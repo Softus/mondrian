@@ -1,0 +1,3 @@
+Title: mondrian
+Version: 3.0.4.11371
+Vendor: Pentaho
