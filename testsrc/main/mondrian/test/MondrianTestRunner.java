@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/MondrianTestRunner.java#2 $
+// $Id: //open/mondrian/testsrc/main/mondrian/test/MondrianTestRunner.java#11 $
 // Modified from junit's TestRunner class. Original code is covered by
 // the junit license and modifications are covered as follows:
 //
@@ -82,7 +82,6 @@ public class MondrianTestRunner extends BaseTestRunner {
         // uncomment this block to get a list of the single tests with time used
         final long[] longa = new long[1];
        result.addListener(new TestListener() {
-
          public void addError(Test arg0, Throwable arg1) {
                // do nothing
            }
@@ -105,7 +104,7 @@ public class MondrianTestRunner extends BaseTestRunner {
               }
            }
        }
-       );
+      );
         */
 
         final long startTime = System.currentTimeMillis();
@@ -132,11 +131,11 @@ public class MondrianTestRunner extends BaseTestRunner {
                             setStopReason("Test stopped due to errors.");
                             result.stop();
                         }
-                        if (result.shouldStop())
+                        if (result.shouldStop()) {
                             break;
+                        }
                     }
                 }
-
             }, "Test thread " + i);
             threads[i].start();
         }
@@ -202,3 +201,5 @@ public class MondrianTestRunner extends BaseTestRunner {
     }
 
 }
+
+// End MondrianTestRunner.java

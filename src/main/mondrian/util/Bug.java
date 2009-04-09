@@ -1,16 +1,17 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/util/Bug.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/util/Bug.java#26 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2007 Julian Hyde
+// Copyright (C) 2006-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
 package mondrian.util;
 
-import mondrian.rolap.sql.SqlQuery;
 import mondrian.olap.MondrianProperties;
+import mondrian.spi.Dialect;
+
 /**
  * Holder for constants which indicate whether particular issues have been
  * fixed. Reference one of those constants in your code, and it is clear which
@@ -18,7 +19,7 @@ import mondrian.olap.MondrianProperties;
  * when its bug is fixed.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/util/Bug.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/util/Bug.java#26 $
  * @since Oct 11, 2006
  */
 public class Bug {
@@ -48,6 +49,13 @@ public class Bug {
 
     /**
      * Whether
+     * <a href="http://sourceforge.net/tracker/index.php?func=detail&aid=2076407&group_id=35302&atid=414613">bug Bug2076407Fixed, "Make Native NonEmpty consistant with MSAS"</a>
+     * is fixed.
+     */
+    public static final boolean Bug2076407Fixed = false;
+
+    /**
+     * Whether
      * <a href="http://sourceforge.net/tracker/index.php?func=detail&aid=1767775&group_id=35302&atid=414613">bug 1767775, "Predicate references RolapStar.Column when used in AggStar"</a>
      * is fixed.
      */
@@ -66,12 +74,12 @@ public class Bug {
      * is fixed.
      */
     public static final boolean Bug1791609Fixed = false;
-    
+
     /**
      * Whether
      * <a href="http://sourceforge.net/tracker/index.php?func=detail&aid=1867953&group_id=35302&atid=414613">bug 1867953, "Aggregate Tables not working with Shared Dimensions"</a>
      * is fixed.
-     * 
+     *
      */
     public static final boolean Bug1867953Fixed = false;
 
@@ -82,7 +90,20 @@ public class Bug {
      */
     public static final boolean Bug1888821Fixed = false;
 
-    
+    /**
+     * Whether
+     * <a href="https://sourceforge.net/tracker/index.php?func=detail&aid=2446228&group_id=35302&atid=414613">bug 2446228, "HighCardinalityTest test cases disabled"</a>
+     * is fixed.
+     */
+    public static final boolean Bug2446228Fixed = false;
+
+    /**
+     * Whether
+     * <a href="http://sourceforge.net/tracker/index.php?func=detail&aid=2583015&group_id=35302&atid=414613">bug 2583015, "RolapResultTest disabled"</a>
+     * is fixed.
+     */
+    public static final boolean Bug2583015Fixed = false;
+
     /**
      * Returns whether to avoid a test because the memory monitor may cause it
      * to fail.
@@ -93,9 +114,9 @@ public class Bug {
      * @param dialect Dialect
      * @return Whether to avoid a test
      */
-    public static boolean avoidMemoryOverflow(SqlQuery.Dialect dialect) {
-        return dialect.isAccess() &&
-            MondrianProperties.instance().MemoryMonitor.get();
+    public static boolean avoidMemoryOverflow(Dialect dialect) {
+        return dialect.getDatabaseProduct() == Dialect.DatabaseProduct.ACCESS
+            && MondrianProperties.instance().MemoryMonitor.get();
     }
 }
 

@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/SchemaTest.java#7 $
+// $Id: //open/mondrian/testsrc/main/mondrian/test/SchemaTest.java#48 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2008 Julian Hyde
+// Copyright (C) 2006-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -12,17 +12,15 @@ package mondrian.test;
 import org.apache.log4j.*;
 import org.apache.log4j.Level;
 import org.apache.log4j.varia.LevelRangeFilter;
-import org.olap4j.OlapConnection;
 import org.olap4j.metadata.*;
 
 import mondrian.rolap.aggmatcher.AggTableManager;
-import mondrian.rolap.sql.SqlQuery;
 import mondrian.olap.*;
 import mondrian.util.Bug;
 import mondrian.olap.Member;
 import mondrian.olap.Position;
 import mondrian.olap.Cube;
-import mondrian.olap.Schema;
+import mondrian.spi.Dialect;
 
 import java.io.StringWriter;
 import java.util.List;
@@ -33,7 +31,7 @@ import java.sql.SQLException;
  *
  * @author jhyde
  * @since August 7, 2006
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/SchemaTest.java#7 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/test/SchemaTest.java#48 $
  */
 public class SchemaTest extends FoodMartTestCase {
 
@@ -70,7 +68,7 @@ public class SchemaTest extends FoodMartTestCase {
 
     // Tests follow...
 
-    public void testSolveOrderInCalculatedMember(){
+    public void testSolveOrderInCalculatedMember() {
         final TestContext testContext = TestContext.createSubstitutingCube(
             "Sales",null,"<CalculatedMember\n" +
             "      name=\"QuantumProfit\"\n" +
@@ -172,6 +170,55 @@ public class SchemaTest extends FoodMartTestCase {
                 "Row #0: 131,558\n"));
     }
 
+    /**
+     * Tests that an error occurs if a hierarchy is based on a non-existent
+     * table.
+     */
+    public void testHierarchyTableNotFound() {
+        final TestContext testContext = TestContext.createSubstitutingCube(
+            "Sales",
+            "<Dimension name=\"Yearly Income3\" foreignKey=\"product_id\">\n" +
+            "  <Hierarchy hasAll=\"true\" primaryKey=\"customer_id\">\n" +
+            "    <Table name=\"customer_not_found\"/>\n" +
+            "    <Level name=\"Yearly Income\" column=\"yearly_income\" uniqueMembers=\"true\"/>\n" +
+            "  </Hierarchy>\n" +
+            "</Dimension>");
+        // FIXME: This should validate the schema, and fail.
+        testContext.assertSimpleQuery();
+        // FIXME: Should give better error.
+        testContext.assertThrows(
+            "select [Yearly Income3].Children from [Sales]",
+            "Error while parsing MDX statement");
+    }
+
+    public void testPrimaryKeyTableNotFound() {
+        final TestContext testContext = TestContext.createSubstitutingCube(
+            "Sales",
+            "<Dimension name=\"Yearly Income4\" foreignKey=\"product_id\">\n" +
+            "  <Hierarchy hasAll=\"true\" primaryKey=\"customer_id\" primaryKeyTable=\"customer_not_found\">\n" +
+            "    <Table name=\"customer\"/>\n" +
+            "    <Level name=\"Yearly Income\" column=\"yearly_income\" uniqueMembers=\"true\"/>\n" +
+            "  </Hierarchy>\n" +
+            "</Dimension>");
+        testContext.assertThrows(
+            "select from [Sales]",
+            "no table 'customer_not_found' found in hierarchy [Yearly Income4]");
+    }
+
+    public void testLevelTableNotFound() {
+        final TestContext testContext = TestContext.createSubstitutingCube(
+            "Sales",
+            "<Dimension name=\"Yearly Income5\" foreignKey=\"product_id\">\n" +
+            "  <Hierarchy hasAll=\"true\" primaryKey=\"customer_id\">\n" +
+            "    <Table name=\"customer\"/>\n" +
+            "    <Level name=\"Yearly Income\" table=\"customer_not_found\" column=\"yearly_income\" uniqueMembers=\"true\"/>\n" +
+            "  </Hierarchy>\n" +
+            "</Dimension>");
+        testContext.assertThrows(
+            "select from [Sales]",
+            "Table 'customer_not_found' not found");
+    }
+
     public void testHierarchyBadDefaultMember() {
         final TestContext testContext = TestContext.createSubstitutingCube(
             "Sales",
@@ -190,9 +237,10 @@ public class SchemaTest extends FoodMartTestCase {
     }
 
     /**
-     * WG: Note, this no longer throws an exception with the new RolapCubeMember functionality.
-     * 
-     * Tests that an error is issued if two dimensions use the same table via
+     * WG: Note, this no longer throws an exception with the new RolapCubeMember
+     * functionality.
+     *
+     * <p>Tests that an error is issued if two dimensions use the same table via
      * different drill-paths and do not use a different alias. If this error is
      * not issued, the generated SQL can be missing a join condition, as in
      * <a href="https://sourceforge.net/tracker/?func=detail&atid=414613&aid=1583462&group_id=35302">
@@ -275,8 +323,7 @@ public class SchemaTest extends FoodMartTestCase {
                     "{[Yearly Income].[All Yearly Incomes].[$10K - $30K]}\n" +
                     "Axis #2:\n" +
                     "{[Yearly Income2].[All Yearly Income2s].[$150K +]}\n" +
-                    "Row #0: 918\n")
-        );
+                    "Row #0: 918\n"));
 
         testContext.assertQueryReturns(
             "select NON EMPTY {[Measures].[Unit Sales]} ON COLUMNS,\n" +
@@ -499,72 +546,76 @@ public class SchemaTest extends FoodMartTestCase {
                             "Row #5: 44,967\n" +
                             "Row #6: 33,045\n" +
                             "Row #7: 11,919\n"));
-
     }
-    
+
     /**
      * test hierarchy with completely different join path to fact table than
      * first hierarchy. tables are auto-aliased as necessary to guarantee
      * unique joins to the fact table.
      */
     public void testSnowflakeHierarchyValidationNotNeeded() {
-    	final TestContext testContext = TestContext.create(
-    			null,
-    			"<Cube name=\"AliasedDimensionsTesting\" defaultMeasure=\"Supply Time\">\n" +
-    			"  <Table name=\"sales_fact_1997\"/>\n" +
-    			"  <Dimension name=\"Store\" foreignKey=\"store_id\">\n" +
-    			"    <Hierarchy hasAll=\"true\" primaryKeyTable=\"store\" primaryKey=\"store_id\">\n" +
-    			"      <Join leftKey=\"region_id\" rightKey=\"region_id\">\n" +
-    			"        <Table name=\"store\"/>\n" +
-    			"        <Join leftKey=\"sales_district_id\" rightKey=\"promotion_id\">\n" +
-    			"          <Table name=\"region\"/>\n" +
-    			"          <Table name=\"promotion\"/>\n" +
-    			"        </Join>\n" +
-    			"      </Join>\n" +
-    			"      <Level name=\"Store Country\" table=\"store\" column=\"store_country\"/>\n" +
-    			"      <Level name=\"Store Region\" table=\"region\" column=\"sales_region\" />\n" +
-    			"      <Level name=\"Store Name\" table=\"store\" column=\"store_name\" />\n" +
-    			"    </Hierarchy>\n" +
-    			"    <Hierarchy name=\"MyHierarchy\" hasAll=\"true\" primaryKeyTable=\"customer\" primaryKey=\"customer_id\">\n" +
-    			"      <Join leftKey=\"customer_region_id\" rightKey=\"region_id\">\n" +
-    			"        <Table name=\"customer\"/>\n" +
-    			"        <Table name=\"region\"/>\n" +
-    			"      </Join>\n" +
-    			"      <Level name=\"Country\" table=\"customer\" column=\"country\" uniqueMembers=\"true\"/>\n" +
-    			"      <Level name=\"Region\" table=\"region\" column=\"sales_region\" uniqueMembers=\"true\"/>\n" +
-    			"      <Level name=\"City\" table=\"customer\" column=\"city\" uniqueMembers=\"false\"/>\n" +
-    			"      <Level name=\"Name\" table=\"customer\" column=\"customer_id\" type=\"Numeric\" uniqueMembers=\"true\"/>\n" +
-    			"    </Hierarchy>\n" +
-    			"  </Dimension>\n" +
-    			"  <Dimension name=\"Customers\" foreignKey=\"customer_id\">\n" +
-    			"    <Hierarchy hasAll=\"true\" allMemberName=\"All Customers\" primaryKeyTable=\"customer\" primaryKey=\"customer_id\">\n" +
-    			"      <Join leftKey=\"customer_region_id\" rightKey=\"region_id\">\n" +
-    			"        <Table name=\"customer\"/>\n" +
-    			"        <Table name=\"region\"/>\n" +
-    			"      </Join>\n" +
-    			"      <Level name=\"Country\" table=\"customer\" column=\"country\" uniqueMembers=\"true\"/>\n" +
-    			"      <Level name=\"Region\" table=\"region\" column=\"sales_region\" uniqueMembers=\"true\"/>\n" +
-    			"      <Level name=\"City\" table=\"customer\" column=\"city\" uniqueMembers=\"false\"/>\n" +
-    			"      <Level name=\"Name\" table=\"customer\" column=\"customer_id\" type=\"Numeric\" uniqueMembers=\"true\"/>\n" +
-    			"    </Hierarchy>\n" +
-    			"  </Dimension>\n" +
-    			"<Measure name=\"Unit Sales\" column=\"unit_sales\" aggregator=\"sum\" formatString=\"Standard\"/>\n" +
-    			"</Cube>",
-    			null, null, null, null);
+        // this test breaks when using aggregates at the moment
+        // due to a known limitation
+        if ((MondrianProperties.instance().ReadAggregates.get() ||
+                MondrianProperties.instance().UseAggregates.get())
+                && !Bug.Bug1867953Fixed) {
+            return;
+        }
 
-    	testContext.assertQueryReturns(
-          "select  {[Store.MyHierarchy].[Mexico]} on rows," +
-          "{[Customers].[USA].[South West]} on columns" +
-          " from " +
-          "AliasedDimensionsTesting",
-          fold("Axis #0:\n" +
-               "{}\n" +
-               "Axis #1:\n" +
-               "{[Customers].[All Customers].[USA].[South West]}\n" +
-               "Axis #2:\n" +
-               "{[Store.MyHierarchy].[All Store.MyHierarchys].[Mexico]}\n" +
-               "Row #0: 51,298\n"));
-    	
+        final TestContext testContext = TestContext.create(
+            null,
+            "<Cube name=\"AliasedDimensionsTesting\" defaultMeasure=\"Supply Time\">\n"
+            + "  <Table name=\"sales_fact_1997\"/>\n"
+            + "  <Dimension name=\"Store\" foreignKey=\"store_id\">\n"
+            + "    <Hierarchy hasAll=\"true\" primaryKeyTable=\"store\" primaryKey=\"store_id\">\n"
+            + "      <Join leftKey=\"region_id\" rightKey=\"region_id\">\n"
+            + "        <Table name=\"store\"/>\n"
+            + "        <Join leftKey=\"sales_district_id\" rightKey=\"promotion_id\">\n"
+            + "          <Table name=\"region\"/>\n"
+            + "          <Table name=\"promotion\"/>\n"
+            + "        </Join>\n"
+            + "      </Join>\n"
+            + "      <Level name=\"Store Country\" table=\"store\" column=\"store_country\"/>\n"
+            + "      <Level name=\"Store Region\" table=\"region\" column=\"sales_region\" />\n"
+            + "      <Level name=\"Store Name\" table=\"store\" column=\"store_name\" />\n"
+            + "    </Hierarchy>\n"
+            + "    <Hierarchy name=\"MyHierarchy\" hasAll=\"true\" primaryKeyTable=\"customer\" primaryKey=\"customer_id\">\n"
+            + "      <Join leftKey=\"customer_region_id\" rightKey=\"region_id\">\n"
+            + "        <Table name=\"customer\"/>\n"
+            + "        <Table name=\"region\"/>\n"
+            + "      </Join>\n"
+            + "      <Level name=\"Country\" table=\"customer\" column=\"country\" uniqueMembers=\"true\"/>\n"
+            + "      <Level name=\"Region\" table=\"region\" column=\"sales_region\" uniqueMembers=\"true\"/>\n"
+            + "      <Level name=\"City\" table=\"customer\" column=\"city\" uniqueMembers=\"false\"/>\n"
+            + "      <Level name=\"Name\" table=\"customer\" column=\"customer_id\" type=\"Numeric\" uniqueMembers=\"true\"/>\n"
+            + "    </Hierarchy>\n"
+            + "  </Dimension>\n"
+            + "  <Dimension name=\"Customers\" foreignKey=\"customer_id\">\n"
+            + "    <Hierarchy hasAll=\"true\" allMemberName=\"All Customers\" primaryKeyTable=\"customer\" primaryKey=\"customer_id\">\n"
+            + "      <Join leftKey=\"customer_region_id\" rightKey=\"region_id\">\n"
+            + "        <Table name=\"customer\"/>\n"
+            + "        <Table name=\"region\"/>\n"
+            + "      </Join>\n"
+            + "      <Level name=\"Country\" table=\"customer\" column=\"country\" uniqueMembers=\"true\"/>\n"
+            + "      <Level name=\"Region\" table=\"region\" column=\"sales_region\" uniqueMembers=\"true\"/>\n"
+            + "      <Level name=\"City\" table=\"customer\" column=\"city\" uniqueMembers=\"false\"/>\n"
+            + "      <Level name=\"Name\" table=\"customer\" column=\"customer_id\" type=\"Numeric\" uniqueMembers=\"true\"/>\n"
+            + "    </Hierarchy>\n"
+            + "  </Dimension>\n"
+            + "<Measure name=\"Unit Sales\" column=\"unit_sales\" aggregator=\"sum\" formatString=\"Standard\"/>\n"
+            + "</Cube>", null, null, null, null);
+
+        testContext.assertQueryReturns(
+            "select  {[Store.MyHierarchy].[Mexico]} on rows,"
+            + "{[Customers].[USA].[South West]} on columns"
+            + " from " + "AliasedDimensionsTesting",
+            fold("Axis #0:\n"
+                + "{}\n"
+                + "Axis #1:\n"
+                + "{[Customers].[All Customers].[USA].[South West]}\n"
+                + "Axis #2:\n"
+                + "{[Store].[MyHierarchy].[All MyHierarchys].[Mexico]}\n"
+                + "Row #0: 51,298\n"));
     }
 
     /**
@@ -573,50 +624,50 @@ public class SchemaTest extends FoodMartTestCase {
      * the same join aliases to the fact table.
      */
     public void testSnowflakeHierarchyValidationNotNeeded2() {
-    	final TestContext testContext = TestContext.create(
-    			null,
-    			"<Cube name=\"AliasedDimensionsTesting\" defaultMeasure=\"Supply Time\">\n" +
-    			"  <Table name=\"sales_fact_1997\"/>\n" +
-    			"  <Dimension name=\"Store\" foreignKey=\"store_id\">\n" +
-    			"    <Hierarchy hasAll=\"true\" primaryKeyTable=\"store\" primaryKey=\"store_id\">\n" +
-    			"      <Join leftKey=\"region_id\" rightKey=\"region_id\">\n" +
-    			"        <Table name=\"store\"/>\n" +
-    			"        <Join leftKey=\"sales_district_id\" rightKey=\"promotion_id\">\n" +
-    			"          <Table name=\"region\"/>\n" +
-    			"          <Table name=\"promotion\"/>\n" +
-    			"        </Join>\n" +
-    			"      </Join>\n" +
-    			"      <Level name=\"Store Country\" table=\"store\" column=\"store_country\"/>\n" +
-    			"      <Level name=\"Store Region\" table=\"region\" column=\"sales_region\" />\n" +
-    			"      <Level name=\"Store Name\" table=\"store\" column=\"store_name\" />\n" +
-    			"    </Hierarchy>\n" +
-    			"    <Hierarchy name=\"MyHierarchy\" hasAll=\"true\" primaryKeyTable=\"store\" primaryKey=\"store_id\">\n" +
-    			"      <Join leftKey=\"region_id\" rightKey=\"region_id\">\n" +
-    			"        <Table name=\"store\"/>\n" +
-    			"        <Table name=\"region\"/>\n" +
-    			"      </Join>\n" +
-    			"      <Level name=\"Store Country\" table=\"store\" column=\"store_country\"/>\n" +
-    			"      <Level name=\"Store Region\" table=\"region\" column=\"sales_region\" />\n" +
-    			"      <Level name=\"Store Name\" table=\"store\" column=\"store_name\" />\n" +
-    			"    </Hierarchy>\n" +
-    			"  </Dimension>\n" +
-    			"  <Dimension name=\"Customers\" foreignKey=\"customer_id\">\n" +
-    			"    <Hierarchy hasAll=\"true\" allMemberName=\"All Customers\" primaryKeyTable=\"customer\" primaryKey=\"customer_id\">\n" +
-    			"    <Join leftKey=\"customer_region_id\" rightKey=\"region_id\">\n" +
-    			"      <Table name=\"customer\"/>\n" +
-    			"      <Table name=\"region\"/>\n" +
-    			"    </Join>\n" +
-    			"    <Level name=\"Country\" table=\"customer\" column=\"country\" uniqueMembers=\"true\"/>\n" +
-    			"    <Level name=\"Region\" table=\"region\" column=\"sales_region\" uniqueMembers=\"true\"/>\n" +
-    			"    <Level name=\"City\" table=\"customer\" column=\"city\" uniqueMembers=\"false\"/>\n" +
-    			"    <Level name=\"Name\" table=\"customer\" column=\"customer_id\" type=\"Numeric\" uniqueMembers=\"true\"/>\n" +
-    			"  </Hierarchy>\n" +
-    			"</Dimension>\n" +
-    			"<Measure name=\"Unit Sales\" column=\"unit_sales\" aggregator=\"sum\" formatString=\"Standard\"/>\n" +
-    			"</Cube>",
-    			null, null, null, null);
+        final TestContext testContext = TestContext.create(
+                null,
+                "<Cube name=\"AliasedDimensionsTesting\" defaultMeasure=\"Supply Time\">\n" +
+                "  <Table name=\"sales_fact_1997\"/>\n" +
+                "  <Dimension name=\"Store\" foreignKey=\"store_id\">\n" +
+                "    <Hierarchy hasAll=\"true\" primaryKeyTable=\"store\" primaryKey=\"store_id\">\n" +
+                "      <Join leftKey=\"region_id\" rightKey=\"region_id\">\n" +
+                "        <Table name=\"store\"/>\n" +
+                "        <Join leftKey=\"sales_district_id\" rightKey=\"promotion_id\">\n" +
+                "          <Table name=\"region\"/>\n" +
+                "          <Table name=\"promotion\"/>\n" +
+                "        </Join>\n" +
+                "      </Join>\n" +
+                "      <Level name=\"Store Country\" table=\"store\" column=\"store_country\"/>\n" +
+                "      <Level name=\"Store Region\" table=\"region\" column=\"sales_region\" />\n" +
+                "      <Level name=\"Store Name\" table=\"store\" column=\"store_name\" />\n" +
+                "    </Hierarchy>\n" +
+                "    <Hierarchy name=\"MyHierarchy\" hasAll=\"true\" primaryKeyTable=\"store\" primaryKey=\"store_id\">\n" +
+                "      <Join leftKey=\"region_id\" rightKey=\"region_id\">\n" +
+                "        <Table name=\"store\"/>\n" +
+                "        <Table name=\"region\"/>\n" +
+                "      </Join>\n" +
+                "      <Level name=\"Store Country\" table=\"store\" column=\"store_country\"/>\n" +
+                "      <Level name=\"Store Region\" table=\"region\" column=\"sales_region\" />\n" +
+                "      <Level name=\"Store Name\" table=\"store\" column=\"store_name\" />\n" +
+                "    </Hierarchy>\n" +
+                "  </Dimension>\n" +
+                "  <Dimension name=\"Customers\" foreignKey=\"customer_id\">\n" +
+                "    <Hierarchy hasAll=\"true\" allMemberName=\"All Customers\" primaryKeyTable=\"customer\" primaryKey=\"customer_id\">\n" +
+                "    <Join leftKey=\"customer_region_id\" rightKey=\"region_id\">\n" +
+                "      <Table name=\"customer\"/>\n" +
+                "      <Table name=\"region\"/>\n" +
+                "    </Join>\n" +
+                "    <Level name=\"Country\" table=\"customer\" column=\"country\" uniqueMembers=\"true\"/>\n" +
+                "    <Level name=\"Region\" table=\"region\" column=\"sales_region\" uniqueMembers=\"true\"/>\n" +
+                "    <Level name=\"City\" table=\"customer\" column=\"city\" uniqueMembers=\"false\"/>\n" +
+                "    <Level name=\"Name\" table=\"customer\" column=\"customer_id\" type=\"Numeric\" uniqueMembers=\"true\"/>\n" +
+                "  </Hierarchy>\n" +
+                "</Dimension>\n" +
+                "<Measure name=\"Unit Sales\" column=\"unit_sales\" aggregator=\"sum\" formatString=\"Standard\"/>\n" +
+                "</Cube>",
+                null, null, null, null);
 
-    	testContext.assertQueryReturns(
+        testContext.assertQueryReturns(
           "select  {[Store.MyHierarchy].[USA].[South West]} on rows," +
           "{[Customers].[USA].[South West]} on columns" +
           " from " +
@@ -626,19 +677,17 @@ public class SchemaTest extends FoodMartTestCase {
                "Axis #1:\n" +
                "{[Customers].[All Customers].[USA].[South West]}\n" +
                "Axis #2:\n" +
-               "{[Store.MyHierarchy].[All Store.MyHierarchys].[USA].[South West]}\n" +
+               "{[Store].[MyHierarchy].[All MyHierarchys].[USA].[South West]}\n" +
                "Row #0: 72,631\n"));
-    	
     }
 
     /**
      * WG: This no longer throws an exception, it is now possible
-     * 
+     *
      * Tests two dimensions using same table (via different join paths).
      * both using a table alias.
      */
     public void testDimensionsShareJoinTable() {
-
         final TestContext testContext = TestContext.create(
                 null,
                 "<Cube name=\"AliasedDimensionsTesting\" defaultMeasure=\"Supply Time\">\n" +
@@ -881,8 +930,7 @@ public class SchemaTest extends FoodMartTestCase {
                     "{[StoreB].[All StoreBs].[USA]}\n" +
                     "Axis #2:\n" +
                     "{[StoreA].[All StoreAs].[USA]}\n" +
-                    "Row #0: 10,425\n")
-         );
+                    "Row #0: 10,425\n"));
     }
 
     /**
@@ -895,7 +943,7 @@ public class SchemaTest extends FoodMartTestCase {
                 null,
 
                 "<Cube name=\"Sales Two Dimensions\">\n" +
-                    "  <Table name=\"sales_fact_1997\" alias=\"sales_fact_1997_mdu\"/>\n" + 
+                    "  <Table name=\"sales_fact_1997\" alias=\"sales_fact_1997_mdu\"/>\n" +
                     "  <DimensionUsage name=\"Time\" source=\"Time\" foreignKey=\"time_id\"/>\n" +
                     "  <DimensionUsage name=\"Time2\" source=\"Time\" foreignKey=\"product_id\"/>\n" +
                     "  <DimensionUsage name=\"Store\" source=\"Store\" foreignKey=\"store_id\"/>\n" +
@@ -915,7 +963,9 @@ public class SchemaTest extends FoodMartTestCase {
                     "Axis #0:\n" +
                     "{}\n" +
                     "Axis #1:\n" +
-                    "{[Time2].[1997]}\n" +
+                    (MondrianProperties.instance().SsasCompatibleNaming.get()
+                        ? "{[Time2].[Time].[1997]}\n"
+                        : "{[Time2].[1997]}\n") +
                     "Axis #2:\n" +
                     "{[Time].[1997].[Q3]}\n" +
                     "Row #0: 16,266\n"));
@@ -931,7 +981,7 @@ public class SchemaTest extends FoodMartTestCase {
                 null,
 
                 "<Cube name=\"Sales Two Dimensions\">\n" +
-                    "  <Table name=\"sales_fact_1997\" alias=\"sales_fact_1997_mdu\"/>\n" + 
+                    "  <Table name=\"sales_fact_1997\" alias=\"sales_fact_1997_mdu\"/>\n" +
                     "  <DimensionUsage name=\"Time\" caption=\"TimeOne\" source=\"Time\" foreignKey=\"time_id\"/>\n" +
                     "  <DimensionUsage name=\"Time2\" caption=\"TimeTwo\" source=\"Time\" foreignKey=\"product_id\"/>\n" +
                     "  <DimensionUsage name=\"Store\" source=\"Store\" foreignKey=\"store_id\"/>\n" +
@@ -941,25 +991,25 @@ public class SchemaTest extends FoodMartTestCase {
                     "   formatString=\"#,###.00\"/>\n" +
                     "</Cube>",
                 null, null, null, null);
-        
+
         String query = "select\n" +
         " {[Time2].[1997]} on columns,\n" +
         " {[Time].[1997].[Q3]} on rows\n" +
         "From [Sales Two Dimensions]";
-        
+
         Result result = testContext.executeQuery(query);
-        
+
         // Time2.1997 Member
         Member member1 = result.getAxes()[0].getPositions().iterator().next().iterator().next();
 
         // NOTE: The caption is modified at the dimension, not the hierarchy
         assertEquals("TimeTwo", member1.getLevel().getDimension().getCaption());
-        
+
         Member member2 = result.getAxes()[1].getPositions().iterator().next().iterator().next();
         assertEquals("TimeOne", member2.getLevel().getDimension().getCaption());
     }
 
-    
+
     /**
      * This test verifies that the createDimension() API call is working correctly.
      */
@@ -977,7 +1027,7 @@ public class SchemaTest extends FoodMartTestCase {
                     "</Cube>",
                     null, null, null, null);
         Cube cube = testContext.getConnection().getSchema().lookupCube("Sales Create Dimension", true);
-       
+
         testContext.assertQueryReturns(
                 "select\n" +
                     "NON EMPTY {[Store].[All Stores].children} on columns \n" +
@@ -988,10 +1038,10 @@ public class SchemaTest extends FoodMartTestCase {
                             "Axis #1:\n" +
                             "{[Store].[All Stores].[USA]}\n" +
                             "Row #0: 266,773\n"));
-        
+
         String dimension = "<DimensionUsage name=\"Time\" source=\"Time\" foreignKey=\"time_id\"/>";
         testContext.getConnection().getSchema().createDimension(cube, dimension);
-        
+
         testContext.assertQueryReturns(
                 "select\n" +
                     "NON EMPTY {[Store].[All Stores].children} on columns, \n" +
@@ -1005,9 +1055,8 @@ public class SchemaTest extends FoodMartTestCase {
                             "Axis #2:\n" +
                             "{[Time].[1997].[Q1]}\n" +
                             "Row #0: 66,291\n"));
-        
     }
-    
+
     /**
      * Test DimensionUsage level attribute
      */
@@ -1022,7 +1071,7 @@ public class SchemaTest extends FoodMartTestCase {
                     "  <Measure name=\"Children\" column=\"total_children\" aggregator=\"sum\"/>\n" +
                     "</Cube>",
                     null, null, null, null);
-        
+
        testContext.assertQueryReturns(
                 "select\n" +
                     " {[Store].[Store State].members} on columns \n" +
@@ -1051,10 +1100,10 @@ public class SchemaTest extends FoodMartTestCase {
                             "Row #0: 46,965\n" +
                             "Row #0: 4,686\n" +
                             "Row #0: 32,767\n"));
-       
-       // BC.children should return an empty list, considering that we've 
+
+       // BC.children should return an empty list, considering that we've
        // joined Store at the State level.
-       
+
 //       testContext.assertQueryReturns(
 //               "select\n" +
 //                   " {[Store].[All Stores].[Canada].[BC].children} on columns \n" +
@@ -1065,9 +1114,9 @@ public class SchemaTest extends FoodMartTestCase {
 //                       "Axis #1:\n"));
     }
 
-    
+
     /**
-     * Test to verify naming of all member with 
+     * Test to verify naming of all member with
      * dimension usage name is different then source name
      */
     public void testAllMemberMultipleDimensionUsages() {
@@ -1085,10 +1134,21 @@ public class SchemaTest extends FoodMartTestCase {
                     "</Cube>",
                 null, null, null, null);
 
+        // If SsasCompatibleNaming (the new behavior), the usages of the
+        // [Store] dimension create dimensions called [Store]
+        // and [Store2], each with a hierarchy called [Store].
+        // Therefore Store2's all member is [Store2].[Store].[All Stores],
+        // or [Store2].[All Stores] for short.
+        //
+        // Under the old behavior, the member is called [Store2].[All Store2s].
+        final String store2AllMember =
+            MondrianProperties.instance().SsasCompatibleNaming.get()
+            ? "[Store2].[All Stores]"
+            : "[Store2].[All Store2s]";
         testContext.assertQueryReturns(
             "select\n" +
-                " {[Store].[All Stores]} on columns,\n" +
-                " {[Store2].[All Store2s]} on rows\n" +
+                " {[Store].[Store].[All Stores]} on columns,\n" +
+                " {" + store2AllMember + "} on rows\n" +
                 "From [Sales Two Sales Dimensions]",
             fold(
                 "Axis #0:\n" +
@@ -1096,11 +1156,11 @@ public class SchemaTest extends FoodMartTestCase {
                     "Axis #1:\n" +
                     "{[Store].[All Stores]}\n" +
                     "Axis #2:\n" +
-                    "{[Store2].[All Store2s]}\n" +
+                    "{[Store2].[Store].[All Stores]}\n" +
                     "Row #0: 266,773\n"));
 
         final Result result = testContext.executeQuery(
-            "select ([Store].[All Stores], [Store2].[All Store2s]) on 0\n"
+            "select ([Store].[All Stores], " + store2AllMember + ") on 0\n"
                 + "from [Sales Two Sales Dimensions]");
         final Axis axis = result.getAxes()[0];
         final Position position = axis.getPositions().get(0);
@@ -1129,11 +1189,24 @@ public class SchemaTest extends FoodMartTestCase {
                     "</Cube>",
                 null, null, null, null);
 
-       testContext.assertThrows(
-                "select\n" +
-                    " {[Time].[1997]} on columns \n" +
-                    "From [Sales Two Dimensions]",
+        final String query = "select\n" +
+            " {[Time].[1997]} on columns \n" +
+            "From [Sales Two Dimensions]";
+        if (!MondrianProperties.instance().SsasCompatibleNaming.get()) {
+            testContext.assertThrows(
+                query,
                 "In cube \"Sales Two Dimensions\" use of unaliased Dimension name \"[Time]\" rather than the alias name \"Time2\"");
+        } else {
+            // In new behavior, resolves to the hierarchy name [Time] even if
+            // not qualified by dimension name [Time2].
+            testContext.assertQueryReturns(
+                query,
+                fold("Axis #0:\n" +
+                    "{}\n" +
+                    "Axis #1:\n" +
+                    "{[Time2].[Time].[1997]}\n" +
+                    "Row #0: 266,773\n"));
+        }
     }
 
     /**
@@ -1154,6 +1227,9 @@ public class SchemaTest extends FoodMartTestCase {
                 "     <![CDATA[select * from \"inventory_fact_1997\" \"FOOBAR\"]]>\n" +
                 "    </SQL>\n" +
                 "    <SQL dialect=\"mysql\">\n" +
+                "     <![CDATA[select * from `inventory_fact_1997` as `FOOBAR`]]>\n" +
+                "    </SQL>\n" +
+                "    <SQL dialect=\"infobright\">\n" +
                 "     <![CDATA[select * from `inventory_fact_1997` as `FOOBAR`]]>\n" +
                 "    </SQL>\n" +
                 "  </View>\n" +
@@ -1215,6 +1291,9 @@ public class SchemaTest extends FoodMartTestCase {
                 "     <![CDATA[select * from \"store\" \"FOOBAR\"]]>\n" +
                 "    </SQL>\n" +
                 "    <SQL dialect=\"mysql\">\n" +
+                "     <![CDATA[select * from `store` as `FOOBAR`]]>\n" +
+                "    </SQL>\n" +
+                "    <SQL dialect=\"infobright\">\n" +
                 "     <![CDATA[select * from `store` as `FOOBAR`]]>\n" +
                 "    </SQL>\n" +
                 "  </View>\n" +
@@ -1506,7 +1585,7 @@ public class SchemaTest extends FoodMartTestCase {
                     + "      formatString=\"#,###.00\"/>\n"
                     + "</Cube>",
                 null, null, null, null);
-        
+
         // With bug, and with aggregates enabled, query against Sales returns
         // 565,238, which is actually the total for [Store Sales]. I think the
         // aggregate tables are getting crossed.
@@ -1523,13 +1602,12 @@ public class SchemaTest extends FoodMartTestCase {
             "select {[Measures]} on 0 from [Sales]",
             expected);
     }
-    
-    /** 
+
+    /**
      * This tests for bug #1746362 Property column shifting when use captionColumn.
      */
     public void testBug1746362() {
-
-        // In order to reproduce the problem a dimension specifying captionColumn and 
+        // In order to reproduce the problem a dimension specifying captionColumn and
         // Properties were required.
         final TestContext testContext = TestContext.createSubstitutingCube(
                 "Sales",
@@ -1537,13 +1615,13 @@ public class SchemaTest extends FoodMartTestCase {
                 "    <Hierarchy name=\"Store2\" hasAll=\"true\" allMemberName=\"All Stores\" primaryKey=\"store_id\">\n" +
                 "      <Table name=\"store_ragged\"/>\n" +
                 "      <Level name=\"Store2\" table=\"store_ragged\" column=\"store_id\" captionColumn=\"store_name\" uniqueMembers=\"true\">\n" +
-                "           <Property name=\"Store Type\" column=\"store_type\"/>" + 
+                "           <Property name=\"Store Type\" column=\"store_type\"/>" +
                 "           <Property name=\"Store Manager\" column=\"store_manager\"/>" +
-                "     </Level>" +                     
+                "     </Level>" +
                 "    </Hierarchy>\n" +
                 "  </Dimension>\n");
 
-        // In the query below Mondrian (prior to the fix) would 
+        // In the query below Mondrian (prior to the fix) would
         // return the store name instead of the store type.
         testContext.assertQueryReturns("WITH\n" +
                 "   MEMBER [Measures].[StoreType] AS \n" +
@@ -1558,19 +1636,19 @@ public class SchemaTest extends FoodMartTestCase {
                         "{[Measures].[Store Sales]}\n" +
                         "{[Measures].[StoreType]}\n" +
                         "Axis #2:\n" +
-                        "{[Store2.Store2].[All Stores].[2], [Product].[All Products]}\n" +
-                        "{[Store2.Store2].[All Stores].[3], [Product].[All Products]}\n" +
-                        "{[Store2.Store2].[All Stores].[6], [Product].[All Products]}\n" +
-                        "{[Store2.Store2].[All Stores].[7], [Product].[All Products]}\n" +
-                        "{[Store2.Store2].[All Stores].[11], [Product].[All Products]}\n" +
-                        "{[Store2.Store2].[All Stores].[13], [Product].[All Products]}\n" +
-                        "{[Store2.Store2].[All Stores].[14], [Product].[All Products]}\n" +
-                        "{[Store2.Store2].[All Stores].[15], [Product].[All Products]}\n" +
-                        "{[Store2.Store2].[All Stores].[16], [Product].[All Products]}\n" +
-                        "{[Store2.Store2].[All Stores].[17], [Product].[All Products]}\n" +
-                        "{[Store2.Store2].[All Stores].[22], [Product].[All Products]}\n" +
-                        "{[Store2.Store2].[All Stores].[23], [Product].[All Products]}\n" +
-                        "{[Store2.Store2].[All Stores].[24], [Product].[All Products]}\n" +
+                        "{[Store2].[All Stores].[2], [Product].[All Products]}\n" +
+                        "{[Store2].[All Stores].[3], [Product].[All Products]}\n" +
+                        "{[Store2].[All Stores].[6], [Product].[All Products]}\n" +
+                        "{[Store2].[All Stores].[7], [Product].[All Products]}\n" +
+                        "{[Store2].[All Stores].[11], [Product].[All Products]}\n" +
+                        "{[Store2].[All Stores].[13], [Product].[All Products]}\n" +
+                        "{[Store2].[All Stores].[14], [Product].[All Products]}\n" +
+                        "{[Store2].[All Stores].[15], [Product].[All Products]}\n" +
+                        "{[Store2].[All Stores].[16], [Product].[All Products]}\n" +
+                        "{[Store2].[All Stores].[17], [Product].[All Products]}\n" +
+                        "{[Store2].[All Stores].[22], [Product].[All Products]}\n" +
+                        "{[Store2].[All Stores].[23], [Product].[All Products]}\n" +
+                        "{[Store2].[All Stores].[24], [Product].[All Products]}\n" +
                         "Row #0: 4,739.23\n" +
                         "Row #0: Small Grocery\n" +
                         "Row #1: 52,896.30\n" +
@@ -1596,7 +1674,7 @@ public class SchemaTest extends FoodMartTestCase {
                         "Row #11: 24,329.23\n" +
                         "Row #11: Mid-Size Grocery\n" +
                         "Row #12: 54,431.14\n" +
-                        "Row #12: Supermarket\n"));              
+                        "Row #12: Supermarket\n"));
     }
 
     public void testCubeWithOneDimensionOneMeasure() {
@@ -1746,7 +1824,7 @@ public class SchemaTest extends FoodMartTestCase {
             "select {[Measures]} on columns from [OneCalcMeasure] where [Promotion Media].[TV]",
             "Hierarchy '[Measures]' is invalid (has no members)");
     }
-    
+
     /**
      * this test triggers an exception out of the aggregate table manager
      */
@@ -1755,7 +1833,7 @@ public class SchemaTest extends FoodMartTestCase {
             TestContext testContext = TestContext.create(
                     null,
                     "<Cube name=\"Sales Two Dimensions\">\n" +
-                        "  <Table name=\"sales_fact_1997\"/>\n" + 
+                        "  <Table name=\"sales_fact_1997\"/>\n" +
                         "  <DimensionUsage name=\"Time\" source=\"Time\" foreignKey=\"time_id\"/>\n" +
                         "  <DimensionUsage name=\"Time2\" source=\"Time\" foreignKey=\"product_id\"/>\n" +
                         "  <DimensionUsage name=\"Store\" source=\"Store\" foreignKey=\"store_id\"/>\n" +
@@ -1811,8 +1889,8 @@ public class SchemaTest extends FoodMartTestCase {
            // force reloading of aggregates, which currently throws an exception
         }
     }
-    
-    
+
+
     /**
      * this test verifies that RolapHierarchy.tableExists() supports views
      */
@@ -1836,25 +1914,28 @@ public class SchemaTest extends FoodMartTestCase {
               + "      <SQL dialect=\"luciddb\">\n"
               + "        <![CDATA[SELECT * FROM \"customer\"]]>\n"
               + "      </SQL>\n"
+              + "      <SQL dialect=\"netezza\">\n"
+              + "        <![CDATA[SELECT * FROM \"customer\"]]>\n"
+              + "      </SQL>\n"
               + "      <SQL dialect=\"db2\">\n"
               + "        <![CDATA[SELECT * FROM \"customer\"]]>\n"
               + "      </SQL>\n"
               + "    </View>\n"
               + "    <Level name=\"Gender\" table=\"gender2\" column=\"gender\" uniqueMembers=\"true\"/>\n"
               + "  </Hierarchy>\n"
-              + "</Dimension>"  
+              + "</Dimension>"
               + "  <Measure name=\"Unit Sales\" column=\"unit_sales\" aggregator=\"sum\"\n"
               + "      formatString=\"Standard\"/>\n"
               + "</Cube>",
               null, null, null, null);
-        
+
         if (!testContext.getDialect().allowsFromQuery()) {
             return;
         }
-        
+
         Result result = testContext.executeQuery(
                 "select {[Gender2].members} on columns from [GenderCube]");
-        
+
         TestContext.assertEqualsVerbose(
             TestContext.toString(result.getAxes()[0].getPositions()),
             fold("[Gender2].[All Gender]\n" +
@@ -1876,7 +1957,6 @@ public class SchemaTest extends FoodMartTestCase {
                 + "Legal values: {all, custom, none, all_dimensions}");
     }
 
-    
     public void testAllMemberNoStringReplace() {
         TestContext testContext = TestContext.create(
                 null,
@@ -1889,7 +1969,7 @@ public class SchemaTest extends FoodMartTestCase {
                     "  <Level name=\"Quarters\" column=\"quarter\" uniqueMembers=\"false\" levelType=\"TimeQuarters\"/>" +
                     "  <Level name=\"Months\" column=\"month_of_year\" uniqueMembers=\"false\" levelType=\"TimeMonths\"/>" +
                     "</Hierarchy>"+
-                    "</Dimension>" + 
+                    "</Dimension>" +
                     "  <DimensionUsage name=\"Store\" source=\"Store\" foreignKey=\"store_id\"/>\n" +
                     "  <Measure name=\"Unit Sales\" column=\"unit_sales\" aggregator=\"sum\" "+
                     "   formatString=\"Standard\"/>\n" +
@@ -1898,16 +1978,17 @@ public class SchemaTest extends FoodMartTestCase {
                     "</Cube>",
                 null, null, null, null);
 
-        
-        testContext.assertQueryReturns("select [TIME.CALENDAR].[All TIME(CALENDAR)] on rows from [Sales Special Time]", 
-                fold(
-                    "Axis #0:\n" +
-                    "{}\n" +
-                    "Axis #1:\n" +
-                    "{[TIME.CALENDAR].[All TIME(CALENDAR)]}\n" +
-                    "Row #0: 266,773\n"));
+
+        testContext.assertQueryReturns(
+            "select [TIME.CALENDAR].[All TIME(CALENDAR)] on columns\n" +
+                "from [Sales Special Time]",
+            fold("Axis #0:\n" +
+                "{}\n" +
+                "Axis #1:\n" +
+                "{[TIME].[CALENDAR].[All TIME(CALENDAR)]}\n" +
+                "Row #0: 266,773\n"));
     }
-    
+
     public void testUnionRole() {
         final TestContext testContext = TestContext.create(
             null, null, null, null, null,
@@ -1970,7 +2051,7 @@ public class SchemaTest extends FoodMartTestCase {
         testContext.assertThrows(
             "select from [Sales]", "Unknown role 'Role2'");
     }
-    
+
     public void testVirtualCubeNamedSetSupportInSchema() {
         final TestContext testContext = TestContext.createSubstitutingCube(
                 "Warehouse and Sales", null,null, "<NamedSet name=\"Non CA State Stores\" " +
@@ -2016,7 +2097,6 @@ public class SchemaTest extends FoodMartTestCase {
     }
 
     public void testVirtualCubeNamedSetSupportInSchemaError() {
-
         final TestContext testContext = TestContext.createSubstitutingCube(
                 "Warehouse and Sales", null,null, "<NamedSet name=\"Non CA State Stores\" " +
                 "formula=\"EXCEPT({[Store].[Store State].[USA].children},{[Store].[Store Country].[USA].[CA]})\"/>");
@@ -2078,8 +2158,11 @@ public class SchemaTest extends FoodMartTestCase {
      * compare()", caused by binary column value.
      */
     public void testBinaryLevelKey() {
-        final SqlQuery.Dialect dialect = TestContext.instance().getDialect();
-        if (!dialect.isDerby() && !dialect.isMySQL()) {
+        switch (TestContext.instance().getDialect().getDatabaseProduct()) {
+        case DERBY:
+        case MYSQL:
+            break;
+        default:
             // Not all databases support binary literals (e.g. X'AB01'). Only
             // Derby returns them as byte[] values from its JDBC driver and
             // therefore experiences bug 1963913.
@@ -2148,6 +2231,185 @@ public class SchemaTest extends FoodMartTestCase {
                 "Row #0: \n" +
                 "Row #0: \n" +
                 "Row #0: \n"));
+    }
+
+    public void _testAttributeHierarchy() {
+        // from email from peter tran dated 2008/9/8
+        // TODO: schema syntax to create attribute hierarchy
+        assertQueryReturns(
+            "WITH \n"
+                + " MEMBER\n"
+                + "  Measures.SalesPerWorkingDay AS \n"
+                + "    IIF(\n"
+                + "     Count(\n"
+                + "      Filter(\n"
+                + "        Descendants(\n"
+                + "          [Date].[Calendar].CurrentMember\n"
+                + "          ,[Date].[Calendar].[Date]\n"
+                + "          ,SELF)\n"
+                + "       ,  [Date].[Day of Week].CurrentMember.Name <> \"1\"\n"
+                + "      )\n"
+                + "    ) = 0\n"
+                + "     ,NULL\n"
+                + "     ,[Measures].[Internet Sales Amount]\n"
+                + "      /\n"
+                + "       Count(\n"
+                + "         Filter(\n"
+                + "           Descendants(\n"
+                + "             [Date].[Calendar].CurrentMember\n"
+                + "             ,[Date].[Calendar].[Date]\n"
+                + "             ,SELF)\n"
+                + "          ,  [Date].[Day of Week].CurrentMember.Name <> \"1\"\n"
+                + "         )\n"
+                + "       )\n"
+                + "    )\n"
+                + "   '\n"
+                + "SELECT [Measures].[SalesPerWorkingDay]  ON 0\n"
+                + ", [Date].[Calendar].[Month].MEMBERS ON 1\n"
+                + "FROM [Adventure Works]",
+            "x");
+    }
+
+    /**
+     * Testcase for a problem which involved a slowly changing dimension.
+     * Not actually a slowly-changing dimension - we don't have such a thing in
+     * the foodmart schema - but the same structure. The dimension is a two
+     * table snowflake, and the table nearer to the fact table is not used by
+     * any level.
+     */
+    public void testScdJoin() {
+        final TestContext testContext =
+            TestContext.createSubstitutingCube(
+                "Sales",
+                "  <Dimension name=\"Product truncated\" foreignKey=\"product_id\">\n"
+                + "    <Hierarchy hasAll=\"true\" primaryKey=\"product_id\" primaryKeyTable=\"product\">\n"
+                + "      <Join leftKey=\"product_class_id\" rightKey=\"product_class_id\">\n"
+                + "        <Table name=\"product\"/>\n"
+                + "        <Table name=\"product_class\"/>\n"
+                + "      </Join>\n"
+                + "      <Level name=\"Product Class\" table=\"product_class\" nameColumn=\"product_subcategory\"\n"
+                + "          column=\"product_class_id\" type=\"Numeric\" uniqueMembers=\"true\"/>\n"
+                + "    </Hierarchy>\n"
+                + "  </Dimension>\n", null, null);
+        testContext.assertQueryReturns(
+            "select non empty {[Measures].[Unit Sales]} on 0,\n"
+                + " non empty Filter({[Product truncated].Members}, [Measures].[Unit Sales] > 10000) on 1\n"
+                + "from [Sales]",
+            fold("Axis #0:\n" +
+                "{}\n" +
+                "Axis #1:\n" +
+                "{[Measures].[Unit Sales]}\n" +
+                "Axis #2:\n" +
+                "{[Product truncated].[All Product truncateds]}\n" +
+                "{[Product truncated].[All Product truncateds].[Fresh Vegetables]}\n" +
+                "{[Product truncated].[All Product truncateds].[Fresh Fruit]}\n" +
+                "Row #0: 266,773\n" +
+                "Row #1: 20,739\n" +
+                "Row #2: 11,767\n"));
+    }
+
+    // TODO: enable this test as part of PhysicalSchema work
+    // TODO: also add a test that Table.alias, Join.leftAlias and
+    // Join.rightAlias cannot be the empty string.
+    public void _testNonUniqueAlias() {
+        final TestContext testContext =
+            TestContext.createSubstitutingCube(
+                "Sales",
+                "  <Dimension name=\"Product truncated\" foreignKey=\"product_id\">\n"
+                + "    <Hierarchy hasAll=\"true\" primaryKey=\"product_id\" primaryKeyTable=\"product\">\n"
+                + "      <Join leftKey=\"product_class_id\" rightKey=\"product_class_id\">\n"
+                + "        <Table name=\"product\" alias=\"product_class\"/>\n"
+                + "        <Table name=\"product_class\"/>\n"
+                + "      </Join>\n"
+                + "      <Level name=\"Product Class\" table=\"product_class\" nameColumn=\"product_subcategory\"\n"
+                + "          column=\"product_class_id\" type=\"Numeric\" uniqueMembers=\"true\"/>\n"
+                + "    </Hierarchy>\n"
+                + "  </Dimension>\n", null, null);
+        Throwable throwable = null;
+        try {
+            testContext.assertSimpleQuery();
+        } catch (Throwable e) {
+            throwable = e;
+        }
+        // neither a source column or source expression specified
+        TestContext.checkThrowable(
+            throwable,
+            "Alias not unique");
+    }
+
+    public void testBug2384825() {
+        // tests fix for [ 2384825 ] ClassCastException when obtaining RolapCubeLevel
+
+        // until bug #2538280 is fixed, this test case only works on MySQL
+        if (TestContext.instance().getDialect().getDatabaseProduct() !=
+            Dialect.DatabaseProduct.MYSQL) {
+            return;
+        }
+
+        // In order to reproduce the problem it was necessary to only have one
+        // non empty member under USA. In the cube definition below we create a cube
+        // with only CA data to achieve this.
+        String salesCube1 =
+        "<Cube name=\"Sales2\" defaultMeasure=\"Unit Sales\">\n" +
+        "  <Table name=\"sales_fact_1997\" >\n" +
+        "    <SQL dialect=\"default\">\n" +
+        "     <![CDATA[`sales_fact_1997`.`store_id` in (select distinct `store_id` from `store` where `store`.`store_state` = \"CA\")]]>\n" +
+        "    </SQL>\n" +
+        "  </Table>\n" +
+        "  <DimensionUsage name=\"Store\" source=\"Store\" foreignKey=\"store_id\"/>\n" +
+        "  <DimensionUsage name=\"Product\" source=\"Product\" foreignKey=\"product_id\"/>\n" +
+        "  <Measure name=\"Unit Sales\" column=\"unit_sales\" aggregator=\"sum\" formatString=\"Standard\"/>\n" +
+        "  <Measure name=\"Store Sales\" column=\"store_sales\" aggregator=\"sum\" formatString=\"Standard\"/>\n" +
+        "</Cube>\n";
+
+        TestContext testContext =
+        TestContext.create(
+            null,
+            salesCube1,
+            null,
+            null,
+            null,
+            null);
+
+        // First query all children of the USA. This should only return CA since all the
+        // other states were filtered out. CA will be put in the member cache
+        String query1 = "WITH SET [#DataSet#] as " +
+                "'NonEmptyCrossjoin({[Product].[All Products]}, {[Store].[All Stores].[USA].Children})' " +
+                "SELECT {[Measures].[Unit Sales]} on columns, " +
+                "NON EMPTY Hierarchize({[#DataSet#]}) on rows FROM [Sales2]";
+
+        testContext.assertQueryReturns(query1,
+            fold(
+                "Axis #0:\n" +
+                "{}\n" +
+                "Axis #1:\n" +
+                "{[Measures].[Unit Sales]}\n" +
+                "Axis #2:\n" +
+                "{[Product].[All Products], [Store].[All Stores].[USA].[CA]}\n" +
+                "Row #0: 74,748\n"));
+
+        // Now query the children of CA using the descendants function
+        // This is where the ClassCastException occurs
+        String query2 = "WITH SET [#DataSet#] as " +
+                "'{Descendants([Store].[All Stores], 3)}' " +
+                "SELECT {[Measures].[Unit Sales]} on columns, " +
+                "NON EMPTY Hierarchize({[#DataSet#]}) on rows FROM [Sales2]";
+
+        testContext.assertQueryReturns(query2,
+            fold(
+                "Axis #0:\n" +
+                "{}\n" +
+                "Axis #1:\n" +
+                "{[Measures].[Unit Sales]}\n" +
+                "Axis #2:\n" +
+                "{[Store].[All Stores].[USA].[CA].[Beverly Hills]}\n" +
+                "{[Store].[All Stores].[USA].[CA].[Los Angeles]}\n" +
+                "{[Store].[All Stores].[USA].[CA].[San Diego]}\n" +
+                "{[Store].[All Stores].[USA].[CA].[San Francisco]}\n" +
+                "Row #0: 21,333\n" +
+                "Row #1: 25,663\n" +
+                "Row #2: 25,635\n" +
+                "Row #3: 2,117\n"));
     }
 }
 

@@ -17,7 +17,7 @@ import mondrian.olap.fun.FunUtil;
 /**
  * Test for <code>ConstantCalc</code>
  * @author Matt
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/calc/impl/ConstantCalcTest.java#2 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/calc/impl/ConstantCalcTest.java#2 $
  */
 public class ConstantCalcTest extends TestCase {
     public void testNullEvaluatesToConstantDoubleNull() {

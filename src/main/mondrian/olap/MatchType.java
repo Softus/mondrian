@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/MatchType.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/MatchType.java#5 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2003-2006 Julian Hyde
+// Copyright (C) 2003-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -16,15 +16,27 @@ package mondrian.olap;
  * searching for a member based on its unique name.
  *
  * @author Zelaine Fong
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/MatchType.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/MatchType.java#5 $
  */
 public enum MatchType {
+    /** Match the unique name exactly, do not query database for members */
+    EXACT_SCHEMA,
     /** Match the unique name exactly */
     EXACT,
     /** If no exact match, return the preceding member */
     BEFORE,
     /** If no exact match, return the next member */
     AFTER;
+
+    /**
+     * Return true if either Exact or Exact Schema value
+     * is selected.
+     *
+     * @return true if exact
+     */
+    public boolean isExact() {
+        return this == EXACT || this == EXACT_SCHEMA;
+    }
 }
 
 // End MatchType.java

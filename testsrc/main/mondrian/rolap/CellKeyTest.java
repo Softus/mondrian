@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/rolap/CellKeyTest.java#2 $
+// $Id: //open/mondrian/testsrc/main/mondrian/rolap/CellKeyTest.java#10 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2007 Julian Hyde and others.
+// Copyright (C) 2005-2008 Julian Hyde and others.
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -17,7 +17,7 @@ import mondrian.test.TestContext;
  * Test that the implementations of the CellKey interface are correct.
  *
  * @author <a>Richard M. Emberson</a>
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/rolap/CellKeyTest.java#2 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/rolap/CellKeyTest.java#10 $
  */
 public class CellKeyTest extends FoodMartTestCase {
     public CellKeyTest() {
@@ -268,12 +268,12 @@ public class CellKeyTest extends FoodMartTestCase {
         copy = CellKey.Generator.newCellKey(ordinals);
         assertTrue("CellKey equals" , (key.equals(copy)));
     }
-    
+
     public void testCellLookup() {
         if (!isDefaultNullMemberRepresentation()) {
             return;
         }
-        String cubeDef = 
+        String cubeDef =
             "<Cube name = \"SalesTest\" defaultMeasure=\"Unit Sales\">\n" +
             "  <Table name=\"sales_fact_1997\"/>\n" +
             "  <Dimension name=\"City\" foreignKey=\"customer_id\">\n" +
@@ -296,10 +296,10 @@ public class CellKeyTest extends FoodMartTestCase {
             "  </Dimension>\n" +
             "  <Measure name=\"Unit Sales\" column=\"unit_sales\" aggregator=\"sum\" formatString=\"Standard\"/>\n" +
             "</Cube>";
-        
+
         String query =
             "With Set [*NATIVE_CJ_SET] as NonEmptyCrossJoin([Gender].Children, [Address2].Children) " +
-            "Select Generate([*NATIVE_CJ_SET], {([Gender].CurrentMember, [Address2].CurrentMember)}) on rows " +
+            "Select Generate([*NATIVE_CJ_SET], {([Gender].CurrentMember, [Address2].CurrentMember)}) on columns " +
             "From [SalesTest] where ([City].[Redwood City])";
 
         String result =
@@ -316,17 +316,17 @@ public class CellKeyTest extends FoodMartTestCase {
             "Row #0: 3\n" +
             "Row #0: 52\n" +
             "Row #0: 8\n";
-        
+
         /*
          * Make sure ExpandNonNative is not set. Otherwise, the query is evaluated
-         * natively. For the given data set(which contains NULL members), native 
-         * evaluation produces results in a different order from the non-native 
+         * natively. For the given data set(which contains NULL members), native
+         * evaluation produces results in a different order from the non-native
          * evaluation.
          */
         boolean origExpandNonNative =
             MondrianProperties.instance().ExpandNonNative.get();
         MondrianProperties.instance().ExpandNonNative.set(false);
-        
+
         TestContext testContext =
             TestContext.create(
                 null,

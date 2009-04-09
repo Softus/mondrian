@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/VarFunDef.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/fun/VarFunDef.java#5 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -26,7 +26,7 @@ import java.util.List;
  * (and its synonym <code>Variance</code>).
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/VarFunDef.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/VarFunDef.java#5 $
  * @since Mar 23, 2006
  */
 class VarFunDef extends AbstractAggregateFunDef {
@@ -56,7 +56,7 @@ class VarFunDef extends AbstractAggregateFunDef {
         return new AbstractDoubleCalc(call, new Calc[] {listCalc, calc}) {
             public double evaluateDouble(Evaluator evaluator) {
                 List memberList = evaluateCurrentList(listCalc, evaluator);
-                return (Double)var(evaluator.push(), memberList, calc, false);
+                return (Double)var(evaluator.push(false), memberList, calc, false);
             }
 
             public boolean dependsOn(Dimension dimension) {

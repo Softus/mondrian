@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap4j/MondrianOlap4jMember.java#3 $
+// $Id: //open/mondrian/src/main/mondrian/olap4j/MondrianOlap4jMember.java#4 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2007-2007 Julian Hyde
+// Copyright (C) 2007-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -27,7 +27,7 @@ import mondrian.rolap.RolapMeasure;
  * {@link mondrian.olap.Member}.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap4j/MondrianOlap4jMember.java#3 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap4j/MondrianOlap4jMember.java#4 $
  * @since May 25, 2007
  */
 class MondrianOlap4jMember implements Member, Named {
@@ -55,7 +55,7 @@ class MondrianOlap4jMember implements Member, Named {
     }
 
     public NamedList<MondrianOlap4jMember> getChildMembers() {
-        final mondrian.olap.Member[] children =
+        final List<mondrian.olap.Member> children =
             olap4jSchema.schemaReader.getMemberChildren(
                 member);
         return new AbstractNamedList<MondrianOlap4jMember>() {
@@ -64,17 +64,17 @@ class MondrianOlap4jMember implements Member, Named {
             }
 
             public MondrianOlap4jMember get(int index) {
-                return new MondrianOlap4jMember(olap4jSchema, children[index]);
+                return new MondrianOlap4jMember(olap4jSchema, children.get(index));
             }
 
             public int size() {
-                return children.length;
+                return children.size();
             }
         };
     }
 
     public int getChildMemberCount() {
-        return olap4jSchema.schemaReader.getMemberChildren(member).length;
+        return olap4jSchema.schemaReader.getMemberChildren(member).size();
     }
 
     public MondrianOlap4jMember getParentMember() {
@@ -116,7 +116,7 @@ class MondrianOlap4jMember implements Member, Named {
     }
 
     public int getSolveOrder() {
-        throw new UnsupportedOperationException();
+        return member.getSolveOrder();
     }
 
     public ParseTreeNode getExpression() {
@@ -128,7 +128,7 @@ class MondrianOlap4jMember implements Member, Named {
     }
 
     public boolean isCalculatedInQuery() {
-        throw new UnsupportedOperationException();
+        return member.isCalculatedInQuery();
     }
 
     public Object getPropertyValue(Property property) {
@@ -155,15 +155,19 @@ class MondrianOlap4jMember implements Member, Named {
     }
 
     public boolean isHidden() {
-        throw new UnsupportedOperationException();
+        return member.isHidden();
     }
 
     public int getDepth() {
-        throw new UnsupportedOperationException();
+        return member.getDepth();
     }
 
     public Member getDataMember() {
-        throw new UnsupportedOperationException();
+        final mondrian.olap.Member dataMember = member.getDataMember();
+        if (dataMember == null) {
+            return null;
+        }
+        return new MondrianOlap4jMember(olap4jSchema, dataMember);
     }
 
     public String getName() {
@@ -175,11 +179,11 @@ class MondrianOlap4jMember implements Member, Named {
     }
 
     public String getCaption(Locale locale) {
-        throw new UnsupportedOperationException();
+        return member.getCaption();
     }
 
     public String getDescription(Locale locale) {
-        throw new UnsupportedOperationException();
+        return member.getDescription();
     }
 }
 

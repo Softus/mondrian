@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/AbstractAggregateFunDef.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/fun/AbstractAggregateFunDef.java#21 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2007 Julian Hyde
+// Copyright (C) 2005-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -25,7 +25,7 @@ import java.util.*;
  *
  * @author jhyde
  * @since 2005/8/14
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/AbstractAggregateFunDef.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/AbstractAggregateFunDef.java#21 $
  */
 public class AbstractAggregateFunDef extends FunDefBase {
     public AbstractAggregateFunDef(FunDef dummyFunDef) {
@@ -69,7 +69,7 @@ public class AbstractAggregateFunDef extends FunDefBase {
         ListCalc listCalc,
         Evaluator evaluator)
     {
-        List tuples = listCalc.evaluateList(evaluator);
+        List tuples = listCalc.evaluateList(evaluator.push(false));
 
         int currLen = tuples.size();
         crossProd(evaluator, currLen);
@@ -81,7 +81,7 @@ public class AbstractAggregateFunDef extends FunDefBase {
         IterCalc iterCalc,
         Evaluator evaluator)
     {
-        Iterable iter = iterCalc.evaluateIterable(evaluator);
+        Iterable iter = iterCalc.evaluateIterable(evaluator.push(false));
 
         int currLen = 0;
         crossProd(evaluator, currLen);
@@ -126,7 +126,6 @@ public class AbstractAggregateFunDef extends FunDefBase {
         List tuplesForAggregation,
         Evaluator evaluator)
     {
-
         if (tuplesForAggregation.size() == 0) {
             return tuplesForAggregation;
         }
@@ -195,7 +194,7 @@ public class AbstractAggregateFunDef extends FunDefBase {
                     tuples[j].getDimension())) {
                     final Hierarchy hierarchy =
                         tuples[j].getDimension().getHierarchy();
-                    if(hierarchy.hasAll()){
+                    if (hierarchy.hasAll()) {
                         tuples[j] = hierarchy.getAllMember();
                     } else {
                         tuples[j] = hierarchy.getDefaultMember();
@@ -207,7 +206,6 @@ public class AbstractAggregateFunDef extends FunDefBase {
             } else {
                 processedTuples.add(tuples[0]);
             }
-
         }
         return tuplesAsList(processedTuples);
     }
@@ -223,7 +221,7 @@ public class AbstractAggregateFunDef extends FunDefBase {
     private static List tuplesAsList(Set tuples) {
         List results = new ArrayList(tuples.size());
         for (Object tuple : tuples) {
-            if (tuple instanceof MemberArray){
+            if (tuple instanceof MemberArray) {
                 results.add(((MemberArray) tuple).memberArray);
             } else {
                 results.add(tuple);

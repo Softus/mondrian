@@ -17,7 +17,7 @@ import mondrian.olap.MondrianProperties;
  * answers when the mdx is evaluated.
  *
  * @author Richard M. Emberson
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/rolap/aggmatcher/Checkin_7641.java#2 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/rolap/aggmatcher/Checkin_7641.java#7 $
  */
 public class Checkin_7641 extends CsvDBTestCase {
     private static final String DIRECTORY =
@@ -99,8 +99,7 @@ public class Checkin_7641 extends CsvDBTestCase {
             "    column='shipped_value' aggregator='sum'\n" +
             "   formatString='#,###'/>\n" +
             "</Cube>";
-
     }
 }
 
-// Checkin_7641.java
+// End Checkin_7641.java

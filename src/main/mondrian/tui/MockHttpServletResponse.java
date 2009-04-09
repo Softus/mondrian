@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/tui/MockHttpServletResponse.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/tui/MockHttpServletResponse.java#7 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2006 Julian Hyde and others
+// Copyright (C) 2005-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -36,7 +36,7 @@ import javax.servlet.http.Cookie;
  * If you need to add to this implementation, please do so.
  *
  * @author <a>Richard M. Emberson</a>
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/tui/MockHttpServletResponse.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/tui/MockHttpServletResponse.java#7 $
  */
 public class MockHttpServletResponse implements HttpServletResponse {
 
@@ -349,7 +349,6 @@ public class MockHttpServletResponse implements HttpServletResponse {
             headers.put(name, valueList);
         }
         valueList.add(value);
-
     }
 
     /**
@@ -417,7 +416,6 @@ public class MockHttpServletResponse implements HttpServletResponse {
         return ((list == null) || (list.size() == 0))
             ? null
             : list.get(0);
-
     }
 
     public String getContentType() {
@@ -467,3 +465,5 @@ public class MockHttpServletResponse implements HttpServletResponse {
 
 
 }
+
+// End MockHttpServletResponse.java

@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/agg/AggQuerySpec.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/agg/AggQuerySpec.java#20 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2002-2002 Kana Software, Inc.
-// Copyright (C) 2002-2007 Julian Hyde and others
+// Copyright (C) 2002-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -16,6 +16,7 @@ import mondrian.rolap.RolapStar;
 import mondrian.rolap.StarColumnPredicate;
 import mondrian.rolap.aggmatcher.AggStar;
 import mondrian.rolap.sql.SqlQuery;
+import mondrian.spi.Dialect;
 
 import org.apache.log4j.Logger;
 
@@ -30,7 +31,7 @@ import java.util.List;
  * {@link QuerySpec} interface.
  *
  * @author Richard M. Emberson
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/agg/AggQuerySpec.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/agg/AggQuerySpec.java#20 $
  */
 class AggQuerySpec {
     private static final Logger LOGGER = Logger.getLogger(AggQuerySpec.class);
@@ -81,7 +82,7 @@ class AggQuerySpec {
 
         // this should never happen
         if (column == null) {
-            LOGGER.error("column null for bitPos="+bitPos);
+            LOGGER.error("column null for bitPos=" + bitPos);
         }
         return column;
     }
@@ -166,14 +167,23 @@ class AggQuerySpec {
 
             // some DB2 (AS400) versions throw an error, if a column alias is
             // there and *not* used in a subsequent order by/group by
-            if (sqlQuery.getDialect().isAS400()) {
-                sqlQuery.addSelect(expr, null);
-            } else {
-                sqlQuery.addSelect(expr, getColumnAlias(i));
+            final String c;
+            switch (sqlQuery.getDialect().getDatabaseProduct()) {
+            case DB2_AS400:
+            case DB2_OLD_AS400:
+                c = sqlQuery.addSelect(expr, null);
+                break;
+            default:
+                c = sqlQuery.addSelect(expr, getColumnAlias(i));
+                break;
             }
 
             if (rollup) {
-                sqlQuery.addGroupBy(expr);
+                if (sqlQuery.getDialect().requiresGroupByAlias()) {
+                    sqlQuery.addGroupBy(c);
+                } else {
+                    sqlQuery.addGroupBy(expr);
+                }
             }
         }
 

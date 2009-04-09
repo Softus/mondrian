@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/xmla/impl/DefaultXmlaRequest.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/xmla/impl/DefaultXmlaRequest.java#13 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2007 Julian Hyde
+// Copyright (C) 2005-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -69,7 +69,7 @@ public class DefaultXmlaRequest implements XmlaRequest,
             throws XmlaException {
         this(xmlaRoot, null, role);
     }
-    protected DefaultXmlaRequest(final Element xmlaRoot, 
+    protected DefaultXmlaRequest(final Element xmlaRoot,
                                  final String roleName,
                                  final Role role)
             throws XmlaException {
@@ -117,26 +117,30 @@ public class DefaultXmlaRequest implements XmlaRequest,
 */
 
     public String getRequestType() {
-        if (method != METHOD_DISCOVER)
+        if (method != METHOD_DISCOVER) {
             throw new IllegalStateException("Only METHOD_DISCOVER has requestType");
+        }
         return requestType;
     }
 
     public boolean isDrillThrough() {
-        if (method != METHOD_EXECUTE)
+        if (method != METHOD_EXECUTE) {
             throw new IllegalStateException("Only METHOD_EXECUTE determines drillthrough");
+        }
         return drillthrough;
     }
 
     public int drillThroughMaxRows() {
-        if (method != METHOD_EXECUTE)
+        if (method != METHOD_EXECUTE) {
             throw new IllegalStateException("Only METHOD_EXECUTE determines drillthrough");
+        }
         return maxRows;
     }
 
     public int drillThroughFirstRowset() {
-        if (method != METHOD_EXECUTE)
+        if (method != METHOD_EXECUTE) {
             throw new IllegalStateException("Only METHOD_EXECUTE determines drillthrough");
+        }
         return firstRowset;
     }
 
@@ -333,7 +337,6 @@ public class DefaultXmlaRequest implements XmlaRequest,
                 if (n instanceof Element) {
                     Element e = (Element) n;
                     if (NS_XMLA.equals(e.getNamespaceURI())) {
-
                         String key = e.getLocalName();
                         String value = XmlaUtil.textInElement(e);
 

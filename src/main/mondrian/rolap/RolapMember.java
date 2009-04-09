@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/RolapMember.java#4 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/RolapMember.java#79 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2001-2002 Kana Software, Inc.
-// Copyright (C) 2001-2007 Julian Hyde and others
+// Copyright (C) 2001-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -24,7 +24,7 @@ import java.util.*;
  *
  * @author jhyde
  * @since 10 August, 2001
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/RolapMember.java#4 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/RolapMember.java#79 $
  */
 public class RolapMember extends MemberBase {
 
@@ -51,7 +51,7 @@ public class RolapMember extends MemberBase {
      * @param hierarchy  Hierarchy
      * @return List of arrays of members
      */
-    public static List<Member[]> getAllMembers(
+    public static List<List<Member>> getAllMembers(
         SchemaReader schemaReader,
         Hierarchy hierarchy)
     {
@@ -60,10 +60,10 @@ public class RolapMember extends MemberBase {
         try {
             // Getting the members by Level is the fastest way that I could
             // find for getting all of a hierarchy's members.
-            List<Member[]> list = new ArrayList<Member[]>();
+            List<List<Member>> list = new ArrayList<List<Member>>();
             Level[] levels = hierarchy.getLevels();
             for (Level level : levels) {
-                Member[] members = schemaReader.getLevelMembers(level, true);
+                List<Member> members = schemaReader.getLevelMembers(level, true);
                 if (members != null) {
                     list.add(members);
                 }
@@ -72,7 +72,7 @@ public class RolapMember extends MemberBase {
         } finally {
             if (LOGGER.isDebugEnabled()) {
                 long end = System.currentTimeMillis();
-                LOGGER.debug("RolapMember.getAllMembers: time=" +(end-start));
+                LOGGER.debug("RolapMember.getAllMembers: time=" + (end - start));
             }
         }
     }
@@ -136,9 +136,9 @@ public class RolapMember extends MemberBase {
         try {
             Hierarchy hierarchy = seedMember.getHierarchy();
             int ordinal = hierarchy.hasAll() ? 1 : 0;
-            List<Member[]> levelMembers =
+            List<List<Member>> levelMembers =
                 getAllMembers(schemaReader, hierarchy);
-            Member[] leafMembers = levelMembers.get(levelMembers.size() - 1);
+            List<Member> leafMembers = levelMembers.get(levelMembers.size() - 1);
             levelMembers = levelMembers.subList(0, levelMembers.size() - 1);
 
             // Set all ordinals
@@ -152,7 +152,7 @@ public class RolapMember extends MemberBase {
             // If we must to a full Top-down, then first reset all ordinal
             // values to -1, and then call the Top-down
             if (needsFullTopDown) {
-                for (Member[] members : levelMembers) {
+                for (List<Member> members : levelMembers) {
                     for (Member member : members) {
                         if (member instanceof RolapMember) {
                             ((RolapMember) member).resetOrdinal();
@@ -166,7 +166,7 @@ public class RolapMember extends MemberBase {
         } finally {
             if (LOGGER.isDebugEnabled()) {
                 long end = System.currentTimeMillis();
-                LOGGER.debug("RolapMember.setOrdinals: time=" +(end-start));
+                LOGGER.debug("RolapMember.setOrdinals: time=" + (end - start));
             }
         }
     }
@@ -181,8 +181,8 @@ public class RolapMember extends MemberBase {
      * except the leaf level
      * @return whether we need to apply the top-down ordinal assignment
      */
-    private static boolean needsFullTopDown(List<Member[]> levelMembers) {
-        for (Member[] members : levelMembers) {
+    private static boolean needsFullTopDown(List<List<Member>> levelMembers) {
+        for (List<Member> members : levelMembers) {
             for (Member member : members) {
                 if (member.getOrdinal() == -1) {
                     return true;
@@ -239,7 +239,7 @@ public class RolapMember extends MemberBase {
      * @param member Member
      */
     private static void setOrdinalsTopDown(
-        SchemaReader schemaReader, 
+        SchemaReader schemaReader,
         Member member)
     {
         long start = System.currentTimeMillis();
@@ -251,7 +251,7 @@ public class RolapMember extends MemberBase {
                 // top of the world
                 int ordinal = 0;
 
-                Member[] siblings =
+                List<Member> siblings =
                     schemaReader.getHierarchyRootMembers(member.getHierarchy());
 
                 for (Member sibling : siblings) {
@@ -264,16 +264,19 @@ public class RolapMember extends MemberBase {
         } finally {
             if (LOGGER.isDebugEnabled()) {
                 long end = System.currentTimeMillis();
-                LOGGER.debug("RolapMember.setOrdinalsTopDown: time=" +(end-start));
+                LOGGER.debug("RolapMember.setOrdinalsTopDown: time=" + (end - start));
             }
         }
     }
-    private static int setAllChildren(
-            int ordinal, SchemaReader schemaReader, Member member) {
 
+    private static int setAllChildren(
+        int ordinal,
+        SchemaReader schemaReader,
+        Member member)
+    {
         ordinal = setOrdinal(member, ordinal);
 
-        Member[] children = schemaReader.getMemberChildren(member);
+        List<Member> children = schemaReader.getMemberChildren(member);
         for (Member child : children) {
             ordinal = setAllChildren(ordinal, schemaReader, child);
         }
@@ -392,7 +395,7 @@ public class RolapMember extends MemberBase {
         super();
         this.key = null;
     }
-    
+
     protected Logger getLogger() {
         return LOGGER;
     }
@@ -438,8 +441,8 @@ public class RolapMember extends MemberBase {
                 n = Util.quoteMdxIdentifier(n);
                 this.uniqueName = Util.makeFqName(n, name);
                 if (getLogger().isDebugEnabled()) {
-                    getLogger().debug("RolapMember.makeUniqueName: uniqueName="
-                            +uniqueName);
+                    getLogger().debug(
+                        "RolapMember.makeUniqueName: uniqueName=" + uniqueName);
                 }
             }
         }
@@ -447,11 +450,24 @@ public class RolapMember extends MemberBase {
 
     protected void setUniqueName(Object key) {
         String name = keyToString(key);
-        this.uniqueName = (parentMember == null)
-            ? Util.makeFqName(getHierarchy(), name)
-            : Util.makeFqName(parentMember, name);
+        if (parentMember == null) {
+            final RolapHierarchy hierarchy = getHierarchy();
+            final Dimension dimension = hierarchy.getDimension();
+            if (/* dimension.getHierarchies().length == 1
+                && */ hierarchy.getName().equals(dimension.getName()))
+            {
+                // Kludge to ensure that calc members are called
+                // [Measures].[Foo] not [Measures].[Measures].[Foo]. We can
+                // remove this code when we revisit the scheme to generate
+                // member unique names.
+                this.uniqueName = Util.makeFqName(dimension, name);
+            } else {
+                this.uniqueName = Util.makeFqName(hierarchy, name);
+            }
+        } else {
+            this.uniqueName = Util.makeFqName(parentMember, name);
+        }
     }
-
 
     public boolean isCalculatedInQuery() {
         return false;
@@ -459,7 +475,7 @@ public class RolapMember extends MemberBase {
 
     public String getName() {
         final String name =
-                (String) getPropertyValue(Property.NAME.name);
+            (String) getPropertyValue(Property.NAME.name);
         return (name != null)
             ? name
             : keyToString(key);
@@ -604,7 +620,7 @@ public class RolapMember extends MemberBase {
                 break;
             case Property.MEMBER_KEY_ORDINAL:
             case Property.KEY_ORDINAL:
-                return this == this.getHierarchy().getAllMember() ? 0 : getKey();            
+                return this == this.getHierarchy().getAllMember() ? 0 : getKey();
 
             default:
                 break;
@@ -732,14 +748,16 @@ public class RolapMember extends MemberBase {
         case Never:
             return false;
 
-        case IfBlankName: {
+        case IfBlankName:
+        {
             // If the key value in the database is null, then we use
             // a special key value whose toString() is "null".
             final String name = getName();
             return name.equals(RolapUtil.mdxNullLiteral) || name.equals("");
         }
 
-        case IfParentsName: {
+        case IfParentsName:
+        {
             final Member parentMember = getParentMember();
             if (parentMember == null) {
                 return false;
@@ -770,7 +788,7 @@ public class RolapMember extends MemberBase {
             }
         }
         PropertyFormatter pf;
-        if (prop!=null && (pf = prop.getFormatter()) != null) {
+        if (prop != null && (pf = prop.getFormatter()) != null) {
             return pf.formatProperty(this, propertyName,
                 getPropertyValue(propertyName));
         }

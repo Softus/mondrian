@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/TupleFunDef.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/fun/TupleFunDef.java#22 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2002-2002 Kana Software, Inc.
-// Copyright (C) 2002-2007 Julian Hyde and others
+// Copyright (C) 2002-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -13,21 +13,21 @@
 package mondrian.olap.fun;
 import mondrian.olap.*;
 import mondrian.olap.type.*;
-import mondrian.resource.MondrianResource;
 import mondrian.calc.*;
 import mondrian.calc.impl.AbstractTupleCalc;
 import mondrian.mdx.ResolvedFunCall;
 
 import java.io.PrintWriter;
+import java.util.List;
 
 /**
- * <code>TupleFunDef</code> implements the '( ... )' operator which builds
+ * <code>TupleFunDef</code> implements the '(...)' operator which builds
  * tuples, as in <code>([Time].CurrentMember,
  * [Stores].[USA].[California])</code>.
  *
  * @author jhyde
  * @since 3 March, 2002
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/TupleFunDef.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/TupleFunDef.java#22 $
  */
 public class TupleFunDef extends FunDefBase {
     private final int[] argTypes;
@@ -70,7 +70,7 @@ public class TupleFunDef extends FunDefBase {
                 Exp arg = args[i];
                 types[i] = TypeUtil.toMemberType(arg.getType());
             }
-            checkDimensions(types);
+            TupleType.checkDimensions(types);
             return new TupleType(types);
         }
     }
@@ -82,21 +82,6 @@ public class TupleFunDef extends FunDefBase {
             memberCalcs[i] = compiler.compileMember(args[i]);
         }
         return new CalcImpl(call, memberCalcs);
-    }
-
-    private void checkDimensions(MemberType[] memberTypes) {
-        for (int i = 0; i < memberTypes.length; i++) {
-            MemberType memberType = memberTypes[i];
-            for (int j = 0; j < i; j++) {
-                MemberType member1 = memberTypes[j];
-                final Dimension dimension = memberType.getDimension();
-                final Dimension dimension1 = member1.getDimension();
-                if (dimension != null && dimension == dimension1) {
-                    throw MondrianResource.instance().DupDimensionsInTuple.ex(
-                            dimension.getUniqueName());
-                }
-            }
-        }
     }
 
     public static class CalcImpl extends AbstractTupleCalc {
@@ -130,7 +115,10 @@ public class TupleFunDef extends FunDefBase {
         }
 
         public FunDef resolve(
-                Exp[] args, Validator validator, int[] conversionCount) {
+            Exp[] args,
+            Validator validator,
+            List<Conversion> conversions)
+        {
             // Compare with TupleFunDef.getReturnCategory().  For example,
             //   ([Gender].members) is a set,
             //   ([Gender].[M]) is a member,
@@ -148,7 +136,7 @@ public class TupleFunDef extends FunDefBase {
                     //  OK: ([Gender], [Time])           (dimension, dimension)
                     // Not OK: ([Gender].[S], [Store].[Store City]) (member, level)
                     if (!validator.canConvert(
-                            arg, Category.Member, conversionCount)) {
+                            arg, Category.Member, conversions)) {
                         return null;
                     }
                     argTypes[i] = Category.Member;

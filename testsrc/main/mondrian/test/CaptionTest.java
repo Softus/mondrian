@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/CaptionTest.java#2 $
+// $Id: //open/mondrian/testsrc/main/mondrian/test/CaptionTest.java#13 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -20,7 +20,7 @@ import java.util.List;
 /**
  * Unit test special "caption" settings.
  *
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/CaptionTest.java#2 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/test/CaptionTest.java#13 $
  * @author hhaas
  */
 public class CaptionTest extends TestCase {
@@ -85,7 +85,7 @@ public class CaptionTest extends TestCase {
             "<?xml version=\"1.0\"?>\n" +
             "<Schema name=\"FoodMart\">\n" +
             "<!--\n" +
-            "  == $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/CaptionTest.java#2 $\n" +
+            "  == $Id: //open/mondrian/testsrc/main/mondrian/test/CaptionTest.java#13 $\n" +
             "  == This software is subject to the terms of the Common Public License\n" +
             "  == Agreement, available at the following URL:\n" +
             "  == http://www.opensource.org/licenses/cpl.html.\n" +

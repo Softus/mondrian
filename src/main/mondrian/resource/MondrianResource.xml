@@ -4,12 +4,12 @@
  !DOCTYPE resourceBundle SYSTEM "Resource.dtd"
   -->
 <!--
-  == $Id: //open/mondrian-release/3.0/src/main/mondrian/resource/MondrianResource.xml#3 $
+  == $Id: //open/mondrian/src/main/mondrian/resource/MondrianResource.xml#35 $
   == This software is subject to the terms of the Common Public License
   == Agreement, available at the following URL:
   == http://www.opensource.org/licenses/cpl.html.
   == (C) Copyright 2000-2002 Kana Software, Inc.
-  == (C) Copyright 2002-2007 Julian Hyde and others
+  == (C) Copyright 2002-2008 Julian Hyde and others
   == All Rights Reserved.
   == You must accept the terms of that agreement to use this software.
   ==
@@ -181,7 +181,7 @@
 </exception>
 
 <exception id="350440" name="MoreThanOneFunctionMatchesSignature">
-    <text>More than one function matches signature ''{0}''</text>
+    <text>More than one function matches signature ''{0}''; they are: {1}</text>
 </exception>
 
 <exception id="350450" name="MemberNotInLevelHierarchy">
@@ -221,11 +221,15 @@
 </exception>
 
 <exception id="350540" name="InvalidAxis">
-    <text>Invalid axis specification. The axis number must be an integer between 0 and {0,number}, but it was {1,number}.</text>
+    <text>Invalid axis specification. The axis number must be non-negative integer, but it was {0,number}.</text>
 </exception>
 
 <exception id="350545" name="DuplicateAxis">
     <text>Duplicate axis name ''{0}''.</text>
+</exception>
+
+<exception id="350547" name="NonContiguousAxis">
+    <text>Axis numbers specified in a query must be sequentially specified, and cannot contain gaps. Axis {0,number} ({1}) is missing.</text>
 </exception>
 
 <exception id="350550" name="DupDimensionsInTuple">
@@ -262,6 +266,10 @@
 
 <exception id="350600" name="NoTimeDimensionInCube">
     <text>Cannot use the function ''{0}'', no time dimension is available for this cube.</text>
+</exception>
+
+<exception id="350610" name="CannotImplicitlyConvertDimensionToHierarchy">
+    <text>The ''{0}'' dimension contains more than one hierarchy, therefore the hierarchy must be explicitly specified.</text>
 </exception>
 
 <!-- ====================================================================== -->
@@ -337,7 +345,7 @@
 </exception>
 
 <exception id="40170" name="HierarchyMustHaveForeignKey">
-    <text>Hierarchy ''{0}'' in cube ''{1}'' must have a foreign key, since it is not based on the cube's fact table.</text>
+    <text>Hierarchy ''{0}'' in cube ''{1}'' must have a foreign key, since it is not based on the cube''s fact table.</text>
 </exception>
 
 <exception id="40180" name="HierarchyInvalidForeignKey">
@@ -390,6 +398,18 @@
 
 <exception id="40310" name="UnknownRole">
     <text>Unknown role ''{0}''</text>
+</exception>
+
+<exception id="40320" name="DescendantsAppliedToSetOfTuples">
+    <text>Argument to Descendants function must be a member or set of members, not a set of tuples</text>
+</exception>
+
+<exception id="40330" name="CannotDeduceTypeOfSet">
+    <text>Cannot deduce type of set</text>
+</exception>
+
+<exception id="40340" name="NotANamedSet">
+    <text>Not a named set</text>
 </exception>
 
 <!-- ====================================================================== -->
@@ -582,7 +602,7 @@
 </exception>
 
 <exception id="700404" name="AggLoadingExceededErrorCount">
-    <text>Too many errors, ''{0,number}'', while loading/reloadin aggregates.</text>
+    <text>Too many errors, ''{0,number}'', while loading/reloading aggregates.</text>
 </exception>
 
 <message id="7000406" name="UnknownFactTableColumn">

@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/xmla/XmlaException.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/xmla/XmlaException.java#4 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -17,7 +17,7 @@ import mondrian.olap.MondrianException;
  * to the SOAP Fault faultstring.
  *
  * @author <a>Richard M. Emberson</a>
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/xmla/XmlaException.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/xmla/XmlaException.java#4 $
  */
 public class XmlaException extends MondrianException {
 
@@ -81,4 +81,6 @@ public class XmlaException extends MondrianException {
             : t.getClass().getName();
     }
 }
+
+// End XmlaException.java
 

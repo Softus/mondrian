@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/MedianFunDef.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/fun/MedianFunDef.java#6 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -25,7 +25,7 @@ import java.util.List;
  * Definition of the <code>Median</code> MDX functions.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/MedianFunDef.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/MedianFunDef.java#6 $
  * @since Mar 23, 2006
  */
 class MedianFunDef extends AbstractAggregateFunDef {
@@ -49,7 +49,7 @@ class MedianFunDef extends AbstractAggregateFunDef {
         return new AbstractDoubleCalc(call, new Calc[] {listCalc, calc}) {
             public double evaluateDouble(Evaluator evaluator) {
                 List memberList = evaluateCurrentList(listCalc, evaluator);
-                return percentile(evaluator.push(), memberList, calc, 0.5);
+                return percentile(evaluator.push(false), memberList, calc, 0.5);
             }
 
             public boolean dependsOn(Dimension dimension) {

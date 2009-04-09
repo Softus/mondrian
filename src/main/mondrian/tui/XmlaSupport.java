@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/tui/XmlaSupport.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/tui/XmlaSupport.java#16 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2007 Julian Hyde and others
+// Copyright (C) 2005-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -55,7 +55,7 @@ import javax.xml.transform.TransformerConfigurationException;
  * the responses.
  *
  * @author Richard M. Emberson
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/tui/XmlaSupport.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/tui/XmlaSupport.java#16 $
  */
 public class XmlaSupport {
     private static final Logger LOGGER = Logger.getLogger(XmlaSupport.class);
@@ -442,17 +442,16 @@ public class XmlaSupport {
         return XmlaSupport.xmlaRootXPath;
     }
 
-
-
     public static Node[] extractNodesFromSoapXmla(byte[] bytes)
-            throws SAXException, IOException {
+        throws SAXException, IOException
+    {
         Document doc = XmlUtil.parse(bytes);
         return extractNodesFromSoapXmla(doc);
     }
 
     public static Node[] extractNodesFromSoapXmla(Document doc)
-            throws SAXException, IOException {
-
+        throws SAXException, IOException
+    {
         final String xmlaPrefix = "xmla";
         String xpath = getSoapXmlaRootXPath(xmlaPrefix);
 
@@ -464,18 +463,18 @@ public class XmlaSupport {
         };
 
         return extractNodes(doc, xpath, nsArray);
-
     }
 
     public static Node[] extractNodesFromXmla(byte[] bytes)
-            throws SAXException, IOException {
+        throws SAXException, IOException
+    {
         Document doc = XmlUtil.parse(bytes);
         return extractNodesFromXmla(doc);
     }
 
     public static Node[] extractNodesFromXmla(Document doc)
-            throws SAXException, IOException {
-
+        throws SAXException, IOException
+    {
         final String xmlaPrefix = "xmla";
         String xpath = getXmlaRootXPath(xmlaPrefix);
 
@@ -541,9 +540,11 @@ public class XmlaSupport {
      * @throws IOException
      */
     public static Node[] extractNodes(
-            Node node, String xpath, String[][] nsArray)
-            throws SAXException, IOException {
-
+        Node node,
+        String xpath,
+        String[][] nsArray)
+        throws SAXException, IOException
+    {
         Document contextDoc = XmlUtil.createContextDocument(nsArray);
         Node[] nodes = XmlUtil.selectAsNodes(node, xpath, contextDoc);
 
@@ -604,8 +605,6 @@ public class XmlaSupport {
         // read soap file
         File dsFile = null;
         try {
-
-
             // Create datasource file and put datasource xml into it.
             // Mark it as delete on exit.
             String dataSourceText =
@@ -697,21 +696,30 @@ public class XmlaSupport {
 
         return servlet;
     }
-    public static byte[] processSoapXmla(File file, Servlet servlet)
-            throws IOException, ServletException, SAXException {
 
+    public static byte[] processSoapXmla(
+        File file,
+        Servlet servlet)
+        throws IOException, ServletException, SAXException
+    {
         String requestText = XmlaSupport.readFile(file);
         return processSoapXmla(requestText, servlet);
     }
-    public static byte[] processSoapXmla(Document doc, Servlet servlet)
-            throws IOException, ServletException, SAXException {
 
+    public static byte[] processSoapXmla(
+        Document doc,
+        Servlet servlet)
+        throws IOException, ServletException, SAXException
+    {
         String requestText = XmlUtil.toString(doc, false);
         return processSoapXmla(requestText, servlet);
     }
-    public static byte[] processSoapXmla(String requestText, Servlet servlet)
-            throws IOException, ServletException, SAXException {
 
+    public static byte[] processSoapXmla(
+        String requestText,
+        Servlet servlet)
+        throws IOException, ServletException, SAXException
+    {
         byte[] reqBytes = requestText.getBytes();
         // make request
         MockHttpServletRequest req = new MockHttpServletRequest(reqBytes);
@@ -737,10 +745,10 @@ public class XmlaSupport {
      *
      */
     public static boolean validateSchemaSoapXmla(byte[] bytes)
-            throws SAXException, IOException,
-                ParserConfigurationException,
-                TransformerException {
-
+        throws SAXException, IOException,
+               ParserConfigurationException,
+               TransformerException
+    {
         return validateEmbeddedSchema(
             bytes,
             XmlUtil.getSoapXmlaXds2xs("xmla"),
@@ -864,11 +872,12 @@ public class XmlaSupport {
      *
      */
     public static boolean validateSchemaXmla(byte[] bytes)
-            throws SAXException, IOException,
-                ParserConfigurationException,
-                TransformerException {
-
-        return validateEmbeddedSchema(bytes,
+        throws SAXException, IOException,
+               ParserConfigurationException,
+               TransformerException
+    {
+        return validateEmbeddedSchema(
+            bytes,
             XmlUtil.getXmlaXds2xs("xmla"),
             XmlUtil.getXmlaXds2xd("xmla"));
     }
@@ -883,8 +892,8 @@ public class XmlaSupport {
      * the DOMs removing the schema nodes from the XMLA root node.
      */
     public static boolean validateSoapXmlaUsingXpath(byte[] bytes)
-            throws SAXException, IOException {
-
+        throws SAXException, IOException
+    {
         if (! XmlUtil.supportsValidation()) {
             return false;
         }
@@ -899,8 +908,8 @@ public class XmlaSupport {
      *
      */
     public static boolean validateXmlaUsingXpath(byte[] bytes)
-            throws SAXException, IOException {
-
+        throws SAXException, IOException
+    {
         if (! XmlUtil.supportsValidation()) {
             return false;
         }
@@ -916,8 +925,8 @@ public class XmlaSupport {
      * @return  true if validation succeeded, false if validation was not tried
      */
     public static boolean validateNodes(Node[] nodes)
-            throws SAXException, IOException {
-
+        throws SAXException, IOException
+    {
         if (! XmlUtil.supportsValidation()) {
             return false;
         }
@@ -959,14 +968,14 @@ public class XmlaSupport {
      *
      */
     public static boolean validateEmbeddedSchema(
-            byte[] bytes,
-            String schemaTransform,
-            String dataTransform)
-            throws SAXException, IOException,
-                ParserConfigurationException,
-                TransformerException,
-                TransformerConfigurationException {
-
+        byte[] bytes,
+        String schemaTransform,
+        String dataTransform)
+        throws SAXException, IOException,
+               ParserConfigurationException,
+               TransformerException,
+               TransformerConfigurationException
+    {
         if (! XmlUtil.supportsValidation()) {
             return false;
         }
@@ -992,14 +1001,14 @@ public class XmlaSupport {
      *
      */
     public static boolean validateEmbeddedSchema(
-            Document doc,
-            String schemaTransform,
-            String dataTransform)
-            throws SAXException, IOException,
-                ParserConfigurationException,
-                TransformerException,
-                TransformerConfigurationException {
-
+        Document doc,
+        String schemaTransform,
+        String dataTransform)
+        throws SAXException, IOException,
+               ParserConfigurationException,
+               TransformerException,
+               TransformerConfigurationException
+    {
         if (! XmlUtil.supportsValidation()) {
             return false;
         }
@@ -1016,7 +1025,7 @@ public class XmlaSupport {
         }
         String dataStr = XmlUtil.toString(dataDoc, false);
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("XmlaSupport.validateEmbeddedSchema: dataDoc:\n="+dataStr);
+            LOGGER.debug("XmlaSupport.validateEmbeddedSchema: dataDoc:\n=" + dataStr);
         }
         if (! (dataDoc instanceof Document)) {
             LOGGER.warn("XmlaSupport.validateEmbeddedSchema: dataDoc not Document");
@@ -1036,7 +1045,7 @@ public class XmlaSupport {
         }
         String schemaStr = XmlUtil.toString(schemaDoc, false);
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("XmlaSupport.validateEmbeddedSchema: schemaDoc:\n="+schemaStr);
+            LOGGER.debug("XmlaSupport.validateEmbeddedSchema: schemaDoc:\n=" + schemaStr);
         }
         if (! (schemaDoc instanceof Document)) {
             LOGGER.warn("XmlaSupport.validateEmbeddedSchema: schemaDoc not Document");
@@ -1095,5 +1104,8 @@ public class XmlaSupport {
     }
 
 
-    private XmlaSupport() {}
+    private XmlaSupport() {
+    }
 }
+
+// End XmlaSupport.java

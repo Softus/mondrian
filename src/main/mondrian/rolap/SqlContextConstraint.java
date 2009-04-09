@@ -43,23 +43,29 @@ public class SqlContextConstraint implements MemberChildrenConstraint,
     private boolean strict;
 
     /**
+     * @param context evaluation context
+     * @param strict false if more rows than requested may be returned
+     * (i.e. the constraint is incomplete)
+     *
      * @return false if this contstraint will not work for the current context
      */
-    public static boolean isValidContext(Evaluator context) {
-        return isValidContext(context, true, null);
+    public static boolean isValidContext(Evaluator context, boolean strict) {
+        return isValidContext(context, true, null, strict);
     }
 
     /**
      * @param context evaluation context
      * @param disallowVirtualCube if true, check for virtual cubes
      * @param levels levels being referenced in the current context
+     * @param strict false if more rows than requested may be returned
+     * (i.e. the constraint is incomplete)
      *
      * @return false if constraint will not work for current context
      */
     public static boolean isValidContext(
         Evaluator context,
         boolean disallowVirtualCube,
-        Level [] levels)
+        Level [] levels, boolean strict)
     {
         if (context == null) {
             return false;
@@ -73,14 +79,15 @@ public class SqlContextConstraint implements MemberChildrenConstraint,
         if (cube.isVirtual()) {
             Query query = context.getQuery();
             Set<RolapCube> baseCubes = new HashSet<RolapCube>();
-            if (!findVirtualCubeBaseCubes(query, baseCubes)) {
+            List<RolapCube> baseCubeList = new ArrayList<RolapCube>();
+            if (!findVirtualCubeBaseCubes(query, baseCubes, baseCubeList)) {
                 return false;
             }
-            assert(levels != null);
+            assert levels != null;
             // we need to make sure all the levels join with each fact table;
             // otherwise, it doesn't make sense to do the processing
             // natively, as you'll end up with cartesian product joins!
-            // for each rolap cube, make sure there is a base cube level 
+            // for each rolap cube, make sure there is a base cube level
             // equivalent
             for (RolapCube baseCube : baseCubes) {
                 for (Level level : levels) {
@@ -90,8 +97,21 @@ public class SqlContextConstraint implements MemberChildrenConstraint,
                     }
                 }
             }
-                        
-            query.setBaseCubes(baseCubes);
+
+            query.setBaseCubes(baseCubeList);
+        }
+
+        // may return more rows than requested?
+        if (!strict) {
+            return true;
+        }
+
+        // we can not handle calc members in slicer except calc measure
+        Member[] members = ((RolapEvaluator)context).getMembers();
+        for (int i = 1; i < members.length; i++) {
+            if (members[i].isCalculated()) {
+                return false;
+            }
         }
         return true;
     }
@@ -106,7 +126,8 @@ public class SqlContextConstraint implements MemberChildrenConstraint,
      */
     private static boolean findVirtualCubeBaseCubes(
         Query query,
-        Set<RolapCube> baseCubes)
+        Set<RolapCube> baseCubes,
+        List<RolapCube> baseCubeList)
     {
         // Gather the unique set of level-to-column maps corresponding
         // to the underlying star/cube where the measure column
@@ -122,9 +143,9 @@ public class SqlContextConstraint implements MemberChildrenConstraint,
         }
         for (Member member : query.getMeasuresMembers()) {
             if (member instanceof RolapStoredMeasure) {
-                addMeasure((RolapStoredMeasure) member, baseCubes);
+                addMeasure((RolapStoredMeasure) member, baseCubes, baseCubeList);
             } else if (member instanceof RolapCalculatedMember) {
-                findMeasures(member.getExpression(), baseCubes);
+                findMeasures(member.getExpression(), baseCubes, baseCubeList);
             }
         }
         if (baseCubes.isEmpty()) {
@@ -142,10 +163,13 @@ public class SqlContextConstraint implements MemberChildrenConstraint,
      */
     private static void addMeasure(
         RolapStoredMeasure measure,
-        Set<RolapCube> baseCubes) 
+        Set<RolapCube> baseCubes,
+        List<RolapCube> baseCubeList)
     {
         RolapCube baseCube = measure.getCube();
-        baseCubes.add(baseCube);
+        if (baseCubes.add(baseCube)) {
+            baseCubeList.add(baseCube);
+        }
     }
 
     /**
@@ -156,21 +180,22 @@ public class SqlContextConstraint implements MemberChildrenConstraint,
      */
     private static void findMeasures(
         Exp exp,
-        Set<RolapCube> baseCubes) 
+        Set<RolapCube> baseCubes,
+        List<RolapCube> baseCubeList)
     {
         if (exp instanceof MemberExpr) {
             MemberExpr memberExpr = (MemberExpr) exp;
             Member member = memberExpr.getMember();
             if (member instanceof RolapStoredMeasure) {
-                addMeasure((RolapStoredMeasure) member, baseCubes);
+                addMeasure((RolapStoredMeasure) member, baseCubes, baseCubeList);
             } else if (member instanceof RolapCalculatedMember) {
-                findMeasures(member.getExpression(), baseCubes);
+                findMeasures(member.getExpression(), baseCubes, baseCubeList);
             }
         } else if (exp instanceof ResolvedFunCall) {
             ResolvedFunCall funCall = (ResolvedFunCall) exp;
             Exp [] args = funCall.getArgs();
             for (Exp arg : args) {
-                findMeasures(arg, baseCubes);
+                findMeasures(arg, baseCubes, baseCubeList);
             }
         }
     }
@@ -223,8 +248,11 @@ public class SqlContextConstraint implements MemberChildrenConstraint,
         }
         Evaluator e = evaluator.push(parent);
         SqlConstraintUtils.addContextConstraint(sqlQuery, aggStar, e, strict);
-        SqlConstraintUtils.addMemberConstraint(
-                sqlQuery, baseCube, aggStar, parent, true);
+
+        // comment out addMemberConstraint here since constraint
+        // is already added by addContextConstraint
+        // SqlConstraintUtils.addMemberConstraint(
+        //        sqlQuery, baseCube, aggStar, parent, true);
     }
 
     /**
@@ -247,9 +275,13 @@ public class SqlContextConstraint implements MemberChildrenConstraint,
      * Called from LevelMembers: restricts the SQL resultset to the current
      * context.
      */
-    public void addConstraint(SqlQuery sqlQuery, RolapCube baseCube) {
+    public void addConstraint(
+            SqlQuery sqlQuery,
+            RolapCube baseCube,
+            AggStar aggStar)
+    {
         SqlConstraintUtils.addContextConstraint(
-            sqlQuery, null, evaluator, strict);
+            sqlQuery, aggStar, evaluator, strict);
     }
 
     /**
@@ -275,7 +307,7 @@ public class SqlContextConstraint implements MemberChildrenConstraint,
         SqlQuery sqlQuery,
         RolapCube baseCube,
         AggStar aggStar,
-        RolapLevel level) 
+        RolapLevel level)
     {
         if (!isJoinRequired()) {
             return;

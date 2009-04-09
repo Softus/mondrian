@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/CountFunDef.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/fun/CountFunDef.java#8 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2007 Julian Hyde
+// Copyright (C) 2006-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -23,7 +23,7 @@ import java.util.List;
  * Definition of the <code>Count</code> MDX function.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/CountFunDef.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/CountFunDef.java#8 $
  * @since Mar 23, 2006
  */
 class CountFunDef extends AbstractAggregateFunDef {
@@ -42,9 +42,9 @@ class CountFunDef extends AbstractAggregateFunDef {
     }
 
     public Calc compileCall(ResolvedFunCall call, ExpCompiler compiler) {
-        final Calc calc = compiler.compileAs(call.getArg(0),
-            null, ResultStyle.ITERABLE_ANY
-        );
+        final Calc calc =
+            compiler.compileAs(
+                call.getArg(0), null, ResultStyle.ITERABLE_ANY);
         final boolean includeEmpty =
                 call.getArgCount() < 2 ||
                 ((Literal) call.getArg(1)).getValue().equals(
@@ -65,6 +65,7 @@ class CountFunDef extends AbstractAggregateFunDef {
                     return count(evaluator, iterable, includeEmpty);
                 }
 */
+                evaluator = evaluator.push(false);
                 if (calc instanceof IterCalc) {
                     IterCalc iterCalc = (IterCalc) calc;
                     Iterable iterable =
@@ -124,7 +125,7 @@ class CountFunDef extends AbstractAggregateFunDef {
                 // COUNT(<set>, EXCLUDEEMPTY) depends only on the
                 // dimensions that <Set> depends on, plus all
                 // dimensions not masked by the set.
-                if (memberListCalc.getType().usesDimension(dimension, true) ) {
+                if (memberListCalc.getType().usesDimension(dimension, true)) {
                     return false;
                 }
                 return true;

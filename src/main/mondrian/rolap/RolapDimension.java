@@ -1,10 +1,10 @@
 /*
- // $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/RolapDimension.java#3 $
+ // $Id: //open/mondrian/src/main/mondrian/rolap/RolapDimension.java#33 $
  // This software is subject to the terms of the Common Public License
  // Agreement, available at the following URL:
  // http://www.opensource.org/licenses/cpl.html.
  // Copyright (C) 2001-2002 Kana Software, Inc.
- // Copyright (C) 2001-2007 Julian Hyde and others
+ // Copyright (C) 2001-2008 Julian Hyde and others
  // All Rights Reserved.
  // You must accept the terms of that agreement to use this software.
  //
@@ -54,7 +54,7 @@ import mondrian.resource.MondrianResource;
  *
  * @author jhyde
  * @since 10 August, 2001
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/RolapDimension.java#3 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/RolapDimension.java#33 $
  */
 class RolapDimension extends DimensionBase {
 
@@ -62,10 +62,15 @@ class RolapDimension extends DimensionBase {
 
     private final Schema schema;
 
-    RolapDimension(Schema schema, String name, DimensionType dimensionType) {
+    RolapDimension(
+        Schema schema,
+        String name,
+        DimensionType dimensionType,
+        final boolean highCardinality)
+    {
         // todo: recognition of a time dimension should be improved
         // allow multiple time dimensions
-        super(name, dimensionType);
+        super(name, dimensionType, highCardinality);
         this.schema = schema;
         this.hierarchies = new RolapHierarchy[0];
     }
@@ -75,11 +80,17 @@ class RolapDimension extends DimensionBase {
      *
      * @pre schema != null
      */
-    RolapDimension(RolapSchema schema,
-                   RolapCube cube,
-                   MondrianDef.Dimension xmlDimension,
-                   MondrianDef.CubeDimension xmlCubeDimension) {
-        this(schema, xmlDimension.name, xmlDimension.getDimensionType());
+    RolapDimension(
+        RolapSchema schema,
+        RolapCube cube,
+        MondrianDef.Dimension xmlDimension,
+        MondrianDef.CubeDimension xmlCubeDimension)
+    {
+        this(
+            schema,
+            xmlDimension.name,
+            xmlDimension.getDimensionType(),
+            xmlDimension.highCardinality);
 
         Util.assertPrecondition(schema != null);
 
@@ -92,7 +103,6 @@ class RolapDimension extends DimensionBase {
         }
         this.hierarchies = new RolapHierarchy[xmlDimension.hierarchies.length];
         for (int i = 0; i < xmlDimension.hierarchies.length; i++) {
-
             // remaps the xml hierarchy relation to the fact table.
             // moved out of RolapHierarchy constructor
             // this should eventually be phased out completely
@@ -101,7 +111,7 @@ class RolapDimension extends DimensionBase {
                     cube != null) {
                 xmlDimension.hierarchies[i].relation = cube.fact;
             }
-            
+
             RolapHierarchy hierarchy = new RolapHierarchy(
                 this, xmlDimension.hierarchies[i], xmlCubeDimension);
             hierarchies[i] = hierarchy;
@@ -180,7 +190,7 @@ class RolapDimension extends DimensionBase {
     public int getOrdinal(Cube cube) {
         // this is temporary to verify that all calls to this method are for
         // the measures dimension
-        assert(isMeasures());
+        assert isMeasures();
         return 0;
     }
 

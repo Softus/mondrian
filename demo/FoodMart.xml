@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <Schema name="FoodMart">
 <!--
-  == $Id: //open/mondrian-release/3.0/demo/FoodMart.xml#4 $
+  == $Id: //open/mondrian/demo/FoodMart.xml#75 $
   == This software is subject to the terms of the Common Public License
   == Agreement, available at the following URL:
   == http://www.opensource.org/licenses/cpl.html.
@@ -56,8 +56,7 @@
       <Level name="Month" column="month_of_year" uniqueMembers="false" type="Numeric"
           levelType="TimeMonths"/>
     </Hierarchy>
-    <Hierarchy hasAll="true" name="Weekly" primaryKey="time_id"
-          defaultMember="[Time.Weekly].[All Time.Weeklys].[1997]">
+    <Hierarchy hasAll="true" name="Weekly" primaryKey="time_id">
       <Table name="time_by_day"/>
       <Level name="Year" column="the_year" type="Numeric" uniqueMembers="true"
           levelType="TimeYears"/>
@@ -292,6 +291,12 @@ Iif("sales_fact_1997"."promotion_id" = 0, 0, "sales_fact_1997"."store_sales")
       <SQL dialect="mysql">
 (case when `sales_fact_1997`.`promotion_id` = 0 then 0 else `sales_fact_1997`.`store_sales` end)
       </SQL>
+      <!-- Workaround the fact that Infobright does not have a CASE operator.
+           The simpler expression gives wrong results, so some tests are
+           disabled. -->
+      <SQL dialect="infobright">
+`sales_fact_1997`.`store_sales`
+      </SQL>
       <SQL dialect="derby">
 (case when "sales_fact_1997"."promotion_id" = 0 then 0 else "sales_fact_1997"."store_sales" end)
       </SQL>
@@ -350,6 +355,9 @@ Iif("sales_fact_1997"."promotion_id" = 0, 0, "sales_fact_1997"."store_sales")
   <Measure name="Warehouse Profit" aggregator="sum">
     <MeasureExpression>
       <SQL dialect="mysql">
+`warehouse_sales` - `inventory_fact_1997`.`warehouse_cost`
+      </SQL>
+      <SQL dialect="infobright">
 `warehouse_sales` - `inventory_fact_1997`.`warehouse_cost`
       </SQL>
       <SQL dialect="generic">

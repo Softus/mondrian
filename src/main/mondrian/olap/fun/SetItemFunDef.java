@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/SetItemFunDef.java#3 $
+// $Id: //open/mondrian/src/main/mondrian/olap/fun/SetItemFunDef.java#10 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2007 Julian Hyde
+// Copyright (C) 2006-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -29,7 +29,7 @@ import java.util.ArrayList;
  * </code></blockquote>
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/SetItemFunDef.java#3 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/SetItemFunDef.java#10 $
  * @since Mar 23, 2006
  */
 class SetItemFunDef extends FunDefBase {
@@ -45,9 +45,11 @@ class SetItemFunDef extends FunDefBase {
             "<Set>.Item(<String> [, ...])",
             "Returns a tuple from the set specified in <Set>. The tuple to be returned is specified by the member name (or names) in <String>.",
             Syntax.Method) {
-
         public FunDef resolve(
-                Exp[] args, Validator validator, int[] conversionCount) {
+            Exp[] args,
+            Validator validator,
+            List<Conversion> conversions)
+        {
             if (args.length < 1) {
                 return null;
             }
@@ -65,7 +67,7 @@ class SetItemFunDef extends FunDefBase {
             // All args must be strings.
             for (int i = 1; i < args.length; i++) {
                 if (!validator.canConvert(
-                        args[i], Category.String, conversionCount)) {
+                        args[i], Category.String, conversions)) {
                     return null;
                 }
             }
@@ -116,7 +118,7 @@ class SetItemFunDef extends FunDefBase {
             if (isString) {
                 return new AbstractTupleCalc(call, calcs) {
                     public Member[] evaluateTuple(Evaluator evaluator) {
-                        final List<Member[]> list = listCalc.evaluateList(evaluator);
+                        final List<Member[]> list = listCalc.evaluateList(evaluator.push(false));
                         assert list != null;
                         String[] results = new String[stringCalcs.length];
                         for (int i = 0; i < stringCalcs.length; i++) {
@@ -143,7 +145,7 @@ class SetItemFunDef extends FunDefBase {
             } else {
                 return new AbstractTupleCalc(call, calcs) {
                     public Member[] evaluateTuple(Evaluator evaluator) {
-                        final List list = listCalc.evaluateList(evaluator);
+                        final List<Member[]> list = listCalc.evaluateList(evaluator.push(false));
                         assert list != null;
                         final int index = indexCalc.evaluateInteger(evaluator);
                         int listSize = list.size();
@@ -161,7 +163,7 @@ class SetItemFunDef extends FunDefBase {
             if (isString) {
                 return new AbstractMemberCalc(call, calcs) {
                     public Member evaluateMember(Evaluator evaluator) {
-                        final List<Member> list = listCalc.evaluateList(evaluator);
+                        final List<Member> list = listCalc.evaluateList(evaluator.push(false));
                         assert list != null;
                         final String result =
                                 stringCalcs[0].evaluateString(evaluator);
@@ -176,7 +178,7 @@ class SetItemFunDef extends FunDefBase {
             } else {
                 return new AbstractMemberCalc(call, calcs) {
                     public Member evaluateMember(Evaluator evaluator) {
-                        final List list = listCalc.evaluateList(evaluator);
+                        final List list = listCalc.evaluateList(evaluator.push(false));
                         assert list != null;
                         final int index = indexCalc.evaluateInteger(evaluator);
                         int listSize = list.size();

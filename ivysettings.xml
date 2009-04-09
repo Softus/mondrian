@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  == $Id: //open/mondrian-release/3.0/ivysettings.xml#3 $
+  == $Id: //open/mondrian/ivysettings.xml#3 $
   == This software is subject to the terms of the Common Public License
   == Agreement, available at the following URL:
   == http://www.opensource.org/licenses/cpl.html.
@@ -12,7 +12,7 @@
   <settings defaultResolver="chain"/>
   <resolvers>
     <chain name="chain">
-      <url name="pentaho-repo" m2compatible="true">
+      <url name="pentaho-rep" m2compatible="true">
         <artifact pattern="http://repo.pentaho.org/artifactory/repo/[organisation]/[module]/[revision]/[artifact]-[revision].[ext]" />
         <artifact pattern="http://repo.pentaho.org/artifactory/repo/[organisation]/[module]/[revision]/[artifact].[ext]" />
       </url>

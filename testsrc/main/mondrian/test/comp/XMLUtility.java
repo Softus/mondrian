@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/comp/XMLUtility.java#2 $
+// $Id: //open/mondrian/testsrc/main/mondrian/test/comp/XMLUtility.java#10 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2004-2007 Julian Hyde and others
+// Copyright (C) 2004-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -60,8 +60,9 @@ class XMLUtility {
             }
 
             DocumentBuilder documentBuilder = factory.newDocumentBuilder();
-            if (handler != null)
+            if (handler != null) {
                 documentBuilder.setErrorHandler(handler);
+            }
             return documentBuilder;
         } catch (ParserConfigurationException e) {
             return null;
@@ -93,8 +94,9 @@ class XMLUtility {
 
             serializer.serialize(document);
         } finally {
-            if (writer != null)
+            if (writer != null) {
                 writer.close();
+            }
         }
     }
 
@@ -114,14 +116,12 @@ class XMLUtility {
                     enc.charAt(idx + 3) == ';') {
                 result.append('<');
                 idx += 3;
-            }
-            else if (ch == '&' && enc.charAt(idx + 1) == 'g' &&
+            } else if (ch == '&' && enc.charAt(idx + 1) == 'g' &&
                     enc.charAt(idx + 2) == 't' &&
                     enc.charAt(idx + 3) == ';') {
                 result.append('>');
                 idx += 3;
-            }
-            else {
+            } else {
                 result.append(ch);
             }
         }
@@ -151,7 +151,7 @@ class XMLUtility {
 
     public static String toString(Element xmlRoot) {
         stripWhitespace(xmlRoot);
-        return XOMUtil.wrapperToXml(new W3CDOMWrapper(xmlRoot), false);
+        return XOMUtil.wrapperToXml(new W3CDOMWrapper(xmlRoot, null), false);
     }
 
     public static class UtilityErrorHandler implements ErrorHandler {

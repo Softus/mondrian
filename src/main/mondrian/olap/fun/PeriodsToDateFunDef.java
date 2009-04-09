@@ -1,18 +1,16 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/PeriodsToDateFunDef.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/fun/PeriodsToDateFunDef.java#6 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2006 Julian Hyde
+// Copyright (C) 2006-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
 package mondrian.olap.fun;
 
 import mondrian.olap.*;
-import mondrian.olap.type.Type;
-import mondrian.olap.type.SetType;
-import mondrian.olap.type.MemberType;
+import mondrian.olap.type.*;
 import mondrian.resource.MondrianResource;
 import mondrian.calc.Calc;
 import mondrian.calc.ExpCompiler;
@@ -27,7 +25,7 @@ import java.util.List;
  * Definition of the <code>PeriodsToDate</code> MDX function.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/PeriodsToDateFunDef.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/PeriodsToDateFunDef.java#6 $
  * @since Mar 23, 2006
  */
 class PeriodsToDateFunDef extends FunDefBase {
@@ -46,22 +44,30 @@ class PeriodsToDateFunDef extends FunDefBase {
         if (args.length == 0) {
             // With no args, the default implementation cannot
             // guess the hierarchy.
-            Dimension defaultTimeDimension = 
+            Dimension defaultTimeDimension =
                 validator.getQuery().getCube().getTimeDimension();
             if (defaultTimeDimension == null) {
-                throw MondrianResource.instance().
-                            NoTimeDimensionInCube.ex(getName());
+                throw MondrianResource.instance().NoTimeDimensionInCube.ex(
+                    getName());
             }
             Hierarchy hierarchy = defaultTimeDimension.getHierarchy();
-            return new SetType(
-                    MemberType.forHierarchy(hierarchy));
+            return new SetType(MemberType.forHierarchy(hierarchy));
         }
-        final Type type = args[0].getType();
-        if (type.getDimension() == null ||
-            type.getDimension().getDimensionType() !=
-                mondrian.olap.DimensionType.TimeDimension) {
-            throw MondrianResource.instance().TimeArgNeeded.ex(getName());
+
+        if (args.length >= 2) {
+            Type hierarchyType = args[0].getType();
+            MemberType memberType = (MemberType) args[1].getType();
+            if (memberType.getHierarchy() != null
+                && hierarchyType.getHierarchy() != null
+                && memberType.getHierarchy() != hierarchyType.getHierarchy()) {
+                throw Util.newError(
+                    "Type mismatch: member must belong to hierarchy " +
+                        hierarchyType.getHierarchy().getUniqueName());
+            }
         }
+
+        // If we have at least one arg, it's a level which will
+        // tell us the type.
         return super.getResultType(validator, args);
     }
 
@@ -76,7 +82,7 @@ class PeriodsToDateFunDef extends FunDefBase {
                 null;
         final Dimension timeDimension = compiler
                 .getEvaluator().getCube().getTimeDimension();
-        
+
         return new AbstractListCalc(call, new Calc[] {levelCalc, memberCalc}) {
             public List evaluateList(Evaluator evaluator) {
                 final Member member;

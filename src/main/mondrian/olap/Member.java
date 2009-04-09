@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/Member.java#3 $
+// $Id: //open/mondrian/src/main/mondrian/olap/Member.java#26 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 1999-2002 Kana Software, Inc.
-// Copyright (C) 2001-2007 Julian Hyde and others
+// Copyright (C) 2001-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -12,6 +12,8 @@
 */
 
 package mondrian.olap;
+
+import java.util.List;
 
 /**
  * A <code>Member</code> is a 'point' on a dimension of a cube. Examples are
@@ -97,17 +99,27 @@ public interface Member extends OlapElement, Comparable {
      * member</code> clause in an mdx query or a calculated member defined in
      * cube. */
     boolean isCalculated();
+
+    /**
+     * Returns whether this member should be evaluated within the Evaluator, normally
+     * isCalculated() and isEvaluated() should return the same value, but in situations
+     * where mondrian would like to treat the two concepts separately such in role based
+     * security, these values may differ.
+     *
+     * @return true if evaluated
+     */
+    boolean isEvaluated();
     int getSolveOrder();
     Exp getExpression();
 
     /**
-     * Returns array of all members, which are ancestor to <code>this</code>.
+     * Returns a list of the ancestor members of this member.
      */
-    Member[] getAncestorMembers();
+    List<Member> getAncestorMembers();
 
     /**
-     * Returns whether this member is computed from a <code>with member</code>
-     * clause in an mdx query.
+     * Returns whether this member is computed from a {@code WITH MEMBER}
+     * clause in an MDX query.
      */
     boolean isCalculatedInQuery();
 

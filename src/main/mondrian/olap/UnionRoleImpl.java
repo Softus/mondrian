@@ -18,7 +18,7 @@ import java.util.ArrayList;
  * @see mondrian.olap.RoleImpl#union(java.util.List)
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/UnionRoleImpl.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/UnionRoleImpl.java#1 $
  * @since Nov 26, 2007
  */
 class UnionRoleImpl implements Role {

@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/agg/MemberTuplePredicate.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/agg/MemberTuplePredicate.java#6 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2007-2007 Julian Hyde
+// Copyright (C) 2007-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -29,13 +29,13 @@ import java.util.Arrays;
  * above or below a member, or a range between two members.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/agg/MemberTuplePredicate.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/agg/MemberTuplePredicate.java#6 $
  */
 public class MemberTuplePredicate implements StarPredicate {
     private final Bound[] bounds;
     private final List<RolapStar.Column> columnList;
     private BitKey columnBitKey;
-    
+
     /**
      * Creates a MemberTuplePredicate which evaluates to true for a given
      * range of members.
@@ -112,8 +112,7 @@ public class MemberTuplePredicate implements StarPredicate {
 
     private List<RolapStar.Column> computeColumnList(
         RolapMember member,
-        RolapCube baseCube
-    )
+        RolapCube baseCube)
     {
         List<RolapStar.Column> columnList = new ArrayList<RolapStar.Column>();
         while (true) {

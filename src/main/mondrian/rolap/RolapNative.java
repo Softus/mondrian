@@ -2,7 +2,7 @@
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2003-2007 Julian Hyde
+// Copyright (C) 2003-2008 Julian Hyde
 // Copyright (C) 2004-2005 TONBELLER AG
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
@@ -27,7 +27,7 @@ import mondrian.olap.NativeEvaluator;
  * in SQL then a NativeEvaluator will be returned that performs the computations
  * in SQL. Otherwise null will be returned.
  *
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/RolapNative.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/RolapNative.java#6 $
  */
 public abstract class RolapNative {
 
@@ -55,7 +55,6 @@ public abstract class RolapNative {
         TupleReader getTupleReader() {
             return tupleReader;
         }
-
     }
 
     interface Listener {

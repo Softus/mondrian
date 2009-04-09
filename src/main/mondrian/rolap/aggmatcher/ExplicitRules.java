@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/aggmatcher/ExplicitRules.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/aggmatcher/ExplicitRules.java#21 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2007 Julian Hyde and others
+// Copyright (C) 2005-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -27,7 +27,7 @@ import java.util.regex.Pattern;
  * criteria.
  *
  * @author Richard M. Emberson
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/aggmatcher/ExplicitRules.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/aggmatcher/ExplicitRules.java#21 $
  */
 public class ExplicitRules {
     private static final Logger LOGGER = Logger.getLogger(ExplicitRules.class);
@@ -111,7 +111,7 @@ public class ExplicitRules {
             }
 
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug(Util.nl+group);
+                LOGGER.debug(Util.nl + group);
             }
             return group;
         }
@@ -504,9 +504,9 @@ RME TODO
          * @param aggTable
          */
         private static void add(
-                final ExplicitRules.TableDef tableDef,
-                final MondrianDef.AggTable aggTable) {
-
+            final ExplicitRules.TableDef tableDef,
+            final MondrianDef.AggTable aggTable)
+        {
             if (aggTable.getAggFactCount() != null) {
                 tableDef.setFactCountName(aggTable.getAggFactCount().getColumnName());
             }
@@ -632,7 +632,6 @@ RME TODO
                                 msgRecorder.getContext(),
                                 name));
                     } else {
-
                         RolapCube cube = ExplicitRules.TableDef.this.getCube();
                         SchemaReader schemaReader = cube.getSchemaReader();
                         RolapLevel level =
@@ -742,7 +741,7 @@ RME TODO
              * <p>The measure name must be of the form
              * <blockquote><code>[Measures].[measure name]</code></blockquote>
              *
-             * <p>This method checks that is of length 2, starts 
+             * <p>This method checks that is of length 2, starts
              * with "Measures" and the "measure name" exists.
              */
             public void validate(final MessageRecorder msgRecorder) {
@@ -1227,8 +1226,8 @@ RME TODO
          */
         public boolean matches(final String tableName) {
             return (this.ignoreCase) ?
-                    this.name.equals(tableName) :
-                    this.name.equalsIgnoreCase(tableName);
+                    this.name.equalsIgnoreCase(tableName) :
+                    this.name.equals(tableName);
         }
 
         /**
@@ -1257,7 +1256,6 @@ RME TODO
             pw.print(subprefix);
             pw.print("name=");
             pw.println(this.name);
-
         }
     }
 
@@ -1270,14 +1268,14 @@ RME TODO
          * Make a PatternTableDef from the catalog schema.
          */
         static ExplicitRules.PatternTableDef make(
-                final MondrianDef.AggPattern aggPattern,
-                final ExplicitRules.Group group) {
-
+            final MondrianDef.AggPattern aggPattern,
+            final ExplicitRules.Group group)
+        {
             ExplicitRules.PatternTableDef pattern =
-                    new ExplicitRules.PatternTableDef(
-                            aggPattern.getPattern(),
-                            aggPattern.isIgnoreCase(),
-                            group);
+                new ExplicitRules.PatternTableDef(
+                    aggPattern.getPattern(),
+                    aggPattern.isIgnoreCase(),
+                    group);
 
             MondrianDef.AggExclude[] excludes = aggPattern.getAggExcludes();
             if (excludes != null) {
@@ -1389,7 +1387,6 @@ RME TODO
             }
             pw.print(subprefix);
             pw.println("]");
-
         }
     }
 
@@ -1417,7 +1414,8 @@ RME TODO
     }
 
 
-    private ExplicitRules() {}
+    private ExplicitRules() {
+    }
 }
 
 // End ExplicitRules.java

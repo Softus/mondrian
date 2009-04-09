@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/MultiResolver.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/fun/MultiResolver.java#20 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -13,6 +13,8 @@ package mondrian.olap.fun;
 
 import mondrian.olap.*;
 
+import java.util.List;
+
 /**
  * A <code>MultiResolver</code> considers several overloadings of the same
  * function. If one of these overloadings matches the actual arguments, it
@@ -20,7 +22,7 @@ import mondrian.olap.*;
  *
  * @author jhyde
  * @since Feb 12, 2003
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/MultiResolver.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/MultiResolver.java#20 $
  */
 public abstract class MultiResolver extends FunUtil implements Resolver {
     private final String name;
@@ -90,7 +92,9 @@ public abstract class MultiResolver extends FunUtil implements Resolver {
     }
 
     public FunDef resolve(
-        Exp[] args, Validator validator, int[] conversionCount)
+        Exp[] args,
+        Validator validator,
+        List<Conversion> conversions)
     {
 outer:
         for (String signature : signatures) {
@@ -98,9 +102,11 @@ outer:
             if (parameterTypes.length != args.length) {
                 continue;
             }
+            conversions.clear();
             for (int i = 0; i < args.length; i++) {
                 if (!validator.canConvert(
-                    args[i], parameterTypes[i], conversionCount)) {
+                    args[i], parameterTypes[i], conversions))
+                {
                     continue outer;
                 }
             }

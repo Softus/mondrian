@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/ParameterTest.java#2 $
+// $Id: //open/mondrian/testsrc/main/mondrian/test/ParameterTest.java#21 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2003-2007 Julian Hyde
+// Copyright (C) 2003-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -24,7 +24,7 @@ import java.util.Set;
  *
  * @author jhyde
  * @since Feb 13, 2003
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/ParameterTest.java#2 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/test/ParameterTest.java#21 $
  */
 public class ParameterTest extends FoodMartTestCase {
     public ParameterTest(String name) {
@@ -76,9 +76,7 @@ public class ParameterTest extends FoodMartTestCase {
           "{}" + nl +
           "Axis #1:" + nl +
           "{[Measures].[X]}" + nl +
-          "Row #0: 565238" + nl
-
-      );
+          "Row #0: 565238" + nl);
     }
 
     public void testParameterInFormatString_Bug1584439() {
@@ -141,11 +139,15 @@ public class ParameterTest extends FoodMartTestCase {
         assertExprReturns("Parameter(\"Foo\", [Time.Weekly], [Time.Weekly].[1997].[40],\"Foo\").Name",
                 "40");
         // right dimension, wrong hierarchy
+        final String levelName =
+            MondrianProperties.instance().SsasCompatibleNaming.get()
+                ? "[Time].[Weekly]"
+                : "[Time.Weekly]";
         assertExprThrows("Parameter(\"Foo\",[Time.Weekly],[Time].[1997].[Q1],\"Foo\").Name",
-                "Default value of parameter 'Foo' is not consistent with the parameter type 'MemberType<hierarchy=[Time.Weekly]>");
+                "Default value of parameter 'Foo' is not consistent with the parameter type 'MemberType<hierarchy=" + levelName + ">");
         // wrong dimension
         assertExprThrows("Parameter(\"Foo\",[Time.Weekly],[Product].[All Products],\"Foo\").Name",
-                "Default value of parameter 'Foo' is not consistent with the parameter type 'MemberType<hierarchy=[Time.Weekly]>");
+                "Default value of parameter 'Foo' is not consistent with the parameter type 'MemberType<hierarchy=" + levelName + ">");
         // garbage
         assertExprThrows("Parameter(\"Foo\",[Time.Weekly],[Widget].[All Widgets],\"Foo\").Name",
                 "MDX object '[Widget].[All Widgets]' not found in cube 'Sales'");

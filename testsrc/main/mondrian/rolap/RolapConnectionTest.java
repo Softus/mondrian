@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/rolap/RolapConnectionTest.java#3 $
+// $Id: //open/mondrian/testsrc/main/mondrian/rolap/RolapConnectionTest.java#24 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2004-2008 Julian Hyde and others
+// Copyright (C) 2004-2009 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -14,8 +14,8 @@ package mondrian.rolap;
 import junit.framework.TestCase;
 import mondrian.olap.*;
 import mondrian.test.TestContext;
-import mondrian.test.SqlPattern;
 import mondrian.util.Pair;
+import mondrian.spi.Dialect;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
@@ -36,7 +36,7 @@ import java.util.Arrays;
  *
  * @author jng
  * @since 16 April, 2004
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/rolap/RolapConnectionTest.java#3 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/rolap/RolapConnectionTest.java#24 $
  */
 public class RolapConnectionTest extends TestCase {
     private static final ThreadLocal<InitialContext> THREAD_INITIAL_CONTEXT =
@@ -66,7 +66,7 @@ public class RolapConnectionTest extends TestCase {
                         };
                     }
                 }
-            );
+           );
         }
     }
 
@@ -167,7 +167,7 @@ public class RolapConnectionTest extends TestCase {
         Util.PropertyList properties,
         IllegalArgumentException e)
     {
-        // Workaround Java bug #6504538 (see http://bugs.sun.com) with synopsis 
+        // Workaround Java bug #6504538 (see http://bugs.sun.com) with synopsis
         // "DriverManager.getConnection throws IllegalArgumentException".
         if (System.getProperties().getProperty("java.version").startsWith("1.6.")) {
             properties.remove("jdbc.charSet");
@@ -249,7 +249,7 @@ public class RolapConnectionTest extends TestCase {
         } else {
             System.out.println(properties);
         }
-        
+
         try {
             DriverManager.getConnection(
                 properties,
@@ -286,7 +286,7 @@ public class RolapConnectionTest extends TestCase {
                     return dataSource;
                 }
             }
-        );
+       );
 
         // Use the datasource property to connect to the database.
         // Remove user and password, because some data sources (those using
@@ -311,7 +311,8 @@ public class RolapConnectionTest extends TestCase {
         // use the datasource property to connect to the database
         Util.PropertyList properties =
             TestContext.instance().getFoodMartConnectionProperties();
-        if (TestContext.instance().getDialect().isAccess()) {
+        final Dialect dialect = TestContext.instance().getDialect();
+        if (dialect.getDatabaseProduct() == Dialect.DatabaseProduct.ACCESS) {
             // Access doesn't accept user/password, so this test is pointless.
             return;
         }
@@ -324,9 +325,6 @@ public class RolapConnectionTest extends TestCase {
             // Can only run this test if username and password are explicit.
             return;
         }
-
-        final SqlPattern.Dialect dialect =
-            SqlPattern.Dialect.get(TestContext.instance().getDialect());
 
         // Define a data source with bogus user and password.
         properties.put(
@@ -353,7 +351,7 @@ public class RolapConnectionTest extends TestCase {
                         : null;
                 }
             }
-        );
+       );
 
         // Create a property list that we will use for the actual mondrian
         // connection. Replace the original JDBC info with the data source we
@@ -407,7 +405,7 @@ public class RolapConnectionTest extends TestCase {
                 final String s = TestContext.getStackTrace(e);
                 assertTrue(s, s.indexOf(
                     "Error while creating SQL connection: DataSource=jndiDataSource") >= 0);
-                switch (dialect) {
+                switch (dialect.getDatabaseProduct()) {
                 case DERBY:
                     assertTrue(s, s.indexOf(
                         "Caused by: java.sql.SQLException: Schema 'BOGUSUSER' does not exist") >= 0);
@@ -420,7 +418,7 @@ public class RolapConnectionTest extends TestCase {
                     assertTrue(s, s.indexOf(
                         "Caused by: java.sql.SQLException: Access denied for user 'bogususer'@'localhost' (using password: YES)") >= 0);
                     break;
-                case POSTGRES:
+                case POSTGRESQL:
                     assertTrue(s, s.indexOf(
                         "Caused by: org.postgresql.util.PSQLException: FATAL: password authentication failed for user \"bogususer\"") >= 0);
                     break;

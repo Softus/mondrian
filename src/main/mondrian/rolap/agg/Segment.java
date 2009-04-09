@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/agg/Segment.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/agg/Segment.java#51 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2002-2002 Kana Software, Inc.
-// Copyright (C) 2002-2007 Julian Hyde and others
+// Copyright (C) 2002-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -69,7 +69,7 @@ import org.apache.log4j.Logger;
  *
  * @author jhyde
  * @since 21 March, 2002
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/agg/Segment.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/agg/Segment.java#51 $
  */
 class Segment {
     private static int nextId = 0; // generator for "id"
@@ -160,7 +160,7 @@ class Segment {
     public boolean isReady() {
         return (state == State.Ready);
     }
-    
+
     boolean isFailed() {
         return (state == State.Failed);
     }

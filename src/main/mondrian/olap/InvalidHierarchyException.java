@@ -12,7 +12,7 @@ package mondrian.olap;
  * Exception which indicates that a Cube is invalid
  * because there is a hierarchy with no members.
  *
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/InvalidHierarchyException.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/InvalidHierarchyException.java#2 $
  */
 public class InvalidHierarchyException extends MondrianException {
     /**

@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/olap/fun/MemberHelperTest.java#3 $
+// $Id: //open/mondrian/testsrc/main/mondrian/olap/fun/MemberHelperTest.java#27 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2004-2007 Julian Hyde and others
+// Copyright (C) 2004-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -14,11 +14,14 @@ import mondrian.olap.*;
 
 import junit.framework.TestCase;
 
+import java.util.List;
+import java.util.ArrayList;
+
 /**
  * <code>MemberHelperTest</code> tests {@link MemberHelper}.
  *
  * @author gjohnson
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/olap/fun/MemberHelperTest.java#3 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/olap/fun/MemberHelperTest.java#27 $
  */
 public class MemberHelperTest extends TestCase {
     public MemberHelperTest(String name) {
@@ -27,10 +30,12 @@ public class MemberHelperTest extends TestCase {
 
     public void testEqualsMembers() {
         MemberHelper mh0 = new MemberHelper(null);
+        //noinspection ObjectEqualsNull
         assertFalse(mh0.equals(null));
 
         assertEquals(mh0, mh0);
 
+        //noinspection EqualsBetweenInconvertibleTypes
         assertFalse(mh0.equals(""));
 
         MemberHelper mh1 = new MemberHelper(null);
@@ -44,7 +49,6 @@ public class MemberHelperTest extends TestCase {
 
         assertEquals(mh0, mh2);
         assertFalse(mh1.equals(mh2));
-
     }
 
 
@@ -71,15 +75,13 @@ public class MemberHelperTest extends TestCase {
         assertEquals(mh1, mh2);
         assertFalse(mh1.equals(mh3));
         assertFalse(mh3.equals(mh1));
-
     }
 
     public void testConstructor() {
         try {
             new MemberHelper("blah");
             fail("Should not be able to create a MemberHelper with a string");
-        }
-        catch(IllegalArgumentException iae) {
+        } catch (IllegalArgumentException iae) {
         }
     }
 
@@ -107,8 +109,8 @@ public class MemberHelperTest extends TestCase {
             return name.hashCode();
         }
 
-        public Member[] getAncestorMembers() {
-            return new Member[0];
+        public List<Member> getAncestorMembers() {
+            return new ArrayList<Member>();
         }
 
         public String getCaption() {
@@ -163,6 +165,10 @@ public class MemberHelperTest extends TestCase {
             return false;
         }
 
+        public boolean isEvaluated() {
+            return false;
+        }
+
         public boolean isCalculatedInQuery() {
             return false;
         }
@@ -180,11 +186,9 @@ public class MemberHelperTest extends TestCase {
         }
 
         public void setName(String name) {
-
         }
 
         public void setProperty(String name, Object value) {
-
         }
 
         public String getDescription() {
@@ -200,10 +204,6 @@ public class MemberHelperTest extends TestCase {
         }
 
         public String getUniqueName() {
-            return null;
-        }
-
-        public OlapElement lookupChild(SchemaReader schemaReader,Id.Segment s) {
             return null;
         }
 

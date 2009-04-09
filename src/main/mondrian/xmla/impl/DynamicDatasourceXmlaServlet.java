@@ -2,7 +2,7 @@
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2007 Julian Hyde
+// Copyright (C) 2006-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -128,9 +128,10 @@ public class DynamicDatasourceXmlaServlet extends DefaultXmlaServlet {
         }
     }
 
-    boolean areCatalogsEqual
-            (DataSourcesConfig.Catalog catalog1, DataSourcesConfig.Catalog catalog2) {
-
+    boolean areCatalogsEqual(
+        DataSourcesConfig.Catalog catalog1,
+        DataSourcesConfig.Catalog catalog2)
+    {
         if ((catalog1.getDataSourceInfo() != null &&
                 catalog2.getDataSourceInfo() == null) ||
                 (catalog2.getDataSourceInfo() != null &&
@@ -141,10 +142,11 @@ public class DynamicDatasourceXmlaServlet extends DefaultXmlaServlet {
         if ((catalog1.getDataSourceInfo() == null &&
                 catalog2.getDataSourceInfo() == null) ||
                 (catalog1.getDataSourceInfo().equals(catalog2.getDataSourceInfo()))) {
-
             return (catalog1.name.equals(catalog2.name) &&
                     catalog1.definition.equals(catalog2.definition));
         }
         return false;
     }
 }
+
+// End DynamicDatasourceXmlaServlet.java

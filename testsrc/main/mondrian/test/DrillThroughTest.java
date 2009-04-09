@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/DrillThroughTest.java#6 $
+// $Id: //open/mondrian/testsrc/main/mondrian/test/DrillThroughTest.java#31 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2003-2007 Julian Hyde
+// Copyright (C) 2003-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -16,7 +16,7 @@ import mondrian.olap.*;
 import mondrian.rolap.RolapCube;
 import mondrian.rolap.RolapStar;
 import mondrian.rolap.RolapLevel;
-import mondrian.rolap.sql.SqlQuery;
+import mondrian.spi.Dialect;
 
 import javax.sql.DataSource;
 import java.sql.Statement;
@@ -28,7 +28,7 @@ import java.sql.ResultSet;
  *
  * @author jhyde
  * @since May 10, 2006
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/DrillThroughTest.java#6 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/test/DrillThroughTest.java#31 $
  */
 public class DrillThroughTest extends FoodMartTestCase {
     public DrillThroughTest() {
@@ -39,7 +39,7 @@ public class DrillThroughTest extends FoodMartTestCase {
     }
 
     // ~ Tests ================================================================
-    
+
     public void testTrivalCalcMemberDrillThrough() throws Exception {
         Result result = executeQuery(
             "WITH MEMBER [Measures].[Formatted Unit Sales]" +
@@ -120,9 +120,8 @@ public class DrillThroughTest extends FoodMartTestCase {
         getTestContext().assertSqlEquals(expectedSql, sql, 7978);
 
         assertEquals(calcCell.getDrillThroughCount(), 7978);
-        
     }
-    
+
 
     public void testDrillThrough() throws Exception {
         Result result = executeQuery(
@@ -297,7 +296,7 @@ public class DrillThroughTest extends FoodMartTestCase {
             "`product`.`brand_name` as `Brand Name`, `product`.`product_name` as `Product Name`, " +
             "`promotion`.`media_type` as `Media Type`, `promotion`.`promotion_name` as `Promotion Name`, " +
             "`customer`.`country` as `Country`, `customer`.`state_province` as `State Province`, `customer`.`city` as `City`, " +
-            "fname + ' ' + lname as `Name`, `customer`.`customer_id` as `Name (Key)`, " +
+            nameExpStr + " as `Name`, `customer`.`customer_id` as `Name (Key)`, " +
             "`customer`.`education` as `Education Level`, `customer`.`gender` as `Gender`, `customer`.`marital_status` as `Marital Status`, " +
             "`customer`.`yearly_income` as `Yearly Income`, " +
             "`sales_fact_1997`.`unit_sales` as `Unit Sales` " +
@@ -356,7 +355,7 @@ public class DrillThroughTest extends FoodMartTestCase {
         "select {[Measures].[Unit Sales]} ON COLUMNS," + nl +
         "Hierarchize(Union(Union(Union({[Store].[All Stores]}, [Store].[All Stores].Children), [Store].[All Stores].[USA].Children), [Store].[All Stores].[USA].[CA].Children)) ON ROWS" + nl +
         "from [Sales]" + nl +
-        "where [Time].[Date Range]" );
+        "where [Time].[Date Range]");
 
         //String sql = result.getCell(new int[] {0, 0}).getDrillThroughSQL(true);
         String sql = result.getCell(new int[] {0, 6}).getDrillThroughSQL(true);
@@ -468,15 +467,23 @@ public class DrillThroughTest extends FoodMartTestCase {
         final Cube cube = result.getQuery().getCube();
         RolapStar star = ((RolapCube) cube).getStar();
 
-        SqlQuery.Dialect dialect = star.getSqlQueryDialect();
-        if (dialect.isAccess()) {
-            String caseStmt =
-                " \\(case when `sales_fact_1997`.`promotion_id` = 0 then 0" +
+        // Adjust expected SQL for dialect differences in FoodMart.xml.
+        Dialect dialect = star.getSqlQueryDialect();
+        final String caseStmt =
+            " \\(case when `sales_fact_1997`.`promotion_id` = 0 then 0" +
                 " else `sales_fact_1997`.`store_sales` end\\)";
+        switch (dialect.getDatabaseProduct()) {
+        case ACCESS:
             expectedSql = expectedSql.replaceAll(
                 caseStmt,
                 " Iif(`sales_fact_1997`.`promotion_id` = 0, 0," +
-                " `sales_fact_1997`.`store_sales`)");
+                    " `sales_fact_1997`.`store_sales`)");
+            break;
+        case INFOBRIGHT:
+            expectedSql = expectedSql.replaceAll(
+                caseStmt,
+                " `sales_fact_1997`.`store_sales`");
+            break;
         }
 
         getTestContext().assertSqlEquals(expectedSql, sql, 7978);
@@ -488,7 +495,6 @@ public class DrillThroughTest extends FoodMartTestCase {
      * bug".
      */
     public void testDrillThroughDupKeys() throws Exception {
-
         /*
          * Note here that the type on the Store Id level is Integer or Numeric. The default, of course, would be String.
          *
@@ -587,7 +593,8 @@ public class DrillThroughTest extends FoodMartTestCase {
      * definition".
      */
     public void testBug1438285() throws Exception {
-        if (getTestContext().getDialect().isTeradata()) {
+        final Dialect dialect = getTestContext().getDialect();
+        if (dialect.getDatabaseProduct() == Dialect.DatabaseProduct.TERADATA) {
             // On default Teradata express instance there isn't enough spool
             // space to run this query.
             return;
@@ -613,7 +620,7 @@ public class DrillThroughTest extends FoodMartTestCase {
         // Prior to fix the request for the drill through SQL would result in
         // an assertion error
         String sql = result.getCell(new int[] {0, 0}).getDrillThroughSQL(true);
-
+        String nameExpStr = getNameExp(result, "Customers", "Name");
         String expectedSql =
             "select `store`.`store_country` as `Store Country`," +
             " `store`.`store_state` as `Store State`," +
@@ -630,7 +637,7 @@ public class DrillThroughTest extends FoodMartTestCase {
             " `store_ragged`.`store_id` as `Store Id (Key)`, `promotion`.`media_type` as `Media Type`," +
             " `promotion`.`promotion_name` as `Promotion Name`, `customer`.`country` as `Country`," +
             " `customer`.`state_province` as `State Province`, `customer`.`city` as `City`," +
-            " fname + ' ' + lname as `Name`, `customer`.`customer_id` as `Name (Key)`," +
+            " " + nameExpStr + " as `Name`, `customer`.`customer_id` as `Name (Key)`," +
             " `customer`.`education` as `Education Level`, `customer`.`gender` as `Gender`," +
             " `customer`.`marital_status` as `Marital Status`," +
             " `customer`.`yearly_income` as `Yearly Income`," +
@@ -657,7 +664,7 @@ public class DrillThroughTest extends FoodMartTestCase {
             " `product`.`product_name` ASC, `store_ragged`.`store_id` ASC," +
             " `promotion`.`media_type` ASC, `promotion`.`promotion_name` ASC," +
             " `customer`.`country` ASC, `customer`.`state_province` ASC," +
-            " `customer`.`city` ASC, fname + ' ' + lname ASC," +
+            " `customer`.`city` ASC, " + nameExpStr + " ASC," +
             " `customer`.`customer_id` ASC, `customer`.`education` ASC," +
             " `customer`.`gender` ASC, `customer`.`marital_status` ASC," +
             " `customer`.`yearly_income` ASC";
@@ -702,7 +709,8 @@ public class DrillThroughTest extends FoodMartTestCase {
             final Statement statement = connection.createStatement();
             final ResultSet resultSet = statement.executeQuery(sql);
             final int columnCount = resultSet.getMetaData().getColumnCount();
-            if (testContext.getDialect().isDerby()) {
+            final Dialect dialect = testContext.getDialect();
+            if (dialect.getDatabaseProduct() == Dialect.DatabaseProduct.DERBY) {
                 // derby counts ORDER BY columns as columns. insane!
                 assertEquals(11, columnCount);
             } else {

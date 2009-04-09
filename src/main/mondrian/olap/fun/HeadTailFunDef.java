@@ -1,33 +1,30 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/HeadTailFunDef.java#3 $
+// $Id: //open/mondrian/src/main/mondrian/olap/fun/HeadTailFunDef.java#8 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2006 Julian Hyde
+// Copyright (C) 2006-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
 package mondrian.olap.fun;
 
-import mondrian.olap.FunDef;
-import mondrian.olap.Evaluator;
-import mondrian.calc.Calc;
-import mondrian.calc.ExpCompiler;
-import mondrian.calc.ListCalc;
-import mondrian.calc.IntegerCalc;
-import mondrian.calc.impl.ConstantCalc;
+import mondrian.calc.*;
 import mondrian.calc.impl.AbstractListCalc;
+import mondrian.calc.impl.ConstantCalc;
 import mondrian.mdx.ResolvedFunCall;
+import mondrian.olap.Evaluator;
+import mondrian.olap.FunDef;
+import mondrian.util.UnsupportedList;
 
-import java.util.List;
-import java.util.Collections;
+import java.util.*;
 
 /**
  * Definition of the <code>Head</code> and <code>Tail</code>
  * MDX builtin functions.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/HeadTailFunDef.java#3 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/HeadTailFunDef.java#8 $
  * @since Mar 23, 2006
  */
 class HeadTailFunDef extends FunDefBase {
@@ -62,6 +59,7 @@ class HeadTailFunDef extends FunDefBase {
         if (head) {
             return new AbstractListCalc(call, new Calc[] {listCalc, integerCalc}) {
                 public List evaluateList(Evaluator evaluator) {
+                    evaluator = evaluator.push(false);
                     List list = listCalc.evaluateList(evaluator);
                     int count = integerCalc.evaluateInteger(evaluator);
                     return head(count, list);
@@ -69,8 +67,8 @@ class HeadTailFunDef extends FunDefBase {
             };
         } else {
             return new AbstractListCalc(call, new Calc[] {listCalc, integerCalc}) {
-
                 public List evaluateList(Evaluator evaluator) {
+                    evaluator = evaluator.push(false);
                     List list = listCalc.evaluateList(evaluator);
                     int count = integerCalc.evaluateInteger(evaluator);
                     return tail(count, list);
@@ -79,27 +77,86 @@ class HeadTailFunDef extends FunDefBase {
         }
     }
 
-    static List tail(final int count, List members) {
+    static <T> List<T> tail(final int count, final List<T> members) {
         assert members != null;
         final int memberCount = members.size();
         if (count >= memberCount) {
             return members;
         }
         if (count <= 0) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
-        return members.subList(memberCount - count, memberCount);
+        return new UnsupportedList<T>() {
+            public boolean isEmpty() {
+                return count == 0 || members.isEmpty();
+            }
+
+            public int size() {
+                return Math.min(count, members.size());
+            }
+
+            public T get(final int idx) {
+                final int index = idx + memberCount - count;
+                return members.get(index);
+            }
+
+            public Iterator<T> iterator() {
+                return new ItrUnknownSize();
+            }
+
+            public Object[] toArray() {
+                final int offset = memberCount - count;
+                final Object[] a = new Object[size()];
+                for (int i = memberCount - count; i < memberCount; i++) {
+                    a[i - offset] = members.get(i);
+                }
+                return a;
+            }
+        };
     }
 
-    static List head(final int count, List members) {
+    static <T> List<T> head(final int count, final List<T> members) {
         assert members != null;
-        if (count >= members.size()) {
-            return members;
-        }
         if (count <= 0) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
-        return members.subList(0, count);
+        return new UnsupportedList<T>() {
+            public boolean isEmpty() {
+                return count == 0 || members.isEmpty();
+            }
+
+            public int size() {
+                return Math.min(count, members.size());
+            }
+
+            public T get(final int index) {
+                if (index >= count) {
+                    throw new IndexOutOfBoundsException();
+                }
+                return members.get(index);
+            }
+
+            public Iterator<T> iterator() {
+                return new ItrUnknownSize();
+            }
+
+            public Object[] toArray() {
+                Object[] a = new Object[count];
+                int i = 0;
+                for (Object member : members) {
+                    if (i >= a.length) {
+                        return a;
+                    }
+                    a[i++] = member;
+                }
+                if (i < a.length) {
+                    Object[] a0 = a;
+                    a = new Object[i];
+                    System.arraycopy(a0, 0, a, 0, i);
+                }
+                return a;
+            }
+        };
     }
 }
 

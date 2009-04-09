@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/olap/ParserTest.java#4 $
+// $Id: //open/mondrian/testsrc/main/mondrian/olap/ParserTest.java#41 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2004-2007 Julian Hyde and others.
+// Copyright (C) 2004-2008 Julian Hyde and others.
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -22,14 +22,14 @@ import java.io.PrintWriter;
  * Tests the MDX parser.
  *
  * @author gjohnson
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/olap/ParserTest.java#4 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/olap/ParserTest.java#41 $
  */
 public class ParserTest extends FoodMartTestCase {
     public ParserTest(String name) {
         super(name);
     }
 
-    static BuiltinFunTable funTable = BuiltinFunTable.instance();
+    static final BuiltinFunTable funTable = BuiltinFunTable.instance();
 
     public void testAxisParsing() throws Exception {
         checkAxisAllWays(0, "COLUMNS");
@@ -61,12 +61,23 @@ public class ParserTest extends FoodMartTestCase {
     }
 
     public void testNegativeCases() throws Exception {
-        assertParseQueryFails("select [member] on axis(1.7) from sales", "The axis number must be an integer");
+        assertParseQueryFails(
+            "select [member] on axis(1.7) from sales",
+            "Invalid axis specification. The axis number must be non-negative integer, but it was 1.7.");
         assertParseQueryFails("select [member] on axis(-1) from sales", "Syntax error at line");
-        assertParseQueryFails("select [member] on axis(5) from sales", "The axis number must be an integer");
+        // used to be an error, no longer
+        assertParseQuery(
+            "select [member] on axis(5) from sales",
+            fold("select [member] ON AXIS(5)\n" +
+                "from [sales]\n"));
         assertParseQueryFails("select [member] on axes(0) from sales", "Syntax error at line");
-        assertParseQueryFails("select [member] on 0.5 from sales", "The axis number must be an integer");
-        assertParseQueryFails("select [member] on 555 from sales", "The axis number must be an integer");
+        assertParseQueryFails(
+            "select [member] on 0.5 from sales",
+            "Invalid axis specification. The axis number must be non-negative integer, but it was 0.5.");
+        assertParseQuery(
+            "select [member] on 555 from sales",
+            fold("select [member] ON AXIS(555)\n" +
+                "from [sales]\n"));
     }
 
     public void testScannerPunc() {
@@ -145,9 +156,11 @@ public class ParserTest extends FoodMartTestCase {
 
         assertEquals("Number of axes", 2, axes.length);
         assertEquals("Axis index name must be correct",
-            AxisOrdinal.forLogicalOrdinal(0).name(), axes[0].getAxisName());
+            AxisOrdinal.StandardAxisOrdinal.forLogicalOrdinal(0).name(),
+            axes[0].getAxisName());
         assertEquals("Axis index name must be correct",
-            AxisOrdinal.forLogicalOrdinal(1).name(), axes[1].getAxisName());
+            AxisOrdinal.StandardAxisOrdinal.forLogicalOrdinal(1).name(),
+            axes[1].getAxisName());
 
         query = "select {[axis1mbr]} on aXiS(1), "
                 + "{[axis0mbr]} on AxIs(0) from cube";
@@ -157,9 +170,11 @@ public class ParserTest extends FoodMartTestCase {
 
         assertEquals("Number of axes", 2, axes.length);
         assertEquals("Axis index name must be correct",
-            AxisOrdinal.forLogicalOrdinal(0).name(), axes[0].getAxisName());
+            AxisOrdinal.StandardAxisOrdinal.forLogicalOrdinal(0).name(),
+            axes[0].getAxisName());
         assertEquals("Axis index name must be correct",
-            AxisOrdinal.forLogicalOrdinal(1).name(), axes[1].getAxisName());
+            AxisOrdinal.StandardAxisOrdinal.forLogicalOrdinal(1).name(),
+            axes[1].getAxisName());
 
         Exp colsSetExpr = axes[0].getSet();
         assertNotNull("Column tuples", colsSetExpr);
@@ -171,7 +186,7 @@ public class ParserTest extends FoodMartTestCase {
         Exp rowsSetExpr = axes[1].getSet();
         assertNotNull("Row tuples", rowsSetExpr);
 
-        fun = (UnresolvedFunCall ) rowsSetExpr;
+        fun = (UnresolvedFunCall) rowsSetExpr;
         id = ((Id) (fun.getArgs()[0])).getElement(0);
         assertEquals("Correct member on axis", "axis1mbr", id.name);
     }
@@ -303,18 +318,18 @@ public class ParserTest extends FoodMartTestCase {
      */
     public void testMultiplication() {
         Parser p = new Parser();
-        final String mdx = 
+        final String mdx =
             wrapExpr("([Measures].[Unit Sales] * [Measures].[Store Cost] * [Measures].[Store Sales])");
 
         try {
-            final Query query = 
+            final Query query =
                 p.parseInternal(getConnection(), mdx, false, funTable, false, false);
             query.resolve();
-        } catch(Throwable e) {
+        } catch (Throwable e) {
             fail(e.getMessage());
         }
     }
-    
+
     public void testBangFunction() {
         // Parser accepts '<id> [! <id>] *' as a function name, but ignores
         // all but last name.
@@ -383,7 +398,6 @@ public class ParserTest extends FoodMartTestCase {
      * used to gather the mantissa.
      */
     public void testLargePrecision() {
-
         // Now, a query with several numeric literals. This is the original
         // testcase for the bug.
         assertParseQuery(

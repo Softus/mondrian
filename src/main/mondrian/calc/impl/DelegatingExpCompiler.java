@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/calc/impl/DelegatingExpCompiler.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/calc/impl/DelegatingExpCompiler.java#11 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2007 Julian Hyde
+// Copyright (C) 2006-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -19,7 +19,7 @@ import java.util.List;
  * Abstract implementation of {@link mondrian.calc.ExpCompiler}
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/calc/impl/DelegatingExpCompiler.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/calc/impl/DelegatingExpCompiler.java#11 $
  * @since Jan 2, 2006
  */
 public class DelegatingExpCompiler implements ExpCompiler {

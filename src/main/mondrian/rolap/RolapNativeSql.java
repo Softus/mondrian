@@ -12,8 +12,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import mondrian.olap.*;
+import mondrian.rolap.aggmatcher.AggStar;
 import mondrian.rolap.sql.SqlQuery;
 import mondrian.mdx.MemberExpr;
+import mondrian.spi.Dialect;
 
 /**
  * Creates SQL from parse tree nodes. Currently it creates the SQL that
@@ -21,17 +23,18 @@ import mondrian.mdx.MemberExpr;
  *
  * @author av
  * @since Nov 17, 2005
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/RolapNativeSql.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/RolapNativeSql.java#22 $
  */
 public class RolapNativeSql {
 
     private SqlQuery sqlQuery;
-    private SqlQuery.Dialect dialect;
+    private Dialect dialect;
 
     CompositeSqlCompiler numericCompiler;
     CompositeSqlCompiler booleanCompiler;
 
     RolapStoredMeasure storedMeasure;
+    AggStar aggStar;
 
     /**
      * We remember one of the measures so we can generate
@@ -44,15 +47,16 @@ public class RolapNativeSql {
         if (storedMeasure != null) {
             RolapStar star1 = getStar(storedMeasure);
             RolapStar star2 = getStar(m);
-            if (star1 != star2)
+            if (star1 != star2) {
                 return false;
+            }
         }
         this.storedMeasure = m;
         return true;
     }
 
     private RolapStar getStar(RolapStoredMeasure m) {
-        return ((RolapStar.Measure )m.getStarMeasure()).getStar();
+        return ((RolapStar.Measure)m.getStarMeasure()).getStar();
     }
 
     /**
@@ -99,7 +103,6 @@ public class RolapNativeSql {
         public String toString() {
             return compilers.toString();
         }
-
     }
 
     /**
@@ -118,7 +121,8 @@ public class RolapNativeSql {
             }
             Literal literal = (Literal) exp;
             String expr = String.valueOf(literal.getValue());
-            if (dialect.isDB2()) {
+            if (dialect.getDatabaseProduct().getFamily()
+                == Dialect.DatabaseProduct.DB2) {
                 expr = "FLOAT(" + expr + ")";
             }
             return expr;
@@ -161,17 +165,31 @@ public class RolapNativeSql {
             if (measure.isCalculated()) {
                 return null; // ??
             }
-            if (!saveStoredMeasure(measure))
-            	return null;
-            String exprInner = measure.getMondrianDefExpression().getExpression(sqlQuery);
+            if (!saveStoredMeasure(measure)) {
+                return null;
+            }
+
+            String exprInner;
+            // Use aggregate table to create condition if available
+            if (aggStar != null &&
+                    measure.getStarMeasure() instanceof RolapStar.Column) {
+                RolapStar.Column column = (RolapStar.Column) measure.getStarMeasure();
+                int bitPos = column.getBitPosition();
+                AggStar.Table.Column aggColumn = aggStar.lookupColumn(bitPos);
+                exprInner = aggColumn.generateExprString(sqlQuery);
+            } else {
+                exprInner = measure.getMondrianDefExpression().getExpression(sqlQuery);
+            }
+
             String expr = measure.getAggregator().getExpression(exprInner);
-            if (dialect.isDB2()) {
+            if (dialect.getDatabaseProduct().getFamily()
+                == Dialect.DatabaseProduct.DB2) {
                 expr = "FLOAT(" + expr + ")";
             }
             return expr;
         }
 
-		public String toString() {
+        public String toString() {
             return "StoredMeasureSqlCompiler";
         }
     }
@@ -421,16 +439,16 @@ public class RolapNativeSql {
             }
             return sqlQuery.getDialect().caseWhenElse(cond, val1, val2);
         }
-
     }
 
     /**
      * creates a new instance
      * @param sqlQuery the query which is needed for differen SQL dialects - its not modified.
      */
-    RolapNativeSql(SqlQuery sqlQuery) {
+    RolapNativeSql(SqlQuery sqlQuery, AggStar aggStar) {
         this.sqlQuery = sqlQuery;
         this.dialect = sqlQuery.getDialect();
+        this.aggStar = aggStar;
 
         numericCompiler = new CompositeSqlCompiler();
         booleanCompiler = new CompositeSqlCompiler();

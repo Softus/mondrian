@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/RolapStar.java#4 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/RolapStar.java#101 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2001-2002 Kana Software, Inc.
-// Copyright (C) 2001-2007 Julian Hyde and others
+// Copyright (C) 2001-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -19,6 +19,7 @@ import mondrian.rolap.agg.AggregationKey;
 import mondrian.rolap.aggmatcher.AggStar;
 import mondrian.rolap.sql.SqlQuery;
 import mondrian.spi.DataSourceChangeListener;
+import mondrian.spi.Dialect;
 import mondrian.util.Bug;
 import org.apache.log4j.Logger;
 import org.eigenbase.util.property.Property;
@@ -40,7 +41,7 @@ import java.util.*;
  *
  * @author jhyde
  * @since 12 August, 2001
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/RolapStar.java#4 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/RolapStar.java#101 $
  */
 public class RolapStar {
     private static final Logger LOGGER = Logger.getLogger(RolapStar.class);
@@ -68,7 +69,7 @@ public class RolapStar {
                         // CacheControl.flush(CellRegion)
                         for (Iterator<RolapSchema> itSchemas =
                             RolapSchema.getRolapSchemas();
-                             itSchemas.hasNext(); )
+                             itSchemas.hasNext();)
                         {
                             RolapSchema schema1 = itSchemas.next();
                             for (RolapStar star : schema1.getStars()) {
@@ -78,7 +79,7 @@ public class RolapStar {
                     }
                 }
             }
-        );
+       );
     }
 
 
@@ -116,7 +117,7 @@ public class RolapStar {
     /**
      * Holds all requests of aggregations per thread.
      */
-    private final ThreadLocal<List<AggregationKey>> 
+    private final ThreadLocal<List<AggregationKey>>
         localAggregationRequests =
             new ThreadLocal<List<AggregationKey>>() {
             protected List<AggregationKey> initialValue() {
@@ -129,7 +130,7 @@ public class RolapStar {
      */
     private int columnCount;
 
-    private final SqlQuery.Dialect sqlQueryDialect;
+    private final Dialect sqlQueryDialect;
 
     /**
      * If true, then database aggregation information is cached, otherwise
@@ -169,11 +170,11 @@ public class RolapStar {
         this.factNode = new StarNetworkNode(null, factTable.alias, null, null, null);
 
         this.sharedAggregations = new HashMap<AggregationKey, Aggregation>();
-        
+
         this.pendingAggregations = new HashMap<AggregationKey, Aggregation>();
 
         this.aggregationRequests = new ArrayList<AggregationKey>();
-        
+
         clearAggStarList();
 
         this.sqlQueryDialect = schema.getDialect();
@@ -336,7 +337,7 @@ public class RolapStar {
                             ? ((MondrianDef.Relation) left).getAlias()
                             : null,
                         join.leftKey,
-                        left, 
+                        left,
                         right instanceof MondrianDef.Relation
                             ? ((MondrianDef.Relation) right).getAlias()
                             : null,
@@ -459,7 +460,7 @@ public class RolapStar {
     /**
      * Returns this RolapStar's SQL dialect.
      */
-    public SqlQuery.Dialect getSqlQueryDialect() {
+    public Dialect getSqlQueryDialect() {
         return sqlQueryDialect;
     }
 
@@ -517,7 +518,6 @@ public class RolapStar {
                 localAggregations.get().clear();
             }
         }
-
     }
 
     /**
@@ -529,7 +529,6 @@ public class RolapStar {
      * @param aggregationKey this is the contrained column bitkey
      */
     public Aggregation lookupOrCreateAggregation(AggregationKey aggregationKey) {
-
         Aggregation aggregation = lookupAggregation(aggregationKey);
 
         if (aggregation == null) {
@@ -589,7 +588,6 @@ public class RolapStar {
      * be called.
      */
     public void checkAggregateModifications() {
-
         // Clear own aggregation requests at the beginning of a query
         // made by request to materialize results after RolapResult constructor
         // is finished
@@ -632,7 +630,6 @@ public class RolapStar {
         // aggregations, synchronize this instead
         synchronized (this) {
             if (cacheAggregations && !RolapStar.disableCaching) {
-
                 // Push pending modifications other thread could not push
                 // to global cache, because it was in use
                 Iterator<Map.Entry<AggregationKey, Aggregation>>
@@ -687,7 +684,6 @@ public class RolapStar {
     {
         if (cacheAggregations && !RolapStar.disableCaching) {
             synchronized (destAggregations) {
-
                 boolean found = false;
                 Iterator<Map.Entry<AggregationKey, Aggregation>>
                         it = destAggregations.entrySet().iterator();
@@ -698,7 +694,6 @@ public class RolapStar {
                     Aggregation aggregation = e.getValue();
 
                     if (localAggregationKey.equals(aggregationKey)) {
-
                         if (localAggregation.getCreationTimestamp().after(
                             aggregation.getCreationTimestamp())) {
                             it.remove();
@@ -721,7 +716,7 @@ public class RolapStar {
      */
     private void recordAggregationRequest(AggregationKey aggregationKey) {
         if (!localAggregationRequests.get().contains(aggregationKey)) {
-            synchronized(aggregationRequests) {
+            synchronized (aggregationRequests) {
                 aggregationRequests.add(aggregationKey);
             }
             // Store own request for cleanup afterwards
@@ -768,7 +763,7 @@ public class RolapStar {
             localAggregationRequests.get().clear();
         }
     }
-    
+
     /** For testing purposes only.  */
     public void setDataSource(DataSource dataSource) {
         this.dataSource = dataSource;
@@ -817,7 +812,7 @@ public class RolapStar {
         }
         return bitKey;
     }
-    
+
     /**
      * Returns a list of all aliases used in this star.
      */
@@ -965,7 +960,7 @@ public class RolapStar {
                         o2.getConstrainedColumnsBitKey());
                 }
             }
-        );
+       );
 
         for (Aggregation aggregation : aggregationList) {
             aggregation.print(pw);
@@ -1017,7 +1012,7 @@ public class RolapStar {
     public static class Column {
         private final Table table;
         private final MondrianDef.Expression expression;
-        private final SqlQuery.Datatype datatype;
+        private final Dialect.Datatype datatype;
         private final String name;
         /**
          * When a Column is a column, and not a Measure, the parent column
@@ -1049,7 +1044,7 @@ public class RolapStar {
             String name,
             Table table,
             MondrianDef.Expression expression,
-            SqlQuery.Datatype datatype)
+            Dialect.Datatype datatype)
         {
             this(name, table, expression, datatype, null, null, null);
         }
@@ -1058,7 +1053,7 @@ public class RolapStar {
             String name,
             Table table,
             MondrianDef.Expression expression,
-            SqlQuery.Datatype datatype,
+            Dialect.Datatype datatype,
             Column nameColumn,
             Column parentColumn,
             String usagePrefix)
@@ -1081,7 +1076,7 @@ public class RolapStar {
          *
          * @param datatype Datatype
          */
-        protected Column(SqlQuery.Datatype datatype)
+        protected Column(Dialect.Datatype datatype)
         {
             this.table = null;
             this.expression = null;
@@ -1259,7 +1254,7 @@ public class RolapStar {
         public static String createInExpr(
             final String expr,
             StarColumnPredicate predicate,
-            SqlQuery.Datatype datatype,
+            Dialect.Datatype datatype,
             SqlQuery sqlQuery)
         {
             // Sometimes a column predicate is created without a column. This
@@ -1306,7 +1301,7 @@ public class RolapStar {
             pw.print(generateExprString(sqlQuery));
         }
 
-        public SqlQuery.Datatype getDatatype() {
+        public Dialect.Datatype getDatatype() {
             return datatype;
         }
 
@@ -1317,7 +1312,7 @@ public class RolapStar {
          * @param dialect Dialect
          * @return String representation of column's datatype
          */
-        public String getDatatypeString(SqlQuery.Dialect dialect) {
+        public String getDatatypeString(Dialect dialect) {
             final SqlQuery query = new SqlQuery(dialect);
             query.addFrom(
                 table.star.factTable.relation, table.star.factTable.alias,
@@ -1383,7 +1378,7 @@ public class RolapStar {
             RolapAggregator aggregator,
             Table table,
             MondrianDef.Expression expression,
-            SqlQuery.Datatype datatype)
+            Dialect.Datatype datatype)
         {
             super(name, table, expression, datatype);
             this.cubeName = cubeName;
@@ -1624,8 +1619,9 @@ public class RolapStar {
         }
 
         synchronized void makeMeasure(RolapBaseCubeMeasure measure) {
-            assert lookupMeasureByName(
-                measure.getCube().getName(), measure.getName()) == null;
+            // Remove assertion to allow cube to be recreated
+            // assert lookupMeasureByName(
+            //    measure.getCube().getName(), measure.getName()) == null;
             RolapStar.Measure starMeasure = new RolapStar.Measure(
                 measure.getName(),
                 measure.getCube().getName(),
@@ -1654,11 +1650,11 @@ public class RolapStar {
          * @param parentColumn Parent column
          */
         synchronized Column makeColumns(
-                RolapCube cube,
-                RolapCubeLevel level,
-                Column parentColumn,
-                String usagePrefix) {
-
+            RolapCube cube,
+            RolapCubeLevel level,
+            Column parentColumn,
+            String usagePrefix)
+        {
             Column nameColumn = null;
             if (level.getNameExp() != null) {
                 // make a column for the name expression
@@ -1667,7 +1663,7 @@ public class RolapStar {
                     level,
                     level.getName(),
                     level.getNameExp(),
-                    SqlQuery.Datatype.String,
+                    Dialect.Datatype.String,
                     null,
                     null,
                     null);
@@ -1703,7 +1699,7 @@ public class RolapStar {
                 RolapLevel level,
                 String name,
                 MondrianDef.Expression xmlExpr,
-                SqlQuery.Datatype datatype,
+                Dialect.Datatype datatype,
                 Column nameColumn,
                 Column parentColumn,
                 String usagePrefix) {
@@ -1803,7 +1799,6 @@ public class RolapStar {
 
                 String rightAlias = join.rightAlias;
                 if (rightAlias == null) {
-
                     // the right relation of a join may be a join
                     // if so, we need to use the right relation join's
                     // left relation's alias.
@@ -1961,7 +1956,6 @@ public class RolapStar {
                         }
                     }
                 }
-
             }
             return null;
         }
@@ -1985,7 +1979,6 @@ public class RolapStar {
                         }
                     }
                 }
-
             }
             return null;
         }

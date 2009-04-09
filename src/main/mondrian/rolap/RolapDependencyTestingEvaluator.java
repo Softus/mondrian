@@ -1,18 +1,20 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/RolapDependencyTestingEvaluator.java#4 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/RolapDependencyTestingEvaluator.java#12 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2007 Julian Hyde
+// Copyright (C) 2006-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
 package mondrian.rolap;
 
 import mondrian.olap.*;
+import mondrian.olap.type.SetType;
 import mondrian.calc.*;
 import mondrian.calc.impl.DelegatingExpCompiler;
 import mondrian.calc.impl.GenericCalc;
+import mondrian.calc.impl.GenericIterCalc;
 
 import java.util.*;
 import java.io.StringWriter;
@@ -31,7 +33,7 @@ import java.io.PrintWriter;
  *
  * @author jhyde
  * @since September, 2005
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/RolapDependencyTestingEvaluator.java#4 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/RolapDependencyTestingEvaluator.java#12 $
  */
 public class RolapDependencyTestingEvaluator extends RolapEvaluator {
 
@@ -47,6 +49,9 @@ public class RolapDependencyTestingEvaluator extends RolapEvaluator {
 
     /**
      * Creates a child evaluator.
+     *
+     * @param root Root evaluation context
+     * @param evaluator Parent evaluator
      */
     private RolapDependencyTestingEvaluator(
         RolapEvaluatorRoot root,
@@ -247,16 +252,16 @@ public class RolapDependencyTestingEvaluator extends RolapEvaluator {
                 final int levelDepth = random.nextInt(levels.length) + 1;
                 Member member = null;
                 for (int i = 0; i < levelDepth; i++) {
-                    Member[] members;
+                    List<Member> members;
                     if (i == 0) {
                         members = schemaReader.getLevelMembers(levels[i], false);
                     } else {
                         members = schemaReader.getMemberChildren(member);
                     }
-                    if (members.length == 0) {
+                    if (members.size() == 0) {
                         break;
                     }
-                    member = members[random.nextInt(members.length)];
+                    member = members.get(random.nextInt(members.size()));
                 }
                 // If the member chosen happens to be the same as the original
                 // member, try again. Give up after 100 attempts (in case the
@@ -269,19 +274,55 @@ public class RolapDependencyTestingEvaluator extends RolapEvaluator {
     }
 
     /**
-     * Expression which checks dependencies and list immutability.
+     * Expression which checks dependencies of an underlying scalar expression.
      */
-    private static class DteCalcImpl extends GenericCalc {
+    private static class DteScalarCalcImpl extends GenericCalc {
+        private final Calc calc;
+        private final Dimension[] independentDimensions;
+        private final String mdxString;
+
+        DteScalarCalcImpl(
+            Calc calc,
+            Dimension[] independentDimensions,
+            String mdxString)
+        {
+            super(new DummyExp(calc.getType()));
+            this.calc = calc;
+            this.independentDimensions = independentDimensions;
+            this.mdxString = mdxString;
+        }
+
+        public Calc[] getCalcs() {
+            return new Calc[] {calc};
+        }
+
+        public Object evaluate(Evaluator evaluator) {
+            RolapDependencyTestingEvaluator dtEval =
+                (RolapDependencyTestingEvaluator) evaluator;
+            return dtEval.evaluate(calc, independentDimensions, mdxString);
+        }
+
+        public ResultStyle getResultStyle() {
+            return calc.getResultStyle();
+        }
+    }
+
+    /**
+     * Expression which checks dependencies and list immutability of an
+     * underlying list or iterable expression.
+     */
+    private static class DteIterCalcImpl extends GenericIterCalc {
         private final Calc calc;
         private final Dimension[] independentDimensions;
         private final boolean mutableList;
         private final String mdxString;
 
-        DteCalcImpl(
-                Calc calc,
-                Dimension[] independentDimensions,
-                boolean mutableList,
-                String mdxString) {
+        DteIterCalcImpl(
+            Calc calc,
+            Dimension[] independentDimensions,
+            boolean mutableList,
+            String mdxString)
+        {
             super(new DummyExp(calc.getType()));
             this.calc = calc;
             this.independentDimensions = independentDimensions;
@@ -326,15 +367,27 @@ public class RolapDependencyTestingEvaluator extends RolapEvaluator {
         protected Calc afterCompile(Exp exp, Calc calc, boolean mutable) {
             Dimension[] dimensions = getIndependentDimensions(calc);
             calc = super.afterCompile(exp, calc, mutable);
-            return new DteCalcImpl(
+            if (calc.getType() instanceof SetType) {
+                return new DteScalarCalcImpl(
+                    calc,
+                    dimensions,
+                    Util.unparse(exp));
+            } else {
+                return new DteIterCalcImpl(
                     calc,
                     dimensions,
                     mutable,
                     Util.unparse(exp));
+            }
         }
 
         /**
-         * Returns the dimensions an expression depends on.
+         * Returns the dimensions an expression does not depend on. If the
+         * current member of any of these dimensions changes, the expression
+         * will return the same result.
+         *
+         * @param calc Expression
+         * @return List of dimensions that the expression does not depend on
          */
         private Dimension[] getIndependentDimensions(Calc calc) {
             List<Dimension> indDimList = new ArrayList<Dimension>();

@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/gui/JDBCMetaData.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/gui/JDBCMetaData.java#15 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2007 Julian Hyde and others
+// Copyright (C) 2006-2008 Julian Hyde and others
 // Copyright (C) 2006-2007 Cincom Systems, Inc.
 // Copyright (C) 2006-2007 JasperSoft
 // All Rights Reserved.
@@ -20,7 +20,7 @@ import org.apache.log4j.Logger;
 
 /**
  *
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/gui/JDBCMetaData.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/gui/JDBCMetaData.java#15 $
  */
 public class JDBCMetaData {
 
@@ -30,10 +30,12 @@ public class JDBCMetaData {
     String jdbcConnectionUrl = null; // "jdbc:postgresql://localhost:5432/hello?user=postgres&password=post"
     String jdbcUsername = null;
     String jdbcPassword = null;
+    String jdbcSchema = null;
+    boolean requireSchema = false;
 
     Connection conn = null;
     DatabaseMetaData md = null;
-    
+
     Workbench workbench;
 
     /* Map of Schema and its fact tables ::
@@ -59,17 +61,25 @@ public class JDBCMetaData {
     private String errMsg = null;
     private Database db = new Database();
 
-    public JDBCMetaData(Workbench wb, String jdbcDriverClassName, String jdbcConnectionUrl, String jdbcUsername, String jdbcPassword) {
+    public JDBCMetaData(Workbench wb, String jdbcDriverClassName,
+            String jdbcConnectionUrl, String jdbcUsername,
+            String jdbcPassword, String jdbcSchema, boolean requireSchema) {
         this.workbench = wb;
         this.jdbcConnectionUrl = jdbcConnectionUrl;
         this.jdbcDriverClassName = jdbcDriverClassName;
         this.jdbcUsername = jdbcUsername;
         this.jdbcPassword = jdbcPassword;
+        this.jdbcSchema = jdbcSchema;
+        this.requireSchema = requireSchema;
 
         if (initConnection() == null) {
             setAllSchemas();
             closeConnection();
         }
+    }
+
+    public boolean getRequireSchema() {
+        return requireSchema;
     }
 
     /**
@@ -80,25 +90,24 @@ public class JDBCMetaData {
     }
 
     /* Creates a database connection and initializes the meta data details */
-    public String initConnection(){
+    public String initConnection() {
         LOGGER.debug("JDBCMetaData: initConnection");
 
         try {
             if (jdbcDriverClassName == null || jdbcDriverClassName.trim().length() == 0 ||
-                    jdbcConnectionUrl == null|| jdbcConnectionUrl.trim().length() == 0) {
-                errMsg = getResourceConverter().getFormattedString("jdbcMetaData.blank.exception", 
-                        "Driver={0}\nConnection URL={1}\nUse Preferences to set Database Connection parameters first and then open a Schema", 
+                jdbcConnectionUrl == null || jdbcConnectionUrl.trim().length() == 0)
+            {
+                errMsg = getResourceConverter().getFormattedString("jdbcMetaData.blank.exception",
+                        "Driver={0}\nConnection URL={1}\nUse Preferences to set Database Connection parameters first and then open a Schema",
                         new String[] { jdbcDriverClassName, jdbcConnectionUrl });
                 return errMsg;
             }
 
             Class.forName(jdbcDriverClassName);
 
-            if (jdbcUsername != null && jdbcUsername.length() > 0 &&
-                jdbcPassword != null && jdbcPassword.length() > 0) {
+            if (jdbcUsername != null && jdbcUsername.length() > 0) {
                 conn = DriverManager.getConnection(jdbcConnectionUrl, jdbcUsername, jdbcPassword);
             } else {
-
                 conn = DriverManager.getConnection(jdbcConnectionUrl);
             }
 
@@ -109,7 +118,7 @@ public class JDBCMetaData {
             db.productVersion   = md.getDatabaseProductVersion();
             db.catalogName      = conn.getCatalog();
 
-            LOGGER.debug("Catalog name = "+db.catalogName);
+            LOGGER.debug("Catalog name = " + db.catalogName);
             /*
             ResultSet rsd = md.getSchemas();
             while (rsd.next())
@@ -131,7 +140,7 @@ public class JDBCMetaData {
             return null;
         } catch (Exception e) {
             errMsg = e.getClass().getSimpleName() + " : " + e.getLocalizedMessage();
-            LOGGER.error("Database connection exception : "+errMsg, e);
+            LOGGER.error("Database connection exception : " + errMsg, e);
             return errMsg;
             //e.printStackTrace();
         }
@@ -146,31 +155,61 @@ public class JDBCMetaData {
         }
     }
 
+    /**
+     * Check to see if the schemaName is in the list of allowed jdbc schemas
+     *
+     * @param schemaName the name of the schmea
+     *
+     * @return true if found, or if jdbcSchema is null
+     */
+    private boolean inJdbcSchemas(String schemaName) {
+        if (jdbcSchema == null || jdbcSchema.trim().length() == 0) {
+            return true;
+        }
+
+        String schemas[] = jdbcSchema.split("[,;]");
+        for (String schema : schemas) {
+            if (schema.trim().equals(schemaName)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /* set all schemas in the currently connected database */
-    private void setAllSchemas(){
+    private void setAllSchemas() {
         LOGGER.debug("JDBCMetaData: setAllSchemas");
 
         ResultSet rs = null;
         boolean gotSchema = false;
 
-        try{
+        try {
             rs = md.getSchemas();
             /*
             if (true)
             throw new Exception("Schema concept not found in database");
              */
 
-            while(rs.next()) {
-                DbSchema dbs = new DbSchema();
-                dbs.name = rs.getString("TABLE_SCHEM");
-                LOGGER.debug("JDBCMetaData: setAllTables - " + dbs.name);
-                setAllTables(dbs);
-                db.addDbSchema(dbs);
-                gotSchema = true;
+            while (rs.next()) {
+                String schemaName = rs.getString("TABLE_SCHEM");
+                if (inJdbcSchemas(schemaName)) {
+                    DbSchema dbs = new DbSchema();
+                    dbs.name = schemaName;
+                    LOGGER.debug("JDBCMetaData: setAllTables - " + dbs.name);
+                    setAllTables(dbs);
+                    db.addDbSchema(dbs);
+                    gotSchema = true;
+                }
             }
-            rs.close();
         } catch (Exception e) {
-            LOGGER.debug("Exception : Database does not support schemas."+e.getMessage());
+            LOGGER.debug("Exception : Database does not support schemas." + e.getMessage());
+        } finally {
+            try {
+                rs.close();
+            } catch (Exception e) {
+                // ignore
+            }
         }
 
         if (!gotSchema) {
@@ -183,31 +222,48 @@ public class JDBCMetaData {
     }
 
     /* set all tables in the currently connected database */
-    private void setAllTables(DbSchema dbs){
+    private void setAllTables(DbSchema dbs) {
         LOGGER.debug("JDBCMetaData: Loading schema: '" + dbs.name + "'");
         ResultSet rs = null;
         try {
             // Tables and views can be used
-            rs = md.getTables(null, dbs.name, null, new String[]{"TABLE", "VIEW"});
-            while(rs.next()) {
+            try {
+                rs = md.getTables(null, dbs.name, null, new String[]{"TABLE", "VIEW"});
+            } catch (Exception e) {
+                // this is a workaround for databases that throw an exception
+                // when views are requested.
+                rs = md.getTables(null, dbs.name, null, new String[]{"TABLE"});
+            }
+            while (rs.next()) {
+                // Oracle 10g Driver returns bogus BIN$ tables that cause
+                // exceptions
                 String tbname = rs.getString("TABLE_NAME");
+                if (!tbname.matches("(?!BIN\\$).+")) {
+                    continue;
+                }
+
                 DbTable dbt;
 
                 /* Note  : Imported keys are foreign keys which are primary keys of in some other tables
                  *       : Exported keys are primary keys which are referenced as foreign keys in other tables.
                  */
                 ResultSet rs_fks = md.getImportedKeys(null, dbs.name, tbname);
-                if (rs_fks.next()) {
-                    dbt = new FactTable();
-                    do  {
-                        ((FactTable) dbt).addFks(rs_fks.getString("FKCOLUMN_NAME"),rs_fks.getString("pktable_name"));
-                    } while(rs_fks.next());
-
-                } else {
-                    dbt = new DbTable();
+                try {
+                    if (rs_fks.next()) {
+                        dbt = new FactTable();
+                        do  {
+                            ((FactTable) dbt).addFks(rs_fks.getString("FKCOLUMN_NAME"),rs_fks.getString("pktable_name"));
+                        } while (rs_fks.next());
+                    } else {
+                        dbt = new DbTable();
+                    }
+                } finally {
+                    try {
+                        rs_fks.close();
+                    } catch (Exception e) {
+                        // ignore
+                    }
                 }
-                rs_fks.close();
-
                 dbt.schemaName = dbs.name;
                 dbt.name = tbname;
                 setPKey(dbt);
@@ -215,18 +271,23 @@ public class JDBCMetaData {
                 dbs.addDbTable(dbt);
                 db.addDbTable(dbt);
             }
-            rs.close();
         } catch (Exception e) {
             LOGGER.error("setAllTables", e);
+        } finally {
+            try {
+                rs.close();
+            } catch (Exception e) {
+                // ignore
+            }
         }
     }
 
     /* get the Primary key name for a given table name
      * This key may be a  composite key made of multiple columns.
      */
-    private void setPKey(DbTable dbt){
+    private void setPKey(DbTable dbt) {
         ResultSet rs = null;
-        try{
+        try {
             rs = md.getPrimaryKeys(null, dbt.schemaName, dbt.name);
             /*
             while(rs.next()) {
@@ -237,23 +298,33 @@ public class JDBCMetaData {
                 //===dbt.pk = rs.getString("PK_NAME");  // a column may have been given a primary key name
                 dbt.pk = rs.getString("column_name");   // we need the column name which is primary key for the given table.
             }
-            rs.close();
         } catch (Exception e) {
             LOGGER.error("setPKey", e);
+        } finally {
+            try {
+                rs.close();
+            } catch (Exception e) {
+                // ignore
+            }
         }
     }
 
     /* get all columns for a given table name */
-    private void setColumns(DbTable dbt){
+    private void setColumns(DbTable dbt) {
         ResultSet rs = null;
-        try{
+        try {
             rs = md.getColumns(null, dbt.schemaName, dbt.name, null);
-            while(rs.next()) {
+            while (rs.next()) {
                 dbt.addColsDataType(rs.getString("COLUMN_NAME"), rs.getString("DATA_TYPE"));
             }
-            rs.close();
         } catch (Exception e) {
             LOGGER.error("setColumns", e);
+        } finally {
+            try {
+                rs.close();
+            } catch (Exception e) {
+                // ignore
+            }
         }
     }
 
@@ -273,7 +344,6 @@ public class JDBCMetaData {
 
     /* get all tables in given schema minus the given table name */
     public Vector<String> getAllTables(String schemaName, String minusTable) {
-
         if (minusTable == null) {
             return getAllTables(schemaName);
         } else {
@@ -335,7 +405,6 @@ public class JDBCMetaData {
     }
 
     public String getTablePK(String schemaName, String tableName) {
-
         if (tableName == null) {
             return null;
         } else {
@@ -361,7 +430,7 @@ public class JDBCMetaData {
                     }
                     for (int j = 0; j < cols.size(); j++) {
                         String col = cols.get(j);
-                        allcols.add(tab + "->"+ col);
+                        allcols.add(tab + "->" + col);
                     }
                 }
             return allcols;
@@ -372,12 +441,11 @@ public class JDBCMetaData {
 
     // get column data type of given table and its col
     public int getColumnDataType(String schemaName, String tableName, String colName) {
-        if (tableName == null || colName==null) {
+        if (tableName == null || colName == null) {
             return -1;
         } else {
             return db.getColumnDataType(schemaName, tableName, colName);
         }
-
     }
     public String getDbCatalogName() {
         return db.catalogName;
@@ -405,8 +473,9 @@ public class JDBCMetaData {
         String s = "somita->namita";
         String [] p = s.split("->");
         if (LOGGER.isDebugEnabled()) {
-            if (p.length >=2)
-                LOGGER.debug("p0="+p[0]+", p1="+p[1]);
+            if (p.length >= 2) {
+                LOGGER.debug("p0=" + p[0] + ", p1=" + p[1]);
+            }
         }
     }
 
@@ -440,6 +509,10 @@ public class JDBCMetaData {
             tablesCount.put(dbs.name, count);
         }
 
+        private boolean schemaNameEquals(String a, String b) {
+            return (a != null && a.equals(b));
+        }
+
         private Vector<String> getAllSchemas() {
             if (allSchemas == null) {
                 allSchemas = new Vector<String>();
@@ -457,7 +530,7 @@ public class JDBCMetaData {
                 return tablesCount.containsKey(tableName);
             } else {
                 for (DbSchema s : schemas) {
-                    if (s.name.equals(sname)) {
+                    if (schemaNameEquals(s.name, sname)) {
                         for (DbTable d : s.tables) {
                             if (d.name.equals(tableName)) {
                                 return true;
@@ -481,7 +554,7 @@ public class JDBCMetaData {
             } else {
                 // return a vector of "fk col name" string objects if schema is given
                 for (DbSchema s : schemas) {
-                    if (s.name.equals(sname)) {
+                    if (schemaNameEquals(s.name, sname)) {
                         for (DbTable t : s.tables) {
                             if (t.name.equals(tableName)) {
                                 return t.colsDataType.containsKey(colName);
@@ -507,11 +580,10 @@ public class JDBCMetaData {
                         v.add(d.schemaName + "->" + d.name);
                     }
                 }
-
             } else {
                 // return a vector of "tablename" string objects
                 for (DbSchema s : schemas) {
-                    if (s.name.equals(sname)) {
+                    if (schemaNameEquals(s.name, sname)) {
                         for (DbTable d : s.tables) {
                             v.add(d.name);
                         }
@@ -540,7 +612,7 @@ public class JDBCMetaData {
             } else {
                 // return a vector of "fact tablename" string objects if schema is given
                 for (DbSchema s : schemas) {
-                    if (s.name.equals(sname)) {
+                    if (schemaNameEquals(s.name, sname)) {
                         for (DbTable t : s.tables) {
                             if (t instanceof FactTable) {
                                 f.add(((FactTable) t).name);
@@ -585,7 +657,7 @@ public class JDBCMetaData {
             } else {
                 // return a vector of "fk col name" string objects if schema is given
                 for (DbSchema s : schemas) {
-                    if (s.name.equals(sname)) {
+                    if (schemaNameEquals(s.name, sname)) {
                         for (DbTable t : s.tables) {
                             if (t instanceof FactTable && t.name
                                 .equals(factTable)) {
@@ -635,7 +707,7 @@ public class JDBCMetaData {
             } else {
                 // return a vector of "fk col name" string objects if schema is given
                 for (DbSchema s : schemas) {
-                    if (s.name.equals(sname)) {
+                    if (schemaNameEquals(s.name, sname)) {
                         for (DbTable t : s.tables) {
                             if (t instanceof FactTable && t.name
                                 .equals(factTable)) {
@@ -651,7 +723,6 @@ public class JDBCMetaData {
         }
 
         private String getTablePK(String sname, String tableName) {
-
             if (sname == null || sname.equals("")) {
                 // return a vector of "schemaname -> table name -> dimension table name" string objects if schema is not given
                 for (DbTable t : tables) {
@@ -662,7 +733,7 @@ public class JDBCMetaData {
             } else {
                 // return a vector of "fk col name" string objects if schema is given
                 for (DbSchema s : schemas) {
-                    if (s.name.equals(sname)) {
+                    if (schemaNameEquals(s.name, sname)) {
                         for (DbTable t : s.tables) {
                             if (t.name.equals(tableName)) {
                                 return t.pk;
@@ -706,7 +777,7 @@ public class JDBCMetaData {
             } else {
                 // return a vector of "col name" string objects if schema is given
                 for (DbSchema s : schemas) {
-                    if (s.name.equals(sname)) {
+                    if (schemaNameEquals(s.name, sname)) {
                         for (DbTable t : s.tables) {
                             if (t.name.equals(tableName)) {
                                 f.addAll(t.colsDataType.keySet());
@@ -721,7 +792,6 @@ public class JDBCMetaData {
         }
 
         private int getColumnDataType(String sname, String tableName, String colName) {
-
             if (sname == null || sname.equals("")) {
                 for (DbTable t : tables) {
                     if (t.name.equals(tableName)) {
@@ -731,7 +801,7 @@ public class JDBCMetaData {
             } else {
                 // return a vector of "fk col name" string objects if schema is given
                 for (DbSchema s : schemas) {
-                    if (s.name.equals(sname)) {
+                    if (schemaNameEquals(s.name, sname)) {
                         for (DbTable t : s.tables) {
                             if (t.name.equals(tableName)) {
                                 return Integer.parseInt(
@@ -752,7 +822,7 @@ public class JDBCMetaData {
         /** ordered collection, allows duplicates and null */
         final List<DbTable> tables = new ArrayList<DbTable>();
 
-        private void addDbTable(DbTable dbt){
+        private void addDbTable(DbTable dbt) {
             tables.add(dbt);
         }
     }
@@ -767,7 +837,6 @@ public class JDBCMetaData {
         private void addColsDataType(String col, String dataType) {
             colsDataType.put(col, dataType);
         }
-
     }
 
     class FactTable extends DbTable {

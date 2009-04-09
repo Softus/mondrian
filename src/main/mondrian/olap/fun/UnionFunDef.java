@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/UnionFunDef.java#3 $
+// $Id: //open/mondrian/src/main/mondrian/olap/fun/UnionFunDef.java#5 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2007 Julian Hyde
+// Copyright (C) 2006-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -26,7 +26,7 @@ import java.util.ArrayList;
  * Definition of the <code>Union</code> MDX function.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/UnionFunDef.java#3 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/UnionFunDef.java#5 $
  * @since Mar 23, 2006
  */
 class UnionFunDef extends FunDefBase {
@@ -76,7 +76,7 @@ class UnionFunDef extends FunDefBase {
             result.addAll(list1);
             return result;
         } else {
-            Set added = new HashSet();
+            Set<Object> added = new HashSet<Object>();
             List<T> result = new ArrayList<T>();
             FunUtil.addUnique(result, list0, added);
             FunUtil.addUnique(result, list1, added);

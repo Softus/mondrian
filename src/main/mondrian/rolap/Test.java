@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/Test.java#3 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/Test.java#18 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2001-2002 Kana Software, Inc.
-// Copyright (C) 2001-2007 Julian Hyde and others
+// Copyright (C) 2001-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -13,19 +13,20 @@
 
 package mondrian.rolap;
 
-import mondrian.olap.DriverManager;
-import mondrian.olap.Id;
-
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
+
+import mondrian.olap.DriverManager;
+import mondrian.olap.Id;
+import mondrian.olap.Level;
 
 /**
  * todo:
  *
  * @author jhyde
  * @since 21 December, 2001
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/Test.java#3 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/Test.java#18 $
  */
 public class Test {
     PrintWriter pw;
@@ -88,13 +89,22 @@ public class Test {
             connection.commit();
         } finally {
             if (statement2 != null) {
-                try {statement2.close();} catch (java.sql.SQLException e) {}
+                try {
+                    statement2.close();
+                } catch (java.sql.SQLException e) {
+                }
             }
             if (statement != null) {
-                try {statement.close();} catch (java.sql.SQLException e) {}
+                try {
+                    statement.close();
+                } catch (java.sql.SQLException e) {
+                }
             }
             if (connection != null) {
-                try {connection.close();} catch (java.sql.SQLException e) {}
+                try {
+                    connection.close();
+                } catch (java.sql.SQLException e) {
+                }
             }
         }
     }
@@ -123,25 +133,25 @@ public class Test {
         pw.println("Count=" + reader.getMemberCount());
 
         pw.print("Root member(s)=");
-        RolapMember[] rootMembers = RolapUtil.toArray(reader.getRootMembers());
+        List<RolapMember> rootMembers = reader.getRootMembers();
         print(rootMembers);
         pw.println();
 
-        RolapLevel[] levels = (RolapLevel[]) rootMembers[0].getHierarchy().getLevels();
-        RolapLevel level = levels[levels.length > 1 ? 1 : 0];
+        Level[] levels = rootMembers.get(0).getHierarchy().getLevels();
+        Level level = levels[levels.length > 1 ? 1 : 0];
         pw.print("Members at level " + level.getUniqueName() + " are ");
-        RolapMember[] members = RolapUtil.toArray(reader.getMembersInLevel(level, 0, Integer.MAX_VALUE));
+        List<RolapMember> members = reader.getMembersInLevel((RolapLevel)level, 0, Integer.MAX_VALUE);
         print(members);
         pw.println();
 
         pw.println("First children of first children: {");
         List<RolapMember> firstChildren = new ArrayList<RolapMember>();
-        RolapMember member = rootMembers[0];
+        RolapMember member = rootMembers.get(0);
         while (member != null) {
             firstChildren.add(member);
             pw.print("\t");
             print(member);
-            ArrayList<RolapMember> children = new ArrayList<RolapMember>();
+            List<RolapMember> children = new ArrayList<RolapMember>();
             reader.getMemberChildren(member, children);
             if (children.isEmpty()) {
                 break;
@@ -169,14 +179,14 @@ public class Test {
         }
         pw.print("Member(" + member.getUniqueName() + ")");
     }
-    private void print(RolapMember[] members)
+    private void print(List<RolapMember> members)
     {
         pw.print("{");
-        for (int i = 0; i < members.length; i++) {
+        for (int i = 0; i < members.size(); i++) {
             if (i > 0) {
                 pw.print(", ");
             }
-            print(members[i]);
+            print(members.get(i));
         }
         pw.print("}");
     }

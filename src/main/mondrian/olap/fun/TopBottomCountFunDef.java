@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/TopBottomCountFunDef.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/fun/TopBottomCountFunDef.java#13 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2002-2002 Kana Software, Inc.
-// Copyright (C) 2002-2007 Julian Hyde and others
+// Copyright (C) 2002-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -15,40 +15,44 @@ import mondrian.calc.impl.AbstractListCalc;
 import mondrian.calc.ResultStyle;
 import mondrian.mdx.ResolvedFunCall;
 import mondrian.olap.*;
-import mondrian.olap.type.TupleType;
+import mondrian.olap.type.SetType;
 
-import java.util.List;
+import java.util.*;
 
 /**
  * Definition of the <code>TopCount</code> and <code>BottomCount</code>
  * MDX builtin functions.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/TopBottomCountFunDef.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/TopBottomCountFunDef.java#13 $
  * @since Mar 23, 2006
  */
 class TopBottomCountFunDef extends FunDefBase {
     boolean top;
 
-    static final MultiResolver TopCountResolver = new MultiResolver(
+    static final MultiResolver TopCountResolver =
+        new MultiResolver(
             "TopCount",
             "TopCount(<Set>, <Count>[, <Numeric Expression>])",
             "Returns a specified number of items from the top of a set, optionally ordering the set first.",
-            new String[]{"fxxnn", "fxxn"}) {
-        protected FunDef createFunDef(Exp[] args, FunDef dummyFunDef) {
-            return new TopBottomCountFunDef(dummyFunDef, true);
-        }
-    };
+            new String[]{"fxxnn", "fxxn"})
+        {
+            protected FunDef createFunDef(Exp[] args, FunDef dummyFunDef) {
+                return new TopBottomCountFunDef(dummyFunDef, true);
+            }
+        };
 
-    static final MultiResolver BottomCountResolver = new MultiResolver(
+    static final MultiResolver BottomCountResolver =
+        new MultiResolver(
             "BottomCount",
             "BottomCount(<Set>, <Count>[, <Numeric Expression>])",
             "Returns a specified number of items from the bottom of a set, optionally ordering the set first.",
-            new String[]{"fxxnn", "fxxn"}) {
-        protected FunDef createFunDef(Exp[] args, FunDef dummyFunDef) {
-            return new TopBottomCountFunDef(dummyFunDef, false);
-        }
-    };
+            new String[]{"fxxnn", "fxxn"})
+        {
+            protected FunDef createFunDef(Exp[] args, FunDef dummyFunDef) {
+                return new TopBottomCountFunDef(dummyFunDef, false);
+            }
+        };
 
     public TopBottomCountFunDef(FunDef dummyFunDef, final boolean top) {
         super(dummyFunDef);
@@ -57,7 +61,7 @@ class TopBottomCountFunDef extends FunDefBase {
 
     public Calc compileCall(final ResolvedFunCall call, ExpCompiler compiler) {
         // Compile the member list expression. Ask for a mutable list, because
-        // we're going to sortMembers it later.
+        // we're going to sort it later.
         final ListCalc listCalc =
                 compiler.compileList(call.getArg(0), true);
         final IntegerCalc integerCalc =
@@ -66,9 +70,7 @@ class TopBottomCountFunDef extends FunDefBase {
                 call.getArgCount() > 2 ?
                 compiler.compileScalar(call.getArg(2), true) :
                 null;
-        final int arity = call.getType() instanceof TupleType ?
-            ((TupleType) call.getType()).elementTypes.length :
-            1;
+        final int arity = ((SetType) call.getType()).getArity();
         return new AbstractListCalc(call, new Calc[] {listCalc, integerCalc, orderCalc}) {
             public List evaluateList(Evaluator evaluator) {
                 // Use a native evaluator, if more efficient.
@@ -81,33 +83,78 @@ class TopBottomCountFunDef extends FunDefBase {
                     return (List) nativeEvaluator.execute(ResultStyle.LIST);
                 }
 
-                List list = listCalc.evaluateList(evaluator);
-                int n = integerCalc.evaluateInteger(evaluator);
-// RME
-if (n == mondrian.olap.fun.FunUtil.IntegerNull) {
-    return new java.util.ArrayList();
-}
-                if (orderCalc != null) {
-                    if (arity == 1) {
-                        sortMembers(
-                            evaluator.push(),
-                            (List<Member>) list,
-                            orderCalc, top, true);
-                    } else {
-                        sortTuples(
-                            evaluator.push(),
-                            (List<mondrian.olap.Member[]>) list,
-                            orderCalc, top, true, arity);
-                    }
-                }
-                if (n < list.size()) {
-                    list = list.subList(0, n);
-                }
-                return list;
+                 // REVIEW mberkowitz Is it necessary to eval the list when n is null or zero?
+                 List list = listCalc.evaluateList(evaluator);
+                 if (list.isEmpty()) {
+                     return list;
+                 }
+
+                 int n = integerCalc.evaluateInteger(evaluator);
+                 if (n == 0 || n == mondrian.olap.fun.FunUtil.IntegerNull) {
+                     return new java.util.ArrayList();
+                 }
+
+                 if (orderCalc == null) {
+                     if (list instanceof AbstractList && list.size() < n) {
+                         return list;
+                     } else {
+                         return list.subList(0, n);
+                     }
+                 }
+
+                 return partiallySortList(evaluator, list, hasHighCardDimension(list), n, arity);
             }
+
+
+            private List partiallySortList(
+                Evaluator evaluator,
+                List list, boolean highCard, int n, int arity)
+            {
+                if (highCard) {
+                    // sort list in chunks, collect the results
+                    final int chunkSize = 6400; // what is this really?
+                    List allChunkResults = new ArrayList();
+                    Iterator listIter = list.iterator();
+                    while (listIter.hasNext()) {
+                        List chunk = new ArrayList();
+                        for (int count = 0; count < chunkSize && listIter.hasNext(); count++) {
+                            chunk.add(listIter.next());
+                        }
+                        List chunkResult = partiallySortList(evaluator, chunk, false, n, arity);
+                        allChunkResults.addAll(chunkResult);
+                    }
+                    // one last sort, to merge and cull
+                    return partiallySortList(evaluator, allChunkResults, false, n, arity);
+                }
+
+                // normal case: no need for chunks
+                if (arity == 1) {
+                    return partiallySortMembers(
+                        evaluator.push(), (List<Member>) list, orderCalc, n, top);
+                } else {
+                    return partiallySortTuples(
+                        evaluator.push(), (List<Member[]>) list, orderCalc, n, top, arity);
+                }
+            }
+
 
             public boolean dependsOn(Dimension dimension) {
                 return anyDependsButFirst(getCalcs(), dimension);
+            }
+
+            private boolean hasHighCardDimension(List l) {
+                final Object trial = l.get(0);
+                if (trial instanceof Member) {
+                    Member m = (Member) trial;
+                    return m.getHierarchy().getDimension().isHighCardinality();
+                } else {
+                    for (Member m : (Member[]) trial) {
+                        if (m.getHierarchy().getDimension().isHighCardinality()) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
             }
         };
     }

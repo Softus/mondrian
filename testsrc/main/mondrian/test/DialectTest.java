@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/DialectTest.java#4 $
+// $Id: //open/mondrian/testsrc/main/mondrian/test/DialectTest.java#18 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2007-2007 Julian Hyde
+// Copyright (C) 2007-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -16,18 +16,16 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.sql.SQLException;
 import java.sql.ResultSet;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-import java.util.HashSet;
+import java.util.*;
 
 import mondrian.olap.Util;
-import mondrian.rolap.sql.SqlQuery;
+import mondrian.spi.Dialect;
+import mondrian.spi.DialectManager;
 
 import javax.sql.DataSource;
 
 /**
- * Unit test which checks that {@link mondrian.rolap.sql.SqlQuery.Dialect}
+ * Unit test which checks that {@link mondrian.spi.Dialect}
  * accurately represents the capabilities of the underlying database.
  *
  * <p>The existing mondrian tests, when run on various databases and drivers,
@@ -44,13 +42,23 @@ import javax.sql.DataSource;
  * about them, we can change mondrian to use those features.</p>
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/DialectTest.java#4 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/test/DialectTest.java#18 $
  * @since May 18, 2007
  */
 public class DialectTest extends TestCase {
     private Connection connection;
-    private SqlQuery.Dialect dialect;
+    private Dialect dialect;
+    private static final String INFOBRIGHT_UNSUPPORTED =
+        "The query includes syntax that is not supported by the Infobright"
+        + " Optimizer. Either restructure the query with supported syntax, or"
+        + " enable the MySQL Query Path in the brighthouse.ini file to execute"
+        + " the query with reduced performance.";
 
+    /**
+     * Creates a DialectTest.
+     *
+     * @param name Test case name
+     */
     public DialectTest(String name) {
         super(name);
     }
@@ -73,9 +81,9 @@ public class DialectTest extends TestCase {
         super.tearDown();
     }
 
-    protected SqlQuery.Dialect getDialect() {
+    protected Dialect getDialect() {
         if (dialect == null) {
-            dialect = SqlQuery.Dialect.create(getDataSource());
+            dialect = DialectManager.createDialect(getDataSource(), null);
         }
         return dialect;
     }
@@ -83,7 +91,7 @@ public class DialectTest extends TestCase {
     protected Connection getConnection() {
         if (connection == null) {
             try {
-            connection = getDataSource().getConnection();
+                connection = getDataSource().getConnection();
             } catch (SQLException e) {
                 throw Util.newInternal(e, "while creating connection");
             }
@@ -106,12 +114,16 @@ public class DialectTest extends TestCase {
                 "Syntax error: Encountered \",\" at line 1, column 36.",
                 // access
                 "\\[Microsoft\\]\\[ODBC Microsoft Access Driver\\] Syntax error \\(missing operator\\) in query expression '.*'.",
+                // infobright
+                INFOBRIGHT_UNSUPPORTED,
                 // postgres
                 "ERROR: function count\\(integer, integer\\) does not exist",
                 // LucidDb
                 ".*Invalid number of arguments to function 'COUNT'. Was expecting 1 arguments",
                 // teradata
                 ".*Syntax error: expected something between the word 'customer_id' and ','\\..*",
+                // netezza
+                "(?s).*ERROR:  Function 'COUNT', number of parameters greater than the maximum \\(1\\).*",
             };
             assertQueryFails(sql, errs);
         }
@@ -173,13 +185,21 @@ public class DialectTest extends TestCase {
         SQLException e = null;
         Statement stmt = null;
         try {
+            String dropSql = dialectize("drop table [foo]");
+            String createSql = dialectize("create table [foo] ([i] integer)");
             stmt = getConnection().createStatement();
-            String sql = dialectize("create table [foo] ([i] integer)");
+
+            // drop previously existing table, and ignore any errors
+            try {
+                stmt.execute(dropSql);
+            } catch (SQLException e3) {
+                // ignore
+            }
+            // now create and drop a dummy table
             phase = 1;
-            assertFalse(stmt.execute(sql));
+            assertFalse(stmt.execute(createSql));
             phase = 2;
-            sql = dialectize("drop table [foo]");
-            assertFalse(stmt.execute(sql));
+            assertFalse(stmt.execute(dropSql));
             phase = 3;
         } catch (SQLException e2) {
             e = e2;
@@ -193,8 +213,8 @@ public class DialectTest extends TestCase {
             }
         }
         if (getDialect().allowsDdl()) {
+            assertNull(e == null ? null : e.getMessage(), e);
             assertEquals(3, phase);
-            assertNull(e);
         } else {
             assertEquals(1, phase);
             assertNotNull(e);
@@ -231,6 +251,8 @@ public class DialectTest extends TestCase {
                 "ERROR: subquery in FROM must have an alias",
                 // teradata
                 ".*Syntax error, expected something like a name or a Unicode delimited identifier or an 'UDFCALLNAME' keyword between '\\)' and ';'\\.",
+                // netezza
+                "(?s).*ERROR:  sub-SELECT in FROM must have an alias.*",
             };
             assertQueryFails(sql, errs);
         } else {
@@ -244,7 +266,11 @@ public class DialectTest extends TestCase {
                 "FROM [sales_fact_1997]\n" +
                 "ORDER BY [unit_sales] + [store_id]");
         if (getDialect().requiresOrderByAlias()) {
-            assertQueryFails(sql, new String[] {});
+            final String[] errs = {
+                // infobright
+                INFOBRIGHT_UNSUPPORTED,
+            };
+            assertQueryFails(sql, errs);
         } else {
             assertQuerySucceeds(sql);
         }
@@ -263,7 +289,9 @@ public class DialectTest extends TestCase {
                 // oracle
                 "(?s)ORA-03001: unimplemented feature.*",
                 // access
-                "\\[Microsoft\\]\\[ODBC Microsoft Access Driver\\] Too few parameters. Expected 1."
+                "\\[Microsoft\\]\\[ODBC Microsoft Access Driver\\] Too few parameters. Expected 1.",
+                // infobright
+                INFOBRIGHT_UNSUPPORTED,
             };
             assertQueryFails(sql, errs);
         }
@@ -271,19 +299,23 @@ public class DialectTest extends TestCase {
 
     public void testSupportsGroupByExpressions() {
         String sql =
-            dialectize("SELECT sum([unit_sales] + 3 ) + 8\n" +
+            dialectize("SELECT sum([unit_sales] + 3) + 8\n" +
                 "FROM [sales_fact_1997]\n" +
                 "GROUP BY [unit_sales] + [store_id]");
         if (getDialect().supportsGroupByExpressions()) {
             assertQuerySucceeds(sql);
         } else {
-            assertQueryFails(sql, new String[] {});
+            assertQueryFails(
+                sql,
+                new String[] {
+                    "'sum\\(`unit_sales` \\+ 3\\) \\+ 8' isn't in GROUP BY"
+                });
         }
     }
 
     /**
      * Tests that the
-     * {@link mondrian.rolap.sql.SqlQuery.Dialect#supportsGroupingSets()}
+     * {@link mondrian.spi.Dialect#supportsGroupingSets()}
      * dialect property is accurate.
      */
     public void testAllowsGroupingSets() {
@@ -309,6 +341,8 @@ public class DialectTest extends TestCase {
                 "(?s)\\[Microsoft\\]\\[ODBC Microsoft Access Driver\\] Syntax error \\(missing operator\\) in query expression 'GROUPING SETS.*",
                 // postgres
                 "ERROR: syntax error at or near \"SETS\"",
+                // netezza
+                "(?s).*found \"SETS\" \\(at char 135\\) expecting `EXCEPT' or `FOR' or `INTERSECT' or `ORDER' or `UNION'.*",
             };
             assertQueryFails(sql, errs);
         }
@@ -319,6 +353,7 @@ public class DialectTest extends TestCase {
             dialectize("SELECT [unit_sales]\n" +
                 "FROM [sales_fact_1997]\n" +
                 "WHERE ([unit_sales], [time_id]) IN ((1, 371), (2, 394))");
+
         if (getDialect().supportsMultiValueInExpr()) {
             assertQuerySucceeds(sql);
         } else {
@@ -327,8 +362,12 @@ public class DialectTest extends TestCase {
                 "Syntax error: Encountered \",\" at line 3, column 20.",
                 // access
                 "\\[Microsoft\\]\\[ODBC Microsoft Access Driver\\] Syntax error \\(comma\\) in query expression '.*'.",
+                // infobright
+                INFOBRIGHT_UNSUPPORTED,
                 // teradata
                 ".*Syntax error, expected something like a 'SELECT' keyword or '\\(' between '\\(' and the integer '1'\\.",
+                // netezza
+                "(?s).*found \"1\" \\(at char 81\\) expecting `SELECT' or `'\\(''.*",
             };
             assertQueryFails(sql, errs);
         }
@@ -386,15 +425,81 @@ public class DialectTest extends TestCase {
     }
 
     public void testGenerateInline() throws SQLException {
-        assertInline(new String[]{"a", "1"});
-        assertInline(new String[]{"a", "1"}, new String[]{"bb", "2"});
+        final List<String> typeList = Arrays.asList("String", "Numeric");
+        final List<String> nameList = Arrays.asList("x", "y");
+        assertInline(
+            nameList, typeList,
+            new String[]{"a", "1"});
+
+        assertInline(
+            nameList, typeList,
+            new String[]{"a", "1"}, new String[]{"bb", "2"});
+
+        // date value
+        final List<String> typeList2 = Arrays.asList("String", "Date");
+        assertInline(
+            nameList, typeList2,
+            new String[]{"a", "2008-04-29"}, new String[]{"b", "2007-01-02"});
     }
 
-    private void assertInline(String[]... valueList) throws SQLException {
+    /**
+     * Tests that the method {@link mondrian.spi.Dialect#getNullCollation()}
+     * is accurate.
+     */
+    public void testNullCollation() throws SQLException {
+        Dialect dialect = getDialect();
+        String ascQuery =
+            "select "
+            + dialect.quoteIdentifier("grocery_sqft")
+            + " from "
+            + dialect.quoteIdentifier("store")
+            + " order by "
+            + dialect.quoteIdentifier("grocery_sqft");
+        String descQuery = ascQuery + " DESC";
+        Dialect.NullCollation nullCollation = getDialect().getNullCollation();
+        switch (nullCollation) {
+        case NEGINF:
+            assertFirstLast(ascQuery, null, 30351);
+            assertFirstLast(descQuery, 30351, null);
+            break;
+        case POSINF:
+            assertFirstLast(ascQuery, 13305, null);
+            assertFirstLast(descQuery, null, 13305);
+            break;
+        default:
+            fail("unexpected value " + nullCollation);
+        }
+    }
+
+    private void assertFirstLast(
+        String query,
+        Integer expectedFirst,
+        Integer expectedLast) throws SQLException
+    {
+        ResultSet resultSet =
+            getConnection().createStatement().executeQuery(query);
+        List<Integer> values = new ArrayList<Integer>();
+        while (resultSet.next()) {
+            values.add(resultSet.getInt(1));
+            if (resultSet.wasNull()) {
+                values.set(values.size() - 1, null);
+            }
+        }
+        resultSet.close();
+        Integer actualFirst = values.get(0);
+        Integer actualLast = values.get(values.size() - 1);
+        assertEquals(expectedFirst, actualFirst);
+        assertEquals(expectedLast, actualLast);
+    }
+
+    private void assertInline(
+        List<String> nameList,
+        List<String> typeList,
+        String[]... valueList) throws SQLException {
         String sql =
             getDialect().generateInline(
-                Arrays.asList("x", "y"),
-                Arrays.asList("String", "Numeric"),
+                nameList,
+                typeList,
                 Arrays.asList(valueList));
         Statement stmt = null;
         try {
@@ -402,16 +507,28 @@ public class DialectTest extends TestCase {
             ResultSet resultSet = stmt.executeQuery(sql);
             Set<List<String>> actualValues = new HashSet<List<String>>();
             while (resultSet.next()) {
-                actualValues.add(
-                    Arrays.asList(
-                        resultSet.getString(1),
-                        String.valueOf(resultSet.getInt(2))));
+                final List<String> row = new ArrayList<String>();
+                for (int i = 0; i < typeList.size(); i++) {
+                    final String s;
+                    final String type = typeList.get(i);
+                    if (type.equals("String")) {
+                        s = resultSet.getString(i + 1);
+                    } else if (type.equals("Date")) {
+                        s = String.valueOf(resultSet.getDate(i + 1));
+                    } else if (type.equals("Numeric")) {
+                        s = String.valueOf(resultSet.getInt(i + 1));
+                    } else {
+                        throw new RuntimeException("unknown type " + type);
+                    }
+                    row.add(s);
+                }
+                actualValues.add(row);
             }
             Set<List<String>> expectedRows = new HashSet<List<String>>();
             for (String[] strings : valueList) {
                 expectedRows.add(Arrays.asList(strings));
             }
-            assertEquals(actualValues, expectedRows);
+            assertEquals(expectedRows, actualValues);
             stmt.close();
             stmt = null;
         } finally {
@@ -432,17 +549,25 @@ public class DialectTest extends TestCase {
      * @return Query or DDL statement translated into this dialect
      */
     private String dialectize(String s) {
-        if (getDialect().isAccess()) {
-            ;
-        } else if (getDialect().isMySQL()) {
+        final Dialect.DatabaseProduct databaseProduct =
+            getDialect().getDatabaseProduct();
+        switch (databaseProduct) {
+        case ACCESS:
+            break;
+        case MYSQL:
+        case INFOBRIGHT:
             s = s.replace('[', '`');
             s = s.replace(']', '`');
-        } else {
+            break;
+        case ORACLE:
             s = s.replace('[', '"');
             s = s.replace(']', '"');
-            if (getDialect().isOracle()) {
-                s = s.replaceAll(" as ", "");
-            }
+            s = s.replaceAll(" as ", "");
+            break;
+        default:
+            s = s.replace('[', '"');
+            s = s.replace(']', '"');
+            break;
         }
         return s;
     }

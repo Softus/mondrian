@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/loader/CsvDBTestCase.java#2 $
+// $Id: //open/mondrian/testsrc/main/mondrian/test/loader/CsvDBTestCase.java#10 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2007 Julian Hyde and others
+// Copyright (C) 2005-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -13,6 +13,8 @@ import mondrian.olap.Schema;
 import mondrian.rolap.RolapConnection;
 import mondrian.test.FoodMartTestCase;
 import mondrian.test.TestContext;
+import mondrian.spi.Dialect;
+
 import java.sql.SQLException;
 import java.sql.Connection;
 import java.io.File;
@@ -29,7 +31,7 @@ import java.io.File;
  * abstract methods.
  *
  * @author Richard M. Emberson
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/loader/CsvDBTestCase.java#2 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/test/loader/CsvDBTestCase.java#10 $
  */
 public abstract class CsvDBTestCase extends FoodMartTestCase {
 
@@ -46,7 +48,10 @@ public abstract class CsvDBTestCase extends FoodMartTestCase {
     }
 
     protected final boolean isApplicable() {
-        return getTestContext().getDialect().allowsDdl();
+        final Dialect dialect = getTestContext().getDialect();
+        return dialect.allowsDdl()
+            && dialect.getDatabaseProduct()
+            != Dialect.DatabaseProduct.INFOBRIGHT;
     }
 
     protected void setUp() throws Exception {

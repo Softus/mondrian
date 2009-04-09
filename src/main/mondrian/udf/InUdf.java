@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/udf/InUdf.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/udf/InUdf.java#4 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2006 Julian Hyde and others
+// Copyright (C) 2006-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -21,12 +21,11 @@ import java.util.regex.*;
  * User-defined function <code>IN</code>.
  *
  * @author schoi
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/udf/InUdf.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/udf/InUdf.java#4 $
  */
 public class InUdf implements UserDefinedFunction {
 
     public Object execute(Evaluator evaluator, Argument[] arguments) {
-
         Object arg0 = arguments[0].evaluate(evaluator);
         List arg1 = (List) arguments[1].evaluate(evaluator);
 

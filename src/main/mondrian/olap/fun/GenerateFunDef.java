@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/GenerateFunDef.java#3 $
+// $Id: //open/mondrian/src/main/mondrian/olap/fun/GenerateFunDef.java#9 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2007 Julian Hyde
+// Copyright (C) 2006-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -11,10 +11,7 @@ package mondrian.olap.fun;
 
 import mondrian.olap.*;
 import mondrian.olap.type.*;
-import mondrian.calc.Calc;
-import mondrian.calc.ExpCompiler;
-import mondrian.calc.ListCalc;
-import mondrian.calc.StringCalc;
+import mondrian.calc.*;
 import mondrian.calc.impl.AbstractListCalc;
 import mondrian.calc.impl.ConstantCalc;
 import mondrian.calc.impl.AbstractStringCalc;
@@ -30,7 +27,7 @@ import java.util.Set;
  * Definition of the <code>Generate</code> MDX function.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/GenerateFunDef.java#3 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/GenerateFunDef.java#9 $
  * @since Mar 23, 2006
  */
 class GenerateFunDef extends FunDefBase {
@@ -68,9 +65,8 @@ class GenerateFunDef extends FunDefBase {
     }
 
     public Calc compileCall(ResolvedFunCall call, ExpCompiler compiler) {
-        final ListCalc listCalc = compiler.compileList(call.getArg(0));
-        final boolean tuple = ((SetType) listCalc.getType()).getElementType()
-            instanceof TupleType;
+        final IterCalc iterCalc = compiler.compileIter(call.getArg(0));
+        final boolean tupleIn = ((SetType) iterCalc.getType()).getArity() != 1;
         if (call.getArg(1).getType() instanceof StringType) {
             final StringCalc stringCalc = compiler.compileString(call.getArg(1));
             final StringCalc delimCalc;
@@ -81,91 +77,163 @@ class GenerateFunDef extends FunDefBase {
             }
 
             return new GenerateStringCalcImpl(
-                call, listCalc, stringCalc, tuple, delimCalc);
+                call, iterCalc, stringCalc, tupleIn, delimCalc);
         } else {
             final ListCalc listCalc2 = compiler.compileList(call.getArg(1));
             final String literalArg = getLiteralArg(call, 2, "", ReservedWords);
             final boolean all = literalArg.equalsIgnoreCase("ALL");
-
+            final boolean tupleOut = ((SetType) call.getType()).getArity() != 1;
             return new GenerateListCalcImpl(
-                call, listCalc, listCalc2, tuple, all);
+                call, iterCalc, listCalc2, tupleIn, tupleOut, all);
         }
     }
 
     private static class GenerateListCalcImpl extends AbstractListCalc {
-        private final ListCalc listCalc1;
-        private final ListCalc listCalc2;
-        private final boolean tuple;
+        private final MemberIterCalc memberIterCalc1;
+        private final TupleIterCalc tupleIterCalc1;
+        private final MemberListCalc memberListCalc2;
+        private final TupleListCalc tupleListCalc2;
+        private final boolean tupleIn;
+        private final boolean tupleOut;
         private final boolean all;
 
         public GenerateListCalcImpl(
             ResolvedFunCall call,
-            ListCalc listCalc1,
+            IterCalc iterCalc,
             ListCalc listCalc2,
-            boolean tuple, boolean all) {
-            super(call, new Calc[]{listCalc1, listCalc2});
-            this.listCalc1 = listCalc1;
-            this.listCalc2 = listCalc2;
-            this.tuple = tuple;
+            boolean tupleIn,
+            boolean tupleOut,
+            boolean all)
+        {
+            super(call, new Calc[]{iterCalc, listCalc2});
+            if (tupleIn) {
+                this.memberIterCalc1 = null;
+                this.tupleIterCalc1 = (TupleIterCalc) iterCalc;
+            } else {
+                this.memberIterCalc1 = (MemberIterCalc) iterCalc;
+                this.tupleIterCalc1 = null;
+            }
+            if (tupleOut) {
+                this.memberListCalc2 = null;
+                this.tupleListCalc2 = (TupleListCalc) listCalc2;
+            } else {
+                this.memberListCalc2 = (MemberListCalc) listCalc2;
+                this.tupleListCalc2 = null;
+            }
+            this.tupleIn = tupleIn;
+            this.tupleOut = tupleOut;
             this.all = all;
         }
 
         public List evaluateList(Evaluator evaluator) {
-            List<Object> result = new ArrayList<Object>();
-            if (tuple) {
-                final List<Member[]> list1 = listCalc1.evaluateList(evaluator);
-                final Evaluator evaluator2 = evaluator.push();
-                if (all) {
-                    for (Member[] members : list1) {
-                        evaluator2.setContext(members);
-                        final List<Object> result2 =
-                            listCalc2.evaluateList(evaluator2);
-                        result.addAll(result2);
+            evaluator = evaluator.push(false);
+            // 8 cases - all of the combinations of tupleIn x tupleOut x all
+            final Evaluator evaluator2 = evaluator.push();
+            if (tupleIn) {
+                final Iterable<Member[]> iterable1 =
+                    tupleIterCalc1.evaluateTupleIterable(evaluator);
+                if (tupleOut) {
+                    List<Member[]> result = new ArrayList<Member[]>();
+                    if (all) {
+                        for (Member[] members : iterable1) {
+                            evaluator2.setContext(members);
+                            final List<Member[]> result2 =
+                                tupleListCalc2.evaluateTupleList(evaluator2);
+                            result.addAll(result2);
+                        }
+                    } else {
+                        final Set<List<Member>> emitted =
+                            new HashSet<List<Member>>();
+                        for (Member[] members : iterable1) {
+                            evaluator2.setContext(members);
+                            final List<Member[]> result2 =
+                                tupleListCalc2.evaluateTupleList(evaluator2);
+                            addDistinctTuples(result, result2, emitted);
+                        }
                     }
+                    return result;
                 } else {
-                    final Set<Object> emitted = new HashSet<Object>();
-                    for (Member[] members : list1) {
+                    List<Member> result = new ArrayList<Member>();
+                    final Set<Member> emitted =
+                        all ? null : new HashSet<Member>();
+                    for (Member[] members : iterable1) {
                         evaluator2.setContext(members);
-                        final List<Object> result2 =
-                            listCalc2.evaluateList(evaluator2);
-                        addDistinct(result, result2, emitted);
+                        final List<Member> result2 =
+                            memberListCalc2.evaluateMemberList(evaluator2);
+                        if (emitted != null) {
+                            addDistinctMembers(result, result2, emitted);
+                        } else {
+                            result.addAll(result2);
+                        }
                     }
+                    return result;
                 }
             } else {
-                final List<Member> list1 = listCalc1.evaluateList(evaluator);
-                final Evaluator evaluator2 = evaluator.push();
-                if (all) {
-                    for (Member member : list1) {
-                        evaluator2.setContext(member);
-                        final List<Object> result2 =
-                            listCalc2.evaluateList(evaluator2);
-                        result.addAll(result2);
+                final Iterable<Member> iterable1 =
+                    memberIterCalc1.evaluateMemberIterable(evaluator);
+                if (tupleOut) {
+                    List<Member[]> result = new ArrayList<Member[]>();
+                    if (all) {
+                        for (Member member : iterable1) {
+                            evaluator2.setContext(member);
+                            final List<Member[]> result2 =
+                                tupleListCalc2.evaluateTupleList(evaluator2);
+                            result.addAll(result2);
+                        }
+                    } else {
+                        final Set<List<Member>> emitted =
+                            new HashSet<List<Member>>();
+                        for (Member member : iterable1) {
+                            evaluator2.setContext(member);
+                            final List<Member[]> result2 =
+                                tupleListCalc2.evaluateTupleList(evaluator2);
+                            addDistinctTuples(result, result2, emitted);
+                        }
                     }
+                    return result;
                 } else {
-                    Set<Object> emitted = new HashSet<Object>();
-                    for (Member member : list1) {
-                        evaluator2.setContext(member);
-                        final List<Object> result2 =
-                            listCalc2.evaluateList(evaluator2);
-                        addDistinct(result, result2, emitted);
+                    List<Member> result = new ArrayList<Member>();
+                    if (all) {
+                        for (Member member : iterable1) {
+                            evaluator2.setContext(member);
+                            final List<Member> result2 =
+                                memberListCalc2.evaluateMemberList(evaluator2);
+                            result.addAll(result2);
+                        }
+                    } else {
+                        final Set<Member> emitted = new HashSet<Member>();
+                        for (Member member : iterable1) {
+                            evaluator2.setContext(member);
+                            final List<Member> result2 =
+                                memberListCalc2.evaluateMemberList(evaluator2);
+                            addDistinctMembers(result, result2, emitted);
+                        }
                     }
+                    return result;
                 }
             }
-            return result;
         }
 
-        private void addDistinct(
-            List<Object> result,
-            List<Object> result2,
-            Set<Object> emitted) {
-
-            for (Object row : result2) {
-                Object entry = row;
-                if (entry instanceof Member []) {
-                    // wrap array for correct distinctness test
-                    entry = new ArrayHolder<Member>((Member []) entry);
+        private static void addDistinctMembers(
+            List<Member> result,
+            List<Member> result2,
+            Set<Member> emitted)
+        {
+            for (Member row : result2) {
+                if (emitted.add(row)) {
+                    result.add(row);
                 }
-                if (emitted.add(entry)) {
+            }
+        }
+
+        private static void addDistinctTuples(
+            List<Member[]> result,
+            List<Member[]> result2,
+            Set<List<Member>> emitted)
+        {
+            for (Member[] row : result2) {
+                // wrap array for correct distinctness test
+                if (emitted.add(Arrays.asList(row))) {
                     result.add(row);
                 }
             }
@@ -177,18 +245,27 @@ class GenerateFunDef extends FunDefBase {
     }
 
     private static class GenerateStringCalcImpl extends AbstractStringCalc {
-        private final ListCalc listCalc;
+        private final MemberIterCalc memberIterCalc;
+        private final TupleIterCalc tupleIterCalc;
         private final StringCalc stringCalc;
         private final boolean tuple;
         private final StringCalc sepCalc;
 
         public GenerateStringCalcImpl(
             ResolvedFunCall call,
-            ListCalc listCalc,
+            IterCalc listCalc,
             StringCalc stringCalc,
-            boolean tuple, StringCalc sepCalc) {
+            boolean tuple,
+            StringCalc sepCalc)
+        {
             super(call, new Calc[]{listCalc, stringCalc});
-            this.listCalc = listCalc;
+            if (listCalc instanceof MemberIterCalc) {
+                this.memberIterCalc = (MemberIterCalc) listCalc;
+                this.tupleIterCalc = null;
+            } else {
+                this.memberIterCalc = null;
+                this.tupleIterCalc = (TupleIterCalc) listCalc;
+            }
             this.stringCalc = stringCalc;
             this.tuple = tuple;
             this.sepCalc = sepCalc;
@@ -198,9 +275,10 @@ class GenerateFunDef extends FunDefBase {
             StringBuilder buf = new StringBuilder();
             int k = 0;
             if (tuple) {
-                final List<Member[]> list1 = listCalc.evaluateList(evaluator);
+                final Iterable<Member[]> iter11 =
+                    tupleIterCalc.evaluateTupleIterable(evaluator);
                 final Evaluator evaluator2 = evaluator.push();
-                for (Member[] members : list1) {
+                for (Member[] members : iter11) {
                     evaluator2.setContext(members);
                     if (k++ > 0) {
                         String sep = sepCalc.evaluateString(evaluator2);
@@ -211,9 +289,10 @@ class GenerateFunDef extends FunDefBase {
                     buf.append(result2);
                 }
             } else {
-                final List<Member> list1 = listCalc.evaluateList(evaluator);
+                final Iterable<Member> iter1 =
+                    memberIterCalc.evaluateMemberIterable(evaluator);
                 final Evaluator evaluator2 = evaluator.push();
-                for (Member member : list1) {
+                for (Member member : iter1) {
                     evaluator2.setContext(member);
                     if (k++ > 0) {
                         String sep = sepCalc.evaluateString(evaluator2);

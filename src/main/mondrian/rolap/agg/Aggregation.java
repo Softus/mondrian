@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/agg/Aggregation.java#3 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/agg/Aggregation.java#57 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2001-2007 Julian Hyde and others
+// Copyright (C) 2001-2008 Julian Hyde and others
 // Copyright (C) 2001-2002 Kana Software, Inc.
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
@@ -53,7 +53,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * required for the actual values, which is the same in any scheme.</p>
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/agg/Aggregation.java#3 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/agg/Aggregation.java#57 $
  * @since 28 August, 2001
  */
 public class Aggregation {
@@ -97,13 +97,13 @@ public class Aggregation {
      *                       the RolapStar for this Aggregation
      */
     public Aggregation(
-            AggregationKey aggregationKey) {
+        AggregationKey aggregationKey)
+    {
         this.segmentRefs = getThreadSafeListImplementation();
         this.maxConstraints =
                 MondrianProperties.instance().MaxConstraints.get();
         this.creationTimestamp = new Date();
         this.aggregationKey = aggregationKey;
-
     }
 
     private CopyOnWriteArrayList<SoftReference<Segment>> getThreadSafeListImplementation() {
@@ -334,7 +334,7 @@ public class Aggregation {
         Arrays.sort(indexes, comparator);
 
         // Eliminate constraints one by one, until the constrained cell count
-        // became half of the unconstrained cell count. We can not have an 
+        // became half of the unconstrained cell count. We can not have an
         // absolute value here, because its
         // very different if we fetch data for 2 years or 10 years (5 times
         // more means 5 times slower). So a relative comparison is ok here

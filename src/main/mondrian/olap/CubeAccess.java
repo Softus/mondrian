@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/CubeAccess.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/CubeAccess.java#14 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 1999-2002 Kana Software, Inc.
-// Copyright (C) 2001-2007 Julian Hyde and others
+// Copyright (C) 2001-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -69,7 +69,7 @@ public class CubeAccess {
 
     public boolean isHierarchyAllowed(Hierarchy mdxHierarchy) {
         String hierName = mdxHierarchy.getUniqueName();
-        if(noAccessHierarchies == null || hierName == null) {
+        if (noAccessHierarchies == null || hierName == null) {
             return true;
         }
         for (Hierarchy noAccessHierarchy : noAccessHierarchies) {
@@ -138,7 +138,7 @@ public class CubeAccess {
         if (hierarchyList.size() > 0) {
             noAccessHierarchies =
                 hierarchyList.toArray(
-                    new Hierarchy[ hierarchyList.size()]);
+                    new Hierarchy[hierarchyList.size()]);
             hasRestrictions = true;
         }
     }

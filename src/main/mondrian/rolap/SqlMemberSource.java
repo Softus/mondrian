@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/SqlMemberSource.java#3 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/SqlMemberSource.java#97 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2001-2002 Kana Software, Inc.
-// Copyright (C) 2001-2007 Julian Hyde and others
+// Copyright (C) 2001-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -13,12 +13,14 @@
 
 package mondrian.rolap;
 
+import mondrian.gui.MondrianGuiDef.AggTable;
 import mondrian.olap.*;
 import mondrian.resource.MondrianResource;
 import mondrian.rolap.sql.*;
 import mondrian.rolap.aggmatcher.AggStar;
 import mondrian.rolap.agg.AggregationManager;
 import mondrian.rolap.agg.CellRequest;
+import mondrian.spi.Dialect;
 
 import javax.sql.DataSource;
 import java.sql.*;
@@ -31,10 +33,13 @@ import java.util.*;
  *
  * @author jhyde
  * @since 21 December, 2001
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/SqlMemberSource.java#3 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/SqlMemberSource.java#97 $
  */
-class SqlMemberSource implements MemberReader, SqlTupleReader.MemberBuilder {
-    private final SqlConstraintFactory sqlConstraintFactory = SqlConstraintFactory.instance();
+class SqlMemberSource
+    implements MemberReader, SqlTupleReader.MemberBuilder
+{
+    private final SqlConstraintFactory sqlConstraintFactory =
+        SqlConstraintFactory.instance();
     private final RolapHierarchy hierarchy;
     private final DataSource dataSource;
     private MemberCache cache;
@@ -115,8 +120,8 @@ class SqlMemberSource implements MemberReader, SqlTupleReader.MemberBuilder {
                 while (resultSet.next()) {
                     ++stmt.rowCount;
                     boolean isEqual = true;
-                    for (int i = 0; i < nColumns; i++ ) {
-                        String colStr = resultSet.getString(i+1);
+                    for (int i = 0; i < nColumns; i++) {
+                        String colStr = resultSet.getString(i + 1);
                         if (!colStr.equals(colStrings[i])) {
                             isEqual = false;
                         }
@@ -190,7 +195,9 @@ class SqlMemberSource implements MemberReader, SqlTupleReader.MemberBuilder {
                         // generate any count and do the count
                         // distinct "manually".
                         mustCount[0] = true;
-                    } else if (sqlQuery.getDialect().isSybase()) {
+                    } else if (sqlQuery.getDialect().getDatabaseProduct()
+                        == Dialect.DatabaseProduct.SYBASE)
+                    {
                         // "select count(distinct convert(varchar, c1) +
                         // convert(varchar, c2)) from table"
                         if (columnCount == 1) {
@@ -217,8 +224,9 @@ class SqlMemberSource implements MemberReader, SqlTupleReader.MemberBuilder {
                 String keyExp = level2.getKeyExp().getExpression(sqlQuery);
                 if (columnCount > 0 &&
                     !sqlQuery.getDialect().allowsCompoundCountDistinct() &&
-                    sqlQuery.getDialect().isSybase()) {
-
+                    sqlQuery.getDialect().getDatabaseProduct()
+                        == Dialect.DatabaseProduct.SYBASE)
+                {
                     keyExp = "convert(varchar, " + columnList + ")";
                 }
                 columnList += keyExp;
@@ -263,11 +271,11 @@ class SqlMemberSource implements MemberReader, SqlTupleReader.MemberBuilder {
     }
 
 
-    public RolapMember[] getMembers() {
+    public List<RolapMember> getMembers() {
         return getMembers(dataSource);
     }
 
-    private RolapMember[] getMembers(DataSource dataSource) {
+    private List<RolapMember> getMembers(DataSource dataSource) {
         String sql = makeKeysSql(dataSource);
         RolapLevel[] levels = (RolapLevel[]) hierarchy.getLevels();
         SqlStatement stmt =
@@ -292,8 +300,7 @@ class SqlMemberSource implements MemberReader, SqlTupleReader.MemberBuilder {
                     // result limit exceeded, throw an exception
                     throw stmt.handle(
                         MondrianResource.instance().MemberFetchLimitExceeded.
-                        ex(limit)
-                    );
+                        ex(limit));
                 }
 
                 int column = 0;
@@ -346,7 +353,7 @@ RME is this right
                 }
             }
 
-            return RolapUtil.toArray(list);
+            return list;
         } catch (SQLException e) {
             throw stmt.handle(e);
         } finally {
@@ -392,8 +399,7 @@ RME is this right
             MondrianDef.Expression exp = level.getKeyExp();
             hierarchy.addToFrom(sqlQuery, exp);
             String expString = exp.getExpression(sqlQuery);
-            sqlQuery.addSelect(expString);
-            sqlQuery.addGroupBy(expString);
+            sqlQuery.addSelectGroupBy(expString);
             exp = level.getOrdinalExp();
             hierarchy.addToFrom(sqlQuery, exp);
             expString = exp.getExpression(sqlQuery);
@@ -408,8 +414,7 @@ RME is this right
                 exp = property.getExp();
                 hierarchy.addToFrom(sqlQuery, exp);
                 expString = exp.getExpression(sqlQuery);
-                sqlQuery.addSelect(expString);
-                sqlQuery.addGroupBy(expString);
+                sqlQuery.addSelectGroupBy(expString);
             }
         }
         return sqlQuery.toString();
@@ -431,7 +436,10 @@ RME is this right
             int endOrdinal,
             TupleConstraint constraint) {
         if (level.isAll()) {
-            return Collections.singletonList(hierarchy.getAllMember());
+            final List<RolapMember> list = new ArrayList<RolapMember>();
+            list.add(hierarchy.getAllMember());
+                //return Collections.singletonList(hierarchy.getAllMember());
+            return list;
         }
         return getMembersInLevel(level, constraint);
     }
@@ -440,23 +448,56 @@ RME is this right
         RolapLevel level,
         TupleConstraint constraint)
     {
-        TupleReader tupleReader = new SqlTupleReader(constraint);
+        final TupleReader tupleReader =
+            level.getDimension().isHighCardinality()
+                ? new HighCardSqlTupleReader(constraint)
+                : new SqlTupleReader(constraint);
         tupleReader.addLevelMembers(level, this, null);
-        List<RolapMember[]> tupleList =
+        final List<RolapMember[]> tupleList =
             tupleReader.readTuples(dataSource, null, null);
-        List<RolapMember> memberList =
-            new ArrayList<RolapMember>(tupleList.size());
-        for (RolapMember[] tuple : tupleList) {
-            assert tuple.length == 1;
-            memberList.add(tuple[0]);
-        }
-        return memberList;
+
+        return new AbstractList<RolapMember>() {
+            public RolapMember get(final int index) {
+                return tupleList.get(index)[0];
+            }
+
+            public int size() {
+                return tupleList.size();
+            }
+
+            public mondrian.rolap.RolapMember[] toArray() {
+                final List<Member> l = new ArrayList<Member>();
+                for (final RolapMember[] tuple : tupleList) {
+                    l.add(tuple[0]);
+                }
+                return l.toArray(new RolapMember[l.size()]);
+            }
+
+            public <T> T[] toArray(T[] pattern) {
+                return (T[]) toArray();
+            }
+
+            public Iterator<RolapMember> iterator() {
+                final Iterator<RolapMember[]> it = tupleList.iterator();
+                return new Iterator<RolapMember>() {
+                    public boolean hasNext() {
+                        return it.hasNext();
+                    }
+                    public RolapMember next() {
+                        return it.next()[0];
+                    }
+                    public void remove() {
+                        it.remove();
+                    }
+                };
+            }
+        };
     }
 
     public MemberCache getMemberCache() {
         return cache;
     }
-    
+
     public Object getMemberCacheLock() {
         return cache;
     }
@@ -480,7 +521,7 @@ RME is this right
      * GROUP BY "city"</pre>
      * </blockquote> retrieves the children of the member
      * <code>[Canada].[BC]</code>.
-     * <p>Note that this method is never called in the context of 
+     * <p>Note that this method is never called in the context of
      * virtual cubes, it is only called on regular cubes.
      *
      * <p>See also {@link SqlTupleReader#makeLevelMembersSql}.
@@ -506,37 +547,50 @@ RME is this right
         constraint.addMemberConstraint(sqlQuery, null, aggStar, member);
 
         RolapLevel level = (RolapLevel) member.getLevel().getChildLevel();
-        hierarchy.addToFrom(sqlQuery, level.getKeyExp());
-        String q = level.getKeyExp().getExpression(sqlQuery);
-        sqlQuery.addSelect(q);
-        sqlQuery.addGroupBy(q);
 
-        // in non empty mode the level table must be joined to the fact table
-        constraint.addLevelConstraint(sqlQuery, null, aggStar, level);
+        boolean collapsedLevel = (aggStar != null) &&
+                        isLevelCollapsed(aggStar, (RolapCubeLevel)level);
 
-        if (level.hasCaptionColumn()) {
-            MondrianDef.Expression captionExp = level.getCaptionExp();
-            hierarchy.addToFrom(sqlQuery, captionExp);
-            String captionSql = captionExp.getExpression(sqlQuery);
-            sqlQuery.addSelect(captionSql);
-            sqlQuery.addGroupBy(captionSql);
-        }
+        if (!collapsedLevel) {
+            hierarchy.addToFrom(sqlQuery, level.getKeyExp());
+            String q = level.getKeyExp().getExpression(sqlQuery);
+            sqlQuery.addSelectGroupBy(q);
 
-        hierarchy.addToFrom(sqlQuery, level.getOrdinalExp());
-        String orderBy = level.getOrdinalExp().getExpression(sqlQuery);
-        sqlQuery.addOrderBy(orderBy, true, false, true);
-        if (!orderBy.equals(q)) {
-            sqlQuery.addGroupBy(orderBy);
-            sqlQuery.addSelect(orderBy);
-        }
+            // in non empty mode the level table must be joined to the fact table
+            constraint.addLevelConstraint(sqlQuery, null, aggStar, level);
 
-        RolapProperty[] properties = level.getProperties();
-        for (RolapProperty property : properties) {
-            final MondrianDef.Expression exp = property.getExp();
-            hierarchy.addToFrom(sqlQuery, exp);
-            final String s = exp.getExpression(sqlQuery);
-            sqlQuery.addSelect(s);
-            sqlQuery.addGroupBy(s);
+            if (level.hasCaptionColumn()) {
+                MondrianDef.Expression captionExp = level.getCaptionExp();
+                hierarchy.addToFrom(sqlQuery, captionExp);
+                String captionSql = captionExp.getExpression(sqlQuery);
+                sqlQuery.addSelectGroupBy(captionSql);
+            }
+
+            hierarchy.addToFrom(sqlQuery, level.getOrdinalExp());
+            String orderBy = level.getOrdinalExp().getExpression(sqlQuery);
+            sqlQuery.addOrderBy(orderBy, true, false, true);
+            if (!orderBy.equals(q)) {
+                sqlQuery.addSelectGroupBy(orderBy);
+            }
+
+            RolapProperty[] properties = level.getProperties();
+            for (RolapProperty property : properties) {
+                final MondrianDef.Expression exp = property.getExp();
+                hierarchy.addToFrom(sqlQuery, exp);
+                final String s = exp.getExpression(sqlQuery);
+                sqlQuery.addSelectGroupBy(s);
+            }
+        } else {
+            // an earlier check was made in getAggStar() to verify
+            // that this is a single column level, so there is no
+
+            RolapStar.Column starColumn =
+                ((RolapCubeLevel)level).getStarKeyColumn();
+            int bitPos = starColumn.getBitPosition();
+            AggStar.Table.Column aggColumn = aggStar.lookupColumn(bitPos);
+            String q = aggColumn.generateExprString(sqlQuery);
+            sqlQuery.addSelectGroupBy(q);
+            aggColumn.getTable().addToFrom(sqlQuery, false, true);
         }
         return sqlQuery.toString();
     }
@@ -561,7 +615,16 @@ RME is this right
         // Convert global ordinal to cube based ordinal (the 0th dimension
         // is always [Measures])
         final Member[] members = evaluator.getMembers();
-        Member measure = members[0];
+
+        // if measure is calculated, we can't continue
+        if (!(members[0] instanceof RolapBaseCubeMeasure)) {
+            return null;
+        }
+        RolapBaseCubeMeasure measure = (RolapBaseCubeMeasure)members[0];
+        // we need to do more than this!  we need the rolap star ordinal, not the rolap cube
+
+        int bitPosition = ((RolapStar.Measure)measure.getStarMeasure()).getBitPosition();
+
         int ordinal = measure.getOrdinal();
 
         // childLevel will always end up being a RolapCubeLevel, but the API
@@ -569,13 +632,13 @@ RME is this right
         // RolapCubeMembers so this cast is necessary for now. Also note that
         // this method will never be called in the context of a virtual cube
         // so baseCube isn't necessary for retrieving the correct column
-        
+
         // get the level using the current depth
-        RolapCubeLevel childLevel = 
+        RolapCubeLevel childLevel =
             (RolapCubeLevel) member.getLevel().getChildLevel();
-        
+
         RolapStar.Column column = childLevel.getStarKeyColumn();
-        
+
         // set a bit for each level which is constrained in the context
         final CellRequest request =
             RolapAggregationManager.makeRequest(members);
@@ -593,11 +656,83 @@ RME is this right
 
         // set the masks
         levelBitKey.set(column.getBitPosition());
-        measureBitKey.set(ordinal);
+        measureBitKey.set(bitPosition);
 
         // find the aggstar using the masks
-        return AggregationManager.instance().findAgg(
+        AggStar aggStar = AggregationManager.instance().findAgg(
                 star, levelBitKey, measureBitKey, new boolean[]{ false });
+
+        if (aggStar == null) {
+            return null;
+        }
+
+        // verify that the selected member level can fully populate the
+        // member objects
+
+        if (!childLevel.isAll()) {
+            if (isLevelCollapsed(aggStar, (RolapCubeLevel)childLevel) &&
+                levelContainsMultipleColumns(childLevel)) {
+                return null;
+            }
+        }
+
+        return aggStar;
+    }
+
+    /**
+     * Determine if a level contains more than a single column for its
+     * data, such as an ordinal column or property column
+     *
+     * @param level the level to check
+     * @return true if multiple relational columns are involved in this level
+     */
+    private static boolean levelContainsMultipleColumns(RolapLevel level) {
+        MondrianDef.Expression keyExp = level.getKeyExp();
+        MondrianDef.Expression ordinalExp = level.getOrdinalExp();
+        MondrianDef.Expression captionExp = level.getCaptionExp();
+
+        if (!keyExp.equals(ordinalExp)) {
+            return true;
+        }
+
+        if (captionExp != null && !keyExp.equals(captionExp)) {
+            return true;
+        }
+
+        RolapProperty[] properties = level.getProperties();
+        for (RolapProperty property : properties) {
+            if (!property.getExp().equals(keyExp)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Determine if the given aggregate table has the dimension level
+     * specified within in (AggStar.FactTable) it, aka collapsed,
+     * or associated with foreign keys (AggStar.DimTable)
+     *
+     * @param aggStar aggregate star if exists
+     * @param level level
+     * @return true if agg table has level or not
+     */
+    private static boolean isLevelCollapsed(
+            AggStar aggStar,
+            RolapCubeLevel level)
+    {
+        boolean levelCollapsed = false;
+        if (level.isAll()) {
+            return levelCollapsed;
+        }
+        RolapStar.Column starColumn = level.getStarKeyColumn();
+        int bitPos = starColumn.getBitPosition();
+        AggStar.Table.Column aggColumn = aggStar.lookupColumn(bitPos);
+        if (aggColumn.getTable() instanceof AggStar.FactTable) {
+            levelCollapsed = true;
+        }
+        return levelCollapsed;
     }
 
     public void getMemberChildren(List<RolapMember> parentMembers, List<RolapMember> children) {
@@ -645,8 +780,8 @@ RME is this right
     {
         // allow parent child calculated members through
         // this fixes the non closure parent child hierarchy bug
-        if (!parentMember.isAll() && 
-                parentMember.isCalculated() && 
+        if (!parentMember.isAll() &&
+                parentMember.isCalculated() &&
                 !parentMember.getLevel().isParentChild()) {
             return;
         }
@@ -725,9 +860,8 @@ RME is this right
                 dataSource, sql, "SqlMemberSource.getMemberChildren",
                 "while building member cache");
         try {
-
             int limit = MondrianProperties.instance().ResultLimit.get();
-            boolean checkCacheStatus=true;
+            boolean checkCacheStatus = true;
 
             ResultSet resultSet = stmt.getResultSet();
             while (resultSet.next()) {
@@ -744,11 +878,11 @@ RME is this right
                 }
                 Object captionValue;
                 int columnOffset;
-                if (childLevel.hasCaptionColumn()){
+                if (childLevel.hasCaptionColumn()) {
                     // The columnOffset needs to take into account
                     // the caption column if one exists
                     columnOffset = 2;
-                    captionValue=resultSet.getObject(columnOffset);
+                    captionValue = resultSet.getObject(columnOffset);
                 } else {
                     columnOffset = 1;
                     captionValue = null;
@@ -762,6 +896,7 @@ RME is this right
                             parentChild, resultSet, key, columnOffset);
                 }
                 if (value == RolapUtil.sqlNullValue) {
+                    children.toArray();
                     addAsOldestSibling(children, member);
                 } else {
                     children.add(member);
@@ -775,16 +910,16 @@ RME is this right
     }
 
     public RolapMember makeMember(
-            RolapMember parentMember,
-            RolapLevel childLevel,
-            Object value,
-            Object captionValue,
-            boolean parentChild,
-            ResultSet resultSet,
-            Object key,
-            int columnOffset)
-            throws SQLException {
-
+        RolapMember parentMember,
+        RolapLevel childLevel,
+        Object value,
+        Object captionValue,
+        boolean parentChild,
+        ResultSet resultSet,
+        Object key,
+        int columnOffset)
+        throws SQLException
+    {
         RolapMember member = new RolapMember(parentMember, childLevel, value);
         if (!childLevel.getOrdinalExp().equals(childLevel.getKeyExp())) {
             member.setOrdinal(lastOrdinal++);
@@ -877,14 +1012,12 @@ RME is this right
         sqlQuery.addWhere(condition.toString());
         hierarchy.addToFrom(sqlQuery, level.getKeyExp());
         String childId = level.getKeyExp().getExpression(sqlQuery);
-        sqlQuery.addSelect(childId);
-        sqlQuery.addGroupBy(childId);
+        sqlQuery.addSelectGroupBy(childId);
         hierarchy.addToFrom(sqlQuery, level.getOrdinalExp());
         String orderBy = level.getOrdinalExp().getExpression(sqlQuery);
         sqlQuery.addOrderBy(orderBy, true, false, true);
         if (!orderBy.equals(childId)) {
-            sqlQuery.addGroupBy(orderBy);
-            sqlQuery.addSelect(orderBy);
+            sqlQuery.addSelectGroupBy(orderBy);
         }
 
         RolapProperty[] properties = level.getProperties();
@@ -892,8 +1025,7 @@ RME is this right
             final MondrianDef.Expression exp = property.getExp();
             hierarchy.addToFrom(sqlQuery, exp);
             final String s = exp.getExpression(sqlQuery);
-            sqlQuery.addSelect(s);
-            sqlQuery.addGroupBy(s);
+            sqlQuery.addSelectGroupBy(s);
         }
         return sqlQuery.toString();
     }
@@ -932,14 +1064,12 @@ RME is this right
 
         hierarchy.addToFrom(sqlQuery, level.getKeyExp());
         String childId = level.getKeyExp().getExpression(sqlQuery);
-        sqlQuery.addSelect(childId);
-        sqlQuery.addGroupBy(childId);
+        sqlQuery.addSelectGroupBy(childId);
         hierarchy.addToFrom(sqlQuery, level.getOrdinalExp());
         String orderBy = level.getOrdinalExp().getExpression(sqlQuery);
         sqlQuery.addOrderBy(orderBy, true, false, true);
         if (!orderBy.equals(childId)) {
-            sqlQuery.addGroupBy(orderBy);
-            sqlQuery.addSelect(orderBy);
+            sqlQuery.addSelectGroupBy(orderBy);
         }
 
         RolapProperty[] properties = level.getProperties();
@@ -947,8 +1077,7 @@ RME is this right
             final MondrianDef.Expression exp = property.getExp();
             hierarchy.addToFrom(sqlQuery, exp);
             final String s = exp.getExpression(sqlQuery);
-            sqlQuery.addSelect(s);
-            sqlQuery.addGroupBy(s);
+            sqlQuery.addSelectGroupBy(s);
         }
         return sqlQuery.toString();
     }
@@ -1068,7 +1197,7 @@ RME is this right
         protected boolean computeCalculated(final MemberType memberType) {
             return true;
         }
-        
+
         public Exp getExpression() {
             return getHierarchy().getAggregateChildrenExpression();
         }

@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/ResultBase.java#3 $
+// $Id: //open/mondrian/src/main/mondrian/olap/ResultBase.java#13 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2001-2002 Kana Software, Inc.
-// Copyright (C) 2001-2007 Julian Hyde and others
+// Copyright (C) 2001-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -23,7 +23,7 @@ import java.io.PrintWriter;
  *
  * @author jhyde
  * @since 10 August, 2001
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/ResultBase.java#3 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/ResultBase.java#13 $
  */
 public abstract class ResultBase implements Result {
     protected final Query query;
@@ -65,7 +65,7 @@ public abstract class ResultBase implements Result {
         Axis _axis = axis < 0 ? slicerAxis : axes[axis];
         List<Position> positions = _axis.getPositions();
         int i = 0;
-        for (Position position: positions) {
+        for (Position position : positions) {
             if (axis < 0) {
                 if (i > 0) {
                     pw.print(", ");
@@ -107,10 +107,14 @@ public abstract class ResultBase implements Result {
     }
     private void printAxis(PrintWriter pw, Axis axis) {
         List<Position> positions = axis.getPositions();
-        for (Position position: positions) {
+        for (Position position : positions) {
             boolean firstTime = true;
             pw.print("{");
-            for (Member member: position) {
+            for (Member member : position) {
+                if (member.getDimension().isHighCardinality()) {
+                    pw.println(" -- High cardinality dimension --}");
+                    return;
+                }
                 if (! firstTime) {
                     pw.print(", ");
                 }
@@ -138,7 +142,7 @@ public abstract class ResultBase implements Result {
             }
             List<Position> positions = axis.getPositions();
             Position position = positions.get(index);
-            for (Member member: position) {
+            for (Member member : position) {
                 if (member.getDimension() == dimension) {
                     return member;
                 }

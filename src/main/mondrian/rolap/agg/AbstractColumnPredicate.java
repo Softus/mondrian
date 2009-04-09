@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/agg/AbstractColumnPredicate.java#3 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/agg/AbstractColumnPredicate.java#6 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2004-2005 TONBELLER AG
-// Copyright (C) 2006-2007 Julian Hyde and others
+// Copyright (C) 2006-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -25,7 +25,7 @@ import java.util.ArrayList;
  * A <code>AbstractColumnPredicate</code> is an abstract implementation for
  * {@link mondrian.rolap.StarColumnPredicate}.
  *
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/agg/AbstractColumnPredicate.java#3 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/agg/AbstractColumnPredicate.java#6 $
  */
 public abstract class AbstractColumnPredicate implements StarColumnPredicate {
     protected final RolapStar.Column constrainedColumn;
@@ -39,7 +39,7 @@ public abstract class AbstractColumnPredicate implements StarColumnPredicate {
     protected AbstractColumnPredicate(RolapStar.Column constrainedColumn) {
         this.constrainedColumn = constrainedColumn;
         /*
-         * Check if contraintedColumns are null. 
+         * Check if contraintedColumns are null.
          * (Example: FastBatchingCellReader.testAggregateDistinctCount5()).
          */
         if (constrainedColumn != null && constrainedColumn.getTable() != null) {
@@ -71,7 +71,7 @@ public abstract class AbstractColumnPredicate implements StarColumnPredicate {
     public BitKey getConstrainedColumnBitKey() {
         return constrainedColumnBitKey;
     }
-    
+
     public boolean evaluate(List<Object> valueList) {
         assert valueList.size() == 1;
         return evaluate(valueList.get(0));

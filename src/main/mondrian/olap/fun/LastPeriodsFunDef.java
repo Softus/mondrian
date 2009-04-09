@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/LastPeriodsFunDef.java#3 $
+// $Id: //open/mondrian/src/main/mondrian/olap/fun/LastPeriodsFunDef.java#5 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2006 Julian Hyde
+// Copyright (C) 2006-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -31,7 +31,7 @@ import java.util.ArrayList;
  * Definition of the <code>LastPeriods</code> MDX function.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/LastPeriodsFunDef.java#3 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/LastPeriodsFunDef.java#5 $
  * @since Mar 23, 2006
  */
 class LastPeriodsFunDef extends FunDefBase {
@@ -50,7 +50,7 @@ class LastPeriodsFunDef extends FunDefBase {
         if (args.length == 1) {
             // If Member is not specified,
             // it is Time.CurrentMember.
-            Dimension defaultTimeDimension = 
+            Dimension defaultTimeDimension =
                 validator.getQuery().getCube().getTimeDimension();
             if (defaultTimeDimension == null) {
                 throw MondrianResource.instance().
@@ -132,21 +132,21 @@ class LastPeriodsFunDef extends FunDefBase {
         Member endMember;
         if (indexValue > 0) {
             startMember = evaluator.getSchemaReader()
-                .getLeadMember(member, -(indexValue-1));
+                .getLeadMember(member, - (indexValue - 1));
             endMember = member;
             if (startMember.isNull()) {
-                Member[] members = evaluator.getSchemaReader()
+                List<Member> members = evaluator.getSchemaReader()
                     .getLevelMembers(member.getLevel(), false);
-                startMember = members[0];
+                startMember = members.get(0);
             }
         } else {
             startMember = member;
             endMember = evaluator.getSchemaReader()
-                .getLeadMember(member, -(indexValue+1));
+                .getLeadMember(member, -(indexValue + 1));
             if (endMember.isNull()) {
-                Member[] members = evaluator.getSchemaReader()
+                List<Member> members = evaluator.getSchemaReader()
                     .getLevelMembers(member.getLevel(), false);
-                endMember = members[members.length - 1];
+                endMember = members.get(members.size() - 1);
             }
         }
 

@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/SqlStatement.java#3 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/SqlStatement.java#5 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2007-2007 Julian Hyde and others
+// Copyright (C) 2007-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -44,12 +44,12 @@ import java.sql.Statement;
  *
  * <p>SqlStatement is not thread-safe.
  *
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/SqlStatement.java#3 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/SqlStatement.java#5 $
  * @author jhyde
  * @since 2.3
  */
 public class SqlStatement {
-    
+
     private final DataSource dataSource;
     private Connection jdbcConnection;
     private ResultSet resultSet;
@@ -64,7 +64,7 @@ public class SqlStatement {
     private boolean haveSemaphore;
     public int rowCount;
     private long startTime;
-    
+
     // used for SQL logging, allows for a SQL Statement UID
     private static long executeCount = -1;
 
@@ -188,11 +188,11 @@ public class SqlStatement {
         String status = ", exec+fetch " + totalMs + " ms, " + rowCount + " rows";
 
         RolapUtil.SQL_LOGGER.debug(executeCount + ": " + status);
-        
+
         if (RolapUtil.LOGGER.isDebugEnabled()) {
             RolapUtil.LOGGER.debug(component + ": done executing sql [" +
                 sql + "]" + status);
-        }        
+        }
     }
 
     public ResultSet getResultSet() {

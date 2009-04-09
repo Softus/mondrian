@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/SchemaReader.java#3 $
+// $Id: //open/mondrian/src/main/mondrian/olap/SchemaReader.java#34 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2003-2007 Julian Hyde
+// Copyright (C) 2003-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -25,7 +25,7 @@ import java.util.List;
  *
  * @author jhyde
  * @since Feb 24, 2003
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/SchemaReader.java#3 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/SchemaReader.java#34 $
  */
 public interface SchemaReader {
     /**
@@ -35,12 +35,28 @@ public interface SchemaReader {
     Role getRole();
 
     /**
+     * Returns the accessible dimensions of a cube.
+     *
+     * @pre dimension != null
+     * @post return != null
+     */
+    List<Dimension> getCubeDimensions(Cube cube);
+
+    /**
+     * Returns the accessible hierarchies of a dimension.
+     *
+     * @pre dimension != null
+     * @post return != null
+     */
+    List<Hierarchy> getDimensionHierarchies(Dimension dimension);
+
+    /**
      * Returns an array of the root members of <code>hierarchy</code>.
      *
      * @param hierarchy Hierarchy
      * @see #getCalculatedMembers(Hierarchy)
      */
-    Member[] getHierarchyRootMembers(Hierarchy hierarchy);
+    List<Member> getHierarchyRootMembers(Hierarchy hierarchy);
 
     /**
      * Returns number of children parent of a member,
@@ -73,7 +89,7 @@ public interface SchemaReader {
      * @pre member != null
      * @post return != null
      */
-    Member[] getMemberChildren(Member member);
+    List<Member> getMemberChildren(Member member);
 
     /**
      * Returns direct children of <code>member</code>, optimized
@@ -88,7 +104,7 @@ public interface SchemaReader {
      * Wether or not optimization is possible depends
      * on the SchemaReader implementation.
      */
-    Member[] getMemberChildren(Member member, Evaluator context);
+    List<Member> getMemberChildren(Member member, Evaluator context);
 
     /**
      * Returns direct children of each element of <code>members</code>.
@@ -99,7 +115,7 @@ public interface SchemaReader {
      * @pre members != null
      * @post return != null
      */
-    Member[] getMemberChildren(Member[] members);
+    List<Member> getMemberChildren(List<Member> members);
 
     /**
      * Returns direct children of each element of <code>members</code>
@@ -112,7 +128,7 @@ public interface SchemaReader {
      * @pre members != null
      * @post return != null
      */
-    Member[] getMemberChildren(Member[] members, Evaluator context);
+    List<Member> getMemberChildren(List<Member> members, Evaluator context);
 
     /**
      * Returns the parent of <code>member</code>.
@@ -122,7 +138,6 @@ public interface SchemaReader {
      * @return null if member is a root member
      */
     Member getMemberParent(Member member);
-
 
     /**
      * Returns the depth of a member.
@@ -227,7 +242,6 @@ public interface SchemaReader {
         boolean failIfNotFound,
         int category);
 
-
     /**
      * Looks up a calculated member by name. If the name is not found in the
      * current scope, returns null.
@@ -259,7 +273,7 @@ public interface SchemaReader {
     /**
      * Compares a pair of {@link Member}s according to their order in a prefix
      * traversal. (that is, it
-     * is an ancestor or a earlier ), is a sibling, or comes later in a prefix
+     * is an ancestor or a earlier), is a sibling, or comes later in a prefix
      * traversal.
      * @return A negative integer if <code>m1</code> is an ancestor, an earlier
      *   sibling of an ancestor, or a descendent of an earlier sibling, of
@@ -271,18 +285,43 @@ public interface SchemaReader {
     int compareMembersHierarchically(Member m1, Member m2);
 
     /**
-     * Looks up the child of <code>parent</code> called <code>s</code>; returns
+     * Looks up the child of <code>parent</code> called <code>name</code>, or
+     * an approximation according to <code>matchType</code>, returning
      * null if no element is found.
+     *
+     * @param parent Parent element to search in
+     * @param name Compound in compound name, such as "[Product]" or "&[1]"
+     * @param matchType Match type
+     *
+     * @return Element with given name, or null
      */
     OlapElement getElementChild(
-        OlapElement parent, Id.Segment name, MatchType matchType);
+        OlapElement parent,
+        Id.Segment name,
+        MatchType matchType);
 
-    OlapElement getElementChild(OlapElement parent, Id.Segment name);
+    /**
+     * Looks up the child of <code>parent</code> <code>name</code>, returning
+     * null if no element is found.
+     *
+     * <p>Always equivalent to
+     * <code>getElementChild(parent, name, MatchType.EXACT)</code>.
+     *
+     * @param parent Parent element to search in
+     * @param name Compound in compound name, such as "[Product]" or "&[1]"
+     *
+     * @return Element with given name, or null
+     */
+    OlapElement getElementChild(
+        OlapElement parent,
+        Id.Segment name);
 
     /**
      * Returns the members of a level, optionally including calculated members.
      */
-    Member[] getLevelMembers(Level level, boolean includeCalculated);
+    List<Member> getLevelMembers(
+        Level level,
+        boolean includeCalculated);
 
     /**
      * Returns the members of a level, optionally filtering out members which
@@ -292,19 +331,27 @@ public interface SchemaReader {
      * @param context Context for filtering
      * @return Members of this level
      */
-    Member[] getLevelMembers(Level level, Evaluator context);
+    List<Member> getLevelMembers(
+        Level level,
+        Evaluator context);
 
     /**
      * Returns the accessible levels of a hierarchy.
      *
+     * @param hierarchy Hierarchy
+     *
      * @pre hierarchy != null
      * @post return.length >= 1
      */
-    Level[] getHierarchyLevels(Hierarchy hierarchy);
+    List<Level> getHierarchyLevels(Hierarchy hierarchy);
 
     /**
      * Returns the default member of a hierarchy. If the default member is in
      * an inaccessible level, returns the nearest ascendant/descendant member.
+     *
+     * @param hierarchy Hierarchy
+     *
+     * @return Default member of hierarchy
      */
     Member getHierarchyDefaultMember(Hierarchy hierarchy);
 
@@ -342,9 +389,9 @@ public interface SchemaReader {
      * Finds a child of a member with a given name.
      */
     Member lookupMemberChildByName(
-        Member parent, Id.Segment childName, MatchType matchType);
-
-    Member lookupMemberChildByName(Member parent, Id.Segment childName);
+        Member parent,
+        Id.Segment childName,
+        MatchType matchType);
 
     /**
      * Returns an object which can evaluate an expression in native SQL, or
@@ -356,7 +403,10 @@ public interface SchemaReader {
      * @param calc
      */
     NativeEvaluator getNativeSetEvaluator(
-            FunDef fun, Exp[] args, Evaluator evaluator, Calc calc);
+        FunDef fun,
+        Exp[] args,
+        Evaluator evaluator,
+        Calc calc);
 
     /**
      * Returns the definition of a parameter with a given name, or null if not
@@ -365,7 +415,6 @@ public interface SchemaReader {
     Parameter getParameter(String name);
 
     DataSource getDataSource();
-
 }
 
 // End SchemaReader.java

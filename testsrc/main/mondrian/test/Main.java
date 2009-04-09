@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/Main.java#4 $
+// $Id: //open/mondrian/testsrc/main/mondrian/test/Main.java#102 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -46,16 +46,16 @@ import org.apache.log4j.Logger;
  * Mondrian tests.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/Main.java#4 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/test/Main.java#102 $
  */
 public class Main extends TestSuite {
     private static final Logger logger = Logger.getLogger(Main.class);
     /*
      * Scratch area to store information on the emerging test suite.
      */
-    private static Map<TestSuite, String> testSuiteInfo = 
+    private static Map<TestSuite, String> testSuiteInfo =
         new HashMap<TestSuite, String>();
-    
+
     /**
      * Entry point to run test suite from the command line.
      *
@@ -100,7 +100,7 @@ public class Main extends TestSuite {
              */
             return;
         }
-        
+
         if (properties.Warmup.get()) {
             System.out.println("Starting warmup run...");
             MondrianTestRunner runner = new MondrianTestRunner();
@@ -117,8 +117,9 @@ public class Main extends TestSuite {
         runner.setVUsers(properties.VUsers.get());
         runner.setTimeLimit(properties.TimeLimit.get());
         TestResult tres = runner.doRun(test);
-        if (!tres.wasSuccessful())
+        if (!tres.wasSuccessful()) {
             System.exit(1);
+        }
     }
 
     /**
@@ -129,7 +130,7 @@ public class Main extends TestSuite {
      * @return test suite
      * @throws Exception on error
      */
-    private static Test suite() throws Exception {
+    public static Test suite() throws Exception {
         MondrianProperties properties = MondrianProperties.instance();
         String testName = properties.TestName.get();
         String testClass = properties.TestClass.get();
@@ -176,16 +177,20 @@ public class Main extends TestSuite {
                 addTest(suite, (Test) o, clazz.getName() + method.getName());
             }
         } else {
+            addTest(suite, RolapConnectionTest.class);
+            addTest(suite, FilteredIterableTest.class);
+            addTest(suite, HighDimensionsTest.class);
             addTest(suite, IndexedValuesTest.class);
             addTest(suite, MemoryMonitorTest.class);
             addTest(suite, ObjectPoolTest.class);
-            addTest(suite, RolapConnectionTest.class);
+            addTest(suite, Ssas2005CompatibilityTest.OldBehaviorTest.class);
             addTest(suite, DialectTest.class);
             addTest(suite, ResultComparatorTest.class, "suite");
             addTest(suite, DrillThroughTest.class);
             addTest(suite, BasicQueryTest.class);
             addTest(suite, CVBasicTest.class, "suite");
             addTest(suite, GrandTotalTest.class, "suite");
+            addTest(suite, HangerDimensionTest.class, "suite");
             addTest(suite, MetricFilterTest.class, "suite");
             addTest(suite, MiscTest.class, "suite");
             addTest(suite, PredicateFilterTest.class, "suite");
@@ -193,15 +198,19 @@ public class Main extends TestSuite {
             addTest(suite, SummaryMetricPercentTest.class, "suite");
             addTest(suite, SummaryTest.class, "suite");
             addTest(suite, TopBottomTest.class, "suite");
+            addTest(suite, OrderTest.class, "suite");
             addTest(suite, CacheControlTest.class);
             addTest(suite, MemberCacheControlTest.class);
             addTest(suite, FunctionTest.class);
+            addTest(suite, PartialSortTest.class);
             addTest(suite, VbaTest.class);
             addTest(suite, HierarchyBugTest.class);
             addTest(suite, ScheduleTest.class);
             addTest(suite, UtilTestCase.class);
             addTest(suite, SortTest.class);
-            if (isRunOnce()) addTest(suite, TestAggregationManager.class);
+            if (isRunOnce()) {
+                addTest(suite, TestAggregationManager.class);
+            }
             addTest(suite, VirtualCubeTest.class);
             addTest(suite, ParameterTest.class);
             addTest(suite, AccessControlTest.class);
@@ -217,7 +226,9 @@ public class Main extends TestSuite {
             addTest(suite, XmlaTests.class);
             addTest(suite, DynamicDatasourceXmlaServletTest.class);
             addTest(suite, XmlaTest.class, "suite");
-            if (isRunOnce()) addTest(suite, TestCalculatedMembers.class);
+            if (isRunOnce()) {
+                addTest(suite, TestCalculatedMembers.class);
+            }
             addTest(suite, RaggedHierarchyTest.class);
             addTest(suite, NonEmptyPropertyForAllAxisTest.class);
             addTest(suite, InlineTableTest.class);
@@ -243,7 +254,9 @@ public class Main extends TestSuite {
             addTest(suite, RolapAxisTest.class);
             addTest(suite, MemberHelperTest.class);
             addTest(suite, CrossJoinTest.class);
-            addTest(suite, RolapResultTest.class);
+            if (Bug.Bug2583015Fixed) {
+                addTest(suite, RolapResultTest.class);
+            }
             addTest(suite, ConstantCalcTest.class);
             addTest(suite, SharedDimensionTest.class);
             addTest(suite, CellPropertyTest.class);
@@ -257,6 +270,7 @@ public class Main extends TestSuite {
             addTest(suite, AggregationOnDistinctCountMeasuresTest.class);
             addTest(suite, BitKeyTest.class);
             addTest(suite, TypeTest.class);
+            addTest(suite, SteelWheelsTestCase.class);
 
             boolean testNonEmpty = isRunOnce();
             if (!MondrianProperties.instance().EnableNativeNonEmpty.get()) {
@@ -287,15 +301,15 @@ public class Main extends TestSuite {
             Pattern testPattern = Pattern.compile(testName);
             suite = copySuite(suite,  testPattern);
         }
-        
+
         String testInfo = testSuiteInfo.get(suite);
-        
+
         if (testInfo != null && testInfo.length() > 0) {
             System.out.println(testInfo);
         } else {
             System.out.println("No tests to run. Check mondrian.properties setting.");
         }
-        
+
         System.out.flush();
         return suite;
     }
@@ -321,7 +335,7 @@ public class Main extends TestSuite {
      * @return copy of test suite
      * @throws Exception on error
      */
-    private static TestSuite copySuite(TestSuite suite, Pattern testPattern) 
+    private static TestSuite copySuite(TestSuite suite, Pattern testPattern)
         throws Exception
     {
         TestSuite newSuite = new TestSuite(suite.getName());
@@ -346,7 +360,7 @@ public class Main extends TestSuite {
         }
         return newSuite;
     }
-    
+
     private static void addTest(
         TestSuite suite,
         Class<? extends TestCase> testClass) throws Exception
@@ -364,32 +378,32 @@ public class Main extends TestSuite {
     {
         Method method = testClass.getMethod(testMethod);
         Object o = method.invoke(null);
-        int startTestCount = suite.countTestCases();        
+        int startTestCount = suite.countTestCases();
         suite.addTest((Test) o);
         int endTestCount = suite.countTestCases();
         printTestInfo(suite, testClass.getName(), startTestCount, endTestCount);
     }
-    
+
     private static void addTest(
         TestSuite suite,
         Test tests,
         String testClassName) throws Exception
     {
-        int startTestCount = suite.countTestCases();        
+        int startTestCount = suite.countTestCases();
         suite.addTest(tests);
         int endTestCount = suite.countTestCases();
         printTestInfo(suite, testClassName, startTestCount, endTestCount);
     }
-    
+
     private static void printTestInfo(
         TestSuite suite, String testClassName, int startCount, int endCount) {
         String testInfo = testSuiteInfo.get(suite);
-        String newTestInfo = 
+        String newTestInfo =
             "[" + startCount + " - " + endCount + "] : " + testClassName + "\n";
         if (testInfo == null) {
-            testInfo = newTestInfo;            
+            testInfo = newTestInfo;
         } else {
-            testInfo += newTestInfo;                        
+            testInfo += newTestInfo;
         }
         testSuiteInfo.put(suite, testInfo);
     }

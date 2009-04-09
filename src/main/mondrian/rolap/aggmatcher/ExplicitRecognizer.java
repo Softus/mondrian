@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/aggmatcher/ExplicitRecognizer.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/aggmatcher/ExplicitRecognizer.java#19 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2007 Julian Hyde and others
+// Copyright (C) 2005-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -24,7 +24,7 @@ import java.util.List;
  * the catalog schema files; the user explicitly defines the aggregate.
  *
  * @author Richard M. Emberson
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/aggmatcher/ExplicitRecognizer.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/aggmatcher/ExplicitRecognizer.java#19 $
  */
 class ExplicitRecognizer extends Recognizer {
     private ExplicitRules.TableDef tableDef;
@@ -85,7 +85,6 @@ class ExplicitRecognizer extends Recognizer {
     protected int checkMeasures() {
         msgRecorder.pushContextName("ExplicitRecognizer.checkMeasures");
         try {
-
             int measureColumnCounts = 0;
             // Look at each aggregate table column. For each measure defined,
             // see if the measure's column name equals the column's name.
@@ -102,7 +101,7 @@ class ExplicitRecognizer extends Recognizer {
                     getTableDef().getMeasures())
                 {
                     // Column name match is case insensitive
-                    if(measure.getColumnName().equalsIgnoreCase(aggColumnName)){
+                    if (measure.getColumnName().equalsIgnoreCase(aggColumnName)) {
                         String name = measure.getName();
                         List<Id.Segment> parts = Util.parseIdentifier(name);
                         String nameLast = parts.get(parts.size() - 1).name;
@@ -126,7 +125,7 @@ class ExplicitRecognizer extends Recognizer {
             // foreign key.
             for (Iterator<JdbcSchema.Table.Column.Usage> it =
                      dbFactTable.getColumnUsages(JdbcSchema.UsageType.MEASURE);
-                 it.hasNext(); ) {
+                 it.hasNext();) {
                 JdbcSchema.Table.Column.Usage factUsage = it.next();
                 JdbcSchema.Table.Column factColumn = factUsage.getColumn();
 
@@ -155,7 +154,6 @@ class ExplicitRecognizer extends Recognizer {
                 }
             }
             return measureColumnCounts;
-
         } finally {
             msgRecorder.popContextName();
         }
@@ -218,7 +216,6 @@ class ExplicitRecognizer extends Recognizer {
             }
         }
         return matchCount;
-
     }
 
     /**
@@ -238,7 +235,6 @@ class ExplicitRecognizer extends Recognizer {
             final RolapLevel rlevel) {
         msgRecorder.pushContextName("ExplicitRecognizer.matchLevel");
         try {
-
             // Try to match a Level's name against the RolapLevel unique name.
             String levelUniqueName = rlevel.getUniqueName();
             for (ExplicitRules.TableDef.Level level : getTableDef().getLevels()) {
@@ -260,11 +256,9 @@ class ExplicitRecognizer extends Recognizer {
                             return true;
                         }
                     }
-
                 }
             }
             return false;
-
         } finally {
             msgRecorder.popContextName();
         }

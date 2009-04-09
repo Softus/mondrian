@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/gui/JDBCTreeModel.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/gui/JDBCTreeModel.java#9 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2002-2007 Julian Hyde and others
+// Copyright (C) 2002-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -23,7 +23,7 @@ import org.apache.log4j.Logger;
 /**
  *
  * @author  sean
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/gui/JDBCTreeModel.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/gui/JDBCTreeModel.java#9 $
  */
 public class JDBCTreeModel implements javax.swing.tree.TreeModel {
 
@@ -45,18 +45,44 @@ public class JDBCTreeModel implements javax.swing.tree.TreeModel {
             Node cat = new Node(catalogName, Node.CATALOG);
 
             ResultSet trs = metadata.getTables(cat.name, null, null, null);
-            while (trs.next()) {
-                Node table = new Node(trs.getString(3), Node.TABLE);
-                cat.children.add(table);
-                //get the tables for each catalog.
-                ResultSet crs = metadata.getColumns(cat.name, null, table.name, null);
-                while (crs.next()) {
-                    Node column = new Node(crs.getString(4), Node.COLUMN);
-                    table.children.add(column);
+            try {
+                while (trs.next()) {
+                    // Oracle 10g Driver returns bogus BIN$ tables that cause
+                    // exceptions
+                    String tbname = trs.getString("TABLE_NAME");
+                    if (!tbname.matches("(?!BIN\\$).+")) {
+                        continue;
+                    }
+
+                    Node table = new Node(trs.getString(3), Node.TABLE);
+                    cat.children.add(table);
+                    //get the tables for each catalog.
+                    ResultSet crs = metadata.getColumns(cat.name, null, table.name, null);
+                    try {
+                        while (crs.next()) {
+                            Node column = new Node(crs.getString(4), Node.COLUMN);
+                            table.children.add(column);
+                        }
+                    } finally {
+                        try {
+                            if (crs != null) {
+                                crs.close();
+                            }
+                        } catch (Exception e) {
+                            // ignore
+                        }
+                    }
+                }
+            } finally {
+                try {
+                    if (trs != null) {
+                        trs.close();
+                    }
+                } catch (Exception e) {
+                    // ignore
                 }
             }
             root = cat;
-
         } catch (Exception ex) {
             LOGGER.error("JDBCTreeModel", ex);
         }

@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/SimpleResolver.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/fun/SimpleResolver.java#16 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -14,12 +14,14 @@ package mondrian.olap.fun;
 
 import mondrian.olap.*;
 
+import java.util.List;
+
 /**
  * A <code>SimpleResolver</code> resolves a single, non-overloaded function.
  *
  * @author jhyde
  * @since 3 March, 2002
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/SimpleResolver.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/SimpleResolver.java#16 $
  */
 class SimpleResolver implements Resolver {
     private  final FunDef funDef;
@@ -53,14 +55,17 @@ class SimpleResolver implements Resolver {
     }
 
     public FunDef resolve(
-            Exp[] args, Validator validator, int[] conversionCount) {
+        Exp[] args,
+        Validator validator,
+        List<Conversion> conversions)
+    {
         int[] parameterTypes = funDef.getParameterCategories();
         if (parameterTypes.length != args.length) {
             return null;
         }
         for (int i = 0; i < args.length; i++) {
             if (!validator.canConvert(
-                    args[i], parameterTypes[i], conversionCount)) {
+                    args[i], parameterTypes[i], conversions)) {
                 return null;
             }
         }

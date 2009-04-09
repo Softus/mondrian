@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/xmla/test/XmlaTest.java#2 $
+// $Id: //open/mondrian/testsrc/main/mondrian/xmla/test/XmlaTest.java#18 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2007 Julian Hyde
+// Copyright (C) 2005-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -13,9 +13,8 @@ import mondrian.xmla.*;
 import mondrian.xmla.impl.DefaultXmlaRequest;
 import mondrian.xmla.impl.DefaultXmlaResponse;
 import mondrian.olap.*;
-import mondrian.rolap.RolapSchema;
 import mondrian.test.DiffRepository;
-import mondrian.util.Bug;
+import mondrian.test.TestContext;
 
 import junit.framework.*;
 import org.apache.log4j.Logger;
@@ -39,7 +38,7 @@ import java.util.regex.*;
  * {@link mondrian.xmla}).
  *
  * @author Gang Chen
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/xmla/test/XmlaTest.java#2 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/xmla/test/XmlaTest.java#18 $
  */
 public class XmlaTest extends TestCase {
 
@@ -77,6 +76,13 @@ public class XmlaTest extends TestCase {
     }
 
     protected void runTest() throws Exception {
+        if (!MondrianProperties.instance().SsasCompatibleNaming.get()
+            && getName().equals("mdschemaLevelsCubeDimRestrictions")) {
+            // Changes in unique names of hierarchies and levels mean that the
+            // output is a different order in the old behavior, and cannot be
+            // fixed by a few sed-like comparisons.
+            return;
+        }
         DiffRepository diffRepos = getDiffRepos();
         String request = diffRepos.expand(null, "${request}");
         String expectedResponse = diffRepos.expand(null, "${response}");
@@ -92,8 +98,9 @@ public class XmlaTest extends TestCase {
         transformer.transform(
             new DOMSource(responseElem), new StreamResult(bufWriter));
         bufWriter.write(Util.nl);
-        String actualResponse = bufWriter.getBuffer().toString();
-
+        String actualResponse =
+            TestContext.instance().upgradeActual(
+                bufWriter.getBuffer().toString());
         try {
             // Start with a purely logical XML diff to avoid test noise
             // from non-determinism in XML generation.
@@ -110,7 +117,7 @@ public class XmlaTest extends TestCase {
     private Element ignoreLastUpdateDate(Element element) {
         NodeList elements = element.getElementsByTagName("LAST_SCHEMA_UPDATE");
         for (int i = elements.getLength(); i > 0; i--) {
-            removeNode(elements.item(i-1));
+            removeNode(elements.item(i - 1));
         }
         return element;
     }

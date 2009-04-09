@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/web/taglib/TransformTag.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/web/taglib/TransformTag.java#7 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2002-2002 Kana Software, Inc.
-// Copyright (C) 2002-2005 Julian Hyde and others
+// Copyright (C) 2002-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -54,8 +54,7 @@ public class TransformTag extends TagSupport {
             // DOMBuilder.debug(doc);
             Transformer transformer = ar.getTransformer(xsltURI, xsltCache);
             transformer.transform(new DOMSource(doc), new StreamResult(pageContext.getOut()));
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             throw new JspException(e);
         }

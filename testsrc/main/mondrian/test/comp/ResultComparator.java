@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/comp/ResultComparator.java#2 $
+// $Id: //open/mondrian/testsrc/main/mondrian/test/comp/ResultComparator.java#16 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2004-2007 Julian Hyde and others
+// Copyright (C) 2004-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -49,7 +49,6 @@ class ResultComparator {
         HashSet<String> defaultDimMembers = new HashSet<String>();
 
         for (Dimension dim : dims) {
-
             String uniqueName = dim.getHierarchies()[0].
                 getDefaultMember().getUniqueName();
             defaultDimMembers.add(uniqueName);
@@ -121,19 +120,20 @@ class ResultComparator {
         NodeList rowList = xmlRoot.getElementsByTagName("rows");
 
         switch (axes.length) {
-            case 0:
-            case 1:
-                Assert.assertTrue("Must be no rows", rowList.getLength() == 0);
-                break;
+        case 0:
+        case 1:
+            Assert.assertTrue("Must be no rows", rowList.getLength() == 0);
+            break;
 
-            case 2:
-                compareTuples("Row", rowList, axes[1].getPositions());
-                break;
+        case 2:
+            compareTuples("Row", rowList, axes[1].getPositions());
+            break;
 
-            default:
-                Assert.fail("Too many axes returned. " +
-                    "Expected 0, 1 or 2 but got " + axes.length);
-                break;
+        default:
+            Assert.fail(
+                "Too many axes returned. " +
+                "Expected 0, 1 or 2 but got " + axes.length);
+            break;
         }
     }
 
@@ -167,7 +167,9 @@ class ResultComparator {
         final Axis[] axes = result.getAxes();
         for (int i = 0; i < axes.length; i++) {
             Axis axis = axes[i];
-            String axisName = AxisOrdinal.forLogicalOrdinal(i).name().toLowerCase();
+            String axisName =
+                AxisOrdinal.StandardAxisOrdinal.forLogicalOrdinal(i)
+                    .name().toLowerCase();
             axisToXml(document, dataResultXml, axis, axisName);
         }
         final Element dataXml = document.createElement("data");
@@ -334,7 +336,7 @@ class ResultComparator {
             if (!(expected == actual)) {
                 _failNotEquals(message, expected, actual);
             }
-        } else if (!(Math.abs(expected-actual) <= delta)) {
+        } else if (!(Math.abs(expected - actual) <= delta)) {
             // Because comparison with NaN always returns false
             _failNotEquals(message, expected, actual);
         }
@@ -393,17 +395,17 @@ class ResultComparator {
         int numAxes = axes.length;
 
         switch (numAxes) {
-            case 0:
-                compareZeroAxes(expectedRows);
-                break;
+        case 0:
+            compareZeroAxes(expectedRows);
+            break;
 
-            case 1:
-                compareColumnsOnly(expectedRows, axes);
-                break;
+        case 1:
+            compareColumnsOnly(expectedRows, axes);
+            break;
 
-            case 2:
-                compareRowsAndColumns(expectedRows, axes);
-                break;
+        case 2:
+            compareRowsAndColumns(expectedRows, axes);
+            break;
         }
     }
 

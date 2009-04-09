@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/rolap/BitKeyTest.java#2 $
+// $Id: //open/mondrian/testsrc/main/mondrian/rolap/BitKeyTest.java#13 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2007 Julian Hyde and others.
+// Copyright (C) 2005-2009 Julian Hyde and others.
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -18,7 +18,7 @@ import java.util.*;
  * Unit test for {@link BitKey}.
  *
  * @author Richard Emberson
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/rolap/BitKeyTest.java#2 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/rolap/BitKeyTest.java#13 $
  */
 public class BitKeyTest extends TestCase {
     public BitKeyTest(String name) {
@@ -64,7 +64,7 @@ public class BitKeyTest extends TestCase {
         } catch (IllegalArgumentException e) {
             gotException = true;
         }
-        assertTrue("BitKey size " +size, (! gotException));
+        assertTrue("BitKey size " + size, !gotException);
 
         size = 1;
         gotException = false;
@@ -73,7 +73,7 @@ public class BitKeyTest extends TestCase {
         } catch (IllegalArgumentException e) {
             gotException = true;
         }
-        assertTrue("BitKey size " +size, (! gotException));
+        assertTrue("BitKey size " + size, !gotException);
 
         size = 10;
         gotException = false;
@@ -82,7 +82,7 @@ public class BitKeyTest extends TestCase {
         } catch (IllegalArgumentException e) {
             gotException = true;
         }
-        assertTrue("BitKey size " +size, (! gotException));
+        assertTrue("BitKey size " + size, !gotException);
     }
 
     /**
@@ -91,52 +91,53 @@ public class BitKeyTest extends TestCase {
     public void testSizeTypes() {
         int size = 0;
         BitKey bitKey = BitKey.Factory.makeBitKey(size);
-        assertTrue("BitKey size " +size+ " not BitKey.Small",
+        assertTrue("BitKey size " + size + " not BitKey.Small",
             (bitKey.getClass() == BitKey.Small.class));
 
         size = 63;
         bitKey = BitKey.Factory.makeBitKey(size);
-        assertTrue("BitKey size " +size+ " not BitKey.Small",
+        assertTrue("BitKey size " + size + " not BitKey.Small",
             (bitKey.getClass() == BitKey.Small.class));
 
         size = 64;
         bitKey = BitKey.Factory.makeBitKey(size);
-        assertTrue("BitKey size " +size+ " not BitKey.Mid128",
+        assertTrue("BitKey size " + size + " not BitKey.Mid128",
             (bitKey.getClass() == BitKey.Mid128.class));
 
         size = 65;
         bitKey = BitKey.Factory.makeBitKey(size);
-        assertTrue("BitKey size " +size+ " not BitKey.Mid128",
+        assertTrue("BitKey size " + size + " not BitKey.Mid128",
             (bitKey.getClass() == BitKey.Mid128.class));
 
         size = 127;
         bitKey = BitKey.Factory.makeBitKey(size);
-        assertTrue("BitKey size " +size+ " not BitKey.Mid128",
+        assertTrue("BitKey size " + size + " not BitKey.Mid128",
             (bitKey.getClass() == BitKey.Mid128.class));
 
         size = 128;
         bitKey = BitKey.Factory.makeBitKey(size);
-        assertTrue("BitKey size " +size+ " not BitKey.Big",
+        assertTrue("BitKey size " + size + " not BitKey.Big",
             (bitKey.getClass() == BitKey.Big.class));
 
         size = 129;
         bitKey = BitKey.Factory.makeBitKey(size);
-        assertTrue("BitKey size " +size+ " not BitKey.Big",
+        assertTrue("BitKey size " + size + " not BitKey.Big",
             (bitKey.getClass() == BitKey.Big.class));
 
         size = 1280;
         bitKey = BitKey.Factory.makeBitKey(size);
-        assertTrue("BitKey size " +size+ " not BitKey.Big",
+        assertTrue("BitKey size " + size + " not BitKey.Big",
             (bitKey.getClass() == BitKey.Big.class));
     }
+
     /**
      * Test for equals and not equals
      */
     public void testEquals() {
         int[][] positionsArray0 = {
-            { 0, 1, 2, 3, },
-            { 3, 17, 33, 63 },
-            { 1, 2, 3, 20, 21, 33, 61, 62, 63 },
+            new int[] { 0, 1, 2, 3, },
+            new int[] { 3, 17, 33, 63 },
+            new int[] { 1, 2, 3, 20, 21, 33, 61, 62, 63 },
         };
         doTestEquals(0, 0, positionsArray0);
         doTestEquals(0, 64, positionsArray0);
@@ -147,10 +148,10 @@ public class BitKeyTest extends TestCase {
         doTestEquals(128, 64, positionsArray0);
 
         int[][] positionsArray1 = {
-            { 0, 1, 2, 3, },
-            { 3, 17, 33, 63 },
-            { 1, 2, 3, 20, 21, 33, 61, 62, 63 },
-            { 1, 2, 3, 20, 21, 33, 61, 62, 55, 56, 127 },
+            new int[] { 0, 1, 2, 3, },
+            new int[] { 3, 17, 33, 63 },
+            new int[] { 1, 2, 3, 20, 21, 33, 61, 62, 63 },
+            new int[] { 1, 2, 3, 20, 21, 33, 61, 62, 55, 56, 127 },
         };
         doTestEquals(65, 65, positionsArray1);
         doTestEquals(65, 128, positionsArray1);
@@ -158,16 +159,61 @@ public class BitKeyTest extends TestCase {
         doTestEquals(128, 128, positionsArray1);
 
         int[][] positionsArray2 = {
-            { 0, 1, 2, 3, },
-            { 1, 2, 3, 20, 21, 33, 61, 62, 55, 56, 127, 128 },
-            { 1, 2, 499},
-            { 1, 2, 200, 300, 499},
+            new int[] { 0, 1, 2, 3, },
+            new int[] { 1, 2, 3, 20, 21, 33, 61, 62, 55, 56, 127, 128 },
+            new int[] { 1, 2, 499},
+            new int[] { 1, 2, 200, 300, 499},
         };
         doTestEquals(500, 500, positionsArray2);
         doTestEquals(500, 700, positionsArray2);
         doTestEquals(700, 500, positionsArray2);
         doTestEquals(700, 700, positionsArray2);
     }
+
+    public void testHashCode() {
+        BitKey small = BitKey.Factory.makeBitKey(10);
+        BitKey mid = BitKey.Factory.makeBitKey(70);
+        BitKey big255 = BitKey.Factory.makeBitKey(255);
+        BitKey big256 = BitKey.Factory.makeBitKey(256);
+        BitKey big257 = BitKey.Factory.makeBitKey(257);
+        BitKey[] bitKeys = {small, mid, big255, big256, big257};
+        doHashCode(bitKeys);
+        for (int i = 0; i < bitKeys.length; i++) {
+            bitKeys[i].set(0, true);
+        }
+        doHashCode(bitKeys);
+        bitKeys = new BitKey[] {mid, big255, big256, big257};
+        for (int i = 0; i < bitKeys.length; i++) {
+            bitKeys[i].set(50, true);
+        }
+        doHashCode(bitKeys);
+        bitKeys = new BitKey[] {big255, big256, big257};
+        for (int i = 0; i < bitKeys.length; i++) {
+            bitKeys[i].set(128, true);
+            bitKeys[i].set(50, false);
+        }
+        doHashCode(bitKeys);
+    }
+
+    /**
+     * Applies hashCode, compareTo and equals to all combinations of bit keys,
+     * including reflexive (comparing a key to itself) and symmetric
+     * (comparing in both directions). All keys must be equal (albeit different
+     * representations).
+     */
+    private void doHashCode(BitKey[] bitKeys) {
+        for (int i1 = 0; i1 < bitKeys.length; i1++) {
+            BitKey bitKey1 = bitKeys[i1];
+            for (int i2 = 0; i2 < bitKeys.length; i2++) {
+                BitKey bitKey2 = bitKeys[i2];
+                String s = "(" + i1 + ", " + i2 + ")";
+                assertEquals(s, bitKey1, bitKey2);
+                assertEquals(s, bitKey1.hashCode(), bitKey2.hashCode());
+                assertEquals(s, 0, bitKey1.compareTo(bitKey2));
+            }
+        }
+    }
+
     /**
      * Test for not equals and not equals
      */
@@ -270,7 +316,7 @@ public class BitKeyTest extends TestCase {
                 (bitKey2.equals(bitKey_128)));
     }
 
-    public void testNewBitKeyIsTheSameAsAClearedBitKey(){
+    public void testNewBitKeyIsTheSameAsAClearedBitKey() {
         BitKey bitKey = BitKey.Factory.makeBitKey(8);
         bitKey.set(1);
         assertFalse(BitKey.Factory.makeBitKey(8).equals(bitKey));
@@ -278,7 +324,7 @@ public class BitKeyTest extends TestCase {
         assertEquals(BitKey.Factory.makeBitKey(8), bitKey);
     }
 
-    public void testEmptyCopyCreatesBitKeyOfTheSameSize(){
+    public void testEmptyCopyCreatesBitKeyOfTheSameSize() {
         BitKey bitKey = BitKey.Factory.makeBitKey(8);
         assertEquals(bitKey, bitKey.emptyCopy());
     }
@@ -464,6 +510,40 @@ public class BitKeyTest extends TestCase {
         });
     }
 
+    /**
+     * Tests the 'compareTo' operation on BitKeys
+     */
+    public void testCompareTo() {
+        doTestOp(new Checker() {
+            public void check(
+                    int size0, int[] positions0, int size1, int[] positions1) {
+                BitKey bitKey0 = makeAndSet(size0, positions0);
+                BitKey bitKey1 = makeAndSet(size1, positions1);
+                int c = bitKey0.compareTo(bitKey1);
+                final String s0 = bitKey0.toString();
+                final String s1 = bitKey1.toString();
+                String ps0 = s0.substring("0x".length());
+                String ps1 = s1.substring("0x".length());
+                while (ps0.length() < ps1.length()) {
+                    ps0 = "0" + ps0;
+                }
+                while (ps1.length() < ps0.length()) {
+                    ps1 = "0" + ps1;
+                }
+                assertEquals(c, sign(ps0.compareTo(ps1)));
+                assertEquals(-c, bitKey1.compareTo(bitKey0));
+                assertEquals(0, bitKey0.compareTo(bitKey0));
+                assertEquals(0, bitKey1.compareTo(bitKey1));
+            }
+        });
+    }
+
+    private static int sign(int c) {
+        return c < 0 ? -1
+            : c > 0 ? 1
+            : 0;
+    }
+
     private void doTestOp(final Checker checker) {
         int size0 = 40;
         int size1 = 100;
@@ -560,6 +640,7 @@ public class BitKeyTest extends TestCase {
         large.set(2, false);
         assertTrue(large.isEmpty());
     }
+
     public void testIterator() {
 /*
         printBitPositions(0);
@@ -652,10 +733,11 @@ public class BitKeyTest extends TestCase {
         };
         doTestIterator(bitPositions);
     }
+
     private void printBitPositions(int i) {
         int b = (i & -i);
         int p = BitKey.bitPositionTable[b];
-        System.out.println("  i="+i+",b="+b+",p="+p);
+        System.out.println("  i=" + i + ",b=" + b + ",p=" + p);
     }
 
     private void doTestIterator(int[] bitPositions) {
@@ -682,20 +764,24 @@ public class BitKeyTest extends TestCase {
             BitKey bitKey0 = makeAndSet(size0, positions);
             BitKey bitKey1 = makeAndSet(size1, positions);
 
-            assertTrue("BitKey not equals size0=" +size0+
-                ", size1=" +size1+
-                ", i=" +i,
+            assertTrue("BitKey not equals size0=" + size0 +
+                ", size1=" + size1 +
+                ", i=" + i,
                 (bitKey0.equals(bitKey1)));
-
         }
     }
-    private void doTestNotEquals(int size0, int[] positions0,
-                                 int size1, int[] positions1) {
+
+    private void doTestNotEquals(
+        int size0,
+        int[] positions0,
+        int size1,
+        int[] positions1)
+    {
         BitKey bitKey0 = makeAndSet(size0, positions0);
         BitKey bitKey1 = makeAndSet(size1, positions1);
 
-        assertTrue("BitKey not equals size0=" +size0+
-                ", size1=" +size1,
+        assertTrue("BitKey not equals size0=" + size0 +
+                ", size1=" + size1,
                 (! bitKey0.equals(bitKey1)));
     }
 
@@ -706,6 +792,85 @@ public class BitKeyTest extends TestCase {
             bitKey.set(positions[i]);
         }
         return bitKey;
+    }
+
+    public void testCompareUnsigned() {
+        assertEquals(0, BitKey.AbstractBitKey.compareUnsigned(0, 0));
+        assertEquals(0, BitKey.AbstractBitKey.compareUnsigned(10, 10));
+        assertEquals(0, BitKey.AbstractBitKey.compareUnsigned(-3, -3));
+        assertEquals(-1, BitKey.AbstractBitKey.compareUnsigned(0, 1));
+        assertEquals(1, BitKey.AbstractBitKey.compareUnsigned(1, 0));
+        // negative numbers are interpreted as large unsigned
+        assertEquals(1, BitKey.AbstractBitKey.compareUnsigned(-1, 1));
+        assertEquals(1, BitKey.AbstractBitKey.compareUnsigned(-1, 0));
+        // -1 is a larger unsigned number than -2
+        assertEquals(1, BitKey.AbstractBitKey.compareUnsigned(-1, -2));
+        assertEquals(-1, BitKey.AbstractBitKey.compareUnsigned(-2, -1));
+    }
+
+    public void testCompareUnsignedLongArrays() {
+        // empty arrays are equal
+        assertEquals(
+            0,
+            BitKey.AbstractBitKey.compareUnsignedArrays(
+                new long[] {},
+                new long[] {}));
+        // empty array does not equal other
+        assertEquals(
+            -1,
+            BitKey.AbstractBitKey.compareUnsignedArrays(
+                new long[] {},
+                new long[] {1}));
+        // empty array with left-padding
+        assertEquals(
+            0,
+            BitKey.AbstractBitKey.compareUnsignedArrays(
+                new long[] {},
+                new long[] {0, 0}));
+        assertEquals(
+            0,
+            BitKey.AbstractBitKey.compareUnsignedArrays(
+                new long[] {0},
+                new long[] {}));
+        assertEquals(
+            0,
+            BitKey.AbstractBitKey.compareUnsignedArrays(
+                new long[] {0, 0},
+                new long[] {0, 0}));
+        // 0x00000050000001 > 00000040000002
+        assertEquals(
+            1,
+            BitKey.AbstractBitKey.compareUnsignedArrays(
+                new long[] {1, 5},
+                new long[] {2, 4}));
+        // 0x00000050000001 < 00000050000002
+        assertEquals(
+            -1,
+            BitKey.AbstractBitKey.compareUnsignedArrays(
+                new long[] {1, 5},
+                new long[] {2, 5}));
+        // as above, with zero padding
+        assertEquals(
+            -1,
+            BitKey.AbstractBitKey.compareUnsignedArrays(
+                new long[] {1, 5},
+                new long[] {2, 5, 0, 0}));
+        assertEquals(
+            -1,
+            BitKey.AbstractBitKey.compareUnsignedArrays(
+                new long[] {1, 5, 0, 0, 0},
+                new long[] {2, 5, 0, 0}));
+        assertEquals(
+            -1,
+            BitKey.AbstractBitKey.compareUnsignedArrays(
+                new long[] {1, 5, 0, 0, 0},
+                new long[] {2, 5}));
+        // negative numbers are interpreted as large unsigned
+        assertEquals(
+            1,
+            BitKey.AbstractBitKey.compareUnsignedArrays(
+                new long[] {1, 5},
+                new long[] {-2, 4}));
     }
 }
 

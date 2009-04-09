@@ -3,7 +3,7 @@
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2004-2005 TONBELLER AG
-// Copyright (C) 2006-2007 Julian Hyde
+// Copyright (C) 2006-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -22,7 +22,7 @@ import mondrian.rolap.aggmatcher.AggStar;
  * the member we are searching for.
  *
  * @author avix
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/ChildByNameConstraint.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/ChildByNameConstraint.java#19 $
  */
 class ChildByNameConstraint extends DefaultMemberChildrenConstraint {
     String childName;
@@ -49,7 +49,8 @@ class ChildByNameConstraint extends DefaultMemberChildrenConstraint {
     {
         super.addLevelConstraint(query, baseCube, aggStar, level);
         query.addWhere(
-            SqlConstraintUtils.constrainLevel(level, query, baseCube, childName, true));
+            SqlConstraintUtils.constrainLevel(
+                    level, query, baseCube, aggStar, childName, true));
     }
 
     public String toString() {

@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/LevelType.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/LevelType.java#12 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2004-2006 Julian Hyde
+// Copyright (C) 2004-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -16,7 +16,7 @@ package mondrian.olap;
  *
  * @author jhyde
  * @since 5 April, 2004
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/LevelType.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/LevelType.java#12 $
  */
 public enum LevelType {
 

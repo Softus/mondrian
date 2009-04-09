@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/xmla/XmlaUtil.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/xmla/XmlaUtil.java#26 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2003-2007 Julian Hyde
+// Copyright (C) 2003-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -32,7 +32,7 @@ import java.nio.charset.Charset;
  * Utility methods for XML/A implementation.
  *
  * @author Gang Chen
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/xmla/XmlaUtil.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/xmla/XmlaUtil.java#26 $
  */
 public class XmlaUtil implements XmlaConstants {
 
@@ -143,7 +143,8 @@ public class XmlaUtil implements XmlaConstants {
     }
 
     private static Element _2Element(InputSource source)
-            throws XmlaException {
+        throws XmlaException
+    {
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             factory.setIgnoringElementContentWhitespace(true);
@@ -152,7 +153,6 @@ public class XmlaUtil implements XmlaConstants {
             DocumentBuilder builder = factory.newDocumentBuilder();
             Document doc = builder.parse(source);
             return doc.getDocumentElement();
-
         } catch (Exception e) {
             throw new XmlaException(
                 CLIENT_FAULT_FC,
@@ -212,10 +212,11 @@ public class XmlaUtil implements XmlaConstants {
         return null;
     }
 
-    public static Element[] filterChildElements(Element parent,
-                                                String ns,
-                                                String lname) {
-
+    public static Element[] filterChildElements(
+        Element parent,
+        String ns,
+        String lname)
+    {
 /*
 way too noisy
         if (LOGGER.isDebugEnabled()) {
@@ -552,7 +553,7 @@ way too noisy
                 String s = prefix + "<li><b>" + columnName + "</b> "
                     + type
                     + (columnDefinition.nullable
-                    ? " (may be <code>null</code>)" 
+                    ? " (may be <code>null</code>)"
                     : "")
                     + " => " + columnDefinition.description
                     + "</li>";

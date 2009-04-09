@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/rolap/aggmatcher/BUG_1541077.java#2 $
+// $Id: //open/mondrian/testsrc/main/mondrian/rolap/aggmatcher/BUG_1541077.java#10 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2007 Julian Hyde and others
+// Copyright (C) 2005-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -18,7 +18,7 @@ import mondrian.olap.Result;
  * and a couple of other aggregate table ExplicitRecognizer conditions.
  *
  * @author Richard M. Emberson
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/rolap/aggmatcher/BUG_1541077.java#2 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/rolap/aggmatcher/BUG_1541077.java#10 $
  */
 public class BUG_1541077 extends AggTableTestCase {
 
@@ -200,7 +200,6 @@ public class BUG_1541077 extends AggTableTestCase {
             "    column='amount' aggregator='avg'\n" +
             "   formatString='00.0'/>\n" +
             "</Cube>";
-
     }
 }
 

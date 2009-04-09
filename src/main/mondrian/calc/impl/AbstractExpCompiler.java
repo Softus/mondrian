@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/calc/impl/AbstractExpCompiler.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/calc/impl/AbstractExpCompiler.java#28 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2008 Julian Hyde
+// Copyright (C) 2006-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -17,16 +17,13 @@ import mondrian.olap.type.LevelType;
 import mondrian.resource.MondrianResource;
 import mondrian.calc.*;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.List;
-import java.util.ArrayList;
+import java.util.*;
 
 /**
  * Abstract implementation of the {@link mondrian.calc.ExpCompiler} interface.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/calc/impl/AbstractExpCompiler.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/calc/impl/AbstractExpCompiler.java#28 $
  * @since Sep 29, 2005
  */
 public class AbstractExpCompiler implements ExpCompiler {
@@ -93,6 +90,7 @@ public class AbstractExpCompiler implements ExpCompiler {
         List<ResultStyle> preferredResultTypes)
     {
         assert preferredResultTypes != null;
+        int substitutions = 0;
         if (Util.Retrowoven) {
             // Copy and replace ITERABLE
             // A number of functions declare that they can accept
@@ -101,10 +99,11 @@ public class AbstractExpCompiler implements ExpCompiler {
             List<ResultStyle> tmp =
                 new ArrayList<ResultStyle>(preferredResultTypes.size());
             for (ResultStyle preferredResultType : preferredResultTypes) {
-                tmp.add(
-                    (preferredResultType == ResultStyle.ITERABLE)
-                        ? ResultStyle.LIST
-                        : preferredResultType);
+                if (preferredResultType == ResultStyle.ITERABLE) {
+                    preferredResultType = ResultStyle.LIST;
+                    ++substitutions;
+                }
+                tmp.add(preferredResultType);
             }
             preferredResultTypes = tmp;
         }
@@ -122,7 +121,24 @@ public class AbstractExpCompiler implements ExpCompiler {
                     return compileDimension(exp);
                 }
             }
-            return compile(exp);
+            final Calc calc = compile(exp);
+            if (substitutions > 0) {
+                if (calc == null) {
+                    this.resultStyles =
+                        Collections.singletonList(ResultStyle.ITERABLE);
+                    return compile(exp);
+                } else if (calc instanceof IterCalc) {
+                    return calc;
+                } else {
+                    assert calc instanceof ListCalc;
+                    if (((SetType) calc.getType()).getArity() == 1) {
+                        return toIter((MemberListCalc) calc);
+                    } else {
+                        return toIter((TupleListCalc) calc);
+                    }
+                }
+            }
+            return calc;
         } finally {
             this.resultStyles = save;
         }
@@ -132,8 +148,8 @@ public class AbstractExpCompiler implements ExpCompiler {
         final Type type = exp.getType();
         if (type instanceof DimensionType) {
             final DimensionCalc dimensionCalc = compileDimension(exp);
-            return new DimensionCurrentMemberFunDef.CalcImpl(
-                    new DummyExp(TypeUtil.toMemberType(type)), dimensionCalc);
+            return new DimensionCurrentMemberCalc(
+                new DummyExp(TypeUtil.toMemberType(type)), dimensionCalc);
         } else if (type instanceof HierarchyType) {
             final HierarchyCalc hierarchyCalc = compileHierarchy(exp);
             return new HierarchyCurrentMemberFunDef.CalcImpl(
@@ -172,20 +188,36 @@ public class AbstractExpCompiler implements ExpCompiler {
 
     public HierarchyCalc compileHierarchy(Exp exp) {
         final Type type = exp.getType();
-        if (type instanceof DimensionType ||
-                type instanceof MemberType) {
-            // <Dimension> --> <Dimension>.CurrentMember.Hierarchy
+        if (type instanceof DimensionType) {
+            // <Dimension> --> unique Hierarchy else error
+            // Resolve at compile time if constant
+            final Dimension dimension = type.getDimension();
+            if (dimension != null) {
+                final Hierarchy hierarchy =
+                    FunUtil.getDimensionDefaultHierarchy(dimension);
+                if (hierarchy != null) {
+                    return (HierarchyCalc) ConstantCalc.constantHierarchy(
+                        hierarchy);
+                }
+            }
+            final DimensionCalc dimensionCalc = compileDimension(exp);
+            return new DimensionHierarchyCalc(
+                new DummyExp(HierarchyType.forType(type)),
+                dimensionCalc);
+        }
+        if (type instanceof MemberType) {
+            // <Member> --> <Member>.Hierarchy
             final MemberCalc memberCalc = compileMember(exp);
             return new MemberHierarchyFunDef.CalcImpl(
-                    new DummyExp(HierarchyType.forType(type)),
-                    memberCalc);
+                new DummyExp(HierarchyType.forType(type)),
+                memberCalc);
         }
         if (type instanceof LevelType) {
             // <Level> --> <Level>.Hierarchy
             final LevelCalc levelCalc = compileLevel(exp);
             return new LevelHierarchyFunDef.CalcImpl(
-                    new DummyExp(HierarchyType.forType(type)),
-                    levelCalc);
+                new DummyExp(HierarchyType.forType(type)),
+                levelCalc);
         }
         assert type instanceof HierarchyType;
         return (HierarchyCalc) compile(exp);
@@ -228,15 +260,87 @@ public class AbstractExpCompiler implements ExpCompiler {
     }
 
     public ListCalc compileList(Exp exp, boolean mutable) {
+        final List<ResultStyle> resultStyleList;
         if (mutable) {
-            return (ListCalc) compileAs(exp, null, ResultStyle.MUTABLELIST_ONLY);
+            resultStyleList = ResultStyle.MUTABLELIST_ONLY;
         } else {
-            return (ListCalc) compileAs(exp, null, ResultStyle.LIST_ONLY);
+            resultStyleList = ResultStyle.LIST_ONLY;
+        }
+        Calc calc = compileAs(exp, null, resultStyleList);
+        if (calc instanceof ListCalc) {
+            return (ListCalc) calc;
+        }
+        if (calc == null) {
+            calc = compileAs(exp, null, ResultStyle.ITERABLE_ANY);
+            assert calc != null;
+        }
+        if (calc instanceof IterCalc) {
+            if (((SetType) calc.getType()).getArity() == 1) {
+                return toList((MemberIterCalc) calc);
+            } else {
+                return toList((TupleIterCalc) calc);
+            }
+        } else {
+            // A set can only be implemented as a list or an iterable.
+            throw Util.newInternal("Cannot convert calc to list: " + calc);
         }
     }
 
+    /**
+     * Converts an iterable over members to a list of members.
+     *
+     * @param calc Calc
+     * @return List calculation.
+     */
+    public MemberListCalc toList(MemberIterCalc calc) {
+        return new IterableMemberListCalc(calc);
+    }
+
+    /**
+     * Converts an iterable over tuples to a list of tuples.
+     *
+     * @param calc Calc
+     * @return List calculation.
+     */
+    public TupleListCalc toList(TupleIterCalc calc) {
+        return new IterableTupleListCalc(calc);
+    }
+
     public IterCalc compileIter(Exp exp) {
-        return (IterCalc) compileAs(exp, null, ResultStyle.ITERABLE_ONLY);
+        Calc calc = compileAs(exp, null, ResultStyle.ITERABLE_ONLY);
+        if (calc == null) {
+            calc = compileAs(exp, null, ResultStyle.ANY_ONLY);
+            assert calc != null;
+        }
+        if (calc instanceof IterCalc) {
+            return (IterCalc) calc;
+        } else {
+            if (((SetType) calc.getType()).getArity() == 1) {
+                return toIter((MemberListCalc) calc);
+            } else {
+                return toIter((TupleListCalc) calc);
+            }
+        }
+    }
+
+    /**
+     * Converts a list of members to an iterable over members.
+     *
+     * @param memberListCalc Calc
+     * @return Iterable calculation
+     */
+    public MemberIterCalc toIter(final MemberListCalc memberListCalc) {
+        return new MemberListIterCalc(memberListCalc);
+    }
+
+    /**
+     * Converts a list of tuples to an iterable over tuples.
+     *
+     * @param tupleListCalc Calc
+     * @return Iterable calculation
+     */
+    public TupleIterCalc toIter(final TupleListCalc tupleListCalc) {
+        return new TupleListIterCalc(tupleListCalc);
     }
 
     public BooleanCalc compileBoolean(Exp exp) {
@@ -295,7 +399,7 @@ public class AbstractExpCompiler implements ExpCompiler {
             final DimensionCalc dimensionCalc = compileDimension(exp);
             MemberType memberType = MemberType.forType(type);
             final MemberCalc dimensionCurrentMemberCalc =
-                    new DimensionCurrentMemberFunDef.CalcImpl(
+                    new DimensionCurrentMemberCalc(
                             new DummyExp(memberType),
                             dimensionCalc);
             return new MemberValueCalc(
@@ -399,7 +503,7 @@ public class AbstractExpCompiler implements ExpCompiler {
          *
          * @param calc Compiled expression to compute default value of
          * parameter
-         * 
+         *
          * @see #getDefaultValueCalc()
          */
         private void setDefaultValueCalc(Calc calc) {
@@ -422,6 +526,95 @@ public class AbstractExpCompiler implements ExpCompiler {
             return cachedDefaultValue;
         }
     }
+
+    /**
+     * Adapter that converts a member list calc into a member iter calc.
+     */
+    private static class MemberListIterCalc extends AbstractMemberIterCalc {
+        private final MemberListCalc memberListCalc;
+
+        public MemberListIterCalc(MemberListCalc memberListCalc) {
+            super(
+                new DummyExp(memberListCalc.getType()),
+                new Calc[]{memberListCalc});
+            this.memberListCalc = memberListCalc;
+        }
+
+        public Iterable<Member> evaluateMemberIterable(Evaluator evaluator) {
+            return memberListCalc.evaluateMemberList(evaluator);
+        }
+    }
+
+    /**
+     * Adapter that converts a tuple list calc into a tuple iter calc.
+     */
+    private static class TupleListIterCalc extends AbstractTupleIterCalc {
+        private final TupleListCalc tupleListCalc;
+
+        public TupleListIterCalc(TupleListCalc tupleListCalc) {
+            super(
+                new DummyExp(tupleListCalc.getType()),
+                new Calc[]{tupleListCalc});
+            this.tupleListCalc = tupleListCalc;
+        }
+
+        public Iterable<Member[]> evaluateTupleIterable(Evaluator evaluator) {
+            return tupleListCalc.evaluateTupleList(evaluator);
+        }
+    }
+
+    /**
+     * Computes the hierarchy of a dimension
+     */
+    private static class DimensionHierarchyCalc extends AbstractHierarchyCalc {
+        private final DimensionCalc dimensionCalc;
+
+        protected DimensionHierarchyCalc(Exp exp, DimensionCalc dimensionCalc) {
+            super(exp, new Calc[] {dimensionCalc});
+            this.dimensionCalc = dimensionCalc;
+        }
+
+        public Hierarchy evaluateHierarchy(Evaluator evaluator) {
+            Dimension dimension =
+                dimensionCalc.evaluateDimension(evaluator);
+            final Hierarchy hierarchy =
+                FunUtil.getDimensionDefaultHierarchy(dimension);
+            if (hierarchy != null) {
+                return hierarchy;
+            }
+            throw FunUtil.newEvalException(
+                MondrianResource.instance()
+                    .CannotImplicitlyConvertDimensionToHierarchy
+                    .ex(
+                    dimension.getName()));
+        }
+    }
+
+    /**
+     * Computation that returns the current member of a dimension.
+     */
+    public static class DimensionCurrentMemberCalc extends AbstractMemberCalc {
+        private final DimensionCalc dimensionCalc;
+
+        public DimensionCurrentMemberCalc(Exp exp, DimensionCalc dimensionCalc) {
+            super(exp, new Calc[] {dimensionCalc});
+            this.dimensionCalc = dimensionCalc;
+        }
+
+        protected String getName() {
+            return "CurrentMember";
+        }
+
+        public Member evaluateMember(Evaluator evaluator) {
+            Dimension dimension =
+                    dimensionCalc.evaluateDimension(evaluator);
+            return evaluator.getContext(dimension);
+        }
+
+        public boolean dependsOn(Dimension dimension) {
+            return dimensionCalc.getType().usesDimension(dimension, true) ;
+        }
+    }
 }
 
-// End AbtractExpCompiler.java
+// End AbstractExpCompiler.java

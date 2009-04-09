@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/Property.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/Property.java#30 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2001-2002 Kana Software, Inc.
-// Copyright (C) 2001-2007 Julian Hyde and others
+// Copyright (C) 2001-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -55,7 +55,7 @@ import java.util.HashMap;
  * <li>{@link #VALUE}</li>
  * </ul>
  *
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/Property.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/Property.java#30 $
  * @author jhyde
  */
 public class Property extends EnumeratedValues.BasicValue {
@@ -428,7 +428,7 @@ public class Property extends EnumeratedValues.BasicValue {
      */
     public static final Property KEY =
             new Property("KEY", Datatype.TYPE_STRING, KEY_ORDINAL, false, true, false, "Key.");
-    
+
     public static final int UNIQUE_NAME_WITHOUT_HIERARCHY_ORDINAL = 47;
     /**
      * Definition of the internal property which
@@ -438,7 +438,7 @@ public class Property extends EnumeratedValues.BasicValue {
     public static final Property UNIQUE_NAME_WITHOUT_HIERARCHY =
             new Property("$unique_name_without_hierarchy", Datatype.TYPE_STRING, UNIQUE_NAME_WITHOUT_HIERARCHY_ORDINAL, true, true, false, null);
 
-    
+
     /**
      * The various property names which define a format string.
      */

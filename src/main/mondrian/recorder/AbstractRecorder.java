@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/recorder/AbstractRecorder.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/recorder/AbstractRecorder.java#8 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2006 Julian Hyde and others
+// Copyright (C) 2005-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -18,7 +18,7 @@ import java.util.*;
  * Abstract implemention of the {@link MessageRecorder} interface.
  *
  * @author Richard M. Emberson
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/recorder/AbstractRecorder.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/recorder/AbstractRecorder.java#8 $
  */
 public abstract class AbstractRecorder implements MessageRecorder {
 
@@ -47,11 +47,10 @@ public abstract class AbstractRecorder implements MessageRecorder {
             break;
         default:
             logger.warn(
-                    "Unknown message type enum \"" +
+                "Unknown message type enum \"" +
                     msgType +
                     "\" for message: " +
-                    buf.toString()
-            );
+                    buf.toString());
         }
     }
 
@@ -143,7 +142,7 @@ public abstract class AbstractRecorder implements MessageRecorder {
 
     public void popContextName() {
         // light weight
-        contexts.remove(contexts.size()-1);
+        contexts.remove(contexts.size() - 1);
         contextMsgCache = null;
     }
 

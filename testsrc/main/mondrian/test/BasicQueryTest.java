@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/BasicQueryTest.java#3 $
+// $Id: //open/mondrian/testsrc/main/mondrian/test/BasicQueryTest.java#136 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2003-2007 Julian Hyde
+// Copyright (C) 2003-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -16,6 +16,7 @@ import mondrian.olap.type.NumericType;
 import mondrian.olap.type.Type;
 import mondrian.rolap.RolapConnectionProperties;
 import mondrian.spi.UserDefinedFunction;
+import mondrian.spi.Dialect;
 import mondrian.util.Bug;
 import mondrian.calc.ResultStyle;
 
@@ -30,7 +31,7 @@ import junit.framework.Assert;
  *
  * @author jhyde
  * @since Feb 14, 2003
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/BasicQueryTest.java#3 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/test/BasicQueryTest.java#136 $
  */
 public class BasicQueryTest extends FoodMartTestCase {
     static final String EmptyResult = fold(
@@ -44,6 +45,7 @@ public class BasicQueryTest extends FoodMartTestCase {
     public BasicQueryTest() {
         super();
     }
+
     public BasicQueryTest(String name) {
         super(name);
     }
@@ -320,9 +322,9 @@ public class BasicQueryTest extends FoodMartTestCase {
                 "       format_string = '#.00%'\n" +
                 "select\n" +
                 "   { [Product].[All Products].[Drink].[Percent of Alcoholic Drinks] } on columns,\n" +
-                "   order([Customers].[All Customers].[USA].[WA].Children, [Product].[All Products].[Drink].[Percent of Alcoholic Drinks],BDESC ) on rows\n" +
+                "   order([Customers].[All Customers].[USA].[WA].Children, [Product].[All Products].[Drink].[Percent of Alcoholic Drinks],BDESC) on rows\n" +
                 "from Sales\n" +
-                "where ( [Measures].[Unit Sales] )",
+                "where ([Measures].[Unit Sales])",
 
                 "Axis #0:\n" +
                 "{[Measures].[Unit Sales]}\n" +
@@ -470,11 +472,17 @@ public class BasicQueryTest extends FoodMartTestCase {
     }
 
     public void testSample8() {
+        if (TestContext.instance().getDialect().getDatabaseProduct() ==
+            Dialect.DatabaseProduct.INFOBRIGHT)
+        {
+            // Skip this test on Infobright, because [Promotion Sales] is
+            // defined wrong.
+            return;
+        }
         assertQueryReturns(sampleQueries[8].query, sampleQueries[8].result);
     }
 
     public void testGoodComments() {
-
         assertQueryReturns(
                 "SELECT {} ON ROWS, {} ON COLUMNS FROM [Sales]/* trailing comment*/",
                 EmptyResult);
@@ -661,9 +669,9 @@ public class BasicQueryTest extends FoodMartTestCase {
                 "       format_string = '#.00%'  // a custom format for our measure\n" +
                 "select\n" +
                 "   { [Product]/**** still crazy ****/.[All Products].[Drink].[Percent of Alcoholic Drinks] } on columns,\n" +
-                "   order(/****do not put a comment inside square brackets****/[Customers].[All Customers].[USA].[WA].Children, [Product].[All Products].[Drink].[Percent of Alcoholic Drinks],BDESC ) on rows\n" +
+                "   order(/****do not put a comment inside square brackets****/[Customers].[All Customers].[USA].[WA].Children, [Product].[All Products].[Drink].[Percent of Alcoholic Drinks],BDESC) on rows\n" +
                 "from Sales\n" +
-                "where ( [Measures].[Unit Sales] /****,[Time].[1997]****/) -- a comment at the end of the command",
+                "where ([Measures].[Unit Sales] /****,[Time].[1997]****/) -- a comment at the end of the command",
 
                 fold("Axis #0:\n" +
                 "{[Measures].[Unit Sales]}\n" +
@@ -800,7 +808,7 @@ public class BasicQueryTest extends FoodMartTestCase {
                 "SELECT {[Measures].[Unit Sales]} ON COLUMNS,\n" +
                 " {[Gender].MEMBERS} ON ROWS\n" +
                 "FROM [Sales]\n" +
-                "WHERE ( {Filter({[Marital Status].MEMBERS}, [Measures].[Unit Sales] = 266773)}.Item(0) )",
+                "WHERE ({Filter({[Marital Status].MEMBERS}, [Measures].[Unit Sales] = 266773)}.Item(0))",
                 fold("Axis #0:\n" +
                 "{[Marital Status].[All Marital Status]}\n" +
                 "Axis #1:\n" +
@@ -917,7 +925,7 @@ public class BasicQueryTest extends FoodMartTestCase {
                 "      [Promotion Media].[All Media].[TV],\n" +
                 "      [Promotion Media].[All Media].[Sunday Paper],\n" +
                 "      [Promotion Media].[All Media].[Street Handout] }\n" +
-                "    ) on columns\n" +
+                "   ) on columns\n" +
                 "from Sales\n" +
                 "where ([Time].[1997])", 8, 2);
     }
@@ -933,7 +941,7 @@ public class BasicQueryTest extends FoodMartTestCase {
                 "    { [Promotion Media].[All Media].[Cash Register Handout],\n" +
                 "      [Promotion Media].[All Media].[Sunday Paper],\n" +
                 "      [Promotion Media].[All Media].[Street Handout] }\n" +
-                "    ) on columns\n" +
+                "   ) on columns\n" +
                 "from Sales\n" +
                 "where ([Time].[1997])", 2, 2);
     }
@@ -1094,7 +1102,7 @@ public class BasicQueryTest extends FoodMartTestCase {
                 "   MEMBER [Time].[TimeCalc] as '3', SOLVE_ORDER=3\n" +
                 "SELECT\n" +
                 "   { [Product].[ProdCalc] } ON columns,\n" +
-                "   {( [Time].[TimeCalc], [Measures].[MeasuresCalc] )} ON rows\n" +
+                "   {([Time].[TimeCalc], [Measures].[MeasuresCalc])} ON rows\n" +
                 "FROM Sales",
 
                 fold("Axis #0:\n" +
@@ -1520,7 +1528,7 @@ public class BasicQueryTest extends FoodMartTestCase {
                 "      [Promotion Media].[All Media].[TV],\n" +
                 "      [Promotion Media].[All Media].[Sunday Paper],\n" +
                 "      [Promotion Media].[All Media].[Street Handout] }\n" +
-                "    ) on columns\n" +
+                "   ) on columns\n" +
                 "from Sales\n" +
                 "where ([Time].[1997])",
 
@@ -1674,7 +1682,7 @@ public class BasicQueryTest extends FoodMartTestCase {
                 "      [Promotion Media].[All Media].[TV],\n" +
                 "      [Promotion Media].[All Media].[Sunday Paper],\n" +
                 "      [Promotion Media].[All Media].[Street Handout] }\n" +
-                "    ) on columns\n" +
+                "   ) on columns\n" +
                 "from Sales\n" +
                 "where ([Time].[1997])",
 
@@ -2211,8 +2219,7 @@ public class BasicQueryTest extends FoodMartTestCase {
 
                 "Axis #0:\n" +
                 "{[Measures].[Store Sales], [Time].[1997], [Promotion Media].[All Media].[TV]}\n" +
-                "7,786.21")
-    );
+                "7,786.21"));
 
     public void testTaglib0() {
         assertQueryReturns(taglibQueries.get(0).query, taglibQueries.get(0).result);
@@ -2792,6 +2799,9 @@ public class BasicQueryTest extends FoodMartTestCase {
                 "      <SQL dialect=\"db2\">\n" +
                 "        <![CDATA[SELECT * FROM \"customer\"]]>\n" +
                 "      </SQL>\n" +
+                "      <SQL dialect=\"netezza\">\n" +
+                "        <![CDATA[SELECT * FROM \"customer\"]]>\n" +
+                "      </SQL>\n" +
                 "    </View>\n" +
                 "    <Level name=\"Gender\" column=\"gender\" uniqueMembers=\"true\"/>\n" +
                 "  </Hierarchy>\n" +
@@ -3082,7 +3092,7 @@ public class BasicQueryTest extends FoodMartTestCase {
                 // null is at the end in order for DBMSs that sort nulls high
                 (nullsSortHigh ? "{[Store Size in SQFT].[All Store Size in SQFTs].[#null]}\n" : "") +
                 "Row #" + row++ + ": 266,773\n" +
-                (!nullsSortHigh ? "Row #" + row++ + ": 39,329\n" : "" ) +
+                (!nullsSortHigh ? "Row #" + row++ + ": 39,329\n" : "") +
                 "Row #" + row++ + ": 26,079\n" +
                 "Row #" + row++ + ": 25,011\n" +
                 "Row #" + row++ + ": 2,117\n" +
@@ -3103,7 +3113,7 @@ public class BasicQueryTest extends FoodMartTestCase {
                 "Row #" + row++ + ": \n" +
                 "Row #" + row++ + ": \n" +
                 "Row #" + row++ + ": 24,576\n" +
-                (nullsSortHigh ? "Row #" + row++ + ": 39,329\n" : "" ));
+                (nullsSortHigh ? "Row #" + row++ + ": 39,329\n" : ""));
         assertEquals(expected, resultString);
     }
 
@@ -3134,28 +3144,20 @@ public class BasicQueryTest extends FoodMartTestCase {
     }
 
     public void testMembersOfLargeDimensionTheHardWay() {
-
         // Avoid this test if memory is scarce.
         if (Bug.avoidMemoryOverflow(TestContext.instance().getDialect())) {
             return;
         }
 
-        int old = props.LargeDimensionThreshold.get();
-        try {
-            // prevent a CacheMemberReader from kicking in
-            props.LargeDimensionThreshold.set(1);
-            final Connection connection =
-                    TestContext.instance().getFoodMartConnection();
-            String queryString =
-                    "select {[Measures].[Unit Sales]} on columns,\n" +
-                    "{[Customers].members} on rows\n" +
-                    "from Sales";
-            Query query = connection.parseQuery(queryString);
-            Result result = connection.execute(query);
-            assertEquals(10407, result.getAxes()[1].getPositions().size());
-        } finally {
-            props.LargeDimensionThreshold.set(old);
-        }
+        final Connection connection =
+            TestContext.instance().getFoodMartConnection();
+        String queryString =
+            "select {[Measures].[Unit Sales]} on columns,\n" +
+                "{[Customers].members} on rows\n" +
+                "from Sales";
+        Query query = connection.parseQuery(queryString);
+        Result result = connection.execute(query);
+        assertEquals(10407, result.getAxes()[1].getPositions().size());
     }
 
     public void testUnparse() {
@@ -3398,7 +3400,7 @@ public class BasicQueryTest extends FoodMartTestCase {
      * query, using the CurrentMember and Parent MDX functions.
      */
     public void testPercentagesAsMeasures() {
-        assertQueryReturns( // todo: "Store.[USA].[CA]" should be "Store.CA"
+        assertQueryReturns(// todo: "Store.[USA].[CA]" should be "Store.CA"
                 "WITH MEMBER Measures.[Unit Sales Percent] AS\n" +
                 "  '((Store.CURRENTMEMBER, Measures.[Unit Sales]) /\n" +
                 "    (Store.CURRENTMEMBER.PARENT, Measures.[Unit Sales])) ',\n" +
@@ -3477,7 +3479,7 @@ public class BasicQueryTest extends FoodMartTestCase {
      * evaluated once, it would not satisfy the needs of this query.
      */
     public void _testCumlativeSums() {
-        assertQueryReturns( // todo: "[Store].[USA].[CA]" should be "Store.CA"; implement "AS"
+        assertQueryReturns(// todo: "[Store].[USA].[CA]" should be "Store.CA"; implement "AS"
                 "WITH MEMBER Measures.[Cumulative No of Employees] AS\n" +
                 "  'SUM(HEAD(ORDER({[Store].Siblings}, [Measures].[Number of Employees], BDESC) AS OrderedSiblings,\n" +
                 "            RANK([Store], OrderedSiblings)),\n" +
@@ -3563,7 +3565,7 @@ public class BasicQueryTest extends FoodMartTestCase {
      * sales for drink products in the USA, shown by quarter and year for 1997.
      */
     public void testLogicalAnd() {
-        assertQueryReturns( // todo: "[Store].USA" should be "[Store].[USA]"
+        assertQueryReturns(// todo: "[Store].USA" should be "[Store].[USA]"
                 "SELECT {Measures.[Unit Sales]} ON COLUMNS,\n" +
                 "  DESCENDANTS([Time].[1997], [Quarter], SELF_AND_BEFORE) ON ROWS\n" +
                 "FROM Sales\n" +
@@ -3706,7 +3708,7 @@ public class BasicQueryTest extends FoodMartTestCase {
      * that do not support member properties.
      */
     public void _testMemberPropertyAsCalcMember() {
-        assertQueryReturns( // todo: implement <member>.PROPERTIES
+        assertQueryReturns(// todo: implement <member>.PROPERTIES
                 "WITH MEMBER Measures.[Store SqFt] AS '[Store].CURRENTMEMBER.PROPERTIES(\"Store SQFT\")'\n" +
                 "SELECT { [Measures].[Store SQFT], [Measures].[Units Shipped], [Measures].[Units Ordered] }  ON COLUMNS,\n" +
                 "  [Store].[Store Name].MEMBERS ON ROWS\n" +
@@ -3766,7 +3768,7 @@ public class BasicQueryTest extends FoodMartTestCase {
      * and City levels determine the order of the members.
      */
     public void _testDrillingDownMoreThanOneLevel() {
-        assertQueryReturns( // todo: implement "GENERATE"
+        assertQueryReturns(// todo: implement "GENERATE"
                 "SELECT  {[Measures].[Unit Sales]} ON COLUMNS,\n" +
                 "  EXCEPT(GENERATE([Customers].[Country].MEMBERS,\n" +
                 "                  {DESCENDANTS([Customers].CURRENTMEMBER, [Customers].[City], SELF_AND_BEFORE)}),\n" +
@@ -3800,7 +3802,7 @@ public class BasicQueryTest extends FoodMartTestCase {
      * sales for each country.
      */
     public void _testTopmost() {
-        assertQueryReturns( // todo: implement "GENERATE"
+        assertQueryReturns(// todo: implement "GENERATE"
                 "WITH MEMBER Measures.[Country Name] AS \n" +
                 "  'Ancestor(Store.CurrentMember, [Store Country]).Name'\n" +
                 "SELECT {Measures.[Country Name], Measures.[Unit Sales]} ON COLUMNS,\n" +
@@ -4088,7 +4090,7 @@ public class BasicQueryTest extends FoodMartTestCase {
      * query.
      */
     public void _testDifferentCalculationsForDifferentDimensions() {
-        assertQueryReturns( // todo: implement "NONEMPTYCROSSJOIN"
+        assertQueryReturns(// todo: implement "NONEMPTYCROSSJOIN"
                 "WITH MEMBER [Measures].[Avg Units Shipped] AS\n" +
                 "  '[Measures].[Units Shipped] / \n" +
                 "    COUNT(DESCENDANTS([Time].CURRENTMEMBER, [Time].[Month], SELF))'\n" +
@@ -4154,7 +4156,7 @@ public class BasicQueryTest extends FoodMartTestCase {
      * calculated members are created in the following MDX query.
      */
     public void _testDateRange() {
-        assertQueryReturns( // todo: implement "AddCalculatedMembers"
+        assertQueryReturns(// todo: implement "AddCalculatedMembers"
                 "WITH MEMBER [Time].[1997].[Six Month] AS\n" +
                 "  'SUM([Time].[1]:[Time].[6])'\n" +
                 "MEMBER [Time].[1997].[Nine Month] AS\n" +
@@ -4394,7 +4396,7 @@ public class BasicQueryTest extends FoodMartTestCase {
      * time periods.
      */
     public void _testYtdGrowth() {
-        assertQueryReturns( // todo: implement "ParallelPeriod"
+        assertQueryReturns(// todo: implement "ParallelPeriod"
                 "WITH MEMBER [Measures].[YTD Unit Sales] AS\n" +
                 "  'COALESCEEMPTY(SUM(YTD(), [Measures].[Unit Sales]), 0)'\n" +
                 "MEMBER [Measures].[Previous YTD Unit Sales] AS\n" +
@@ -4512,55 +4514,55 @@ public class BasicQueryTest extends FoodMartTestCase {
      *
      * @throws Exception on error
      */
-    public void testFilterWithCrossJoin() throws Exception {    	
-    	String queryWithFilter =
-    		"WITH SET [#DataSet#] AS 'Filter(Crossjoin({[Store].[All Stores]}, {[Customers].[All Customers]}), " +
-    		"[Measures].[Unit Sales] > 5)' " +
-    		"MEMBER [Customers].[#GT#] as 'Aggregate({[#DataSet#]})' " +
-    		"MEMBER [Store].[#GT#] as 'Aggregate({[#DataSet#]})' " +
-    		"SET [#GrandTotalSet#] as 'Crossjoin({[Store].[#GT#]}, {[Customers].[#GT#]})' " +
-    		"SELECT {[Measures].[Unit Sales]} " +
-    		"on columns, Union([#GrandTotalSet#], Hierarchize({[#DataSet#]})) on rows FROM [Sales]";
+    public void testFilterWithCrossJoin() throws Exception {
+        String queryWithFilter =
+            "WITH SET [#DataSet#] AS 'Filter(Crossjoin({[Store].[All Stores]}, {[Customers].[All Customers]}), " +
+            "[Measures].[Unit Sales] > 5)' " +
+            "MEMBER [Customers].[#GT#] as 'Aggregate({[#DataSet#]})' " +
+            "MEMBER [Store].[#GT#] as 'Aggregate({[#DataSet#]})' " +
+            "SET [#GrandTotalSet#] as 'Crossjoin({[Store].[#GT#]}, {[Customers].[#GT#]})' " +
+            "SELECT {[Measures].[Unit Sales]} " +
+            "on columns, Union([#GrandTotalSet#], Hierarchize({[#DataSet#]})) on rows FROM [Sales]";
 
-    	String queryWithoutFilter =
-    		"WITH SET [#DataSet#] AS 'Crossjoin({[Store].[All Stores]}, {[Customers].[All Customers]})' " +
-    		"SET [#GrandTotalSet#] as 'Crossjoin({[Store].[All Stores]}, {[Customers].[All Customers]})' " +
-    		"SELECT {[Measures].[Unit Sales]} on columns, Union([#GrandTotalSet#], Hierarchize({[#DataSet#]})) " +
-    		"on rows FROM [Sales]";
+        String queryWithoutFilter =
+            "WITH SET [#DataSet#] AS 'Crossjoin({[Store].[All Stores]}, {[Customers].[All Customers]})' " +
+            "SET [#GrandTotalSet#] as 'Crossjoin({[Store].[All Stores]}, {[Customers].[All Customers]})' " +
+            "SELECT {[Measures].[Unit Sales]} on columns, Union([#GrandTotalSet#], Hierarchize({[#DataSet#]})) " +
+            "on rows FROM [Sales]";
 
 
-    	String wrongResultWithFilter = "Axis #0:\n" +
-    		"{}\n" +
-    		"Axis #1:\n" +
-    		"{[Measures].[Unit Sales]}\n" +
-    		"Axis #2:\n" +
-    		"{[Store].[#GT#], [Customers].[#GT#]}\n" +
-    		"Row #0: \n";
+        String wrongResultWithFilter = "Axis #0:\n" +
+            "{}\n" +
+            "Axis #1:\n" +
+            "{[Measures].[Unit Sales]}\n" +
+            "Axis #2:\n" +
+            "{[Store].[#GT#], [Customers].[#GT#]}\n" +
+            "Row #0: \n";
 
-    	String expectedResultWithFilter = "Axis #0:\n" +
-	    	"{}\n" +
-	    	"Axis #1:\n" +
-	    	"{[Measures].[Unit Sales]}\n" +
-	    	"Axis #2:\n" +
-	    	"{[Store].[#GT#], [Customers].[#GT#]}\n" +
-	    	"{[Store].[All Stores], [Customers].[All Customers]}\n" +
-	    	"Row #0: 266,773\n" +
-	    	"Row #1: 266,773\n";
+        String expectedResultWithFilter = "Axis #0:\n" +
+            "{}\n" +
+            "Axis #1:\n" +
+            "{[Measures].[Unit Sales]}\n" +
+            "Axis #2:\n" +
+            "{[Store].[#GT#], [Customers].[#GT#]}\n" +
+            "{[Store].[All Stores], [Customers].[All Customers]}\n" +
+            "Row #0: 266,773\n" +
+            "Row #1: 266,773\n";
 
-    	String expectedResultWithoutFilter = "Axis #0:\n" +
-	    	"{}\n" +
-	    	"Axis #1:\n" +
-	    	"{[Measures].[Unit Sales]}\n" +
-	    	"Axis #2:\n" +
-	    	"{[Store].[All Stores], [Customers].[All Customers]}\n" +
-	    	"Row #0: 266,773\n";
+        String expectedResultWithoutFilter = "Axis #0:\n" +
+            "{}\n" +
+            "Axis #1:\n" +
+            "{[Measures].[Unit Sales]}\n" +
+            "Axis #2:\n" +
+            "{[Store].[All Stores], [Customers].[All Customers]}\n" +
+            "Row #0: 266,773\n";
 
-    	// With bug 1755778, the following test below fails because it returns
+        // With bug 1755778, the following test below fails because it returns
         // only row that have a null value (see "wrongResultWithFilter").
-    	// It should return the "expectedResultWithFilter" value.
-    	assertQueryReturns(queryWithFilter, fold(expectedResultWithFilter));
+        // It should return the "expectedResultWithFilter" value.
+        assertQueryReturns(queryWithFilter, fold(expectedResultWithFilter));
 
-    	// To see the test case return the correct result comment out the line
+        // To see the test case return the correct result comment out the line
         // above and uncomment out the lines below following. If a similar
         // query without the filter is executed (queryWithoutFilter) prior to
         // running the query with the filter then the correct result set is
@@ -4589,7 +4591,7 @@ public class BasicQueryTest extends FoodMartTestCase {
                 "      (([Measures].[Store Sales],\n" +
                 "        [Store].[All Stores].[USA].[CA].[San Francisco].[Store 14],\n" +
                 "        [Time].[1997].[Q1].[1]) > 5.0))\n" +
-                "  ) ON rows\n" +
+                " ) ON rows\n" +
                 "from [Sales]\n" +
                 "where (\n" +
                 "  [Store].[All Stores].[USA].[CA].[San Francisco].[Store 14],\n" +
@@ -4616,7 +4618,7 @@ public class BasicQueryTest extends FoodMartTestCase {
                 "  NON EMPTY Crossjoin(\n" +
                 "    [Customers].[Name].Members,\n" +
                 "    [Product].[Product Name].Members\n" +
-                "  ) ON rows\n" +
+                " ) ON rows\n" +
                 "from [Sales]\n" +
                 "where (\n" +
                 "  [Store].[All Stores].[USA].[CA].[San Francisco].[Store 14],\n" +
@@ -4861,7 +4863,8 @@ public class BasicQueryTest extends FoodMartTestCase {
         sql = sql.replace('"', '`');
 
         String tableQualifier = "as ";
-        if (getTestContext().getDialect().isOracle()) {
+        final Dialect dialect = getTestContext().getDialect();
+        if (dialect.getDatabaseProduct() == Dialect.DatabaseProduct.ORACLE) {
             // " + tableQualifier + "
             tableQualifier = "";
         }
@@ -5003,7 +5006,7 @@ public class BasicQueryTest extends FoodMartTestCase {
                     "      formatString=\"#,###.00\"/>\n" +
                     "</Cube>",
                     null, null, null, null);
-                Util.PropertyList properties = 
+                Util.PropertyList properties =
                     super.getFoodMartConnectionProperties();
                 properties.put(
                     RolapConnectionProperties.CatalogContent.name(),
@@ -5256,9 +5259,9 @@ public class BasicQueryTest extends FoodMartTestCase {
                 fold(
                     "with member  [Gender].[test] as '\n" +
                     "  aggregate(\n" +
-                    "  filter ( crossjoin( [Gender].[Gender].members, [Time].members), \n" +
+                    "  filter (crossjoin( [Gender].[Gender].members, [Time].members), \n" +
                     "      [time].CurrentMember = [Time].[1997].[Q1]   AND\n" +
-                    "[measures].[unit sales] > 50)  )\n" +
+                    "[measures].[unit sales] > 50) )\n" +
                     "'\n" +
                     "select \n" +
                     "  { [time].[year].members } on 0,\n" +
@@ -5387,7 +5390,6 @@ public class BasicQueryTest extends FoodMartTestCase {
     }
 
     public void testMemberOrdinalCaching() {
-
         boolean saved = props.CompareSiblingsByOrderKey.get();
         props.CompareSiblingsByOrderKey.set(true);
         Connection conn = null;
@@ -5573,8 +5575,7 @@ public class BasicQueryTest extends FoodMartTestCase {
                                  "{}\n" +
                                  "Axis #1:\n" +
                                  "{[Measures].[foo]}\n" +
-                                 "Row #0: $339,610.90\n")
-                          );
+                                 "Row #0: $339,610.90\n"));
     }
 
     public void testFormatInheritanceWithIIF() {
@@ -5586,8 +5587,7 @@ public class BasicQueryTest extends FoodMartTestCase {
                             fold(
                                 "Axis #0:\n" +
                                 "{[Measures].[foo]}\n" +
-                                "$339,610.90")
-                          );
+                                "$339,610.90"));
     }
 
     /**
@@ -5601,8 +5601,8 @@ public class BasicQueryTest extends FoodMartTestCase {
                         "member measures.bar as " +
                         "'iif(measures.profit>3000,measures.[unit sales],measures.[Customer Count])' " +
                         "select {[Store].[All Stores].[USA].[WA].children} on 0 " +
-                        "from sales where measures.foo"
-                , fold(
+                        "from sales where measures.foo",
+                fold(
                 "Axis #0:\n" +
                         "{[Measures].[foo]}\n" +
                         "Axis #1:\n" +
@@ -5619,9 +5619,7 @@ public class BasicQueryTest extends FoodMartTestCase {
                         "Row #0: $23,591.00\n" +
                         "Row #0: $35,257.00\n" +
                         "Row #0: $96.00\n" +
-                        "Row #0: $11,491.00\n"
-        )
-        );
+                        "Row #0: $11,491.00\n"));
     }
 
     /**
@@ -5632,8 +5630,8 @@ public class BasicQueryTest extends FoodMartTestCase {
                 "with member measures.bar as " +
                     "'iif(measures.profit>3000,min([Education Level].[Education Level].Members),min([Education Level].[Education Level].Members))' " +
                     "select {[Store].[All Stores].[USA].[WA].children} on 0 " +
-                    "from sales where measures.bar"
-                , fold(
+                    "from sales where measures.bar",
+                fold(
                         "Axis #0:\n" +
                         "{[Measures].[bar]}\n" +
                         "Axis #1:\n" +
@@ -5650,22 +5648,18 @@ public class BasicQueryTest extends FoodMartTestCase {
                         "Row #0: $1,434.00\n" +
                         "Row #0: $1,084.00\n" +
                         "Row #0: $129.00\n" +
-                        "Row #0: $958.00\n"
-        )
-        );
+                        "Row #0: $958.00\n"));
     }
 
     public void testFormatInheritanceToPickupFormatFromSecondMeasureWhenTheFirstDoesNotHaveOne() {
         assertQueryReturns("with member measures.foo as 'measures.bar+measures.blah'" +
                 " member measures.bar as '10'" +
                 " member measures.blah as '20',format_string='$##.###.00' " +
-                "select from sales where measures.foo"
-                , fold(
+                "select from sales where measures.foo",
+                fold(
                         "Axis #0:\n" +
                         "{[Measures].[foo]}\n" +
-                        "$30.00"
-                )
-        );
+                        "$30.00"));
     }
 
 
@@ -5688,9 +5682,7 @@ public class BasicQueryTest extends FoodMartTestCase {
                         "Row #0: 37\n" +
                         "Row #0: 37\n" +
                         "Row #0: 37\n" +
-                        "Row #0: 38\n"
-        )
-        );
+                        "Row #0: 38\n"));
     }
 
     public void testQueryIterationLimit()
@@ -5835,7 +5827,6 @@ public class BasicQueryTest extends FoodMartTestCase {
             assertQueriesReturnSimilarResults(queryWithoutFilter,
                     queryWithDefaultMeasureFilter, testContext);
         }
-
     }
 
     /**
@@ -5845,7 +5836,7 @@ public class BasicQueryTest extends FoodMartTestCase {
     public void testNumericToLogicalConversion() {
         assertQueryReturns("select " +
             "{[Measures].[Unit Sales]} on columns, " +
-            "Filter(Descendants( " +
+            "Filter(Descendants(" +
             "[Product].[Food].[Baked Goods].[Bread]), " +
             "Count([Product].currentMember.children)) on Rows " +
             "from [Sales]",
@@ -6000,36 +5991,35 @@ public class BasicQueryTest extends FoodMartTestCase {
     }
 
     /**
-     * This tests for bug #1630754. In Mondrian 2.2.2 the SqlTupleReader.readTuples 
-     * method would create a SQL having an in-clause with more that 1000 entities 
-     * under some circumstances. This exceeded the limit for Oracle resulting in an 
+     * This tests for bug #1630754. In Mondrian 2.2.2 the SqlTupleReader.readTuples
+     * method would create a SQL having an in-clause with more that 1000 entities
+     * under some circumstances. This exceeded the limit for Oracle resulting in an
      * ORA-01795 error.
      */
     public void testBug1630754() {
-
-    	// In order to reproduce this bug a dimension with 2 levels with more 
-    	// than 1000 member each was necessary. The customer_id column has more than 
-    	// 1000 distinct members so it was used for this test.
-    	final TestContext testContext = TestContext.createSubstitutingCube(
+        // In order to reproduce this bug a dimension with 2 levels with more
+        // than 1000 member each was necessary. The customer_id column has more than
+        // 1000 distinct members so it was used for this test.
+        final TestContext testContext = TestContext.createSubstitutingCube(
                 "Sales",
                 "  <Dimension name=\"Customer_2\" foreignKey=\"customer_id\">\n" +
-                    "    <Hierarchy hasAll=\"true\" " + 
+                    "    <Hierarchy hasAll=\"true\" " +
                     "allMemberName=\"All Customers\" "  +
                     "primaryKey=\"customer_id\" " + " >\n" +
                     "      <Table name=\"customer\"/>\n" +
-                    "	   <Level name=\"Name1\" column=\"customer_id\" uniqueMembers=\"true\"/>" + 
+                    "      <Level name=\"Name1\" column=\"customer_id\" uniqueMembers=\"true\"/>" +
                     "      <Level name=\"Name2\" column=\"customer_id\" uniqueMembers=\"true\"/>\n" +
                     "    </Hierarchy>\n" +
                     "  </Dimension>");
-    	
-    	Result result = testContext.executeQuery(
-        		"WITH SET [#DataSet#] AS " +
-        		"	'NonEmptyCrossjoin({Descendants([Customer_2].[All Customers], 2)}, " +
-        		"	{[Product].[All Products]})' " + 
-            	"SELECT {[Measures].[Unit Sales], [Measures].[Store Sales]} on columns, " +
-            	"Hierarchize({[#DataSet#]}) on rows FROM [Sales]");
-    	
-    	final int rowCount = result.getAxes()[1].getPositions().size();
+
+        Result result = testContext.executeQuery(
+                "WITH SET [#DataSet#] AS " +
+                "   'NonEmptyCrossjoin({Descendants([Customer_2].[All Customers], 2)}, " +
+                "   {[Product].[All Products]})' " +
+                "SELECT {[Measures].[Unit Sales], [Measures].[Store Sales]} on columns, " +
+                "Hierarchize({[#DataSet#]}) on rows FROM [Sales]");
+
+        final int rowCount = result.getAxes()[1].getPositions().size();
         assertEquals(5581, rowCount);
     }
 
@@ -6081,7 +6071,26 @@ public class BasicQueryTest extends FoodMartTestCase {
             "select [Gender].Members on 0,"
                 + " [Measures].Members on 10 "
                 + "from [Sales]",
-            "Invalid axis specification. The axis number must be an integer between 0 and 5, but it was 10.");
+            "Axis numbers specified in a query must be sequentially specified," +
+                " and cannot contain gaps. Axis 1 (ROWS) is missing.");
+
+        assertThrows(
+            "select [Gender].Members on columns,"
+                + " [Measures].Members on foobar\n"
+                + "from [Sales]",
+            "Syntax error at line 1, column 59, token 'foobar'");
+
+        assertThrows(
+            "select [Gender].Members on columns,"
+                + " [Measures].Members on slicer\n"
+                + "from [Sales]",
+            "Syntax error at line 1, column 59, token 'slicer'");
+
+        assertThrows(
+            "select [Gender].Members on columns,"
+                + " [Measures].Members on filter\n"
+                + "from [Sales]",
+            "Syntax error at line 1, column 59, token 'filter'");
     }
 
     /**
@@ -6157,7 +6166,7 @@ public class BasicQueryTest extends FoodMartTestCase {
             "WITH\n" +
             "MEMBER [Gender].agg " +
             "AS 'IIF(1=1, ([Gender].[All Gender],measures.[unit sales])," +
-            "([Gender].[All Gender]) )', SOLVE_ORDER = 4 " +
+            "([Gender].[All Gender]))', SOLVE_ORDER = 4 " +
             "SELECT {[Measures].[unit sales]} ON 0, " +
             "{{[Gender].[Gender].MEMBERS},{([Gender].agg)}} on 1 FROM sales",
             fold(
@@ -6178,7 +6187,7 @@ public class BasicQueryTest extends FoodMartTestCase {
         assertQueryReturns("WITH\n" +
             "MEMBER [Gender].agg " +
             "AS 'IIF(1=1, ([Gender].[All Gender])," +
-            "([Gender].[All Gender],measures.[unit sales]) )', SOLVE_ORDER = 4 " +
+            "([Gender].[All Gender],measures.[unit sales]))', SOLVE_ORDER = 4 " +
             "SELECT {[Measures].[unit sales]} ON 0, " +
             "{{[Gender].[Gender].MEMBERS},{([Gender].agg)}} on 1 FROM sales",
             fold(
@@ -6199,7 +6208,7 @@ public class BasicQueryTest extends FoodMartTestCase {
         assertQueryReturns("WITH\n" +
             "MEMBER [Gender].agg " +
             "AS 'IIF(1=1, ([Gender].[All Gender])," +
-            "([Gender].[All Gender],[Time].[1997]) )', SOLVE_ORDER = 4 " +
+            "([Gender].[All Gender],[Time].[1997]))', SOLVE_ORDER = 4 " +
             "SELECT {[Measures].[unit sales]} ON 0, " +
             "{{[Gender].[Gender].MEMBERS},{([Gender].agg)}} on 1 FROM sales",
             fold(
@@ -6221,7 +6230,7 @@ public class BasicQueryTest extends FoodMartTestCase {
             "MEMBER [Gender].agg " +
             "AS 'IIF(1=1, " +
             "([Store].[All Stores].[USA], [Gender].[All Gender]), " +
-            "([Gender].[All Gender]) )', " +
+            "([Gender].[All Gender]))', " +
             "SOLVE_ORDER = 4 " +
             "SELECT {[Measures].[unit sales]} ON 0, " +
             "{([Gender].agg)} on 1 FROM sales",
@@ -6240,7 +6249,7 @@ public class BasicQueryTest extends FoodMartTestCase {
             "MEMBER [Gender].agg " +
             "AS 'IIF(Measures.currentMember is [Measures].[Unit Sales], " +
             "([Store].[All Stores],[Gender].[All Gender],measures.[unit sales])," +
-            "([Store].[All Stores],[Gender].[All Gender]) )', SOLVE_ORDER = 4 " +
+            "([Store].[All Stores],[Gender].[All Gender]))', SOLVE_ORDER = 4 " +
             "SELECT {[Measures].[unit sales]} ON 0, " +
             "{{[Gender].[Gender].MEMBERS},{([Gender].agg)}} on 1 FROM sales",
             fold(
@@ -6262,7 +6271,7 @@ public class BasicQueryTest extends FoodMartTestCase {
             "MEMBER [Gender].agg " +
             "AS 'IIF(Measures.currentMember is [Measures].[Unit Sales], " +
             "([Store].[All Stores],[Gender].[M],measures.[unit sales])," +
-            "([Gender].[M],[Store].[All Stores]) )', SOLVE_ORDER = 4 " +
+            "([Gender].[M],[Store].[All Stores]))', SOLVE_ORDER = 4 " +
             "SELECT {[Measures].[unit sales]} ON 0, " +
             "{{[Gender].[Gender].MEMBERS},{([Gender].agg)}} on 1 FROM sales",
             fold(

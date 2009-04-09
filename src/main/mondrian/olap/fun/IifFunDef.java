@@ -2,7 +2,7 @@
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2008-2008 Julian Hyde
+// Copyright (C) 2008-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -12,17 +12,23 @@ import mondrian.calc.*;
 import mondrian.calc.impl.*;
 import mondrian.mdx.ResolvedFunCall;
 import mondrian.olap.*;
-import mondrian.olap.type.Type;
-import mondrian.olap.type.TypeUtil;
+import mondrian.olap.type.*;
 
 /**
  * Definition of the <code>Iif</code> MDX function.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/IifFunDef.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/IifFunDef.java#4 $
  * @since Jan 17, 2008
  */
 public class IifFunDef extends FunDefBase {
+    /**
+     * Creates an IifFunDef.
+     *
+     * @param name        Name of the function, for example "Members".
+     * @param description Description of the function
+     * @param flags       Encoding of the syntactic, return, and parameter types
+     */
     protected IifFunDef(
         String name,
         String description,
@@ -32,8 +38,29 @@ public class IifFunDef extends FunDefBase {
     }
 
     public Type getResultType(Validator validator, Exp[] args) {
-        return TypeUtil.computeCommonType(
-            true, args[1].getType(), args[2].getType());
+        // This is messy. We have already decided which variant of Iif to use,
+        // and that involves some upcasts. For example, Iif(b, n, NULL) resolves
+        // to the type of n. We don't want to throw it away and take the most
+        // general type. So, for scalar types we create a type based on
+        // returnCategory.
+        //
+        // But for dimensional types (member, level, hierarchy, dimension,
+        // tuple) we want to preserve as much type information as possible, so
+        // we recompute the type based on the common types of all args.
+        //
+        // FIXME: We should pass more info into this method, such as the list
+        // of conversions computed while resolving overloadings.
+        switch (returnCategory) {
+        case Category.Numeric:
+            return new NumericType();
+        case Category.String:
+            return new StringType();
+        case Category.Logical:
+            return new BooleanType();
+        default:
+            return TypeUtil.computeCommonType(
+                true, args[1].getType(), args[2].getType());
+        }
     }
 
     public Calc compileCall(ResolvedFunCall call, ExpCompiler compiler) {
@@ -45,18 +72,33 @@ public class IifFunDef extends FunDefBase {
         final Calc calc2 =
             compiler.compileAs(
                 call.getArg(2), call.getType(), ResultStyle.ANY_LIST);
-        return new GenericCalc(call) {
-            public Object evaluate(Evaluator evaluator) {
-                final boolean b =
-                    booleanCalc.evaluateBoolean(evaluator);
-                Calc calc = b ? calc1 : calc2;
-                return calc.evaluate(evaluator);
-            }
+        if (call.getType() instanceof SetType) {
+            return new GenericIterCalc(call) {
+                public Object evaluate(Evaluator evaluator) {
+                    final boolean b =
+                        booleanCalc.evaluateBoolean(evaluator);
+                    Calc calc = b ? calc1 : calc2;
+                    return calc.evaluate(evaluator);
+                }
 
-            public Calc[] getCalcs() {
-                return new Calc[] {booleanCalc, calc1, calc2};
-            }
-        };
+                public Calc[] getCalcs() {
+                    return new Calc[] {booleanCalc, calc1, calc2};
+                }
+            };
+        } else {
+            return new GenericCalc(call) {
+                public Object evaluate(Evaluator evaluator) {
+                    final boolean b =
+                        booleanCalc.evaluateBoolean(evaluator);
+                    Calc calc = b ? calc1 : calc2;
+                    return calc.evaluate(evaluator);
+                }
+
+                public Calc[] getCalcs() {
+                    return new Calc[] {booleanCalc, calc1, calc2};
+                }
+            };
+        }
     }
 
     // IIf(<Logical Expression>, <String Expression>, <String Expression>)

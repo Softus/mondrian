@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/aggmatcher/AggStar.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/aggmatcher/AggStar.java#34 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2007 Julian Hyde and others
+// Copyright (C) 2005-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -15,6 +15,7 @@ import mondrian.resource.MondrianResource;
 import mondrian.recorder.MessageRecorder;
 import mondrian.rolap.*;
 import mondrian.rolap.sql.SqlQuery;
+import mondrian.spi.Dialect;
 import org.apache.log4j.Logger;
 
 import javax.sql.DataSource;
@@ -41,7 +42,7 @@ import java.util.*;
  * to the enclosing object.
  *
  * @author Richard M. Emberson
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/aggmatcher/AggStar.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/aggmatcher/AggStar.java#34 $
  */
 public class AggStar {
     private static final Logger LOGGER = Logger.getLogger(AggStar.class);
@@ -57,10 +58,10 @@ public class AggStar {
      * etc.
      */
     public static AggStar makeAggStar(
-            final RolapStar star,
-            final JdbcSchema.Table dbTable,
-            final MessageRecorder msgRecorder) {
-
+        final RolapStar star,
+        final JdbcSchema.Table dbTable,
+        final MessageRecorder msgRecorder)
+    {
         AggStar aggStar = new AggStar(star, dbTable);
         AggStar.FactTable aggStarFactTable = aggStar.getFactTable();
 
@@ -204,19 +205,19 @@ public class AggStar {
         this.columns = new AggStar.Table.Column[star.getColumnCount()];
     }
 
-    /** 
-     * Get the fact table. 
-     * 
+    /**
+     * Get the fact table.
+     *
      * @return the fact table
      */
     public AggStar.FactTable getFactTable() {
         return aggTable;
     }
 
-    /** 
+    /**
      * Find a table by name (alias) that is a descendant of the base
-     * fact table. 
-     * 
+     * fact table.
+     *
      * @param name the table to find
      * @return the table or null
      */
@@ -413,12 +414,14 @@ public class AggStar {
             private final MondrianDef.Expression left;
             private final MondrianDef.Expression right;
 
-            private JoinCondition(final MondrianDef.Expression left,
-                                  final MondrianDef.Expression right) {
+            private JoinCondition(
+                final MondrianDef.Expression left,
+                final MondrianDef.Expression right)
+            {
                 if (!(left instanceof MondrianDef.Column)) {
                     JOIN_CONDITION_LOGGER.debug(
                         "JoinCondition.left NOT Column: "
-                        +left.getClass().getName());
+                        + left.getClass().getName());
                 }
                 this.left = left;
                 this.right = right;
@@ -432,21 +435,21 @@ public class AggStar {
             }
 
             /**
-             * Return the left join expression. 
+             * Return the left join expression.
              */
             public MondrianDef.Expression getLeft() {
                 return this.left;
             }
 
-            /** 
-             * Return the left join expression as string. 
+            /**
+             * Return the left join expression as string.
              */
             public String getLeft(final SqlQuery query) {
                 return this.left.getExpression(query);
             }
 
-            /** 
-             * Return the right join expression. 
+            /**
+             * Return the right join expression.
              */
             public MondrianDef.Expression getRight() {
                 return this.right;
@@ -506,7 +509,7 @@ public class AggStar {
 
             private final String name;
             private final MondrianDef.Expression expression;
-            private final SqlQuery.Datatype datatype;
+            private final Dialect.Datatype datatype;
             /**
              * This is only used in RolapAggregationManager and adds
              * non-constraining columns making the drill-through queries
@@ -520,7 +523,7 @@ public class AggStar {
             protected Column(
                     final String name,
                     final MondrianDef.Expression expression,
-                    final SqlQuery.Datatype datatype,
+                    final Dialect.Datatype datatype,
                     final int bitPosition) {
                 this.name = name;
                 this.expression = expression;
@@ -561,7 +564,7 @@ public class AggStar {
             /**
              * Returns the datatype of this column.
              */
-            public SqlQuery.Datatype getDatatype() {
+            public Dialect.Datatype getDatatype() {
                 return datatype;
             }
 
@@ -608,7 +611,7 @@ public class AggStar {
             private ForeignKey(
                     final String name,
                     final MondrianDef.Expression expression,
-                    final SqlQuery.Datatype datatype,
+                    final Dialect.Datatype datatype,
                     final int bitPosition) {
                 super(name, expression, datatype, bitPosition);
                 AggStar.this.levelBitKey.set(bitPosition);
@@ -730,9 +733,9 @@ public class AggStar {
             return children;
         }
 
-        /** 
-         * Find descendant of fact table with given name or return null. 
-         * 
+        /**
+         * Find descendant of fact table with given name or return null.
+         *
          * @param name the child table name (alias).
          * @return the child table or null.
          */
@@ -905,7 +908,7 @@ public class AggStar {
             private Measure(
                     final String name,
                     final MondrianDef.Expression expression,
-                    final SqlQuery.Datatype datatype,
+                    final Dialect.Datatype datatype,
                     final int bitPosition,
                     final RolapAggregator aggregator,
                     final MondrianDef.Expression argument) {
@@ -1109,7 +1112,7 @@ public class AggStar {
 
                 MondrianDef.Expression expression =
                     new MondrianDef.Column(getName(), name);
-                SqlQuery.Datatype datatype = column.getDatatype();
+                Dialect.Datatype datatype = column.getDatatype();
                 RolapStar.Column rColumn = usage.rColumn;
                 if (rColumn == null) {
                     String msg = "loadForeignKey: for column " +
@@ -1138,7 +1141,7 @@ public class AggStar {
             if (symbolicName == null) {
                 symbolicName = name;
             }
-            SqlQuery.Datatype datatype = column.getDatatype();
+            Dialect.Datatype datatype = column.getDatatype();
             RolapAggregator aggregator = usage.getAggregator();
 
             MondrianDef.Expression expression;
@@ -1187,7 +1190,7 @@ public class AggStar {
 
             MondrianDef.Expression expression =
                 new MondrianDef.Column(getName(), name);
-            SqlQuery.Datatype datatype = usage.getColumn().getDatatype();
+            Dialect.Datatype datatype = usage.getColumn().getDatatype();
             int bitPosition = -1;
 
             Column aggColumn = new Column(
@@ -1287,7 +1290,7 @@ public class AggStar {
                     numberOfRows = Integer.MAX_VALUE / getTotalColumnSize();
                 }
             } catch (SQLException e) {
-                stmt.handle(e);
+                throw stmt.handle(e);
             } finally {
                 stmt.close();
             }

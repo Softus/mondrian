@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/mdx/ResolvedFunCall.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/mdx/ResolvedFunCall.java#8 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -24,7 +24,7 @@ import java.io.PrintWriter;
  * {@link FunDef function definition}.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/mdx/ResolvedFunCall.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/mdx/ResolvedFunCall.java#8 $
  * @since Jan 6, 2006
  */
 public final class ResolvedFunCall extends ExpBase implements FunCall {

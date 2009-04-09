@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/util/MemoryMonitorFactory.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/util/MemoryMonitorFactory.java#8 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2002-2002 Kana Software, Inc.
-// Copyright (C) 2002-2007 Julian Hyde and others
+// Copyright (C) 2002-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -38,7 +38,7 @@ import mondrian.olap.Util;
  *
  * @author <a>Richard M. Emberson</a>
  * @since Feb 03 2007
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/util/MemoryMonitorFactory.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/util/MemoryMonitorFactory.java#8 $
  */
 public final class MemoryMonitorFactory
         extends ObjectFactory.Singleton<MemoryMonitor> {
@@ -134,9 +134,9 @@ public final class MemoryMonitorFactory
         return getThreadLocalClassName();
     }
 
-    /** 
-     * Return the <code>MemoryMonitorFactory</code property name. 
-     * 
+    /**
+     * Return the <code>MemoryMonitorFactory</code property name.
+     *
      * @return <code>MemoryMonitorFactory</code> property name
      */
     protected StringProperty getStringProperty() {

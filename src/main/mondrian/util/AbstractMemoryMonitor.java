@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/util/AbstractMemoryMonitor.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/util/AbstractMemoryMonitor.java#7 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2007-2007 Julian Hyde and others
+// Copyright (C) 2007-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -21,7 +21,7 @@ import java.util.ListIterator;
  *
  * @author Richard M. Emberson
  * @since Feb 03 2007
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/util/AbstractMemoryMonitor.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/util/AbstractMemoryMonitor.java#7 $
  */
 public abstract class AbstractMemoryMonitor
         implements MemoryMonitor, MemoryMonitor.Test {
@@ -157,7 +157,6 @@ public abstract class AbstractMemoryMonitor
             }
 */
             return true;
-
         } finally {
             getLogger().info("addListener exit");
         }
@@ -214,7 +213,6 @@ public abstract class AbstractMemoryMonitor
                 listener.memoryUsageNotification(getUsedMemory(), getMaxMemory());
             }
 */
-
         } finally {
             getLogger().info("updateListenerThreshold exit");
         }
@@ -242,7 +240,6 @@ public abstract class AbstractMemoryMonitor
                 if (lowThreshold > prevLowThreshold) {
                     notifyNewLowThreshold(lowThreshold);
                 }
-
             }
             return result;
         } finally {
@@ -307,7 +304,7 @@ public abstract class AbstractMemoryMonitor
 
     /**
      * Converts a percentage threshold to its corresponding memory value,
-     * ( percentage * maximum-memory / 100 ).
+     * (percentage * maximum-memory / 100).
      *
      * @param percentage the threshold.
      * @return the memory value.
@@ -315,7 +312,7 @@ public abstract class AbstractMemoryMonitor
     protected long convertPercentageToThreshold(final int percentage) {
         if (percentage < 0 || percentage > MAX_PERCENTAGE) {
             throw new IllegalArgumentException(
-                    "Percentage not in range: " +percentage);
+                "Percentage not in range: " + percentage);
         }
 
         long maxMemory = getMaxMemory();

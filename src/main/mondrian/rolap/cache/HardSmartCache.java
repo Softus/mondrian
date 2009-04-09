@@ -14,7 +14,7 @@ import java.util.*;
  * An implementation of {@link SmartCache} that uses hard
  * references. Used for testing.
  *
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/cache/HardSmartCache.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/cache/HardSmartCache.java#5 $
  */
 public class HardSmartCache <K, V> implements SmartCache <K, V> {
     Map<K, V> cache = new HashMap<K, V>();

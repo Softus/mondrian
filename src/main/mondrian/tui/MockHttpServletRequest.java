@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/tui/MockHttpServletRequest.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/tui/MockHttpServletRequest.java#11 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2007 Julian Hyde and others
+// Copyright (C) 2005-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -45,7 +45,7 @@ import javax.servlet.http.HttpServletRequest;
  * If you need to add to this implementation, please do so.
  *
  * @author Richard M. Emberson
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/tui/MockHttpServletRequest.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/tui/MockHttpServletRequest.java#11 $
  */
 public class MockHttpServletRequest implements HttpServletRequest {
     public static String AUTHORIZATION = "Authorization";
@@ -172,7 +172,6 @@ public class MockHttpServletRequest implements HttpServletRequest {
         this.remotePort = 5000;
 
         this.sessionCreated = false;
-
     }
 
 
@@ -411,7 +410,6 @@ public class MockHttpServletRequest implements HttpServletRequest {
         return (session == null)
             ? null
             : session.getServletContext().getRealPath(path);
-
     }
 
     /**
@@ -488,10 +486,9 @@ public class MockHttpServletRequest implements HttpServletRequest {
      *
      */
     public String getHeader(String name) {
-
         List<String> headerList = headers.get(name);
 
-        return ((headerList == null) || (headerList.size() ==0))
+        return ((headerList == null) || (headerList.size() == 0))
             ? null
             : headerList.get(0);
     }
@@ -809,7 +806,7 @@ public class MockHttpServletRequest implements HttpServletRequest {
     }
 
     public void setRequestDispatcher(String path, RequestDispatcher dispatcher) {
-        if(dispatcher instanceof MockRequestDispatcher) {
+        if (dispatcher instanceof MockRequestDispatcher) {
             ((MockRequestDispatcher)dispatcher).setPath(path);
         }
         requestDispatchers.put(path, dispatcher);

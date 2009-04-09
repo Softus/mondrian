@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/GroupingSetsCollector.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/GroupingSetsCollector.java#2 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2004-2007 Julian Hyde and others
+// Copyright (C) 2004-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -19,7 +19,7 @@ import java.util.List;
  * the consolidated list to form group by grouping sets sql</p>
  *
  * @author Thiyagu
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/GroupingSetsCollector.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/GroupingSetsCollector.java#2 $
  * @since 06-Jun-2007
  */
 public class GroupingSetsCollector {
@@ -46,3 +46,5 @@ public class GroupingSetsCollector {
         return groupingSets;
     }
 }
+
+// End GroupingSetsCollector.java

@@ -22,7 +22,7 @@ import mondrian.rolap.aggmatcher.AggStar;
  *
  * @author av
  * @since Nov 10, 2005
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/DescendantsConstraint.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/DescendantsConstraint.java#13 $
  */
 class DescendantsConstraint implements TupleConstraint {
     List<RolapMember> parentMembers;
@@ -42,14 +42,18 @@ class DescendantsConstraint implements TupleConstraint {
         this.mcc = mcc;
     }
 
-    public void addConstraint(SqlQuery sqlQuery, RolapCube baseCube) {
-        mcc.addMemberConstraint(sqlQuery, baseCube, null, parentMembers);
+    public void addConstraint(
+        SqlQuery sqlQuery,
+        RolapCube baseCube,
+        AggStar aggStar)
+    {
+        mcc.addMemberConstraint(sqlQuery, baseCube, aggStar, parentMembers);
     }
 
     public void addLevelConstraint(
         SqlQuery sqlQuery,
         RolapCube baseCube,
-        AggStar aggStar, 
+        AggStar aggStar,
         RolapLevel level)
     {
         mcc.addLevelConstraint(sqlQuery, baseCube, aggStar, level);

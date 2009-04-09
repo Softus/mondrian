@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/rolap/BatchTestCase.java#4 $
+// $Id: //open/mondrian/testsrc/main/mondrian/rolap/BatchTestCase.java#20 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2004-2007 Julian Hyde and others
+// Copyright (C) 2004-2009 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -13,8 +13,8 @@ import mondrian.test.FoodMartTestCase;
 import mondrian.test.TestContext;
 import mondrian.test.SqlPattern;
 import mondrian.rolap.agg.*;
-import mondrian.rolap.sql.SqlQuery;
 import mondrian.olap.*;
+import mondrian.spi.Dialect;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -23,7 +23,7 @@ import java.util.ArrayList;
  * To support all <code>Batch</code> related tests.
  *
  * @author Thiyagu
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/rolap/BatchTestCase.java#4 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/rolap/BatchTestCase.java#20 $
  * @since 06-Jun-2007
  */
 public class BatchTestCase extends FoodMartTestCase {
@@ -42,16 +42,18 @@ public class BatchTestCase extends FoodMartTestCase {
     protected final String fieldProductFamily = "product_family";
     protected final String fieldProductDepartment = "product_department";
     protected final String[] fieldValuesYear = {"1997"};
-    protected final String[] fieldValuesProductFamily =
-        {"Food", "Non-Consumable", "Drink"};
-    protected final String[] fieldValueProductDepartment =
-        {"Alcoholic Beverages", "Baked Goods", "Baking Goods",
+    protected final String[] fieldValuesProductFamily = {
+        "Food", "Non-Consumable", "Drink"
+    };
+    protected final String[] fieldValueProductDepartment = {
+        "Alcoholic Beverages", "Baked Goods", "Baking Goods",
          "Beverages", "Breakfast Foods", "Canned Foods",
         "Canned Products","Carousel", "Checkout", "Dairy",
         "Deli", "Eggs", "Frozen Foods", "Health and Hygiene",
         "Household", "Meat", "Packaged Foods", "Periodicals",
         "Produce", "Seafood", "Snack Foods", "Snacks",
-        "Starchy Foods"};
+        "Starchy Foods"
+    };
     protected final String[] fieldValuesGender = {"M", "F"};
     protected final String cubeNameSales = "Sales";
     protected final String measureUnitSales = "[Measures].[Unit Sales]";
@@ -67,13 +69,13 @@ public class BatchTestCase extends FoodMartTestCase {
             values.add(fieldValues[i][0]);
         }
         FastBatchingCellReader.Batch batch = fbcr.new Batch(
-            createRequest(cubeName, measure,
-                tableNames, fieldNames, values.toArray(new String[0])));
+            createRequest(
+                cubeName, measure, tableNames, fieldNames,
+                values.toArray(new String[values.size()])));
 
         addRequests(batch, cubeName, measure, tableNames, fieldNames,
             fieldValues, new ArrayList<String>(), 0);
         return batch;
-
     }
 
     protected FastBatchingCellReader.Batch createBatch(
@@ -86,13 +88,13 @@ public class BatchTestCase extends FoodMartTestCase {
             values.add(fieldValues[i][0]);
         }
         FastBatchingCellReader.Batch batch = fbcr.new Batch(
-            createRequest(cubeName, measure,
-                tableNames, fieldNames, values.toArray(new String[0]), constraint));
+            createRequest(
+                cubeName, measure, tableNames, fieldNames,
+                values.toArray(new String[values.size()]), constraint));
 
         addRequests(batch, cubeName, measure, tableNames, fieldNames,
             fieldValues, new ArrayList<String>(), 0, constraint);
         return batch;
-
     }
 
     private void addRequests(
@@ -113,8 +115,10 @@ public class BatchTestCase extends FoodMartTestCase {
                 selectedValues.remove(fieldValues[currPos][j]);
             }
         } else {
-            batch.add(createRequest(cubeName, measure, tableNames,
-                fieldNames, selectedValues.toArray(new String[0])));
+            batch.add(
+                createRequest(
+                    cubeName, measure, tableNames, fieldNames,
+                    selectedValues.toArray(new String[selectedValues.size()])));
         }
     }
 
@@ -138,8 +142,10 @@ public class BatchTestCase extends FoodMartTestCase {
                 selectedValues.remove(fieldValues[currPos][j]);
             }
         } else {
-            batch.add(createRequest(cubeName, measure, tableNames,
-                fieldNames, selectedValues.toArray(new String[0]), constraint));
+            batch.add(
+                createRequest(
+                    cubeName, measure, tableNames, fieldNames,
+                    selectedValues.toArray(new String[selectedValues.size()]), constraint));
         }
     }
 
@@ -172,15 +178,16 @@ public class BatchTestCase extends FoodMartTestCase {
      * @param patterns Set of patterns
      */
     void assertRequestSql(
-        CellRequest[] requests, SqlPattern[] patterns)
+        CellRequest[] requests,
+        SqlPattern[] patterns)
     {
         final RolapStar star = requests[0].getMeasure().getStar();
         final String cubeName = requests[0].getMeasure().getCubeName();
         final RolapCube cube = lookupCube(cubeName);
-        final SqlQuery.Dialect sqlDialect = star.getSqlQueryDialect();
-        SqlPattern.Dialect d = SqlPattern.Dialect.get(sqlDialect);
+        final Dialect sqlDialect = star.getSqlQueryDialect();
+        Dialect.DatabaseProduct d = sqlDialect.getDatabaseProduct();
         SqlPattern sqlPattern = SqlPattern.getPattern(d, patterns);
-        if (d == SqlPattern.Dialect.UNKNOWN) {
+        if (d == Dialect.DatabaseProduct.UNKNOWN) {
             // If the dialect is not one in the pattern set, do not run the
             // test. We do not print any warning message.
             return;
@@ -188,12 +195,12 @@ public class BatchTestCase extends FoodMartTestCase {
 
         boolean patternFound = false;
         for (SqlPattern pattern : patterns) {
-            if (!pattern.hasDialect(d)) {
+            if (!pattern.hasDatabaseProduct(d)) {
                 continue;
             }
-            
+
             patternFound = true;
-            
+
             clearCache(cube);
 
             String sql = sqlPattern.getSql();
@@ -229,25 +236,24 @@ public class BatchTestCase extends FoodMartTestCase {
             }
             if (bomb == null) {
                 fail("expected query [" + sql + "] did not occur");
-            }            
+            }
             TestContext.assertEqualsVerbose(
                 replaceQuotes(sql),
                 replaceQuotes(bomb.sql));
         }
-        
+
         /*
          * Print warning message that no pattern was specified for the current dialect.
          */
         if (!patternFound) {
             String warnDialect =
                 MondrianProperties.instance().WarnIfNoPatternForDialect.get();
-            
+
             if (warnDialect.equals(d.toString())) {
                 System.out.println(
-                    "[No expected sqls found for dialect \"" + 
+                    "[No expected sqls found for dialect \"" +
                     sqlDialect.toString() +
-                    "\" and test not run]"
-                );                    
+                    "\" and test not run]");
             }
         }
     }
@@ -311,14 +317,14 @@ public class BatchTestCase extends FoodMartTestCase {
         boolean clearCache) {
         assertQuerySqlOrNot(getTestContext(), mdxQuery, patterns, false, false, clearCache);
     }
-    
+
     /**
-     * During MDX query parse and execution, checks that the query results 
+     * During MDX query parse and execution, checks that the query results
      * (or does not result) in a particular SQL statement being generated.
      *
-     * <p>Parses and executes the MDX query once for each SQL 
-     * pattern in the current dialect. If there are multiple patterns, runs the 
-     * MDX query multiple times, and expects to see each SQL statement appear. 
+     * <p>Parses and executes the MDX query once for each SQL
+     * pattern in the current dialect. If there are multiple patterns, runs the
+     * MDX query multiple times, and expects to see each SQL statement appear.
      * If there are no patterns in this dialect, the test trivially succeeds.
      *
      * @param testContext non-default test context if required
@@ -326,28 +332,30 @@ public class BatchTestCase extends FoodMartTestCase {
      * @param patterns Set of patterns
      * @param negative false to assert if SQL is generated;
      *                 true to assert if SQL is NOT generated
-     * @param bypassSchemaCache whether to grab a new connection and bypass the 
+     * @param bypassSchemaCache whether to grab a new connection and bypass the
      *        schema cache before parsing the MDX query
      * @param clearCache whether to clear cache before executing the MDX query
      */
     protected void assertQuerySqlOrNot(
-            TestContext testContext,
-            String mdxQuery,
-            SqlPattern[] patterns,
-            boolean negative,
-            boolean bypassSchemaCache,
-            boolean clearCache)
+        TestContext testContext,
+        String mdxQuery,
+        SqlPattern[] patterns,
+        boolean negative,
+        boolean bypassSchemaCache,
+        boolean clearCache)
     {
         Connection connection = testContext.getConnection();
+
+        mdxQuery = testContext.upgradeQuery(mdxQuery);
 
         // Run the test once for each pattern in this dialect.
         // (We could optimize and run it once, collecting multiple queries, and
         // comparing all queries at the end.)
-        SqlQuery.Dialect dialect = testContext.getDialect();
-        SqlPattern.Dialect d = SqlPattern.Dialect.get(dialect);
-        boolean patternFound = false;        
+        Dialect dialect = testContext.getDialect();
+        Dialect.DatabaseProduct d = dialect.getDatabaseProduct();
+        boolean patternFound = false;
         for (SqlPattern sqlPattern : patterns) {
-            if (!sqlPattern.hasDialect(d)) {
+            if (!sqlPattern.hasDatabaseProduct(d)) {
                 // If the dialect is not one in the pattern set, skip the
                 // test. If in the end no pattern is located, print a warning
                 // message if required.
@@ -355,20 +363,12 @@ public class BatchTestCase extends FoodMartTestCase {
             }
 
             patternFound = true;
-            
+
             String sql = sqlPattern.getSql();
             String trigger = sqlPattern.getTriggerSql();
 
-            switch (d) {
-            case ORACLE:
-                sql = sql.replaceAll(" =as= ", " ");
-                trigger = trigger.replaceAll(" =as= ", " ");
-                break;
-            case TERADATA:
-                sql = sql.replaceAll(" =as= ", " as ");
-                trigger = trigger.replaceAll(" =as= ", " as ");
-                break;
-            }
+            sql = dialectize(d, sql);
+            trigger = dialectize(d, trigger);
 
             // Create a dummy DataSource which will throw a 'bomb' if it is
             // asked to execute a particular SQL statement, but will otherwise
@@ -403,25 +403,36 @@ public class BatchTestCase extends FoodMartTestCase {
                 assertEquals(replaceQuotes(sql), replaceQuotes(bomb.sql));
             }
         }
-        
+
         /*
          * Print warning message that no pattern was specified for the current dialect.
          */
         if (!patternFound) {
             String warnDialect =
                 MondrianProperties.instance().WarnIfNoPatternForDialect.get();
-            
+
             if (warnDialect.equals(d.toString())) {
                 System.out.println(
-                    "[No expected sqls found for dialect \"" + 
+                    "[No expected sqls found for dialect \"" +
                     dialect.toString() +
-                    "\" and test not run]"
-                );                    
+                    "\" and test not run]");
             }
         }
     }
-    
-    
+
+    protected String dialectize(Dialect.DatabaseProduct d, String sql) {
+        switch (d) {
+        case ORACLE:
+            return sql.replaceAll(" =as= ", " ");
+        case TERADATA:
+            return sql.replaceAll(" =as= ", " as ");
+        case DERBY:
+            return sql.replaceAll("`", "\"");
+        default:
+            return sql;
+        }
+    }
+
     private void clearCache(RolapCube cube) {
         // Clear the cache for the Sales cube, so the query runs as if
         // for the first time. (TODO: Cleaner way to do this.)
@@ -457,10 +468,10 @@ public class BatchTestCase extends FoodMartTestCase {
         final String table, final String column, final String value)
     {
         return createRequest(
-            cube, measure, 
+            cube, measure,
             new String[]{table}, new String[]{column}, new String[]{value});
     }
-    
+
     CellRequest createRequest(
         final String cube, final String measureName,
         final String[] tables, final String[] columns, final String[] values)
@@ -489,11 +500,11 @@ public class BatchTestCase extends FoodMartTestCase {
         CellRequestConstraint aggConstraint)
     {
         return createRequest(
-            cube, measure, 
+            cube, measure,
             new String[]{table}, new String[]{column}, new String[]{value},
             aggConstraint);
     }
-    
+
     CellRequest createRequest(
         final String cube, final String measureName,
         final String[] tables, final String[] columns, final String[] values,
@@ -501,75 +512,69 @@ public class BatchTestCase extends FoodMartTestCase {
     {
         RolapStar.Measure starMeasure = getMeasure(cube, measureName);
 
-        CellRequest request = 
+        CellRequest request =
             createRequest(cube, measureName, tables, columns, values);
         final RolapStar star = starMeasure.getStar();
 
         request.addAggregateList(
             aggConstraint.getBitKey(star),
             aggConstraint.toPredicate(star));
-        
+
         return request;
     }
-    
+
     static CellRequestConstraint makeConstraintYearQuarterMonth(
-        List<String[]> values) {
+        List<String[]> values)
+    {
         String[] aggConstraintTables =
             new String[] { "time_by_day", "time_by_day", "time_by_day" };
         String[] aggConstraintColumns =
             new String[] { "the_year", "quarter", "month_of_year" };
         List<String[]> aggConstraintValues = new ArrayList<String[]>();
-        
+
         for (String[] value : values) {
-            assert (value.length == 3);
+            assert value.length == 3;
             aggConstraintValues.add(value);
         }
-        
-        CellRequestConstraint aggConstraint =
-            new CellRequestConstraint(
-                aggConstraintTables, aggConstraintColumns, aggConstraintValues);
 
-        return aggConstraint;
+        return new CellRequestConstraint(
+            aggConstraintTables, aggConstraintColumns, aggConstraintValues);
     }
-    
+
     static CellRequestConstraint makeConstraintCountryState(
-        List<String[]> values) {
+        List<String[]> values)
+    {
         String[] aggConstraintTables =
             new String[] { "store", "store"};
         String[] aggConstraintColumns =
             new String[] { "store_country", "store_state"};
         List<String[]> aggConstraintValues = new ArrayList<String[]>();
-        
+
         for (String[] value : values) {
-            assert (value.length == 2);
+            assert value.length == 2;
             aggConstraintValues.add(value);
         }
-        
-        CellRequestConstraint aggConstraint =
-            new CellRequestConstraint(
-                aggConstraintTables, aggConstraintColumns, aggConstraintValues);
 
-        return aggConstraint;
+        return new CellRequestConstraint(
+            aggConstraintTables, aggConstraintColumns, aggConstraintValues);
     }
 
     static CellRequestConstraint makeConstraintProductFamilyDepartment(
-        List<String[]> values) {
+        List<String[]> values)
+    {
         String[] aggConstraintTables =
             new String[] { "product_class", "product_class"};
         String[] aggConstraintColumns =
             new String[] { "product_family", "product_department"};
         List<String[]> aggConstraintValues = new ArrayList<String[]>();
-        
+
         for (String[] value : values) {
-            assert (value.length == 2);
+            assert value.length == 2;
             aggConstraintValues.add(value);
         }
-        
-        CellRequestConstraint aggConstraint =
-            new CellRequestConstraint(
-                aggConstraintTables, aggConstraintColumns, aggConstraintValues);
 
-        return aggConstraint;
+        return new CellRequestConstraint(
+            aggConstraintTables, aggConstraintColumns, aggConstraintValues);
     }
 
     protected RolapStar.Measure getMeasure(String cube, String measureName) {
@@ -578,8 +583,7 @@ public class BatchTestCase extends FoodMartTestCase {
         Cube salesCube = connection.getSchema().lookupCube(cube, fail);
         Member measure = salesCube.getSchemaReader(null).getMemberByUniqueName(
             Util.parseIdentifier(measureName), fail);
-        RolapStar.Measure starMeasure = RolapStar.getStarMeasure(measure);
-        return starMeasure;
+        return RolapStar.getStarMeasure(measure);
     }
 
     protected Connection getFoodMartConnection() {
@@ -630,24 +634,24 @@ public class BatchTestCase extends FoodMartTestCase {
             }
         }
     }
-    
+
     static class CellRequestConstraint {
         String[] tables;
         String[] columns;
         List<String[]> valueList;
         CellRequestConstraint(
-            String[] tables, 
-            String[] columns, 
+            String[] tables,
+            String[] columns,
             List<String[]> valueList) {
             this.tables = tables;
             this.columns = columns;
             this.valueList = valueList;
         }
-        
+
         BitKey getBitKey(RolapStar star) {
             return star.getBitKey(tables, columns);
         }
-        
+
         StarPredicate toPredicate(RolapStar star) {
             RolapStar.Column starColumn[] = new RolapStar.Column[tables.length];
             for (int i = 0; i < tables.length; i++) {
@@ -655,7 +659,7 @@ public class BatchTestCase extends FoodMartTestCase {
                 String column = columns[i];
                 starColumn[i] = star.lookupColumn(table, column);
             }
-            
+
             List<StarPredicate> orPredList = new ArrayList<StarPredicate>();
             for (String[] values : valueList) {
                 assert (values.length == tables.length);
@@ -666,7 +670,7 @@ public class BatchTestCase extends FoodMartTestCase {
                 }
                 final StarPredicate predicate =
                     andPredList.size() == 1
-                        ? andPredList.get(0) 
+                        ? andPredList.get(0)
                         : new AndPredicate(andPredList);
                 orPredList.add(predicate);
             }

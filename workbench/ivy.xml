@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="http://ivyrep.jayasoft.org/ivy-doc.xsl"?>
 <!--
-  == $Id: //open/mondrian-release/3.0/workbench/ivy.xml#2 $
+  == $Id: //open/mondrian/workbench/ivy.xml#5 $
   == This software is subject to the terms of the Common Public License
   == Agreement, available at the following URL:
   == http://www.opensource.org/licenses/cpl.html.
@@ -14,10 +14,10 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="http://ant.apache.org/ivy/schemas/ivy.xsd">
 
-    <info organisation="pentaho" module="mondrian-workbench" revision="3.0.3">
+    <info organisation="pentaho" module="mondrian-workbench" revision="3.1.0">
         <license name="CPL" url="http://www.opensource.org/licenses/cpl.html"/>
         <ivyauthor name="Julian Hyde" />
-        <repository name="julian-rep" url="http://repo.hydromatic.net"/>
+        <repository name="pentaho-rep" url="http://repo.pentaho.org"/>
         <description homepage="http://mondrian.pentaho.org">
             Mondrian workbench.
         </description>
@@ -29,7 +29,7 @@
         <dependency org="jaxen" name="jaxen" rev="1.1.1"/>
         <dependency org="dom4j" name="dom4j" rev="1.6.1"/>
         <dependency org="junit" name="junit" rev="4.0"/>
-        <dependency org="pentaho" name="pentaho-mondrianschemaworkbench-plugins" rev="1.0"/>
+        <dependency org="pentaho" name="pentaho-mondrianschemaworkbench-plugins" rev="1.0.34319"/>
 
         <!--Exclusions-->
         <exclude org="jaxme" module="jaxme-api"/>

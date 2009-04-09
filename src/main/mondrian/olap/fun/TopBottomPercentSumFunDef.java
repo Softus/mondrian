@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/TopBottomPercentSumFunDef.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/fun/TopBottomPercentSumFunDef.java#9 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2002-2002 Kana Software, Inc.
-// Copyright (C) 2002-2007 Julian Hyde and others
+// Copyright (C) 2002-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -23,7 +23,7 @@ import java.util.Map;
  * <code>TopSum</code> and <code>BottomSum</code> MDX builtin functions.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/TopBottomPercentSumFunDef.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/TopBottomPercentSumFunDef.java#9 $
  * @since Mar 23, 2006
  */
 class TopBottomPercentSumFunDef extends FunDefBase {
@@ -117,15 +117,28 @@ class TopBottomPercentSumFunDef extends FunDefBase {
             if (first instanceof Member) {
                 List<Member> memberList = (List<Member>) list;
                 mapMemberToValue =
-                    evaluateMembers(evaluator, calc, memberList, false);
-                sortMembers(evaluator, memberList, calc, top, true);
+                    evaluateMembers(evaluator, calc, memberList, null, false);
+                sortMembers(
+                    evaluator.push(false),
+                    memberList,
+                    memberList,
+                    calc,
+                    top,
+                    true);
             } else {
                 isMember = false;
                 List<Member[]> tupleList = (List<Member[]>) list;
                 mapMemberToValue =
                     evaluateTuples(evaluator, calc, tupleList);
                 int arity = ((Member[]) first).length;
-                sortTuples(evaluator, tupleList, calc, top, true, arity);
+                sortTuples(
+                    evaluator.push(false),
+                    tupleList,
+                    tupleList,
+                    calc,
+                    top,
+                    true,
+                    arity);
             }
             if (percent) {
                 toPercent(list, mapMemberToValue, isMember);

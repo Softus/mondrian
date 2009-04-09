@@ -1,15 +1,15 @@
 package mondrian.gui.validate;
 
 /**
- * Validation for database schema, table, and columns. Extracted interface from 
+ * Validation for database schema, table, and columns. Extracted interface from
  * <code>mondrian.gui.JDBCMetaData</code>.
- * 
+ *
  * @author mlowery
  */
 public interface JDBCValidator {
     /**
      * Returns the data type of given column.
-     * 
+     *
      * @return SQL type from java.sql.Types
      */
     int getColumnDataType(String schemaName, String tableName, String colName);
@@ -29,4 +29,11 @@ public interface JDBCValidator {
      * validation methods can now be called).
      */
     boolean isInitialized();
+
+    /**
+     * Returns true if schema exists.
+     */
+    boolean isSchemaExists(String schemaName);
 }
+
+// End JDBCValidator.java

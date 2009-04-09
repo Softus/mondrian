@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/RolapAggregationManager.java#5 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/RolapAggregationManager.java#50 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2001-2002 Kana Software, Inc.
-// Copyright (C) 2001-2007 Julian Hyde and others
+// Copyright (C) 2001-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -29,7 +29,7 @@ import java.io.PrintWriter;
  *
  * @author jhyde
  * @since 30 August, 2001
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/RolapAggregationManager.java#5 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/RolapAggregationManager.java#50 $
  */
 public abstract class RolapAggregationManager {
 
@@ -92,10 +92,10 @@ public abstract class RolapAggregationManager {
     public static CellRequest makeRequest(
         RolapEvaluator evaluator) {
         final Member[] currentMembers = evaluator.getMembers();
-        final List<List<RolapMember>> aggregationLists =
+        final List<List<Member[]>> aggregationLists =
             evaluator.getAggregationLists();
 
-        final RolapStoredMeasure measure = 
+        final RolapStoredMeasure measure =
             (RolapStoredMeasure) currentMembers[0];
         final RolapStar.Measure starMeasure =
             (RolapStar.Measure) measure.getStarMeasure();
@@ -124,26 +124,35 @@ public abstract class RolapAggregationManager {
          * These compoundPredicates are AND'ed together when sql is generated for
          * them.
          */
-        for (List<RolapMember> aggregationList : aggregationLists) {
+        for (List<Member[]> aggregationList : aggregationLists) {
             compoundBitKey = BitKey.Factory.makeBitKey(starColumnCount);
             compoundBitKey.clear();
             compoundGroupMap = new LinkedHashMap<BitKey, List<RolapCubeMember[]>>();
-            
+
             // Go through the compound members(tuples) once and separete them
             // into groups.
+            List<RolapMember[]> rolapAggregationList =
+                new ArrayList<RolapMember[]>();
+            for (Member[] members : aggregationList) {
+                RolapMember[] rolapMembers = new RolapMember[members.length];
+                //noinspection SuspiciousSystemArraycopy
+                System.arraycopy(members, 0, rolapMembers, 0, members.length);
+                rolapAggregationList.add(rolapMembers);
+            }
+
             unsatisfiable =
                 makeCompoundGroup(
-                    starColumnCount, 
-                    measure.getCube(), 
-                    aggregationList, 
+                    starColumnCount,
+                    measure.getCube(),
+                    rolapAggregationList,
                     compoundGroupMap);
-            
+
             if (unsatisfiable) {
                 return null;
             }
             compoundPredicate =
                 makeCompoundPredicate(compoundGroupMap, measure.getCube());
-            
+
             if (compoundPredicate != null) {
                 /*
                  * Only add the compound constraint when it is not empty.
@@ -180,7 +189,7 @@ public abstract class RolapAggregationManager {
             if (members[0] instanceof RolapStoredMeasure) {
                 measure = (RolapStoredMeasure) members[0];
             } else {
-                measure = (RolapStoredMeasure) cube.getMeasures()[0];
+                measure = (RolapStoredMeasure) cube.getMeasures().get(0);
             }
         } else {
             if (members[0] instanceof RolapStoredMeasure) {
@@ -213,6 +222,9 @@ public abstract class RolapAggregationManager {
             }
         } else {
             for (int i = 1; i < members.length; i++) {
+                if (!(members[i] instanceof RolapCubeMember)) {
+                    continue;
+                }
                 RolapCubeMember member = (RolapCubeMember) members[i];
                 final RolapCubeLevel level = member.getLevel();
                 final boolean needToReturnNull =
@@ -276,7 +288,7 @@ public abstract class RolapAggregationManager {
     }
 
     /*
-     * Group members(or tuples) from the same compound(i.e. hierarchy) into groups 
+     * Group members(or tuples) from the same compound(i.e. hierarchy) into groups
      * that are constrained by the same set of columns.
      *
      * E.g.
@@ -288,16 +300,16 @@ public abstract class RolapAggregationManager {
      *     [USA].[OR].[Portland]
      *
      * will be grouped into
-     * Group 1: 
+     * Group 1:
      *     {[USA].[CA], [Canada].[BC]}
-     * Group 2: 
+     * Group 2:
      *     {[USA].[CA].[San Francisco], [USA].[OR].[Portland]}
      *
      * This helps with generating optimal form of sql.
      *
-     * In case of aggregating over a list of tuples, similar logic also 
+     * In case of aggregating over a list of tuples, similar logic also
      * applies.
-     * 
+     *
      * For example:
      * Tuples:
      *     ([Gender].[M], [Store].[All Stores].[USA].[CA])
@@ -306,13 +318,13 @@ public abstract class RolapAggregationManager {
      *     ([Gender].[F], [Store].[All Stores].[Canada])
      *
      * will be grouped into
-     * Group 1: 
+     * Group 1:
      *     {([Gender].[M], [Store].[All Stores].[USA].[CA]),
      *      ([Gender].[F], [Store].[All Stores].[USA].[CA])}
-     * Group 2: 
+     * Group 2:
      *     {([Gender].[M], [Store].[All Stores].[USA]),
      *      ([Gender].[F], [Store].[All Stores].[Canada])}
-     * 
+     *
      * This function returns a boolean value indicating if any constraint
      * can be created from the aggregationList. It is possible that only part
      * of the aggregationList can be applied, which still leads to a (partial)
@@ -321,46 +333,41 @@ public abstract class RolapAggregationManager {
     private static boolean makeCompoundGroup(
         int starColumnCount,
         RolapCube baseCube,
-        List aggregationList,
+        List<RolapMember[]> aggregationList,
         Map<BitKey, List<RolapCubeMember[]>> compoundGroupMap)
     {
         // The more generalized aggregation as aggregating over tuples.
         // The special case is a tuple defined by only one member.
-        int unsatisfiableTupleCount=0;
-        for (Object aggregation : aggregationList) {
+        int unsatisfiableTupleCount = 0;
+        for (RolapMember[] aggregation : aggregationList) {
             boolean isTuple;
-            if (aggregation instanceof Member) {
-                isTuple = false;
-            } else if (aggregation instanceof Member[] &&
-                       ((Member[])aggregation).length > 0 &&
-                       ((Member[])aggregation)[0] instanceof RolapCubeMember) {
+            if (aggregation.length > 0 &&
+                    aggregation[0] instanceof RolapCubeMember)
+            {
                 isTuple = true;
             } else {
-                unsatisfiableTupleCount ++;
-                continue;          
+                ++unsatisfiableTupleCount;
+                continue;
             }
-            
+
             BitKey bitKey = BitKey.Factory.makeBitKey(starColumnCount);
             RolapCubeMember[] tuple;
-            
-            if (!isTuple) {
-                tuple = new RolapCubeMember[]{(RolapCubeMember)aggregation};
-            } else {
-                tuple = new RolapCubeMember[((Member[])aggregation).length];
-                int i = 0;
-                for (Member member : (Member[])aggregation) {
-                    tuple[i] = (RolapCubeMember)member;
-                    i++;
-                }
+
+            tuple = new RolapCubeMember[aggregation.length];
+            int i = 0;
+            for (Member member : aggregation) {
+                tuple[i] = (RolapCubeMember)member;
+                i++;
             }
-            
+
+
             boolean tupleUnsatisfiable = false;
             for (RolapCubeMember member : tuple) {
                 // Tuple cannot be constrained if any of the member cannot be.
                 tupleUnsatisfiable =
                     makeCompoundGroupForMember(member, baseCube, bitKey);
                 if (tupleUnsatisfiable) {
-                    // If this tuple is unsatisfiable, skip it and try to 
+                    // If this tuple is unsatisfiable, skip it and try to
                     // constrain the next tuple.
                     unsatisfiableTupleCount ++;
                     break;
@@ -368,12 +375,12 @@ public abstract class RolapAggregationManager {
             }
 
             if (!tupleUnsatisfiable && !bitKey.isEmpty()) {
-                // Found tuple(columns) to constrain, 
+                // Found tuple(columns) to constrain,
                 // now add it to the compoundGroupMap
                 addTupleToCompoundGroupMap(tuple, bitKey, compoundGroupMap);
             }
         }
-        
+
         return (unsatisfiableTupleCount == aggregationList.size());
     }
 
@@ -388,7 +395,6 @@ public abstract class RolapAggregationManager {
             compoundGroupMap.put(bitKey, compoundGroup);
         }
         compoundGroup.add(tuple);
-
     }
 
     private static boolean makeCompoundGroupForMember(
@@ -406,7 +412,7 @@ public abstract class RolapAggregationManager {
                 if (column != null) {
                     bitKey.set(column.getBitPosition());
                 } else {
-                    // One level in a member causes the member to be 
+                    // One level in a member causes the member to be
                     // unsatisfiable.
                     memberUnsatisfiable = true;
                     break;
@@ -467,7 +473,7 @@ public abstract class RolapAggregationManager {
      * </blockquote>
      *
      * @param compoundGroupMap
-     * @param baseCube base cube if virtual 
+     * @param baseCube base cube if virtual
      * @return compound predicate for a tuple or a member
      */
     private static StarPredicate makeCompoundPredicate(
@@ -478,7 +484,7 @@ public abstract class RolapAggregationManager {
             new ArrayList<StarPredicate> ();
         for (List<RolapCubeMember[]> group : compoundGroupMap.values()) {
             /*
-             * e.g. 
+             * e.g.
              * {[USA].[CA], [Canada].[BC]}
              * or
              * {
@@ -487,7 +493,7 @@ public abstract class RolapAggregationManager {
             for (RolapCubeMember[] tuple : group) {
                /*
                 * [USA].[CA]
-                */                
+                */
                 StarPredicate tuplePredicate = null;
 
                 for (RolapCubeMember member : tuple) {
@@ -503,7 +509,7 @@ public abstract class RolapAggregationManager {
                     }
                 }
             }
-            
+
             if (compoundGroupPredicate != null) {
                 /*
                  * Sometimes the compound member list does not constrain any
@@ -512,7 +518,7 @@ public abstract class RolapAggregationManager {
                 compoundPredicateList.add(compoundGroupPredicate);
             }
         }
-        
+
         StarPredicate compoundPredicate = null;
 
         if (compoundPredicateList.size() > 1) {
@@ -532,7 +538,6 @@ public abstract class RolapAggregationManager {
         while (member != null) {
             RolapCubeLevel level = member.getLevel();
             if (!level.isAll()) {
-
                 RolapStar.Column column = level.getBaseStarKeyColumn(baseCube);
                 if (memberPredicate == null) {
                     memberPredicate =
@@ -674,10 +679,10 @@ public abstract class RolapAggregationManager {
                 final RolapCubeMember rolapMember = (RolapCubeMember) member;
                 final RolapCubeLevel level = rolapMember.getLevel();
                 RolapStar.Column column = level.getBaseStarKeyColumn(baseCube);
-                
+
                 level.getLevelReader().constrainRegion(
-                    new MemberColumnPredicate(column, rolapMember), 
-                    baseCube, 
+                    new MemberColumnPredicate(column, rolapMember),
+                    baseCube,
                     cacheRegion);
             }
         } else if (region instanceof CacheControlImpl.MemberRangeCellRegion) {
@@ -685,7 +690,7 @@ public abstract class RolapAggregationManager {
                 (CacheControlImpl.MemberRangeCellRegion) region;
             final RolapCubeLevel level = (RolapCubeLevel)rangeRegion.getLevel();
             RolapStar.Column column = level.getBaseStarKeyColumn(baseCube);
-            
+
             level.getLevelReader().constrainRegion(
                 new RangeColumnPredicate(
                     column,
@@ -699,7 +704,7 @@ public abstract class RolapAggregationManager {
                         null :
                         new MemberColumnPredicate(
                             column, rangeRegion.getUpperBound()))),
-                baseCube, 
+                baseCube,
                 cacheRegion);
         } else {
             throw new UnsupportedOperationException();
@@ -724,7 +729,7 @@ public abstract class RolapAggregationManager {
             public int getMissCount() {
                 return 0; // RolapAggregationManager never lies
             }
-            
+
             public boolean isDirty() {
                 return false;
             }
@@ -742,7 +747,8 @@ public abstract class RolapAggregationManager {
      * A set of segments which are pinned for a short duration as a result of a
      * cache inquiry.
      */
-    public interface PinSet {}
+    public interface PinSet {
+    }
 }
 
 // End RolapAggregationManager.java

@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/PercentileFunDef.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/fun/PercentileFunDef.java#2 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -23,7 +23,7 @@ import java.util.List;
  * Definition of the <code>Percentile</code> MDX function.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/PercentileFunDef.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/PercentileFunDef.java#2 $
  * @since Jan 16, 2008
  */
 class PercentileFunDef extends AbstractAggregateFunDef {
@@ -52,7 +52,7 @@ class PercentileFunDef extends AbstractAggregateFunDef {
             public double evaluateDouble(Evaluator evaluator) {
                 List memberList = evaluateCurrentList(listCalc, evaluator);
                 double percent = percentCalc.evaluateDouble(evaluator) * 0.01;
-                return percentile(evaluator.push(), memberList, calc, percent);
+                return percentile(evaluator.push(false), memberList, calc, percent);
             }
 
             public boolean dependsOn(Dimension dimension) {

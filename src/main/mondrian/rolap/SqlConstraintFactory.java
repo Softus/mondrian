@@ -25,27 +25,34 @@ import mondrian.rolap.sql.TupleConstraint;
  */
 public class SqlConstraintFactory {
 
-    boolean enabled = MondrianProperties.instance().EnableNativeNonEmpty.get();
+    static boolean enabled;
 
     private static final SqlConstraintFactory instance = new SqlConstraintFactory();
 
-    /** singleton */
+    /**
+     * singleton
+     */
     private SqlConstraintFactory() {
     }
 
     public static SqlConstraintFactory instance() {
+        setNativeNonEmptyValue();
         return instance;
     }
 
+    public static void setNativeNonEmptyValue() {
+        enabled = MondrianProperties.instance().EnableNativeNonEmpty.get();
+    }
+
     public MemberChildrenConstraint getMemberChildrenConstraint(Evaluator context) {
-        if (!enabled || !SqlContextConstraint.isValidContext(context))
+        if (!enabled || !SqlContextConstraint.isValidContext(context, false)) {
             return DefaultMemberChildrenConstraint.instance();
+        }
         return new SqlContextConstraint((RolapEvaluator) context, false);
     }
 
     public TupleConstraint getLevelMembersConstraint(Evaluator context) {
-        boolean[] satisfied = {false};
-        return getLevelMembersConstraint(context, null, satisfied);
+        return getLevelMembersConstraint(context, null);
     }
 
     /**
@@ -54,28 +61,20 @@ public class SqlConstraintFactory {
      * implemented (say if native constraints are disabled) returns null.
      *
      * @param context Context within which members must be non-empty
-     * @param levels levels being referenced in the current context
-     * @param satisfied Set to false if constraint does not satisfy non-empty
-     * context and caller still has to do it
+     * @param levels  levels being referenced in the current context
      * @return Constraint
      */
     public TupleConstraint getLevelMembersConstraint(
         Evaluator context,
-        Level [] levels,
-        boolean[] satisfied)
+        Level[] levels)
     {
         if (context == null) {
-            satisfied[0] = true;
             return DefaultTupleConstraint.instance();
         }
         if (!enabled) {
-            // Cannot implement constraint in SQL; caller must still implement
-            // it
-            satisfied[0] = false;
             return DefaultTupleConstraint.instance();
         }
-        satisfied[0] = true;
-        if (!SqlContextConstraint.isValidContext(context, false, levels)) {
+        if (!SqlContextConstraint.isValidContext(context, false, levels, false)) {
             return DefaultTupleConstraint.instance();
         }
         return new SqlContextConstraint((RolapEvaluator) context, false);

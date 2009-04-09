@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/OpeningClosingPeriodFunDef.java#3 $
+// $Id: //open/mondrian/src/main/mondrian/olap/fun/OpeningClosingPeriodFunDef.java#12 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2002-2002 Kana Software, Inc.
-// Copyright (C) 2002-2007 Julian Hyde and others
+// Copyright (C) 2002-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -21,13 +21,15 @@ import mondrian.calc.impl.AbstractMemberCalc;
 import mondrian.calc.impl.DimensionCurrentMemberCalc;
 import mondrian.mdx.ResolvedFunCall;
 
+import java.util.List;
+
 /**
  * Definition of the <code>OpeningPeriod</code> and <code>ClosingPeriod</code>
  * builtin functions.
  *
  * @author jhyde
  * @since 2005/8/14
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/OpeningClosingPeriodFunDef.java#3 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/OpeningClosingPeriodFunDef.java#12 $
  */
 class OpeningClosingPeriodFunDef extends FunDefBase {
     private final boolean opening;
@@ -68,7 +70,7 @@ class OpeningClosingPeriodFunDef extends FunDefBase {
             // With no args, the default implementation cannot
             // guess the hierarchy, so we supply the Time
             // dimension.
-            Dimension defaultTimeDimension = 
+            Dimension defaultTimeDimension =
                 validator.getQuery().getCube().getTimeDimension();
             if (defaultTimeDimension == null) {
                 throw MondrianResource.instance().
@@ -88,7 +90,7 @@ class OpeningClosingPeriodFunDef extends FunDefBase {
         Dimension defaultTimeDimension = null;
         switch (args.length) {
         case 0:
-            defaultTimeDimension = 
+            defaultTimeDimension =
                 compiler.getEvaluator().getCube().getTimeDimension();
             if (defaultTimeDimension == null) {
                 throw MondrianResource.instance().
@@ -98,7 +100,7 @@ class OpeningClosingPeriodFunDef extends FunDefBase {
             levelCalc = null;
             break;
         case 1:
-            defaultTimeDimension = 
+            defaultTimeDimension =
                 compiler.getEvaluator().getCube().getTimeDimension();
             if (defaultTimeDimension == null) {
                 throw MondrianResource.instance().
@@ -172,11 +174,12 @@ class OpeningClosingPeriodFunDef extends FunDefBase {
      * @pre member.getLevel().getDepth() < level.getDepth();
      */
     static Member getDescendant(
-            SchemaReader schemaReader,
-            Member member,
-            Level targetLevel,
-            boolean returnFirstDescendant) {
-        Member[] children;
+        SchemaReader schemaReader,
+        Member member,
+        Level targetLevel,
+        boolean returnFirstDescendant)
+    {
+        List<Member> children;
 
         final int targetLevelDepth = targetLevel.getDepth();
         assertPrecondition(member.getLevel().getDepth() < targetLevelDepth,
@@ -185,12 +188,13 @@ class OpeningClosingPeriodFunDef extends FunDefBase {
         for (;;) {
             children = schemaReader.getMemberChildren(member);
 
-            if (children.length == 0) {
+            if (children.size() == 0) {
                 return targetLevel.getHierarchy().getNullMember();
             }
 
-            member = children[returnFirstDescendant ? 0 : (children.length - 1)];
-
+            final int index =
+                returnFirstDescendant ? 0 : (children.size() - 1);
+            member = children.get(index);
             if (member.getLevel().getDepth() == targetLevelDepth) {
                 if (member.isHidden()) {
                     return member.getHierarchy().getNullMember();

@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/spi/DataSourceChangeListener.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/spi/DataSourceChangeListener.java#4 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2007 Julian Hyde
+// Copyright (C) 2005-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -36,12 +36,12 @@ import mondrian.rolap.agg.Aggregation;
  * the first timestamp mondrian tries to read the datasource.
  *
  * @author Bart Pappyn
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/spi/DataSourceChangeListener.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/spi/DataSourceChangeListener.java#4 $
  * @since Dec 12, 2006
  */
 
 public interface DataSourceChangeListener {
-	
+
     /**
      * Checks if the given hierarchy has changed since the previous
      * time this function was called.
@@ -66,3 +66,5 @@ public interface DataSourceChangeListener {
      */
     public boolean isAggregationChanged(Aggregation aggregation);
 }
+
+// End DataSourceChangeListener.java

@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/SumFunDef.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/fun/SumFunDef.java#10 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -22,7 +22,7 @@ import java.util.Collections;
  * Definition of the <code>Sum</code> MDX function.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/SumFunDef.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/SumFunDef.java#10 $
  * @since Mar 23, 2006
  */
 class SumFunDef extends AbstractAggregateFunDef {
@@ -105,7 +105,7 @@ class SumFunDef extends AbstractAggregateFunDef {
             public double evaluateDouble(Evaluator evaluator) {
                 ListCalc listCalc = (ListCalc) ncalc;
                 List memberList = evaluateCurrentList(listCalc, evaluator);
-                return sumDouble(evaluator.push(), memberList, calc);
+                return sumDouble(evaluator.push(false), memberList, calc);
             }
 
             public Calc[] getCalcs() {

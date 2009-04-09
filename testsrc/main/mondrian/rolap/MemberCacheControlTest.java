@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/rolap/MemberCacheControlTest.java#2 $
+// $Id: //open/mondrian/testsrc/main/mondrian/rolap/MemberCacheControlTest.java#4 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -26,7 +26,7 @@ import java.util.*;
  * loaded next time mondrian goes to the database.
  *
  * @author mberkowitz
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/rolap/MemberCacheControlTest.java#2 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/rolap/MemberCacheControlTest.java#4 $
  * @since Jan 2008
  */
 public class MemberCacheControlTest extends FoodMartTestCase {
@@ -193,7 +193,8 @@ public class MemberCacheControlTest extends FoodMartTestCase {
     {
         return printMemberProperties(
             pw,
-            result.getAxes()[AxisOrdinal.ROWS.logicalOrdinal()]);
+            result.getAxes()[
+                AxisOrdinal.StandardAxisOrdinal.ROWS.logicalOrdinal()]);
     }
 
     private static String getRowMemberPropertiesAsString(Result r) {

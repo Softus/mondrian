@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/FunCall.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/FunCall.java#22 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -20,7 +20,7 @@ package mondrian.olap;
  * which has a {@link FunDef function definition} and extra type information.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/FunCall.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/FunCall.java#22 $
  * @since Jan 6, 2006
  */
 public interface FunCall extends Exp {

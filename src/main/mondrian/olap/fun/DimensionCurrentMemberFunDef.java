@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/DimensionCurrentMemberFunDef.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/fun/DimensionCurrentMemberFunDef.java#4 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -12,12 +12,8 @@ package mondrian.olap.fun;
 import mondrian.calc.Calc;
 import mondrian.calc.ExpCompiler;
 import mondrian.calc.DimensionCalc;
-import mondrian.calc.impl.AbstractMemberCalc;
+import mondrian.calc.impl.AbstractExpCompiler;
 import mondrian.mdx.ResolvedFunCall;
-import mondrian.olap.Exp;
-import mondrian.olap.Member;
-import mondrian.olap.Evaluator;
-import mondrian.olap.Dimension;
 
 /**
  * Definition of the <code>&lt;Dimension&gt;.CurrentMember</code> MDX builtin
@@ -26,8 +22,10 @@ import mondrian.olap.Dimension;
  * <p>Syntax:
  * <blockquote><code>&lt;Dimension&gt;.CurrentMember</code></blockquote>
  *
+ * <p>XXX TODO: obsolete
+ *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/DimensionCurrentMemberFunDef.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/DimensionCurrentMemberFunDef.java#4 $
  * @since Mar 23, 2006
  */
 public class DimensionCurrentMemberFunDef extends FunDefBase {
@@ -43,30 +41,7 @@ public class DimensionCurrentMemberFunDef extends FunDefBase {
     public Calc compileCall(ResolvedFunCall call, ExpCompiler compiler) {
         final DimensionCalc dimensionCalc =
                 compiler.compileDimension(call.getArg(0));
-        return new CalcImpl(call, dimensionCalc);
-    }
-
-    public static class CalcImpl extends AbstractMemberCalc {
-        private final DimensionCalc dimensionCalc;
-
-        public CalcImpl(Exp exp, DimensionCalc dimensionCalc) {
-            super(exp, new Calc[] {dimensionCalc});
-            this.dimensionCalc = dimensionCalc;
-        }
-
-        protected String getName() {
-            return "CurrentMember";
-        }
-
-        public Member evaluateMember(Evaluator evaluator) {
-            Dimension dimension =
-                    dimensionCalc.evaluateDimension(evaluator);
-            return evaluator.getContext(dimension);
-        }
-
-        public boolean dependsOn(Dimension dimension) {
-            return dimensionCalc.getType().usesDimension(dimension, true) ;
-        }
+        return new AbstractExpCompiler.DimensionCurrentMemberCalc(call, dimensionCalc);
     }
 }
 

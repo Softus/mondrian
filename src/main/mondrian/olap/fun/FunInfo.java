@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/FunInfo.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/fun/FunInfo.java#16 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2007 Julian Hyde and others
+// Copyright (C) 2005-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -22,7 +22,7 @@ import java.lang.reflect.Array;
  * available functions and their syntax.
  *
  * @author Richard M. Emberson
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/FunInfo.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/FunInfo.java#16 $
  */
 public class FunInfo implements Comparable<FunInfo> {
     private final Syntax syntax;
@@ -87,6 +87,19 @@ public class FunInfo implements Comparable<FunInfo> {
         final String signature = resolver.getSignature();
         this.sigs = signature == null ? new String[0] :
                 new String[] {signature};
+    }
+
+    FunInfo(
+        String name,
+        String description,
+        String flags)
+    {
+        this.name = name;
+        this.description = description;
+        this.syntax = FunUtil.decodeSyntacticType(flags);
+        this.returnTypes = new int[] {FunUtil.decodeReturnCategory(flags)};
+        this.parameterTypes =
+            new int[][] {FunUtil.decodeParameterCategories(flags)};
     }
 
     public String[] getSignatures() {

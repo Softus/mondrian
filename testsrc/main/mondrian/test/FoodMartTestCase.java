@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/FoodMartTestCase.java#2 $
+// $Id: //open/mondrian/testsrc/main/mondrian/test/FoodMartTestCase.java#35 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2002-2002 Kana Software, Inc.
-// Copyright (C) 2002-2007 Julian Hyde and others
+// Copyright (C) 2002-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -26,10 +26,16 @@ import java.util.Arrays;
  *
  * @author jhyde
  * @since 29 March, 2002
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/FoodMartTestCase.java#2 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/test/FoodMartTestCase.java#35 $
  */
 public class FoodMartTestCase extends TestCase {
     protected static final String nl = Util.nl;
+
+    /**
+     * Access properties via this object and their values will be reset on
+     * {@link #tearDown()}.
+     */
+    protected final PropertySaver propSaver = new PropertySaver();
 
     public FoodMartTestCase(String name) {
         super(name);
@@ -38,26 +44,17 @@ public class FoodMartTestCase extends TestCase {
     public FoodMartTestCase() {
     }
 
+    protected void tearDown() throws Exception {
+        // revert any properties that have been set during this test
+        propSaver.reset();
+    }
+
     /**
      * Returns the test context. Override this method if you wish to use a
      * different source for your FoodMart connection.
      */
     public TestContext getTestContext() {
         return TestContext.instance();
-    }
-
-    /**
-     * Returns a {@link TestContext} which uses a given cube for executing
-     * scalar and set expressions.
-     *
-     * @param cubeName Name of cube
-     */
-    protected TestContext getTestContext(final String cubeName) {
-        return new DelegatingTestContext(getTestContext()) {
-            public String getDefaultCubeName() {
-                return cubeName;
-            }
-        };
     }
 
     /**
@@ -163,7 +160,7 @@ public class FoodMartTestCase extends TestCase {
      * the result is the expected one.
      */
     public void assertBooleanExprReturns(String expression, boolean expected) {
-        final String iifExpression = "Iif(" + expression + ",\"true\",\"false\")";
+        final String iifExpression = "Iif (" + expression + ",\"true\",\"false\")";
         final String actual = executeExpr(iifExpression);
         final String expectedString = expected ? "true" : "false";
         assertEquals(expectedString, actual);
@@ -200,7 +197,6 @@ public class FoodMartTestCase extends TestCase {
         String query2,
         TestContext testContext)
     {
-
         String resultString1 =
                 TestContext.toString(testContext.executeQuery(query1));
         String resultString2 =
@@ -214,7 +210,6 @@ public class FoodMartTestCase extends TestCase {
     private static String measureValues(String resultString) {
         int index = resultString.indexOf("}");
         return index != -1 ? resultString.substring(index) : resultString;
-
     }
 
     protected boolean isGroupingSetsSupported() {
@@ -235,7 +230,7 @@ public class FoodMartTestCase extends TestCase {
     }
 
     protected List<Member> storeMembersCAAndOR(SchemaReader salesCubeSchemaReader) {
-        return Arrays.asList(new Member[]{
+        return Arrays.asList(
             member(Id.Segment.toList("Store", "All Stores", "USA", "CA",
                 "Alameda"), salesCubeSchemaReader),
             member(Id.Segment.toList("Store", "All Stores", "USA", "CA",
@@ -253,14 +248,13 @@ public class FoodMartTestCase extends TestCase {
             member(Id.Segment.toList("Store", "All Stores", "USA", "OR",
                 "Salem"), salesCubeSchemaReader),
             member(Id.Segment.toList("Store", "All Stores", "USA", "OR",
-                "Salem", "Store 13"), salesCubeSchemaReader)
-        });
+                "Salem", "Store 13"), salesCubeSchemaReader));
     }
 
     protected List<Member> productMembersPotScrubbersPotsAndPans(
         SchemaReader salesCubeSchemaReader)
     {
-        return Arrays.asList(new Member[]{
+        return Arrays.asList(
             member(Id.Segment.toList("Product", "All Products", "Non-Consumable",
                 "Household", "Kitchen Products", "Pot Scrubbers", "Cormorant"),
                 salesCubeSchemaReader),
@@ -284,8 +278,7 @@ public class FoodMartTestCase extends TestCase {
                 salesCubeSchemaReader),
             member(Id.Segment.toList("Product", "All Products", "Non-Consumable",
                 "Household", "Kitchen Products", "Pots and Pans", "Sunset"),
-                salesCubeSchemaReader)
-        });
+                salesCubeSchemaReader));
     }
 
     protected List<Member> genderMembersIncludingAll(
@@ -301,7 +294,7 @@ public class FoodMartTestCase extends TestCase {
         if (includeAllMember) {
             members = new Member[] {allMember("Gender", salesCube), maleMember,
                 femaleMember};
-        } else  {
+        } else {
             members = new Member[] {maleMember, femaleMember};
         }
         return Arrays.asList(members);
@@ -331,30 +324,26 @@ public class FoodMartTestCase extends TestCase {
     }
 
     protected List<Member> warehouseMembersCanadaMexicoUsa(SchemaReader reader) {
-        return Arrays.asList(new Member[]{
+        return Arrays.asList(
             member(Id.Segment.toList(
                 "Warehouse", "All Warehouses", "Canada"), reader),
             member(Id.Segment.toList(
                 "Warehouse", "All Warehouses", "Mexico"), reader),
             member(Id.Segment.toList(
-                "Warehouse", "All Warehouses", "USA"), reader)
-        });
+                "Warehouse", "All Warehouses", "USA"), reader));
     }
 
     protected Cube cubeByName(Connection connection, String cubeName) {
         SchemaReader reader = connection.getSchemaReader();
 
         Cube[] cubes = reader.getCubes();
-        Cube cube =
-            cubeByName(cubeName, cubes);
-        return cube;
+        return cubeByName(cubeName, cubes);
     }
 
     private Cube cubeByName(String cubeName, Cube[] cubes) {
         Cube resultCube = null;
         for (Cube cube : cubes) {
-            if (cubeName.equals(cube.getName()))
-            {
+            if (cubeName.equals(cube.getName())) {
                 resultCube = cube;
                 break;
             }
@@ -433,22 +422,21 @@ class TestCaseForker {
                 }
             };
         }
-        for (int i = 0; i < threads.length; i++) {
-            threads[i].start();
+        for (Thread thread : threads) {
+            thread.start();
         }
-        for (int i = 0; i < threads.length; i++) {
+        for (Thread thread : threads) {
             try {
-                threads[i].join(timeoutMs);
+                thread.join(timeoutMs);
             } catch (InterruptedException e) {
                 failures.add(
-                        Util.newInternal(
-                                e, "Interrupted after " + timeoutMs + "ms"));
+                    Util.newInternal(
+                        e, "Interrupted after " + timeoutMs + "ms"));
                 break;
             }
         }
         if (failures.size() > 0) {
-            for (int i = 0; i < failures.size(); i++) {
-                Throwable throwable = failures.get(i);
+            for (Throwable throwable : failures) {
                 throwable.printStackTrace();
             }
             TestCase.fail(failures.size() + " threads failed");

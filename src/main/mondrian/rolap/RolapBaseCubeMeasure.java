@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/RolapBaseCubeMeasure.java#3 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/RolapBaseCubeMeasure.java#11 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2007 Julian Hyde
+// Copyright (C) 2006-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -12,6 +12,7 @@ package mondrian.rolap;
 import mondrian.olap.*;
 import mondrian.rolap.sql.SqlQuery;
 import mondrian.resource.MondrianResource;
+import mondrian.spi.Dialect;
 
 import java.util.List;
 import java.util.Arrays;
@@ -24,7 +25,7 @@ import java.util.Arrays;
  *
  * @author jhyde
  * @since 24 August, 2006
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/RolapBaseCubeMeasure.java#3 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/RolapBaseCubeMeasure.java#11 $
  */
 public class RolapBaseCubeMeasure extends RolapMember implements RolapStoredMeasure {
 
@@ -117,11 +118,11 @@ public class RolapBaseCubeMeasure extends RolapMember implements RolapStoredMeas
         return cube;
     }
 
-    public CellFormatter getFormatter(){
+    public CellFormatter getFormatter() {
         return formatter;
     }
 
-    public void setFormatter(CellFormatter formatter){
+    public void setFormatter(CellFormatter formatter) {
         this.formatter = formatter;
     }
 
@@ -133,14 +134,14 @@ public class RolapBaseCubeMeasure extends RolapMember implements RolapStoredMeas
         this.starMeasure = starMeasure;
     }
 
-    public SqlQuery.Datatype getDatatype() {
+    public Dialect.Datatype getDatatype() {
         Object datatype = getPropertyValue(Property.DATATYPE.name);
         try {
-            return SqlQuery.Datatype.valueOf((String) datatype);
+            return Dialect.Datatype.valueOf((String) datatype);
         } catch (ClassCastException e) {
-            return SqlQuery.Datatype.String;
+            return Dialect.Datatype.String;
         } catch (IllegalArgumentException e) {
-            return SqlQuery.Datatype.String;
+            return Dialect.Datatype.String;
         }
     }
 }

@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/CaseMatchFunDef.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/fun/CaseMatchFunDef.java#8 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2007 Julian Hyde
+// Copyright (C) 2006-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -31,7 +31,7 @@ import java.util.ArrayList;
  *
  * @see CaseTestFunDef
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/CaseMatchFunDef.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/CaseMatchFunDef.java#8 $
  * @since Mar 23, 2006
  */
 class CaseMatchFunDef extends FunDefBase {
@@ -65,7 +65,6 @@ class CaseMatchFunDef extends FunDefBase {
 
         return new GenericCalc(call) {
             public Object evaluate(Evaluator evaluator) {
-
                 Object value = valueCalc.evaluate(evaluator);
                 for (int i = 0; i < matchCalcs.length; i++) {
                     Object match = matchCalcs[i].evaluate(evaluator);
@@ -92,7 +91,10 @@ class CaseMatchFunDef extends FunDefBase {
         }
 
         public FunDef resolve(
-                Exp[] args, Validator validator, int[] conversionCount) {
+            Exp[] args,
+            Validator validator,
+            List<Conversion> conversions)
+        {
             if (args.length < 3) {
                 return null;
             }
@@ -101,19 +103,19 @@ class CaseMatchFunDef extends FunDefBase {
             int j = 0;
             int clauseCount = (args.length - 1) / 2;
             int mismatchingArgs = 0;
-            if (!validator.canConvert(args[j++], valueType, conversionCount)) {
+            if (!validator.canConvert(args[j++], valueType, conversions)) {
                 mismatchingArgs++;
             }
             for (int i = 0; i < clauseCount; i++) {
-                if (!validator.canConvert(args[j++], valueType, conversionCount)) {
+                if (!validator.canConvert(args[j++], valueType, conversions)) {
                     mismatchingArgs++;
                 }
-                if (!validator.canConvert(args[j++], returnType, conversionCount)) {
+                if (!validator.canConvert(args[j++], returnType, conversions)) {
                     mismatchingArgs++;
                 }
             }
             if (j < args.length) {
-                if (!validator.canConvert(args[j++], returnType, conversionCount)) {
+                if (!validator.canConvert(args[j++], returnType, conversions)) {
                     mismatchingArgs++;
                 }
             }

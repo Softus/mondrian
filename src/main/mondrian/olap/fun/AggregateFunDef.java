@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/AggregateFunDef.java#3 $
+// $Id: //open/mondrian/src/main/mondrian/olap/fun/AggregateFunDef.java#26 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2007 Julian Hyde
+// Copyright (C) 2005-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -19,15 +19,18 @@ import mondrian.mdx.ResolvedFunCall;
 import mondrian.olap.*;
 import mondrian.rolap.RolapAggregator;
 import mondrian.rolap.RolapEvaluator;
+import mondrian.spi.Dialect;
 
 import java.util.*;
+
+import org.eigenbase.util.property.IntegerProperty;
 
 /**
  * Definition of the <code>AGGREGATE</code> MDX function.
  *
  * @author jhyde
  * @since 2005/8/14
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/AggregateFunDef.java#3 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/AggregateFunDef.java#26 $
  */
 public class AggregateFunDef extends AbstractAggregateFunDef {
     static final ReflectiveMultiResolver resolver =
@@ -92,9 +95,11 @@ public class AggregateFunDef extends AbstractAggregateFunDef {
                 //  (Gender.[All Gender], [Product].[All Products])
                 //
                 // Similar optimization can also be done for list of members.
-
+                List<Member[]> tupleList;
                 if (list.get(0) instanceof Member) {
-                    list = makeTupleList(list);
+                    tupleList = makeTupleList((List<Member>)list);
+                } else {
+                    tupleList =  (List<Member[]>) list;
                 }
 
                 RolapEvaluator rolapEvaluator = null;
@@ -110,9 +115,27 @@ public class AggregateFunDef extends AbstractAggregateFunDef {
                     // very slow.  May want to revisit this if someone
                     // improves the algorithm.
                 } else {
-                    list = optimizeChildren(list,
-                        evaluator.getSchemaReader(),evaluator.getMeasureCube());
-                    checkIfAggregationSizeIsTooLarge(list);
+                    // FIXME: We remove overlapping tuple entries only to pass
+                    // AggregationOnDistinctCountMeasuresTest
+                    // .testOptimizeListWithTuplesOfLength3 on Access. Without
+                    // the optimization, we generate a statement 7000
+                    // characters long and Access gives "Query is too complex".
+                    // The optimization is expensive, so we only want to do it
+                    // if the DBMS can't execute the query otherwise.
+                    if ((rolapEvaluator != null) &&
+                        rolapEvaluator.getDialect().getDatabaseProduct()
+                            == Dialect.DatabaseProduct.ACCESS &&
+                        false) {
+                        tupleList = removeOverlappingTupleEntries(tupleList);
+                    }
+                    if (true) {
+                        tupleList =
+                            optimizeChildren(
+                                tupleList,
+                                evaluator.getSchemaReader(),
+                                evaluator.getMeasureCube());
+                    }
+                    checkIfAggregationSizeIsTooLarge(tupleList);
                 }
 
                 // Can't aggregate distinct-count values in the same way
@@ -122,12 +145,79 @@ public class AggregateFunDef extends AbstractAggregateFunDef {
                 // members all at once. To do this, we postpone evaluation,
                 // and create a lambda function containing the members.
                 Evaluator evaluator2 =
-                    evaluator.pushAggregation((List<Member>) list);
+                    evaluator.pushAggregation(tupleList);
+                // cancel nonEmpty context
+                evaluator2.setNonEmpty(false);
                 final Object o = evaluator2.evaluateCurrent();
                 final Number number = (Number) o;
                 return GenericCalc.numberToDouble(number);
             }
-            return (Double) rollup.aggregate(evaluator.push(), list, calc);
+            return (Double) rollup.aggregate(evaluator.push(false), list, calc);
+        }
+
+        /**
+         * In case of distinct count aggregation if a tuple which is a super
+         * set of other tuples in the set exists then the child tuples can be
+         * ignored.
+         *
+         * <p>
+         * E.g.
+         * List consists of:
+         *  (Gender.[All Gender], [Product].[All Products]),
+         *  (Gender.[All Gender].[F], [Product].[All Products].[Drink]),
+         *  (Gender.[All Gender].[M], [Product].[All Products].[Food])
+         * Can be optimized to:
+         *  (Gender.[All Gender], [Product].[All Products])
+         *
+         * @param list
+         */
+
+        public static List<Member[]> removeOverlappingTupleEntries(List<Member[]> list) {
+            List<Member[]> trimmedList = new ArrayList<Member[]>();
+            for (Member[] tuple1 : list) {
+                if (trimmedList.isEmpty()) {
+                    trimmedList.add(tuple1);
+                } else {
+                    boolean ignore = false;
+                    final Iterator<Member[]> iterator = trimmedList.iterator();
+                    while (iterator.hasNext()) {
+                        Member[] tuple2 = iterator.next();
+                        if (isSuperSet(tuple1, tuple2)) {
+                            iterator.remove();
+                        } else if (isSuperSet(tuple2,  tuple1) ||
+                            isEqual(tuple1, tuple2)) {
+                            ignore = true;
+                            break;
+                        }
+                    }
+                    if (!ignore) {
+                        trimmedList.add(tuple1);
+                    }
+                }
+            }
+            return trimmedList;
+        }
+
+        /**
+         * Returns whether tuple1 is a superset of tuple2
+         * @param tuple1
+         * @param tuple2
+         * @return boolean
+         */
+        public static boolean isSuperSet(Member[] tuple1, Member[] tuple2) {
+            int parentLevelCount = 0;
+            for (int i = 0; i < tuple1.length; i++) {
+                Member member1 = tuple1[i];
+                Member member2 = tuple2[i];
+
+                if (!member2.isChildOrEqualTo(member1)) {
+                    return false;
+                }
+                if (member1.getLevel().getDepth() < member2.getLevel().getDepth()) {
+                    parentLevelCount++;
+                }
+            }
+            return parentLevelCount > 0;
         }
 
         /**
@@ -144,10 +234,15 @@ public class AggregateFunDef extends AbstractAggregateFunDef {
         }
 
         private void checkIfAggregationSizeIsTooLarge(List list) {
-            if (list.size() > MondrianProperties.instance().MaxConstraints.get()) {
+            final IntegerProperty property =
+                MondrianProperties.instance().MaxConstraints;
+            final int maxConstraints = property.get();
+            if (list.size() > maxConstraints) {
                 throw newEvalException(
-                    null,"Distinct Count aggregation is not supported over a " +
-                    "large list");
+                    null,
+                    "Distinct Count aggregation is not supported over a list"
+                        + " with more than " + maxConstraints + " predicates"
+                        + " (see property " + property.getPath() + ")");
             }
         }
 
@@ -183,29 +278,32 @@ public class AggregateFunDef extends AbstractAggregateFunDef {
          *  (Gender.[All Gender], [Store].[All Stores].[USA])
          *  (Gender.[All Gender], [Store].[All Stores].[CANADA])
          *
-         * @param tuples
-         * @param reader
-         * @param baseCubeForMeasure
+         * @param tuples Tuples
+         * @param reader Schema reader
+         * @param baseCubeForMeasure Cube
+         * @return xxxx
          */
-        public static List optimizeChildren(
+        public static List<Member[]> optimizeChildren(
             List<Member[]> tuples,
             SchemaReader reader,
             Cube baseCubeForMeasure)
         {
-
-            Map[] membersOccurancesInTuple =
-                membersVersusOccurancesInTuple(tuples);
+            Map<Member, Integer>[] membersOccurencesInTuple =
+                membersVersusOccurencesInTuple(tuples);
             int tupleLength = tuples.get(0).length;
 
-            Set[] sets = new HashSet[tupleLength];
+            //noinspection unchecked
+            Set<Member>[] sets = new HashSet[tupleLength];
             boolean optimized = false;
             for (int i = 0; i < tupleLength; i++) {
-
-                if (areOccurancesEqual(membersOccurancesInTuple[i].values())) {
-                    Set members = membersOccurancesInTuple[i].keySet();
+                if (areOccurencesEqual(membersOccurencesInTuple[i].values())) {
+                    Set<Member> members = membersOccurencesInTuple[i].keySet();
                     int originalSize = members.size();
-                    sets[i] = optimizeMemberSet(new HashSet<Member>(members),
-                        reader, baseCubeForMeasure);
+                    sets[i] =
+                        optimizeMemberSet(
+                            new HashSet<Member>(members),
+                            reader,
+                            baseCubeForMeasure);
                     if (sets[i].size() != originalSize) {
                         optimized = true;
                     }
@@ -213,7 +311,13 @@ public class AggregateFunDef extends AbstractAggregateFunDef {
             }
             if (optimized) {
                 if (sets.length == 1) {
-                    return new ArrayList(sets[0]);
+                    Set<Member> set = sets[0];
+                    List<Member[]> tupleList =
+                        new ArrayList<Member[]>(set.size());
+                    for (Member member : set) {
+                        tupleList.add(new Member[] {member});
+                    }
+                    return tupleList;
                 }
                 return crossProd(sets);
             }
@@ -224,13 +328,15 @@ public class AggregateFunDef extends AbstractAggregateFunDef {
          * Finds member occurrences in tuple and generates a map of Members
          * versus their occurrences in tuples.
          *
-         * @param tuples
+         * @param tuples List of tuples
+         * @return Map of the number of occurrences of each member in a tuple
          */
-        public static Map[] membersVersusOccurancesInTuple(List<Member[]> tuples)
+        public static Map<Member, Integer>[] membersVersusOccurencesInTuple(
+            List<Member[]> tuples)
         {
-
             int tupleLength = tuples.get(0).length;
-            Map[] counters = new Map[tupleLength];
+            //noinspection unchecked
+            Map<Member, Integer>[] counters = new Map[tupleLength];
             for (int i = 0; i < counters.length; i++) {
                 counters[i] = new HashMap<Member, Integer>();
             }
@@ -249,28 +355,18 @@ public class AggregateFunDef extends AbstractAggregateFunDef {
             return counters;
         }
 
-        /**
-         * Checks Whether all occurrences of dimension members are same
-         * @param collection
-         * @return boolean true if all values are same
-         */
-        public static boolean areOccurancesEqual(Collection<Integer> collection) {
-            return (new HashSet<Integer>(collection).size() == 1);
-        }
-
-        private static Set optimizeMemberSet(
+        private static Set<Member> optimizeMemberSet(
             Set<Member> members,
             SchemaReader reader,
             Cube baseCubeForMeasure)
         {
-
             boolean didOptimize;
             Set<Member> membersToBeOptimized = new HashSet<Member>();
             Set<Member> optimizedMembers = new HashSet<Member>();
             while (members.size() > 0) {
                 Iterator<Member> iterator = members.iterator();
                 Member first = iterator.next();
-                if(first.isAll()){
+                if (first.isAll()) {
                     optimizedMembers.clear();
                     optimizedMembers.add(first);
                     return optimizedMembers;
@@ -281,7 +377,7 @@ public class AggregateFunDef extends AbstractAggregateFunDef {
                 Member firstParentMember = first.getParentMember();
                 while (iterator.hasNext()) {
                     Member current =  iterator.next();
-                    if(current.isAll()){
+                    if (current.isAll()) {
                         optimizedMembers.clear();
                         optimizedMembers.add(current);
                         return optimizedMembers;
@@ -290,7 +386,7 @@ public class AggregateFunDef extends AbstractAggregateFunDef {
                     Member currentParentMember = current.getParentMember();
                     if (firstParentMember == null &&
                         currentParentMember == null ||
-                        (firstParentMember!= null &&
+                        (firstParentMember != null &&
                         firstParentMember.equals(currentParentMember))) {
                         membersToBeOptimized.add(current);
                         iterator.remove();
@@ -321,22 +417,42 @@ public class AggregateFunDef extends AbstractAggregateFunDef {
             return optimizedMembers;
         }
 
+        /**
+         * Returns whether tuples are equal. They must have the same length.
+         *
+         * @param tuple1 First tuple
+         * @param tuple2 Second tuple
+         * @return whether tuples are equal
+         */
+        private static boolean isEqual(Member[] tuple1, Member[] tuple2) {
+            for (int i = 0; i < tuple1.length; i++) {
+                if (!tuple1[i].getUniqueName().
+                    equals(tuple2[i].getUniqueName())) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
         private static boolean canOptimize(
             Member parentMember,
             Cube baseCube)
         {
-            return dimensionJoinsToBaseCube(parentMember.getDimension(),
-                baseCube) || !parentMember.isAll();
+            return dimensionJoinsToBaseCube(
+                parentMember.getDimension(), baseCube)
+                || !parentMember.isAll();
         }
 
-        private static List<Member[]> crossProd(Set[] sets) {
-            List firstList = new ArrayList(sets[0]);
-            List secondList = new ArrayList(sets[1]);
-            List tupleList = CrossJoinFunDef.crossJoin(firstList, secondList);
+        private static List<Member[]> crossProd(Set<Member>[] sets) {
+            List<Member> firstList = new ArrayList<Member>(sets[0]);
+            List<Member> secondList = new ArrayList<Member>(sets[1]);
+            List<Member[]> tupleList =
+                CrossJoinFunDef.crossJoin(firstList, secondList);
             for (int i = 2; i < sets.length; i++) {
-                Set set = sets[i];
-                tupleList = CrossJoinFunDef.
-                    crossJoin(tupleList, new ArrayList(set));
+                Set<Member> set = sets[i];
+                tupleList =
+                    CrossJoinFunDef.crossJoin(
+                        tupleList, new ArrayList<Member>(set));
             }
             return tupleList;
         }
@@ -359,9 +475,8 @@ public class AggregateFunDef extends AbstractAggregateFunDef {
             if (childrenCountFromCache != -1) {
                 return childrenCountFromCache;
             }
-            return reader.getMemberChildren(parentMember).length;
+            return reader.getMemberChildren(parentMember).size();
         }
-
     }
 }
 
