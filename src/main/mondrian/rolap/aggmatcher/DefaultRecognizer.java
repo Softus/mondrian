@@ -180,7 +180,7 @@ class DefaultRecognizer extends Recognizer {
      * and, if found, a level usage is created for that column and true is
      * returned.
      */
-    protected boolean matchLevel(
+    protected JdbcSchema.Table.Column.Usage matchLevel(
             final Hierarchy hierarchy,
             final HierarchyUsage hierarchyUsage,
             final RolapLevel level) {
@@ -198,17 +198,16 @@ class DefaultRecognizer extends Recognizer {
 
             for (JdbcSchema.Table.Column aggColumn : aggTable.getColumns()) {
                 if (matcher.matches(aggColumn.getName())) {
-                    makeLevel(
+                    return makeLevel(
                         aggColumn,
                         hierarchy,
                         hierarchyUsage,
                         getColumnName(level.getKeyExp()),
                         getColumnName(level.getKeyExp()),
                         level.getName());
-                    return true;
                 }
             }
-            return false;
+            return null;
 
         } finally {
             msgRecorder.popContextName();

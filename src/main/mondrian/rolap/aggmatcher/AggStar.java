@@ -22,6 +22,8 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.*;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * This is an aggregate table version of a RolapStar for a fact table.
@@ -177,6 +179,11 @@ public class AggStar {
     private final BitKey levelBitKey;
 
     /**
+     * BitKey of the levels of the agg table.
+     */
+    private final BitKey aggLevelBitKey;
+
+    /**
      * BitKey of the measures of this AggStar.
      */
     private final BitKey measureBitKey;
@@ -197,6 +204,7 @@ public class AggStar {
         this.star = star;
         this.bitKey = BitKey.Factory.makeBitKey(star.getColumnCount());
         this.levelBitKey = bitKey.emptyCopy();
+        this.aggLevelBitKey = bitKey.emptyCopy();
         this.measureBitKey = bitKey.emptyCopy();
         this.foreignKeyBitKey = bitKey.emptyCopy();
         this.distinctMeasureBitKey = bitKey.emptyCopy();
@@ -322,6 +330,13 @@ public class AggStar {
      */
     public BitKey getLevelBitKey() {
         return levelBitKey;
+    }
+    
+    /**
+     * Get the agg level BitKey.
+     */
+    public BitKey getAggLevelBitKey() {
+        return aggLevelBitKey;
     }
 
     /**
@@ -611,6 +626,7 @@ public class AggStar {
                     final SqlQuery.Datatype datatype,
                     final int bitPosition) {
                 super(name, expression, datatype, bitPosition);
+                AggStar.this.foreignKeyBitKey.set(bitPosition);
                 AggStar.this.levelBitKey.set(bitPosition);
             }
         }
@@ -778,6 +794,20 @@ public class AggStar {
             if (rightJoinConditionColumnName != null) {
                 left = new MondrianDef.Column(getName(),
                                               rightJoinConditionColumnName);
+
+                if (rleft instanceof MondrianDef.Column) {
+                    mondrian.rolap.RolapStar.Column col =
+                        getAggStar().getStar().getFactTable().lookupColumn(((MondrianDef.Column)rleft).name);
+                    if (col != null) {
+                        getAggStar().foreignKeyBitKey.set(col.getBitPosition());
+                    }
+                }
+                
+                RolapStar.Column pkColumn = rTable.lookupColumnByExpression(rright);
+                
+                if (null != pkColumn) {
+                	getAggStar().aggLevelBitKey.set(pkColumn.getBitPosition());
+                }
             } else {
                 if (rleft instanceof MondrianDef.Column) {
                     MondrianDef.Column lcolumn = (MondrianDef.Column) rleft;
@@ -797,11 +827,11 @@ public class AggStar {
             // AggStar. This lets us later determine if a measure is
             // based upon a foreign key (see AggregationManager findAgg
             // method).
-            mondrian.rolap.RolapStar.Column col =
-                getAggStar().getStar().getFactTable().lookupColumn(left.name);
-            if (col != null) {
-                getAggStar().setForeignKey(col.getBitPosition());
-            }
+//            mondrian.rolap.RolapStar.Column col =
+//                getAggStar().getStar().getFactTable().lookupColumn(left.name);
+//            if (col != null) {
+//                getAggStar().setForeignKey(col.getBitPosition());
+//            }
             JoinCondition joinCondition = new JoinCondition(left, rright);
             DimTable dimTable =
                 new DimTable(this, tableName, relation, joinCondition);
@@ -1118,10 +1148,10 @@ public class AggStar {
                     getLogger().warn(msg);
                 } else {
                     int bitPosition = rColumn.getBitPosition();
-                    ForeignKey c =
+//                    ForeignKey c =
                         new ForeignKey(
                             symbolicName, expression, datatype, bitPosition);
-                    getAggStar().setForeignKey(c.getBitPosition());
+//                    getAggStar().setForeignKey(c.getBitPosition());
                 }
             }
         }
@@ -1170,9 +1200,17 @@ public class AggStar {
 
             if (aggMeasure.aggregator.isDistinct()) {
                 distinctMeasureBitKey.set(bitPosition);
+                
+                if (usage.rMeasure.hasFunctionallyDependentDims()) {
+                	for (RolapCubeDimension dim : usage.rMeasure.getFunctionallyDependentDims()) {
+                		for (Iterator<Integer> it = dim.getDimensionLevelsBitKey().iterator(); it.hasNext(); ) {
+                			aggMeasure.rollableLevelBitKey.set(it.next());
+                		}
+                	}
+                }
             }
         }
-
+        
         /**
          * Create a fact_count column for a usage of type fact count.
          *
@@ -1215,6 +1253,10 @@ public class AggStar {
                     bitPosition,
                     usage.rColumn);
             addLevel(level);
+
+            if (usage.isMinLevelColumn()) {
+            	getAggStar().aggLevelBitKey.set(bitPosition);
+            }
         }
 
         public void print(final PrintWriter pw, final String prefix) {
@@ -1266,6 +1308,38 @@ public class AggStar {
             query.addSelect("count(*)");
             query.addFrom(getRelation(), getName(), false);
             DataSource dataSource = getAggStar().getStar().getDataSource();
+
+            if (query.getDialect().isPostgres() && getRelation() instanceof MondrianDef.Table) {
+                MondrianDef.Table table = (MondrianDef.Table)getRelation();
+                
+                if (null != table.schema && table.schema.length() > 0) {
+                    SqlStatement stmt =
+	                    RolapUtil.executeQuery(
+	                        dataSource,
+	                        "explain select * from " + table.schema + '.' + table.name,
+	                        "AggStar.FactTable.makeNumberOfRows",
+	                        "Counting rows in aggregate table");
+	                try {
+	                    ResultSet resultSet = stmt.getResultSet();
+	                    if (resultSet.next()) {
+	                        ++stmt.rowCount;
+	                        
+	                        Matcher m = Pattern.compile("^.+rows\\s*=\\s*(\\d+).+$").matcher(resultSet.getString(1));
+	                        if (m.matches()) {
+	                        	numberOfRows = Integer.parseInt(m.replaceAll("$1"));
+	                        }
+	                    }
+	                } catch (SQLException e) {
+	                    stmt.handle(e);
+	                } finally {
+	                    stmt.close();
+	                }
+	
+	                if (numberOfRows > 0)
+	                    return;
+                }
+            }
+
             SqlStatement stmt =
                 RolapUtil.executeQuery(
                     dataSource, query.toString(),
@@ -1391,12 +1465,20 @@ public class AggStar {
         pw.println(bitKey);
 
         pw.print(subprefix);
-        pw.print("fbk=");
+        pw.print("mbk=");
+        pw.println(measureBitKey);
+
+        pw.print(subprefix);
+        pw.print("lbk=");
         pw.println(levelBitKey);
 
         pw.print(subprefix);
-        pw.print("mbk=");
-        pw.println(measureBitKey);
+        pw.print("abk=");
+        pw.println(aggLevelBitKey);
+
+        pw.print(subprefix);
+        pw.print("fbk=");
+        pw.println(foreignKeyBitKey);
 
         pw.print(subprefix);
         pw.print("has foreign key=");

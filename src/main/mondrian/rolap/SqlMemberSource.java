@@ -879,6 +879,15 @@ RME is this right
         String childId = level.getKeyExp().getExpression(sqlQuery);
         sqlQuery.addSelect(childId);
         sqlQuery.addGroupBy(childId);
+        
+        if (level.hasCaptionColumn()) {
+            MondrianDef.Expression captionExp = level.getCaptionExp();
+            hierarchy.addToFrom(sqlQuery, captionExp);
+            String captionSql = captionExp.getExpression(sqlQuery);
+            sqlQuery.addSelect(captionSql);
+            sqlQuery.addGroupBy(captionSql);
+        }
+        
         hierarchy.addToFrom(sqlQuery, level.getOrdinalExp());
         String orderBy = level.getOrdinalExp().getExpression(sqlQuery);
         sqlQuery.addOrderBy(orderBy, true, false, true);
@@ -934,6 +943,15 @@ RME is this right
         String childId = level.getKeyExp().getExpression(sqlQuery);
         sqlQuery.addSelect(childId);
         sqlQuery.addGroupBy(childId);
+        
+        if (level.hasCaptionColumn()) {
+            MondrianDef.Expression captionExp = level.getCaptionExp();
+            hierarchy.addToFrom(sqlQuery, captionExp);
+            String captionSql = captionExp.getExpression(sqlQuery);
+            sqlQuery.addSelect(captionSql);
+            sqlQuery.addGroupBy(captionSql);
+        }
+        
         hierarchy.addToFrom(sqlQuery, level.getOrdinalExp());
         String orderBy = level.getOrdinalExp().getExpression(sqlQuery);
         sqlQuery.addOrderBy(orderBy, true, false, true);
@@ -1043,6 +1061,10 @@ RME is this right
 
         public int getOrdinal() {
             return dataMember.getOrdinal();
+        }
+
+        public String getCaption() {
+            return dataMember.getCaption();
         }
     }
 

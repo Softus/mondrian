@@ -14,6 +14,7 @@ package mondrian.rolap;
 
 import mondrian.olap.Cube;
 import mondrian.olap.DimensionType;
+import mondrian.olap.Hierarchy;
 import mondrian.olap.HierarchyBase;
 import mondrian.olap.MondrianDef;
 import mondrian.olap.Schema;
@@ -31,6 +32,8 @@ public class RolapCubeDimension extends RolapDimension {
     RolapDimension rolapDimension;
     int cubeOrdinal;
     MondrianDef.CubeDimension xmlDimension;
+    
+    private BitKey levelsBK;
     
     public RolapCubeDimension(RolapCube parent, RolapDimension rolapDim, 
             MondrianDef.CubeDimension cubeDim, String name, int cubeOrdinal) {
@@ -108,6 +111,72 @@ public class RolapCubeDimension extends RolapDimension {
         return rolapDimension.getDimensionType();
     }
     
+    public BitKey getDimensionLevelsBitKey()
+    {
+    	if (levelsBK == null) {
+    		RolapCube cube = getCube();
+    		RolapStar star = cube.getStar();
+
+    		levelsBK = BitKey.Factory.makeBitKey(star.getColumnCount());
+
+            for (Hierarchy hierarchy : getHierarchies()) {
+                for (HierarchyUsage hierarchyUsage : cube.getUsages(hierarchy)) {
+                    RolapLevel[] levels = (RolapLevel[])hierarchy.getLevels();
+                    for (RolapLevel level : levels) {
+                    	if (level.isAll()) {
+                    		continue;
+                    	}
+                    	
+                    	MondrianDef.Expression expr = level.getKeyExp();
+                    	String levelColumnName =
+                    		(expr instanceof MondrianDef.Column)
+                        		? ((MondrianDef.Column)expr).getColumnName()
+                        		: (expr instanceof MondrianDef.KeyExpression)
+                        			? ((MondrianDef.KeyExpression)expr).toString()
+                        			: null;
+                        			
+                        if (levelColumnName != null) {
+                        	MondrianDef.Relation relation = hierarchyUsage.getJoinTable();
+                        	MondrianDef.Expression joinExp = hierarchyUsage.getJoinExp();
+                        	
+                        	String tableAlias =
+                        		(joinExp instanceof MondrianDef.Column)
+                        			? ((MondrianDef.Column)joinExp).table
+                        			: relation.getAlias();
+                        	RolapStar.Table table = star.getFactTable().findDescendant(tableAlias);
+                        			
+                            if (table != null) {
+                            	RolapStar.Column levelColumn = lookupColumn(table, levelColumnName);
+
+                            	if (levelColumn != null) {
+                            		levelsBK.set(levelColumn.getBitPosition());
+                            	}
+                            }
+                        }
+                    }
+                }
+            }
+    	}
+    	
+    	return levelsBK;
+    }
+    
+    private static RolapStar.Column lookupColumn(
+            final RolapStar.Table table,
+            final String columnName)
+    {
+    	RolapStar.Column column = table.lookupColumn(columnName);
+    	
+    	if (column == null) {
+            for (RolapStar.Table child : table.getChildren()) {
+                column = lookupColumn(child, columnName);
+                if (column != null) {
+                    break;
+                }
+            }
+    	}
+        return column;
+    }
 }
 
 // End RolapCubeDimension.java

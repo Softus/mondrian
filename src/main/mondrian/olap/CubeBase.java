@@ -111,6 +111,12 @@ public abstract class CubeBase extends OlapElementBase implements Cube {
             MondrianProperties.instance().NeedDimensionPrefix.get()) {
             return mdxDimension;
         }
+        
+        //maybe this is not a dimension - maybe it's hierarchy
+        Hierarchy mdxHierarchy = lookupHierarchy(s, false);
+        if (mdxHierarchy != null) {
+        	return mdxHierarchy;
+        }
 
         //maybe this is not a dimension - maybe it's hierarchy, level or name
         for (Dimension dimension : dimensions) {

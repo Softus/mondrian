@@ -1376,6 +1376,7 @@ public class RolapStar {
     public static class Measure extends Column {
         private final String cubeName;
         private final RolapAggregator aggregator;
+        private final RolapCubeDimension[] functionallyDependentDims;
 
         public Measure(
             String name,
@@ -1383,15 +1384,25 @@ public class RolapStar {
             RolapAggregator aggregator,
             Table table,
             MondrianDef.Expression expression,
-            SqlQuery.Datatype datatype)
+            SqlQuery.Datatype datatype,
+            RolapCubeDimension[] functionallyDependentDims)
         {
             super(name, table, expression, datatype);
             this.cubeName = cubeName;
             this.aggregator = aggregator;
+            this.functionallyDependentDims = functionallyDependentDims;
         }
 
         public RolapAggregator getAggregator() {
             return aggregator;
+        }
+
+        public boolean hasFunctionallyDependentDims() {
+            return aggregator.isDistinct() && functionallyDependentDims != null && functionallyDependentDims.length > 0;
+        }
+        
+        public RolapCubeDimension[] getFunctionallyDependentDims() {
+        	return functionallyDependentDims;
         }
 
         public boolean equals(Object o) {
@@ -1632,7 +1643,8 @@ public class RolapStar {
                 measure.getAggregator(),
                 this,
                 measure.getMondrianDefExpression(),
-                measure.getDatatype());
+                measure.getDatatype(),
+                measure.getFunctionallyDependentDims());
 
             measure.setStarMeasure(starMeasure); // reverse mapping
 
@@ -1964,6 +1976,34 @@ public class RolapStar {
 
             }
             return null;
+        }
+
+        /**
+         * Finds the child tables of the fact table with the given columnName
+         * used in its left join condition. This is used by the AggTableManager
+         * while characterizing the fact table columns.
+         */
+        public List<RolapStar.Table> findTablesWithLeftJoinCondition(
+            final String columnName)
+        {
+        	List<RolapStar.Table> children = null;
+        	
+            for (Table child : getChildren()) {
+                Condition condition = child.joinCondition;
+                if (condition != null) {
+                    if (condition.left instanceof MondrianDef.Column) {
+                        MondrianDef.Column mcolumn =
+                            (MondrianDef.Column) condition.left;
+                        if (mcolumn.name.equals(columnName)) {
+                        	if (null == children) {
+                        		children = new ArrayList<RolapStar.Table>();
+                        	}
+                        	children.add(child);
+                        }
+                    }
+                }
+            }
+            return children;
         }
 
         /**

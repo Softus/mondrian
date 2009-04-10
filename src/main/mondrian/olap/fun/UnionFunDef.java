@@ -9,8 +9,10 @@
 */
 package mondrian.olap.fun;
 
+import mondrian.olap.Exp;
 import mondrian.olap.FunDef;
 import mondrian.olap.Evaluator;
+import mondrian.olap.Validator;
 import mondrian.calc.Calc;
 import mondrian.calc.ExpCompiler;
 import mondrian.calc.ListCalc;
@@ -39,6 +41,8 @@ class UnionFunDef extends FunDefBase {
             new String[] {"fxxx", "fxxxy"},
             UnionFunDef.class,
             ReservedWords);
+    
+    static final MultiResolver PlusResolver = new PlusUnionResolver();
 
     public UnionFunDef(FunDef dummyFunDef) {
         super(dummyFunDef);
@@ -81,6 +85,32 @@ class UnionFunDef extends FunDefBase {
             FunUtil.addUnique(result, list0, added);
             FunUtil.addUnique(result, list1, added);
             return result;
+        }
+    }
+    
+    private static class PlusUnionResolver extends MultiResolver {
+        public PlusUnionResolver() {
+            super(
+                    "+",
+                    "<Set1> + <Set2>",
+                    "Returns the union of two sets.",
+                    new String[]{"ixxx"});
+        }
+
+        public FunDef resolve(
+                Exp[] args, Validator validator, int[] conversionCount) {
+            // This function only applies in contexts which require a set.
+            // Elsewhere, "+" is the addition operator.
+            // This means that [Gender].[F] + [Gender].[M] is
+            // well-defined.
+            if (validator.requiresExpression()) {
+                return null;
+            }
+            return super.resolve(args, validator, conversionCount);
+        }
+
+        protected FunDef createFunDef(Exp[] args, FunDef dummyFunDef) {
+            return new UnionFunDef(dummyFunDef);
         }
     }
 }

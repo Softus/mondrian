@@ -1150,6 +1150,7 @@ public class BuiltinFunTable extends FunTableImpl {
         define(HeadTailFunDef.TailResolver);
         define(ToggleDrillStateFunDef.Resolver);
         define(UnionFunDef.Resolver);
+        define(UnionFunDef.PlusResolver);
         define(VisualTotalsFunDef.Resolver);
         define(XtdFunDef.WtdResolver);
         define(XtdFunDef.YtdResolver);
@@ -1969,6 +1970,12 @@ public class BuiltinFunTable extends FunTableImpl {
             }
 
         });
+
+        // Axiz([<count>])
+        define(AxizFunDef.Resolver);
+
+        // OpeningSet(<Set>[, <Tuple>][, BYSET | BYHIER])
+        define(OpeningSetFunDef.resolver);
 
         // Define VBA functions.
         for (FunDef funDef : JavaFunDef.scan(Vba.class)) {

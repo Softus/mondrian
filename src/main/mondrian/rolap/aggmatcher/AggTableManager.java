@@ -479,13 +479,22 @@ public class AggTableManager {
                 }
 
                 // it still might be a foreign key
-                RolapStar.Table rTable =
-                    star.getFactTable().findTableWithLeftJoinCondition(cname);
-                if (rTable != null) {
-                    JdbcSchema.Table.Column.Usage usage =
-                        factColumn.newUsage(JdbcSchema.UsageType.FOREIGN_KEY);
-                    usage.setSymbolicName("FOREIGN_KEY");
-                    usage.rTable = rTable;
+//                RolapStar.Table rTable =
+//                    star.getFactTable().findTableWithLeftJoinCondition(cname);
+//                if (rTable != null) {
+//                    JdbcSchema.Table.Column.Usage usage =
+//                        factColumn.newUsage(JdbcSchema.UsageType.FOREIGN_KEY);
+//                    usage.setSymbolicName("FOREIGN_KEY");
+//                    usage.rTable = rTable;
+                List<RolapStar.Table> rTables =
+                    star.getFactTable().findTablesWithLeftJoinCondition(cname);
+                if (rTables != null) {
+                    for (RolapStar.Table rTable : rTables) {
+                        JdbcSchema.Table.Column.Usage usage =
+                            factColumn.newUsage(JdbcSchema.UsageType.FOREIGN_KEY);
+                        usage.setSymbolicName("FOREIGN_KEY");
+                        usage.rTable = rTable;
+                    }
                 } else {
                     RolapStar.Column rColumn =
                         star.getFactTable().lookupColumn(cname);

@@ -362,6 +362,7 @@ public class JdbcSchema {
                 public MondrianDef.Relation relation;
                 public MondrianDef.Expression joinExp;
                 public String levelColumnName;
+                public boolean minLevelColumn;
 
                 // level
                 public RolapStar.Column rColumn;
@@ -429,6 +430,14 @@ public class JdbcSchema {
                  */
                 public RolapAggregator getAggregator() {
                     return aggregator;
+                }
+                
+                public void setMinLevelColumn(final boolean minLevelColumn) {
+                	this.minLevelColumn = minLevelColumn;
+                }
+                
+                public boolean isMinLevelColumn() {
+                	return this.minLevelColumn;
                 }
 
                 public String toString() {

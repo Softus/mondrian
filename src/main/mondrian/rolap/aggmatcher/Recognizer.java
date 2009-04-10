@@ -270,7 +270,7 @@ abstract class Recognizer {
      * implied and the measure is created for the aggregate table.
      */
     protected void generateImpliedMeasures() {
-        for (JdbcSchema.Table.Column factColumn : aggTable.getColumns()) {
+        for (JdbcSchema.Table.Column factColumn : dbFactTable.getColumns()) {
             JdbcSchema.Table.Column.Usage sumFactUsage = null;
             JdbcSchema.Table.Column.Usage avgFactUsage = null;
 
@@ -493,7 +493,7 @@ abstract class Recognizer {
                             continue;
                         }
 
-
+                        JdbcSchema.Table.Column.Usage minLevelUsage = null;
                         RolapLevel[] levels =
                             (RolapLevel[]) hierarchy.getLevels();
                         // If the top level is seen, then one or more
@@ -507,8 +507,9 @@ abstract class Recognizer {
                             if (level.isAll()) {
                                 continue mid_level;
                             }
-                            if (matchLevel(hierarchy, hierarchyUsage, level)) {
-
+                            JdbcSchema.Table.Column.Usage levelUsage = matchLevel(hierarchy, hierarchyUsage, level); 
+                            if (levelUsage != null) {
+                            	minLevelUsage = levelUsage;
                                 continue mid_level;
 
                             } else {
@@ -517,6 +518,10 @@ abstract class Recognizer {
                                 break mid_level;
                             }
                         }
+                        
+                        if (minLevelUsage != null) {
+                        	minLevelUsage.setMinLevelColumn(true);
+                    	}
                     }
                 }
             }
@@ -582,7 +587,7 @@ abstract class Recognizer {
      * Match a aggregate table column given the hierarchy, hierarchy usage, and
      * rolap level returning true if a match is found.
      */
-    protected abstract boolean matchLevel(
+    protected abstract JdbcSchema.Table.Column.Usage matchLevel(
             final Hierarchy hierarchy,
             final HierarchyUsage hierarchyUsage,
             final RolapLevel level);
@@ -596,7 +601,7 @@ abstract class Recognizer {
      * calling this method was to create. If there is an existing level usage
      * for the column and it matches something else, then it is an error.
      */
-    protected void makeLevel(
+    protected JdbcSchema.Table.Column.Usage makeLevel(
             final JdbcSchema.Table.Column aggColumn,
             final Hierarchy hierarchy,
             final HierarchyUsage hierarchyUsage,
@@ -607,6 +612,7 @@ abstract class Recognizer {
         msgRecorder.pushContextName("Recognizer.makeLevel");
 
         try {
+        JdbcSchema.Table.Column.Usage aggUsage = null;
 
         if (aggColumn.hasUsage(JdbcSchema.UsageType.LEVEL)) {
             // The column has at least one usage of level type
@@ -615,93 +621,79 @@ abstract class Recognizer {
             for (Iterator<JdbcSchema.Table.Column.Usage> uit =
                 aggColumn.getUsages(JdbcSchema.UsageType.LEVEL);
                     uit.hasNext(); ) {
-                JdbcSchema.Table.Column.Usage aggUsage = uit.next();
+                aggUsage = uit.next();
 
                 MondrianDef.Relation rel = hierarchyUsage.getJoinTable();
                 String cName = levelColumnName;
-
-                if (! aggUsage.relation.equals(rel) ||
-                    ! aggColumn.column.name.equals(cName)) {
-
-                    // this is an error so return
-                    String msg = mres.DoubleMatchForLevel.str(
-                        aggTable.getName(),
-                        dbFactTable.getName(),
-                        aggColumn.getName(),
-                        aggUsage.relation.toString(),
-                        aggColumn.column.name,
-                        rel.toString(),
-                        cName);
-                    msgRecorder.reportError(msg);
-
-                    returnValue = false;
-
-                    msgRecorder.throwRTException();
+                
+                if (aggUsage.relation.equals(rel) && aggColumn.column.name.equals(cName)) {
+                	return aggUsage;
                 }
             }
-        } else {
-            JdbcSchema.Table.Column.Usage aggUsage =
-                aggColumn.newUsage(JdbcSchema.UsageType.LEVEL);
-            // Cache table and column for the above
-            // check
-            aggUsage.relation = hierarchyUsage.getJoinTable();
-            aggUsage.joinExp = hierarchyUsage.getJoinExp();
-            aggUsage.levelColumnName = levelColumnName;
-
-            aggUsage.setSymbolicName(symbolicName);
-
-            String tableAlias;
-            if (aggUsage.joinExp instanceof MondrianDef.Column) {
-                MondrianDef.Column mcolumn =
-                    (MondrianDef.Column) aggUsage.joinExp;
-                tableAlias = mcolumn.table;
-            } else {
-                tableAlias = aggUsage.relation.getAlias();
-            }
-
-
-            RolapStar.Table factTable = star.getFactTable();
-            RolapStar.Table descTable = factTable.findDescendant(tableAlias);
-
-            if (descTable == null) {
-                // TODO: what to do here???
-                StringBuilder buf = new StringBuilder(256);
-                buf.append("descendant table is null for factTable=");
-                buf.append(factTable.getAlias());
-                buf.append(", tableAlias=");
-                buf.append(tableAlias);
-                msgRecorder.reportError(buf.toString());
-
-                returnValue = false;
-
-                msgRecorder.throwRTException();
-            }
-
-            RolapStar.Column rc = descTable.lookupColumn(factColumnName);
-
-            if (rc == null) {
-                rc = lookupInChildren(descTable, factColumnName);
-
-            }
-            if (rc == null) {
-                StringBuilder buf = new StringBuilder(256);
-                buf.append("Rolap.Column not found (null) for tableAlias=");
-                buf.append(tableAlias);
-                buf.append(", factColumnName=");
-                buf.append(factColumnName);
-                buf.append(", levelColumnName=");
-                buf.append(levelColumnName);
-                buf.append(", symbolicName=");
-                buf.append(symbolicName);
-                msgRecorder.reportError(buf.toString());
-
-                returnValue = false;
-
-                msgRecorder.throwRTException();
-            } else {
-                aggUsage.rColumn = rc;
-            }
         }
+        
+    	aggUsage = aggColumn.newUsage(JdbcSchema.UsageType.LEVEL);
+        // Cache table and column for the above
+        // check
+        aggUsage.relation = hierarchyUsage.getJoinTable();
+        aggUsage.joinExp = hierarchyUsage.getJoinExp();
+        aggUsage.levelColumnName = levelColumnName;
+
+        aggUsage.setSymbolicName(symbolicName);
+
+        String tableAlias;
+        if (aggUsage.joinExp instanceof MondrianDef.Column) {
+            MondrianDef.Column mcolumn =
+                (MondrianDef.Column) aggUsage.joinExp;
+            tableAlias = mcolumn.table;
+        } else {
+            tableAlias = aggUsage.relation.getAlias();
+        }
+
+        RolapStar.Table factTable = star.getFactTable();
+        RolapStar.Table descTable = factTable.findDescendant(tableAlias);
+
+        if (descTable == null) {
+            // TODO: what to do here???
+            StringBuilder buf = new StringBuilder(256);
+            buf.append("descendant table is null for factTable=");
+            buf.append(factTable.getAlias());
+            buf.append(", tableAlias=");
+            buf.append(tableAlias);
+            msgRecorder.reportError(buf.toString());
+
+            returnValue = false;
+
+            msgRecorder.throwRTException();
+        }
+
+        RolapStar.Column rc = descTable.lookupColumn(factColumnName);
+
+        if (rc == null) {
+            rc = lookupInChildren(descTable, factColumnName);
+
+        }
+        if (rc == null) {
+            StringBuilder buf = new StringBuilder(256);
+            buf.append("Rolap.Column not found (null) for tableAlias=");
+            buf.append(tableAlias);
+            buf.append(", factColumnName=");
+            buf.append(factColumnName);
+            buf.append(", levelColumnName=");
+            buf.append(levelColumnName);
+            buf.append(", symbolicName=");
+            buf.append(symbolicName);
+            msgRecorder.reportError(buf.toString());
+
+            returnValue = false;
+
+            msgRecorder.throwRTException();
+        } else {
+            aggUsage.rColumn = rc;
+        }
+        
+        return aggUsage;
+        
         } finally {
             msgRecorder.popContextName();
         }
@@ -840,7 +832,8 @@ abstract class Recognizer {
         }
 
         if (rollupAgg == null) {
-            rollupAgg = (RolapAggregator) factAgg.getRollup();
+            rollupAgg = (factAgg == RolapAggregator.DistinctCount)
+                ? RolapAggregator.DistinctCount : (RolapAggregator) factAgg.getRollup();  
         }
 
         if (rollupAgg == null) {

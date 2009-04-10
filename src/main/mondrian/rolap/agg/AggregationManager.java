@@ -173,6 +173,8 @@ public class AggregationManager extends RolapAggregationManager {
                     buf.append(Util.nl);
                     buf.append("   aggstar=");
                     buf.append(aggStar.getBitKey());
+                    buf.append("   ");
+                    buf.append(aggStar.getFactTable().getName());
                     buf.append(Util.nl);
                     buf.append("AggStar=");
                     buf.append(aggStar.getFactTable().getName());
@@ -207,7 +209,7 @@ public class AggregationManager extends RolapAggregationManager {
         if (getLogger().isDebugEnabled()) {
             RolapStar star = groupingSetsList.getStar();
 
-            StringBuilder buf = new StringBuilder(256);
+            StringBuilder buf = new StringBuilder(1024);
             buf.append("NO MATCH: ");
             buf.append(star.getFactTable().getAlias());
             buf.append(Util.nl);
@@ -217,6 +219,14 @@ public class AggregationManager extends RolapAggregationManager {
             buf.append("   measure=");
             buf.append(measureBitKey);
             buf.append(Util.nl);
+            
+            for (AggStar agg : star.getAggStars()) {
+                buf.append("   aggstar=");
+                buf.append(agg.getBitKey());
+                buf.append("   ");
+                buf.append(agg.getFactTable().getName());
+                buf.append(Util.nl);
+            }
 
             getLogger().debug(buf.toString());
         }
@@ -281,11 +291,12 @@ public class AggregationManager extends RolapAggregationManager {
 
             boolean isDistinct = measureBitKey.intersects(
                 aggStar.getDistinctMeasureBitKey());
+            
+            rollup[0] = !aggStar.getAggLevelBitKey().equals(levelBitKey);            
 
-            // The AggStar has no "distinct count" measures so
+            // The AggStar exact match or has no "distinct count" measures so
             // we can use it without looking any further.
             if (!isDistinct) {
-                rollup[0] = !aggStar.getLevelBitKey().equals(levelBitKey);
                 return aggStar;
             }
 
@@ -361,28 +372,35 @@ System.out.println(buf.toString());
                 // Get all of the foreign key columns.
                 // For each such measure, is it based upon a foreign key.
                 // Are there any foreign keys left over. No, can use AggStar.
-                BitKey fkBitKey = aggStar.getForeignKeyBitKey().copy();
-                for (AggStar.FactTable.Measure measure : aggStar.getFactTable()
-                    .getMeasures()) {
-                    if (measure.isDistinct()) {
-                        if (measureBitKey.get(measure.getBitPosition())) {
-                            fkBitKey.clear(measure.getBitPosition());
-                        }
-                    }
-                }
-                if (!fkBitKey.isEmpty()) {
-                    // there are foreign keys left so we can not use this
-                    // AggStar.
-                    continue;
-                }
+//                BitKey fkBitKey = aggStar.getForeignKeyBitKey().copy();
+//                for (AggStar.FactTable.Measure measure : aggStar.getFactTable()
+//                    .getMeasures()) {
+//                    if (measure.isDistinct()) {
+//                        if (measureBitKey.get(measure.getBitPosition())) {
+//                            fkBitKey.clear(measure.getBitPosition());
+//                        }
+//                    }
+//                }
+//                if (!fkBitKey.isEmpty()) {
+//                    // there are foreign keys left so we can not use this
+//                    // AggStar.
+//                    continue;
+//                }
             }
 
-            if (!aggStar.select(
-                levelBitKey, combinedLevelBitKey, measureBitKey)) {
-                continue;
+//            if (!aggStar.select(
+//                levelBitKey, combinedLevelBitKey, measureBitKey)) {
+//                continue;
+//            }
+            
+            if (!aggStar.getAggLevelBitKey().andNot(combinedLevelBitKey).equals(levelBitKey.andNot(combinedLevelBitKey))) {
+            	continue;
+            }
+            
+            if (!rollup[0]) {
+            	rollup[0] = measureBitKey.intersects(aggStar.getForeignKeyBitKey());
             }
 
-            rollup[0] = !aggStar.getLevelBitKey().equals(levelBitKey);
             return aggStar;
         }
         return null;

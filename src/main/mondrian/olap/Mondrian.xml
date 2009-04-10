@@ -841,6 +841,13 @@ Revision is $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/Mondrian.xml
             </Doc>
         </Object>
         <Array name="memberProperties" type="CalculatedMemberProperty" min="0"/>
+        <Array name="functionallyDependentDims" type="FunctionallyDependentDimension" min="0"/>
+    </Element>
+
+    <Element type="FunctionallyDependentDimension">
+        <Attribute name="name" required="true">
+            <Doc>Name of functionally dependent dimension.</Doc>
+        </Attribute>
     </Element>
 
     <Element type="CalculatedMember">

@@ -476,7 +476,7 @@ public class RolapMember extends MemberBase {
      * side-effects.
      */
     public synchronized void setProperty(String name, Object value) {
-        if (name.equals(Property.CAPTION.name)) {
+        if (name.equals(Property.CAPTION.name) || name.equals(Property.MEMBER_CAPTION.name)) {
             setCaption((String)value);
             return;
         }

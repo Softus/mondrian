@@ -1053,18 +1053,18 @@ RME TODO
                     }
 
                     // Is the level foreign key name a duplicate
-                    if (columnsToObjects.containsKey(level.getColumnName())) {
-                        Level l = (Level)
-                            columnsToObjects.get(level.getColumnName());
-                        msgRecorder.reportError(
-                            mres.DuplicateLevelColumnNames.str(
-                                msgRecorder.getContext(),
-                                level.getName(),
-                                l.getName(),
-                                level.getColumnName()));
-                    } else {
-                        columnsToObjects.put(level.getColumnName(), level);
-                    }
+//                    if (columnsToObjects.containsKey(level.getColumnName())) {
+//                        Level l = (Level)
+//                            columnsToObjects.get(level.getColumnName());
+//                        msgRecorder.reportError(
+//                            mres.DuplicateLevelColumnNames.str(
+//                                msgRecorder.getContext(),
+//                                level.getName(),
+//                                l.getName(),
+//                                level.getColumnName()));
+//                    } else {
+//                        columnsToObjects.put(level.getColumnName(), level);
+//                    }
                 }
 
                 // reset names map, but keep the columns from levels

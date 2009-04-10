@@ -42,6 +42,8 @@ public class RolapBaseCubeMeasure extends RolapMember implements RolapStoredMeas
     private final RolapAggregator aggregator;
 
     private final RolapCube cube;
+    
+    private final RolapCubeDimension[] functionallyDependentDims;
 
     /**
      * Holds the {@link mondrian.rolap.RolapStar.Measure} from which this
@@ -60,10 +62,12 @@ public class RolapBaseCubeMeasure extends RolapMember implements RolapStoredMeas
             String formatString,
             MondrianDef.Expression expression,
             String aggregatorName,
-            String datatype) {
+            String datatype,
+            RolapCubeDimension[] functionallyDependentDims) {
         super(parentMember, level, name, null, MemberType.MEASURE);
         this.cube = cube;
         this.expression = expression;
+        this.functionallyDependentDims = functionallyDependentDims;        
         if (formatString == null) {
             formatString = "";
         }
@@ -143,6 +147,11 @@ public class RolapBaseCubeMeasure extends RolapMember implements RolapStoredMeas
             return SqlQuery.Datatype.String;
         }
     }
+    
+    public RolapCubeDimension[] getFunctionallyDependentDims() {
+    	return functionallyDependentDims;
+    }
+    
 }
 
 // End RolapBaseCubeMeasure.java
