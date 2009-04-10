@@ -1221,7 +1221,8 @@ must be run under JDK 1.5." />
     </exec>
   </target>
 
-  <target name="jar" depends="version,compile,compile.tests,compileJdk16">
+  <target name="jar" depends="compile">
+<!--  <target name="jar" depends="version,compile,compile.tests,compileJdk16"> -->
     <mkdir dir="${lib.dir}" />
     <jar
         destfile="${jar.file}"

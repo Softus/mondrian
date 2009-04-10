@@ -127,6 +127,12 @@ public abstract class CubeBase extends OlapElementBase implements Cube {
         if (mdxDimension != null) {
             return mdxDimension;
         }
+        
+        //maybe this is not a dimension - maybe it's hierarchy
+        Hierarchy mdxHierarchy = lookupHierarchy(s, false);
+        if (mdxHierarchy != null) {
+        	return mdxHierarchy;
+        }
 
         final List<Dimension> dimensions = schemaReader.getCubeDimensions(this);
 

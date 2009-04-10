@@ -316,6 +316,7 @@ public class RolapResult extends ResultBase {
                     savedEvaluator,
                     query.slicerAxis,
                     query.slicerCalc);
+            this.query.slicerPositions = this.slicerAxis; 
 
             // Use the context created by the slicer for the other
             // axes.  For example, "select filter([Customers], [Store
@@ -408,6 +409,7 @@ public class RolapResult extends ResultBase {
                         }
                     }
                     this.axes[i] = axisResult;
+                    this.query.axisPositions[i] = this.axes[i]; 
                 }
             }
 

@@ -293,6 +293,12 @@ public class MockServletContext implements ServletContext {
             this.parameters.setProperty(name, value);
         }
     }
+
+	public String getContextPath()
+    {
+	    // TODO Auto-generated method stub
+	    return null;
+    }
 }
 
 // End MockServletContext.java
