@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/aggmatcher/DefaultRecognizer.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/aggmatcher/DefaultRecognizer.java#15 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2007 Julian Hyde and others
+// Copyright (C) 2005-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -24,7 +24,7 @@ import java.util.Iterator;
  * DefaultRules.xml to find aggregate tables and there columns.
  *
  * @author Richard M. Emberson
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/aggmatcher/DefaultRecognizer.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/aggmatcher/DefaultRecognizer.java#15 $
  */
 class DefaultRecognizer extends Recognizer {
 
@@ -67,8 +67,8 @@ class DefaultRecognizer extends Recognizer {
      * Get the Match used to identify columns that are measures.
      */
     protected Recognizer.Matcher getMeasureMatcher(
-            JdbcSchema.Table.Column.Usage factUsage) {
-
+        JdbcSchema.Table.Column.Usage factUsage)
+    {
         String measureName = factUsage.getSymbolicName();
         String measureColumnName = factUsage.getColumn().getName();
         String aggregateName = factUsage.getAggregator().getName();
@@ -100,7 +100,7 @@ class DefaultRecognizer extends Recognizer {
 
             for (Iterator<JdbcSchema.Table.Column.Usage> it =
                     dbFactTable.getColumnUsages(JdbcSchema.UsageType.MEASURE);
-                    it.hasNext(); ) {
+                    it.hasNext();) {
                 JdbcSchema.Table.Column.Usage factUsage = it.next();
 
                 Matcher matcher = getMeasureMatcher(factUsage);
@@ -135,7 +135,6 @@ class DefaultRecognizer extends Recognizer {
                 }
             }
             return measureCountCount;
-
         } finally {
             msgRecorder.popContextName();
         }
@@ -181,13 +180,12 @@ class DefaultRecognizer extends Recognizer {
      * returned.
      */
     protected JdbcSchema.Table.Column.Usage matchLevel(
-            final Hierarchy hierarchy,
-            final HierarchyUsage hierarchyUsage,
-            final RolapLevel level) {
-
+        final Hierarchy hierarchy,
+        final HierarchyUsage hierarchyUsage,
+        final RolapLevel level)
+    {
         msgRecorder.pushContextName("DefaultRecognizer.matchLevel");
         try {
-
             String usagePrefix = hierarchyUsage.getUsagePrefix();
             String hierName = hierarchy.getName();
             String levelName = level.getName();
@@ -208,7 +206,6 @@ class DefaultRecognizer extends Recognizer {
                 }
             }
             return null;
-
         } finally {
             msgRecorder.popContextName();
         }

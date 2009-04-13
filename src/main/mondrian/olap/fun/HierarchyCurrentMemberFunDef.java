@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/HierarchyCurrentMemberFunDef.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/fun/HierarchyCurrentMemberFunDef.java#4 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -20,7 +20,7 @@ import mondrian.olap.*;
  * Definition of the <code>&lt;Hierarchy&gt;.CurrentMember</code> MDX builtin function.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/HierarchyCurrentMemberFunDef.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/HierarchyCurrentMemberFunDef.java#4 $
  * @since Mar 23, 2006
  */
 public class HierarchyCurrentMemberFunDef extends FunDefBase {
@@ -71,7 +71,7 @@ public class HierarchyCurrentMemberFunDef extends FunDefBase {
         }
 
         public boolean dependsOn(Dimension dimension) {
-            return hierarchyCalc.getType().usesDimension(dimension, true);
+            return hierarchyCalc.getType().usesDimension(dimension, false);
         }
     }
 }

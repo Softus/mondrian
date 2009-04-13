@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/agg/DrillThroughQuerySpec.java#3 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/agg/DrillThroughQuerySpec.java#14 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2007 Julian Hyde
+// Copyright (C) 2005-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -26,7 +26,7 @@ import java.util.Set;
  *
  * @author jhyde
  * @author Richard M. Emberson
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/agg/DrillThroughQuerySpec.java#3 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/agg/DrillThroughQuerySpec.java#14 $
  */
 class DrillThroughQuerySpec extends AbstractQuerySpec {
     private final CellRequest request;
@@ -39,7 +39,7 @@ class DrillThroughQuerySpec extends AbstractQuerySpec {
         int tmpMaxColumnNameLength =
             getStar().getSqlQueryDialect().getMaxColumnNameLength();
         if (tmpMaxColumnNameLength == 0) {
-            // From java.sql.DatabaseMetaData: "a result of zero means that 
+            // From java.sql.DatabaseMetaData: "a result of zero means that
             // there is no limit or the limit is not known"
             maxColumnNameLength = Integer.MAX_VALUE;
         } else {

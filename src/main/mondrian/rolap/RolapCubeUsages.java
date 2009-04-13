@@ -3,7 +3,7 @@
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2001-2007 Julian Hyde and others
+// Copyright (C) 2001-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -20,7 +20,7 @@ import mondrian.olap.MondrianDef;
  * ignored.
  * @author ajoglekar
  * @since Nov 22 2007
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/RolapCubeUsages.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/RolapCubeUsages.java#4 $
  */
 
 public class RolapCubeUsages {
@@ -31,11 +31,11 @@ public class RolapCubeUsages {
     }
 
     public boolean shouldIgnoreUnrelatedDimensions(String baseCubeName) {
-        if(cubeUsages==null || cubeUsages.cubeUsages == null){
+        if (cubeUsages == null || cubeUsages.cubeUsages == null) {
             return false;
         }
         for (MondrianDef.CubeUsage usage : cubeUsages.cubeUsages) {
-            if(usage.cubeName.equals(baseCubeName)
+            if (usage.cubeName.equals(baseCubeName)
                 && Boolean.TRUE.equals(usage.ignoreUnrelatedDimensions)) {
                 return true;
             }
@@ -43,3 +43,5 @@ public class RolapCubeUsages {
         return false;
     }
 }
+
+// End RolapCubeUsages.java

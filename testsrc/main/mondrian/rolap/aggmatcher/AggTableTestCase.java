@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/rolap/aggmatcher/AggTableTestCase.java#2 $
+// $Id: //open/mondrian/testsrc/main/mondrian/rolap/aggmatcher/AggTableTestCase.java#6 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2006 Julian Hyde and others
+// Copyright (C) 2005-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -20,7 +20,7 @@ import mondrian.olap.MondrianProperties;
  * The particular cube definition and CSV file to use are abstract methods.
  *
  * @author <a>Richard M. Emberson</a>
- * @version  $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/rolap/aggmatcher/AggTableTestCase.java#2 $
+ * @version  $Id: //open/mondrian/testsrc/main/mondrian/rolap/aggmatcher/AggTableTestCase.java#6 $
  */
 public abstract class AggTableTestCase extends CsvDBTestCase {
 
@@ -83,3 +83,5 @@ public abstract class AggTableTestCase extends CsvDBTestCase {
         return DIRECTORY;
     }
 }
+
+// End AggTableTestCase.java

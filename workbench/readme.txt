@@ -1,4 +1,4 @@
-# $Id: //open/mondrian-release/3.0/workbench/readme.txt#5 $
+# $Id: //open/mondrian/workbench/readme.txt#3 $
 # This software is subject to the terms of the Common Public License
 # Agreement, available at the following URL:
 # http://www.opensource.org/licenses/cpl.html.

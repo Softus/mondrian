@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/tui/XmlUtil.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/tui/XmlUtil.java#14 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2007 Julian Hyde and others
+// Copyright (C) 2005-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -32,7 +32,7 @@ import java.util.*;
  * to valiate XMLA responses.
  *
  * @author Richard M. Emberson
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/tui/XmlUtil.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/tui/XmlUtil.java#14 $
  */
 public class XmlUtil {
 
@@ -391,11 +391,11 @@ public class XmlUtil {
      *
      */
     public static DOMParser getParser(
-            String schemaLocationPropertyValue,
-            EntityResolver entityResolver,
-            boolean validate)
-            throws SAXNotRecognizedException, SAXNotSupportedException {
-
+        String schemaLocationPropertyValue,
+        EntityResolver entityResolver,
+        boolean validate)
+        throws SAXNotRecognizedException, SAXNotSupportedException
+    {
         boolean doingValidation =
             (validate || (schemaLocationPropertyValue != null));
 
@@ -433,7 +433,7 @@ public class XmlUtil {
                 throw new RuntimeException(errorStr, t);
             }
         } else {
-            System.out.println("errorHandler=" +errorHandler);
+            System.out.println("errorHandler=" + errorHandler);
         }
     }
 
@@ -467,13 +467,14 @@ public class XmlUtil {
      *
      */
     public static Document parse(byte[] bytes)
-            throws SAXException, IOException {
+        throws SAXException, IOException
+    {
         return XmlUtil.parse(new ByteArrayInputStream(bytes));
     }
 
     public static Document parse(File file)
-            throws SAXException, IOException {
-
+        throws SAXException, IOException
+    {
         return parse(new FileInputStream(file));
     }
 
@@ -482,8 +483,8 @@ public class XmlUtil {
      *
      */
     public static Document parse(InputStream in)
-            throws SAXException, IOException {
-
+        throws SAXException, IOException
+    {
         InputSource source = new InputSource(in);
 
         DOMParser parser = XmlUtil.getParser(null, null, false);
@@ -588,43 +589,64 @@ public class XmlUtil {
         return buf.toString();
     }
 
-    public static String selectAsString(Node node, String xpath)
-                                            throws XPathException {
+    public static String selectAsString(
+        Node node,
+        String xpath)
+        throws XPathException
+    {
         return XmlUtil.selectAsString(node, xpath, node);
     }
-    public static String selectAsString(Node node, String xpath,
-                        Node namespaceNode) throws XPathException {
 
+    public static String selectAsString(
+        Node node,
+        String xpath,
+        Node namespaceNode)
+        throws XPathException
+    {
         XPathResult xpathResult = XmlUtil.select(node, xpath, namespaceNode);
         return XmlUtil.convertToString(xpathResult, false);
     }
 
-    public static Node[] selectAsNodes(Node node, String xpath)
-                                            throws XPathException {
+    public static Node[] selectAsNodes(
+        Node node,
+        String xpath)
+        throws XPathException
+    {
         return XmlUtil.selectAsNodes(node, xpath, node);
     }
-    public static Node[] selectAsNodes(Node node, String xpath,
-                        Node namespaceNode) throws XPathException {
 
+    public static Node[] selectAsNodes(
+        Node node,
+        String xpath,
+        Node namespaceNode)
+        throws XPathException
+    {
         XPathResult xpathResult = XmlUtil.select(node, xpath, namespaceNode);
         return XmlUtil.convertToNodes(xpathResult);
     }
 
-    public static XPathResult select(Node contextNode, String xpath,
-                        Node namespaceNode) throws XPathException {
+    public static XPathResult select(
+        Node contextNode,
+        String xpath,
+        Node namespaceNode)
+        throws XPathException
+    {
         XPathEvaluator evaluator = new XPathEvaluatorImpl();
         XPathNSResolver resolver = evaluator.createNSResolver(namespaceNode);
 
-        return (XPathResult) evaluator.evaluate(xpath, contextNode, resolver,
-                XPathResult.ANY_TYPE, null);
+        return (XPathResult) evaluator.evaluate(
+            xpath, contextNode, resolver,
+            XPathResult.ANY_TYPE, null);
     }
 
     /**
      * Convert an XPathResult object to String.
      *
      */
-    public static String convertToString(XPathResult xpathResult,
-                                         boolean prettyPrint) {
+    public static String convertToString(
+        XPathResult xpathResult,
+        boolean prettyPrint)
+    {
         switch (xpathResult.getResultType()) {
         case XPathResult.NUMBER_TYPE:
             double d = xpathResult.getNumberValue();
@@ -639,12 +661,14 @@ public class XmlUtil {
             return String.valueOf(b);
 
         case XPathResult.FIRST_ORDERED_NODE_TYPE:
-        case XPathResult.ANY_UNORDERED_NODE_TYPE: {
+        case XPathResult.ANY_UNORDERED_NODE_TYPE:
+        {
             Node node = xpathResult.getSingleNodeValue();
             return XmlUtil.toString(node, prettyPrint);
         }
         case XPathResult.ORDERED_NODE_ITERATOR_TYPE:
-        case XPathResult.UNORDERED_NODE_ITERATOR_TYPE: {
+        case XPathResult.UNORDERED_NODE_ITERATOR_TYPE:
+        {
             StringBuilder buf = new StringBuilder(512);
             Node node = xpathResult.iterateNext();
             while (node != null) {
@@ -654,7 +678,8 @@ public class XmlUtil {
             return buf.toString();
         }
         case XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE:
-        case XPathResult.ORDERED_NODE_SNAPSHOT_TYPE: {
+        case XPathResult.ORDERED_NODE_SNAPSHOT_TYPE:
+        {
             StringBuilder buf = new StringBuilder(512);
             int len = xpathResult.getSnapshotLength();
             for (int i = 0; i < len; i++) {
@@ -688,12 +713,14 @@ public class XmlUtil {
             return NULL_NODE_ARRAY;
 
         case XPathResult.FIRST_ORDERED_NODE_TYPE:
-        case XPathResult.ANY_UNORDERED_NODE_TYPE: {
+        case XPathResult.ANY_UNORDERED_NODE_TYPE:
+        {
             Node node = xpathResult.getSingleNodeValue();
             return new Node[] { node };
         }
         case XPathResult.ORDERED_NODE_ITERATOR_TYPE:
-        case XPathResult.UNORDERED_NODE_ITERATOR_TYPE: {
+        case XPathResult.UNORDERED_NODE_ITERATOR_TYPE:
+        {
             List<Node> list = new ArrayList<Node>();
             Node node = xpathResult.iterateNext();
             while (node != null) {
@@ -703,7 +730,8 @@ public class XmlUtil {
             return (Node[]) list.toArray(NULL_NODE_ARRAY);
         }
         case XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE:
-        case XPathResult.ORDERED_NODE_SNAPSHOT_TYPE: {
+        case XPathResult.ORDERED_NODE_SNAPSHOT_TYPE:
+        {
             int len = xpathResult.getSnapshotLength();
             Node[] nodes = new Node[len];
             for (int i = 0; i < len; i++) {
@@ -766,7 +794,7 @@ public class XmlUtil {
                     writer.write(LINE_SEP);
                 }
             } else {
-                writer.write("node class = " +node.getClass().getName());
+                writer.write("node class = " + node.getClass().getName());
                 if (prettyPrint) {
                     writer.write(LINE_SEP);
                 } else {
@@ -837,7 +865,7 @@ public class XmlUtil {
         String version = getXercesVersion();
         int index = version.indexOf(' ');
         return (index == -1)
-            ? "0.0.0" : version.substring(index+1);
+            ? "0.0.0" : version.substring(index + 1);
     }
 
     private static int[] versionNumbers = null;
@@ -856,18 +884,17 @@ public class XmlUtil {
             int index = verNumStr.indexOf('.');
             verNums[0] = Integer.parseInt(verNumStr.substring(0, index));
 
-            verNumStr = verNumStr.substring(index+1);
+            verNumStr = verNumStr.substring(index + 1);
             index = verNumStr.indexOf('.');
             verNums[1] = Integer.parseInt(verNumStr.substring(0, index));
 
-            verNumStr = verNumStr.substring(index+1);
+            verNumStr = verNumStr.substring(index + 1);
             verNums[2] = Integer.parseInt(verNumStr);
 
             versionNumbers = verNums;
         }
 
         return versionNumbers;
-
     }
 
     /**
@@ -912,7 +939,6 @@ public class XmlUtil {
         throws IOException,
         SAXException
     {
-
         OutputFormat format  = new OutputFormat(doc, null, true);
         StringWriter writer = new StringWriter(1000);
         XMLSerializer serial = new XMLSerializer(writer, format);
@@ -942,7 +968,6 @@ public class XmlUtil {
         } catch (SAXParseException ex) {
             checkForParseError(parser, ex);
         }
-
     }
 
     /**
@@ -978,12 +1003,12 @@ public class XmlUtil {
     public static Node transform(Document inDoc,
         String xslFileName,
         String[][] namevalueParameters)
-            throws ParserConfigurationException,
-                SAXException,
-                IOException,
-                TransformerConfigurationException,
-                TransformerException {
-
+        throws ParserConfigurationException,
+               SAXException,
+               IOException,
+               TransformerConfigurationException,
+               TransformerException
+    {
         DocumentBuilderFactory dfactory = DocumentBuilderFactory.newInstance();
         dfactory.setNamespaceAware(true);
 
@@ -1024,12 +1049,12 @@ public class XmlUtil {
     public static Node transform(Document inDoc,
         Reader xslReader,
         String[][] namevalueParameters)
-            throws ParserConfigurationException,
-                SAXException,
-                IOException,
-                TransformerConfigurationException,
-                TransformerException {
-
+        throws ParserConfigurationException,
+               SAXException,
+               IOException,
+               TransformerConfigurationException,
+               TransformerException
+    {
         DocumentBuilderFactory dfactory = DocumentBuilderFactory.newInstance();
         dfactory.setNamespaceAware(true);
 
@@ -1064,7 +1089,8 @@ public class XmlUtil {
     }
 
 
-    private XmlUtil() {}
+    private XmlUtil() {
+    }
 }
 
 // End XmlUtil.java

@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/olap/HierarchyBugTest.java#2 $
+// $Id: //open/mondrian/testsrc/main/mondrian/olap/HierarchyBugTest.java#10 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -52,7 +52,9 @@ public class HierarchyBugTest extends FoodMartTestCase {
         String failStr = null;
         int len = query.axes.length;
         for (int i = 0; i < len; i++) {
-            Hierarchy[] hs = query.getMdxHierarchiesOnAxis(AxisOrdinal.forLogicalOrdinal(i));
+            Hierarchy[] hs =
+                query.getMdxHierarchiesOnAxis(
+                    AxisOrdinal.StandardAxisOrdinal.forLogicalOrdinal(i));
             if (hs == null) {
             } else {
                 for (Hierarchy h : hs) {

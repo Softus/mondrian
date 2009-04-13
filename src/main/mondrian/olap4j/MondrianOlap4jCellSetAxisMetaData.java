@@ -2,7 +2,7 @@
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2007-2007 Julian Hyde
+// Copyright (C) 2007-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -23,7 +23,7 @@ import java.util.*;
  * for the Mondrian OLAP engine.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap4j/MondrianOlap4jCellSetAxisMetaData.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap4j/MondrianOlap4jCellSetAxisMetaData.java#6 $
 * @since Nov 17, 2007
 */
 class MondrianOlap4jCellSetAxisMetaData implements CellSetAxisMetaData {
@@ -31,13 +31,19 @@ class MondrianOlap4jCellSetAxisMetaData implements CellSetAxisMetaData {
     private final MondrianOlap4jCellSetMetaData cellSetMetaData;
     private final List<Property> propertyList = new ArrayList<Property>();
 
+    /**
+     * Creates a MondrianOlap4jCellSetAxisMetaData.
+     *
+     * @param cellSetMetaData Cell set axis metadata
+     * @param queryAxis Query axis
+     */
     MondrianOlap4jCellSetAxisMetaData(
         MondrianOlap4jCellSetMetaData cellSetMetaData,
         QueryAxis queryAxis)
     {
         if (queryAxis == null) {
             queryAxis = new QueryAxis(
-                false, null, AxisOrdinal.SLICER,
+                false, null, AxisOrdinal.StandardAxisOrdinal.SLICER,
                 QueryAxis.SubtotalVisibility.Undefined);
         }
         this.queryAxis = queryAxis;
@@ -52,16 +58,12 @@ class MondrianOlap4jCellSetAxisMetaData implements CellSetAxisMetaData {
     }
 
     public Axis getAxisOrdinal() {
-        switch (queryAxis.getAxisOrdinal()) {
-        case SLICER:
-            return Axis.FILTER;
-        default:
-            return Axis.valueOf(queryAxis.getAxisOrdinal().name());
-        }
+        return Axis.Factory.forOrdinal(
+            queryAxis.getAxisOrdinal().logicalOrdinal());
     }
 
     public List<Hierarchy> getHierarchies() {
-        if (queryAxis.getAxisOrdinal() == AxisOrdinal.SLICER) {
+        if (queryAxis.getAxisOrdinal().isFilter()) {
             // Slicer contains all dimensions not mentioned on other axes.
             // The list contains the default hierarchy of
             // each dimension not already in the slicer or in another axes.
@@ -106,6 +108,11 @@ class MondrianOlap4jCellSetAxisMetaData implements CellSetAxisMetaData {
         }
     }
 
+    /**
+     * Returns the hierarchies on a non-filter axis.
+     *
+     * @return List of hierarchies, never null
+     */
     private List<Hierarchy> getHierarchiesNonFilter() {
         final Exp exp = queryAxis.getSet();
         if (exp == null) {

@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/agg/AggregationManager.java#3 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/agg/AggregationManager.java#61 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2001-2002 Kana Software, Inc.
-// Copyright (C) 2001-2007 Julian Hyde and others
+// Copyright (C) 2001-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -28,13 +28,13 @@ import java.util.*;
  *
  * @author jhyde
  * @since 30 August, 2001
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/agg/AggregationManager.java#3 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/agg/AggregationManager.java#61 $
  */
 public class AggregationManager extends RolapAggregationManager {
-    
+
     private static final MondrianProperties properties =
         MondrianProperties.instance();
-    
+
     private static final Logger LOGGER =
             Logger.getLogger(AggregationManager.class);
 
@@ -94,11 +94,11 @@ public class AggregationManager extends RolapAggregationManager {
     public Object getCellFromCache(CellRequest request) {
         return getCellFromCache(request, null);
     }
-    
-    public Object getCellFromCache(CellRequest request, PinSet pinSet) {       
+
+    public Object getCellFromCache(CellRequest request, PinSet pinSet) {
         final RolapStar.Measure measure = request.getMeasure();
         // REVIEW:
-        // Is it possible to optimize this so not every cell lookup 
+        // Is it possible to optimize this so not every cell lookup
         // causes an AggregationKey to be created.
         AggregationKey aggregationKey = new AggregationKey(request);
         final Aggregation aggregation =
@@ -112,7 +112,7 @@ public class AggregationManager extends RolapAggregationManager {
                 measure, request.getSingleValues(), pinSet);
         }
     }
-    
+
     public String getDrillThroughSql(
         final CellRequest request,
         boolean countOnly)
@@ -219,7 +219,7 @@ public class AggregationManager extends RolapAggregationManager {
             buf.append("   measure=");
             buf.append(measureBitKey);
             buf.append(Util.nl);
-            
+
             for (AggStar agg : star.getAggStars()) {
                 buf.append("   aggstar=");
                 buf.append(agg.getBitKey());
@@ -234,8 +234,8 @@ public class AggregationManager extends RolapAggregationManager {
 
         // Fact table query
         SegmentArrayQuerySpec spec =
-            new SegmentArrayQuerySpec(groupingSetsList, compoundPredicateList);            
-        
+            new SegmentArrayQuerySpec(groupingSetsList, compoundPredicateList);
+
         String sql = spec.generateSqlQuery();
 
         if (getLogger().isDebugEnabled()) {
@@ -291,8 +291,8 @@ public class AggregationManager extends RolapAggregationManager {
 
             boolean isDistinct = measureBitKey.intersects(
                 aggStar.getDistinctMeasureBitKey());
-            
-            rollup[0] = !aggStar.getAggLevelBitKey().equals(levelBitKey);            
+
+            rollup[0] = !aggStar.getAggLevelBitKey().equals(levelBitKey);
 
             // The AggStar exact match or has no "distinct count" measures so
             // we can use it without looking any further.
@@ -355,7 +355,7 @@ public class AggregationManager extends RolapAggregationManager {
                     buf.append(Util.nl);
                     for (Iterator columnIter =
                             aggStar.getFactTable().getColumns().iterator();
-                         columnIter.hasNext(); ) {
+                         columnIter.hasNext();) {
                         AggStar.Table.Column column =
                                 (AggStar.Table.Column) columnIter.next();
                         buf.append("   ");
@@ -392,13 +392,13 @@ System.out.println(buf.toString());
 //                levelBitKey, combinedLevelBitKey, measureBitKey)) {
 //                continue;
 //            }
-            
+
             if (!aggStar.getAggLevelBitKey().andNot(combinedLevelBitKey).equals(levelBitKey.andNot(combinedLevelBitKey))) {
-            	continue;
+                continue;
             }
-            
+
             if (!rollup[0]) {
-            	rollup[0] = measureBitKey.intersects(aggStar.getForeignKeyBitKey());
+                rollup[0] = measureBitKey.intersects(aggStar.getForeignKeyBitKey());
             }
 
             return aggStar;

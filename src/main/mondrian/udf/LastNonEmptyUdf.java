@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/udf/LastNonEmptyUdf.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/udf/LastNonEmptyUdf.java#9 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2007 Julian Hyde
+// Copyright (C) 2005-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -20,7 +20,7 @@ import java.util.List;
  * Definition of the user-defined function "LastNonEmpty".
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/udf/LastNonEmptyUdf.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/udf/LastNonEmptyUdf.java#9 $
  */
 public class LastNonEmptyUdf implements UserDefinedFunction {
 
@@ -85,7 +85,7 @@ public class LastNonEmptyUdf implements UserDefinedFunction {
                 // examines twice as many cells as the previous pass. Thus
                 // we can move back through N members in log2(N) passes.
                 ++missCount;
-                if (missCount < 2*nullCount+1) {
+                if (missCount < 2 * nullCount + 1) {
                     continue;
                 }
             }

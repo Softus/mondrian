@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/RolapNativeFilter.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/RolapNativeFilter.java#23 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2007 Julian Hyde
+// Copyright (C) 2005-2008 Julian Hyde
 // Copyright (C) 2004-2005 TONBELLER AG
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
@@ -16,6 +16,7 @@ import java.util.List;
 import javax.sql.DataSource;
 
 import mondrian.olap.*;
+import mondrian.rolap.aggmatcher.AggStar;
 import mondrian.rolap.sql.SqlQuery;
 import mondrian.rolap.sql.TupleConstraint;
 
@@ -24,7 +25,7 @@ import mondrian.rolap.sql.TupleConstraint;
  *
  * @author av
  * @since Nov 21, 2005
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/RolapNativeFilter.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/RolapNativeFilter.java#23 $
  */
 public class RolapNativeFilter extends RolapNativeSet {
 
@@ -33,11 +34,11 @@ public class RolapNativeFilter extends RolapNativeSet {
     }
 
     static class FilterConstraint extends SetConstraint {
-        String filterExpr;
+        Exp filterExpr;
 
-        public FilterConstraint(CrossJoinArg[] args, RolapEvaluator evaluator, String filterByExpr) {
+        public FilterConstraint(CrossJoinArg[] args, RolapEvaluator evaluator, Exp filterExpr) {
             super(args, evaluator, true);
-            this.filterExpr = filterByExpr;
+            this.filterExpr = filterExpr;
         }
 
         /**
@@ -47,16 +48,25 @@ public class RolapNativeFilter extends RolapNativeSet {
         protected boolean isJoinRequired() {
             return true;
         }
-        
-        public void addConstraint(SqlQuery sqlQuery, RolapCube baseCube) {
-            sqlQuery.addHaving(filterExpr);
-            super.addConstraint(sqlQuery, baseCube);
+
+        public void addConstraint(
+            SqlQuery sqlQuery,
+            RolapCube baseCube,
+            AggStar aggStar) {
+            // Use aggregate table to generate filter condition
+            RolapNativeSql sql = new RolapNativeSql(sqlQuery, aggStar);
+            String filterSql =  sql.generateFilterCondition(filterExpr);
+            sqlQuery.addHaving(filterSql);
+            super.addConstraint(sqlQuery, baseCube, aggStar);
         }
 
         public Object getCacheKey() {
             List<Object> key = new ArrayList<Object>();
             key.add(super.getCacheKey());
-            key.add(filterExpr);
+            // Note required to use string in order for caching to work
+            if (filterExpr != null) {
+                key.add(filterExpr.toString());
+            }
             return key;
         }
     }
@@ -69,7 +79,7 @@ public class RolapNativeFilter extends RolapNativeSet {
         if (!isEnabled()) {
             return null;
         }
-        if (!FilterConstraint.isValidContext(evaluator)) {
+        if (!FilterConstraint.isValidContext(evaluator, restrictMemberTypes())) {
             return null;
         }
         // is this "Filter(<set>, <numeric expr>)"
@@ -96,25 +106,28 @@ public class RolapNativeFilter extends RolapNativeSet {
         DataSource ds = schemaReader.getDataSource();
 
         // generate the WHERE condition
+        // Need to generate where condition here to determine whether
+        // or not the filter condition can be created. The filter
+        // condition could change to use an aggregate table later in evaulation
         SqlQuery sqlQuery = SqlQuery.newQuery(ds, "NativeFilter");
-        RolapNativeSql sql = new RolapNativeSql(sqlQuery);
+        RolapNativeSql sql = new RolapNativeSql(sqlQuery, null);
         String filterExpr = sql.generateFilterCondition(args[1]);
         if (filterExpr == null) {
             return null;
         }
-        
+
         // check to see if evaluator contains a calculated member.
         // this is necessary due to the SqlConstraintsUtils.addContextConstraint()
         // method which gets called when generating the native SQL
         if (SqlConstraintUtils.containsCalculatedMember(evaluator.getMembers())) {
             return null;
         }
-        
+
         LOGGER.debug("using native filter");
 
         evaluator = overrideContext(evaluator, cargs, sql.getStoredMeasure());
 
-        TupleConstraint constraint = new FilterConstraint(cargs, evaluator, filterExpr);
+        TupleConstraint constraint = new FilterConstraint(cargs, evaluator, args[1]);
         return new SetEvaluator(cargs, schemaReader, constraint);
     }
 

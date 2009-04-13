@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/loader/CsvLoader.java#2 $
+// $Id: //open/mondrian/testsrc/main/mondrian/test/loader/CsvLoader.java#9 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2007 Julian Hyde and others
+// Copyright (C) 2005-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -68,7 +68,7 @@ import org.apache.log4j.*;
  *    double quotes: "" ""
  *    single quotes: '  '
  *    bracket: i     [ ]
- *    parenthesis:   ( )
+ *    parenthesis:   ()
  *    braces:        { }
  *    chevrons:      < >
  * </pre></blockquote>
@@ -78,7 +78,7 @@ import org.apache.log4j.*;
  * adequate.
  *
  * @author <a>Richard M. Emberson</a>
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/loader/CsvLoader.java#2 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/test/loader/CsvLoader.java#9 $
  */
 public class CsvLoader {
     protected static final Logger LOGGER = Logger.getLogger(CsvLoader.class);
@@ -107,12 +107,12 @@ public class CsvLoader {
     private String[] columns;
 
     public CsvLoader(InputStream in, String charset)
-            throws UnsupportedEncodingException{
+            throws UnsupportedEncodingException {
         this(new InputStreamReader(in, charset));
     }
     public CsvLoader(InputStream in, char separator,
                 boolean includesHeader, String charset)
-            throws UnsupportedEncodingException{
+            throws UnsupportedEncodingException {
         this(new InputStreamReader(in, charset), separator, includesHeader);
     }
     public CsvLoader(InputStream in) {
@@ -331,7 +331,7 @@ public class CsvLoader {
             if (this.inComment) {
                 buf.append("comment=true: ");
             }
-            for (int i=0; i < columns.length; i++) {
+            for (int i = 0; i < columns.length; i++) {
                 String column = columns[i];
                 if (i > 0) {
                     buf.append(", ");
@@ -352,7 +352,7 @@ public class CsvLoader {
         char separator = DEFAULT_SEPARATOR;
         for (int cnt = 0; cnt < args.length; cnt++) {
             String filename = args[cnt];
-            System.out.println("FileName:" +filename);
+            System.out.println("FileName:" + filename);
 
             CsvLoader csvLoader = new CsvLoader(filename);
 
@@ -361,7 +361,7 @@ public class CsvLoader {
             System.out.print("  ");
             for (int i = 0; i < columnNames.length; i++) {
                 System.out.print(columnNames[i]);
-                if (i+1 < columnNames.length) {
+                if (i + 1 < columnNames.length) {
                     System.out.print(separator);
                 }
             }
@@ -373,13 +373,14 @@ public class CsvLoader {
                 String[] columns = csvLoader.nextLine();
                 for (int i = 0; i < columns.length; i++) {
                     System.out.print(columns[i]);
-                    if (i+1 < columns.length) {
+                    if (i + 1 < columns.length) {
                         System.out.print(separator);
                     }
                 }
                 System.out.println();
             }
         }
-
     }
 }
+
+// End CsvLoader.java

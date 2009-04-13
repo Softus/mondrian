@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/MondrianResultPrinter.java#2 $
+// $Id: //open/mondrian/testsrc/main/mondrian/test/MondrianResultPrinter.java#7 $
 // Modified from junit's ResultPrinter class. Original code is covered by
 // the junit license and modifications are covered as follows:
 //
@@ -27,12 +27,12 @@ import junit.runner.BaseTestRunner;
 
 public class MondrianResultPrinter implements TestListener {
     PrintStream fWriter;
-    int fStarted= 0;
-    
+    int fStarted = 0;
+
     public MondrianResultPrinter(PrintStream writer) {
-        fWriter= writer;
+        fWriter = writer;
     }
-    
+
     /* API for use by textui.TestRunner
      */
 
@@ -47,33 +47,36 @@ public class MondrianResultPrinter implements TestListener {
         getWriter().println();
         getWriter().println("<RETURN> to continue");
     }
-    
-    /* Internal methods 
+
+    /* Internal methods
      */
 
     protected void printHeader() {
         getWriter().println();
     }
-    
+
     protected void printErrors(TestResult result) {
         printDefects(result.errors(), result.errorCount(), "error");
     }
-    
+
     protected void printFailures(TestResult result) {
         printDefects(result.failures(), result.failureCount(), "failure");
     }
-    
+
     protected void printDefects(Enumeration booBoos, int count, String type) {
-        if (count == 0) return;
-        if (count == 1)
+        if (count == 0) {
+            return;
+        }
+        if (count == 1) {
             getWriter().println("There was " + count + " " + type + ":");
-        else
+        } else {
             getWriter().println("There were " + count + " " + type + "s:");
-        for (int i= 1; booBoos.hasMoreElements(); i++) {
+        }
+        for (int i = 1; booBoos.hasMoreElements(); i++) {
             printDefect((TestFailure) booBoos.nextElement(), i);
         }
     }
-    
+
     public void printDefect(TestFailure booBoo, int count) { // only public for testing purposes
         printDefectHeader(booBoo, count);
         printDefectTrace(booBoo);
@@ -93,17 +96,17 @@ public class MondrianResultPrinter implements TestListener {
         if (result.wasSuccessful()) {
             getWriter().println();
             getWriter().print("OK");
-            getWriter().println (" (" + result.runCount() + " test" + (result.runCount() == 1 ? "": "s") + ")");
+            getWriter().println (" (" + result.runCount() + " test" + (result.runCount() == 1 ? "" : "s") + ")");
 
         } else {
             getWriter().println();
             getWriter().println("FAILURES!!!");
-            getWriter().println("Tests run: "+result.runCount()+ 
-                         ",  Failures: "+result.failureCount()+
-                         ",  Errors: "+result.errorCount());
+            getWriter().println("Tests run: " + result.runCount() +
+                         ",  Failures: " + result.failureCount() +
+                         ",  Errors: " + result.errorCount());
         }
         getWriter().println();
-        getWriter().println("Time: "+elapsedTimeAsString(runTime));
+        getWriter().println("Time: " + elapsedTimeAsString(runTime));
     }
 
 
@@ -112,7 +115,7 @@ public class MondrianResultPrinter implements TestListener {
      * Duplicated from BaseTestRunner. Fix it.
      */
     protected String elapsedTimeAsString(long runTime) {
-        return NumberFormat.getInstance().format((double)runTime/1000);
+        return NumberFormat.getInstance().format((double)runTime / 1000);
     }
 
     public PrintStream getWriter() {
@@ -150,3 +153,5 @@ public class MondrianResultPrinter implements TestListener {
     }
 
 }
+
+// End MondrianResultPrinter.java

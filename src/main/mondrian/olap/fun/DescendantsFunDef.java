@@ -1,36 +1,35 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/DescendantsFunDef.java#3 $
+// $Id: //open/mondrian/src/main/mondrian/olap/fun/DescendantsFunDef.java#24 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2004-2002 Kana Software, Inc.
-// Copyright (C) 2004-2007 Julian Hyde and others
+// Copyright (C) 2004-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
 package mondrian.olap.fun;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import mondrian.olap.*;
-import mondrian.olap.type.NumericType;
-import mondrian.olap.type.NullType;
+import mondrian.olap.type.*;
 import mondrian.calc.*;
-import mondrian.calc.impl.AbstractListCalc;
-import mondrian.mdx.ResolvedFunCall;
+import mondrian.calc.impl.AbstractMemberListCalc;
+import mondrian.mdx.*;
+import mondrian.resource.MondrianResource;
 
 /**
  * Definition of the <code>Descendants</code> MDX function.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/DescendantsFunDef.java#3 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/DescendantsFunDef.java#24 $
  * @since Mar 23, 2006
  */
 class DescendantsFunDef extends FunDefBase {
 
-    static final ReflectiveMultiResolver Resolver = new ReflectiveMultiResolver(
+    static final ReflectiveMultiResolver Resolver =
+        new ReflectiveMultiResolver(
             "Descendants",
             "Descendants(<Member>[, <Level>[, <Desc_flag>]])",
             "Returns the set of descendants of a member at a specified level, optionally including or excluding descendants in other levels.",
@@ -38,12 +37,59 @@ class DescendantsFunDef extends FunDefBase {
             DescendantsFunDef.class,
             Flag.getNames());
 
+    static final ReflectiveMultiResolver Resolver2 =
+        new ReflectiveMultiResolver(
+            "Descendants",
+            "Descendants(<Set>[, <Level>[, <Desc_flag>]])",
+            "Returns the set of descendants of a set of members at a specified level, optionally including or excluding descendants in other levels.",
+            new String[]{"fxx", "fxxl", "fxxly", "fxxn", "fxxny", "fxxey"},
+            DescendantsFunDef.class,
+            Flag.getNames());
+
     public DescendantsFunDef(FunDef dummyFunDef) {
         super(dummyFunDef);
-
     }
 
     public Calc compileCall(ResolvedFunCall call, ExpCompiler compiler) {
+        final Type type0 = call.getArg(0).getType();
+        if (type0 instanceof SetType) {
+            final SetType setType = (SetType) type0;
+            if (setType.getElementType() instanceof TupleType) {
+                throw MondrianResource.instance()
+                    .DescendantsAppliedToSetOfTuples.ex();
+            }
+
+            MemberType memberType = (MemberType) setType.getElementType();
+            final Dimension dimension = memberType.getDimension();
+            if (dimension == null) {
+                throw MondrianResource.instance().CannotDeduceTypeOfSet.ex();
+            }
+            // Convert
+            //   Descendants(<set>, <args>)
+            // into
+            //   Generate(<set>, Descendants(<dimension>.CurrentMember, <args>))
+            Exp[] descendantsArgs = call.getArgs().clone();
+            descendantsArgs[0] =
+                new UnresolvedFunCall(
+                    "CurrentMember",
+                    Syntax.Property,
+                    new Exp[] {
+                        new DimensionExpr(dimension)
+                    });
+            final ResolvedFunCall generateCall =
+                (ResolvedFunCall) compiler.getValidator().validate(
+                    new UnresolvedFunCall(
+                        "Generate",
+                        new Exp[] {
+                            call.getArg(0),
+                            new UnresolvedFunCall(
+                                "Descendants",
+                                descendantsArgs)
+                        }),
+                    false);
+            return generateCall.accept(compiler);
+        }
+
         final MemberCalc memberCalc = compiler.compileMember(call.getArg(0));
         Flag flag = Flag.SELF;
         if (call.getArgCount() == 1) {
@@ -52,7 +98,7 @@ class DescendantsFunDef extends FunDefBase {
         final boolean depthSpecified = call.getArgCount() >= 2 &&
             call.getArg(1).getType() instanceof NumericType;
         final boolean depthEmpty = call.getArgCount() >= 2 &&
-            call.getArg(1).getType() instanceof NullType;
+            call.getArg(1).getType() instanceof EmptyType;
         if (call.getArgCount() >= 3) {
             flag = FunUtil.getLiteralArg(call, 2, Flag.SELF, Flag.class);
         }
@@ -67,8 +113,8 @@ class DescendantsFunDef extends FunDefBase {
             final IntegerCalc depthCalc = depthSpecified ?
                 compiler.compileInteger(call.getArg(1)) :
                 null;
-            return new AbstractListCalc(call, new Calc[] {memberCalc, depthCalc}) {
-                public List evaluateList(Evaluator evaluator) {
+            return new AbstractMemberListCalc(call, new Calc[] {memberCalc, depthCalc}) {
+                public List<Member> evaluateMemberList(Evaluator evaluator) {
                     final Member member = memberCalc.evaluateMember(evaluator);
                     List<Member> result = new ArrayList<Member>();
                     int depth = -1;
@@ -82,7 +128,7 @@ class DescendantsFunDef extends FunDefBase {
                         evaluator.getSchemaReader();
                     descendantsLeavesByDepth(
                         member, result, schemaReader, depth);
-                    hierarchize(result, false);
+                    hierarchizeMemberList(result, false);
                     return result;
                 }
             };
@@ -91,16 +137,17 @@ class DescendantsFunDef extends FunDefBase {
                     compiler.compileInteger(call.getArg(1)) :
                     null;
             final Flag flag1 = flag;
-            return new AbstractListCalc(call, new Calc[] {memberCalc, depthCalc}) {
-                public List evaluateList(Evaluator evaluator) {
+            return new AbstractMemberListCalc(call, new Calc[] {memberCalc, depthCalc}) {
+                public List<Member> evaluateMemberList(Evaluator evaluator) {
                     final Member member = memberCalc.evaluateMember(evaluator);
-                    List result = new ArrayList();
+                    List<Member> result = new ArrayList<Member>();
                     final int depth = depthCalc.evaluateInteger(evaluator);
                     final SchemaReader schemaReader = evaluator.getSchemaReader();
                     descendantsByDepth(
-                            member, result, schemaReader,
-                            depth, flag1.before, flag1.self, flag1.after, evaluator);
-                    hierarchize(result, false);
+                        member, result, schemaReader,
+                        depth, flag1.before, flag1.self, flag1.after,
+                        evaluator);
+                    hierarchizeMemberList(result, false);
                     return result;
                 }
             };
@@ -109,8 +156,8 @@ class DescendantsFunDef extends FunDefBase {
                     compiler.compileLevel(call.getArg(1)) :
                     null;
             final Flag flag2 = flag;
-            return new AbstractListCalc(call, new Calc[] {memberCalc, levelCalc}) {
-                public List evaluateList(Evaluator evaluator) {
+            return new AbstractMemberListCalc(call, new Calc[] {memberCalc, levelCalc}) {
+                public List<Member> evaluateMemberList(Evaluator evaluator) {
                     final Evaluator context =
                             evaluator.isNonEmpty() ? evaluator : null;
                     final Member member = memberCalc.evaluateMember(evaluator);
@@ -123,7 +170,7 @@ class DescendantsFunDef extends FunDefBase {
                             schemaReader, member, level, result,
                         flag2.before, flag2.self,
                         flag2.after, flag2.leaves, context);
-                    hierarchize(result, false);
+                    hierarchizeMemberList(result, false);
                     return result;
                 }
             };
@@ -131,37 +178,39 @@ class DescendantsFunDef extends FunDefBase {
     }
 
     private static void descendantsByDepth(
-            Member member,
-            List result,
-            final SchemaReader schemaReader,
-            final int depthLimitFinal,
-            final boolean before,
-            final boolean self,
-            final boolean after,
-            final Evaluator context) {
-        Member[] children = {member};
+        Member member,
+        List<Member> result,
+        final SchemaReader schemaReader,
+        final int depthLimitFinal,
+        final boolean before,
+        final boolean self,
+        final boolean after,
+        final Evaluator context)
+    {
+        List<Member> children = new ArrayList<Member>();
+        children.add(member);
         for (int depth = 0;; ++depth) {
             if (depth == depthLimitFinal) {
                 if (self) {
-                    addAll(result, children);
+                    result.addAll(children);
                 }
                 if (!after) {
                     break; // no more results after this level
                 }
             } else if (depth < depthLimitFinal) {
                 if (before) {
-                    addAll(result, children);
+                    result.addAll(children);
                 }
             } else {
                 if (after) {
-                    addAll(result, children);
+                    result.addAll(children);
                 } else {
                     break; // no more results after this level
                 }
             }
 
             children = schemaReader.getMemberChildren(children, context);
-            if (children.length == 0) {
+            if (children.size() == 0) {
                 break;
             }
         }
@@ -183,10 +232,11 @@ class DescendantsFunDef extends FunDefBase {
             }
             return;
         }
-        Member[] children = {member};
+        List<Member> children = new ArrayList<Member>();
+        children.add(member);
         for (int depth = 0; depthLimit == -1 || depth <= depthLimit; ++depth) {
             children = schemaReader.getMemberChildren(children);
-            if (children.length == 0) {
+            if (children.size() == 0) {
                 throw Util.newInternal("drillable member must have children");
             }
             List<Member> nextChildren = new ArrayList<Member>();
@@ -204,7 +254,7 @@ class DescendantsFunDef extends FunDefBase {
             if (nextChildren.isEmpty()) {
                 return;
             }
-            children = nextChildren.toArray(new Member[nextChildren.size()]);
+            children = nextChildren;
         }
     }
 
@@ -249,7 +299,7 @@ class DescendantsFunDef extends FunDefBase {
         // (a city). This is why we repeat the before/self/after logic for
         // each member.
         final int levelDepth = level.getDepth();
-        Member[] members = {ancestor};
+        List<Member> members = Collections.singletonList(ancestor);
         // Each pass, "fertileMembers" has the same contents as "members",
         // except that we omit members whose children we are not interested
         // in. We allocate it once, and clear it each pass, to save a little
@@ -260,25 +310,23 @@ class DescendantsFunDef extends FunDefBase {
                 List<Member> nextMembers = new ArrayList<Member>();
                 for (Member member : members) {
                     final int currentDepth = member.getLevel().getDepth();
-                    Member[] childMembers =
+                    List<Member> childMembers =
                         schemaReader.getMemberChildren(member, context);
-                    if (childMembers.length == 0) {
+                    if (childMembers.size() == 0) {
                         // this member is a leaf -- add it
                         if (currentDepth == levelDepth) {
                             result.add(member);
                         }
-                        continue;
                     } else {
                         // this member is not a leaf -- add its children
                         // to the list to be considered next iteration
                         if (currentDepth <= levelDepth) {
-                            nextMembers.addAll(Arrays.asList(childMembers));
+                            nextMembers.addAll(childMembers);
                         }
                     }
                 }
-                members = nextMembers.toArray(new Member[nextMembers.size()]);
-            }
-            while (members.length > 0);
+                members = nextMembers;
+            } while (members.size() > 0);
         } else {
             List<Member> fertileMembers = new ArrayList<Member>();
             do {
@@ -305,11 +353,9 @@ class DescendantsFunDef extends FunDefBase {
                         }
                     }
                 }
-                members = new Member[fertileMembers.size()];
-                members = fertileMembers.toArray(members);
-                members = schemaReader.getMemberChildren(members, context);
-            }
-            while (members.length > 0);
+                members =
+                    schemaReader.getMemberChildren(fertileMembers, context);
+            } while (members.size() > 0);
         }
     }
 

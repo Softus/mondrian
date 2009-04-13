@@ -24,7 +24,7 @@ import java.util.*;
  *
  * @author av
  * @since Nov 3, 2005
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/cache/SoftSmartCache.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/cache/SoftSmartCache.java#7 $
  */
 public class SoftSmartCache<K, V> implements SmartCache<K, V> {
 

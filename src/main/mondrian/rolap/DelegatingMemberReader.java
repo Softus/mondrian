@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/DelegatingMemberReader.java#3 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/DelegatingMemberReader.java#16 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2003-2007 Julian Hyde
+// Copyright (C) 2003-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -24,7 +24,7 @@ import mondrian.rolap.sql.MemberChildrenConstraint;
  *
  * @author jhyde
  * @since Feb 26, 2003
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/DelegatingMemberReader.java#3 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/DelegatingMemberReader.java#16 $
  */
 class DelegatingMemberReader implements MemberReader {
     protected final MemberReader memberReader;
@@ -78,7 +78,7 @@ class DelegatingMemberReader implements MemberReader {
         return memberReader.setCache(cache);
     }
 
-    public RolapMember[] getMembers() {
+    public List<RolapMember> getMembers() {
         return memberReader.getMembers();
     }
 

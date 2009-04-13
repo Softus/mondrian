@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/gui/SchemaTreeCellEditor.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/gui/SchemaTreeCellEditor.java#6 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2007 Julian Hyde and others
+// Copyright (C) 2006-2008 Julian Hyde and others
 // Copyright (C) 2006-2007 CINCOM SYSTEMS, INC.
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
@@ -26,9 +26,9 @@ import javax.swing.tree.TreePath;
 /**
  *
  * @author sarora
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/gui/SchemaTreeCellEditor.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/gui/SchemaTreeCellEditor.java#6 $
  */
-public class SchemaTreeCellEditor extends javax.swing.tree.DefaultTreeCellEditor{
+public class SchemaTreeCellEditor extends javax.swing.tree.DefaultTreeCellEditor {
 
     private final ClassLoader myClassLoader;
     JComboBox listEditor;
@@ -46,8 +46,8 @@ public class SchemaTreeCellEditor extends javax.swing.tree.DefaultTreeCellEditor
         renderer.setClosedIcon(new ImageIcon(myClassLoader.getResource(workbench.getResourceConverter().getGUIReference("join"))));
 
         /*
-        listEditor = new JComboBox( new String[] {"Join", "Table"} );
-        editor.addItemListener( new ItemListener() {
+        listEditor = new JComboBox(new String[] {"Join", "Table"});
+        editor.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
                 //System.out.println("item state changed ="+listEditor.getSelectedItem());
                 //if (listEditor.isDisplayable()) listEditor.setPopupVisible(false);
@@ -56,22 +56,21 @@ public class SchemaTreeCellEditor extends javax.swing.tree.DefaultTreeCellEditor
             }
         });
          */
-
     }
 
     public Component getTreeCellEditorComponent(JTree tree, Object value, boolean isSelected, boolean expanded, boolean leaf, int row) {
-        Component retValue=null;
+        Component retValue = null;
 
 
         if (value instanceof MondrianGuiDef.RelationOrJoin) {
             String valueClass = value.getClass().getName();
             String simpleName[] = valueClass.split("[$.]",0);
 
-            retValue = super.getTreeCellEditorComponent(tree, simpleName[simpleName.length-1], isSelected, expanded, leaf, row);
+            retValue = super.getTreeCellEditorComponent(tree, simpleName[simpleName.length - 1], isSelected, expanded, leaf, row);
             /*
             retValue.setPreferredSize(null);
-            retValue.setPreferredSize(new java.awt.Dimension(retValue.getPreferredSize().width+1, 20)); //Do not remove this
-            retValue.setMaximumSize(new java.awt.Dimension(retValue.getPreferredSize().width+1, 20)); //Do not remove this
+            retValue.setPreferredSize(new java.awt.Dimension(retValue.getPreferredSize().width + 1, 20)); //Do not remove this
+            retValue.setMaximumSize(new java.awt.Dimension(retValue.getPreferredSize().width + 1, 20)); //Do not remove this
              */
             /*
             if (listEditor.isDisplayable()) {
@@ -95,14 +94,14 @@ public class SchemaTreeCellEditor extends javax.swing.tree.DefaultTreeCellEditor
                             ((MouseEvent)event).getX(),
                             ((MouseEvent)event).getY());
                     editable = (lastPath != null && path != null &&  lastPath.equals(path));
-                    if (path!=null) {
+                    if (path != null) {
                         Object value = path.getLastPathComponent();
                         TreePath parentPath = path.getParentPath();
-                        Object parent = (parentPath==null?null:parentPath.getLastPathComponent());
+                        Object parent = (parentPath == null ? null : parentPath.getLastPathComponent());
                         if (value instanceof MondrianGuiDef.RelationOrJoin && (parent instanceof MondrianGuiDef.Hierarchy || parent instanceof MondrianGuiDef.RelationOrJoin)) {
                             // editing of relation(cube fact table is not allowed
                             //===System.out.println("Super iscelleditable="+ super.isCellEditable(event)); //editable;
-                            if(((MouseEvent)event).getClickCount() == 2) {
+                            if (((MouseEvent)event).getClickCount() == 2) {
                                 return true;
                             }
                             return false;
@@ -127,7 +126,6 @@ public class SchemaTreeCellEditor extends javax.swing.tree.DefaultTreeCellEditor
             return new MondrianGuiDef.Join("","",new MondrianGuiDef.Table(), "", "", new MondrianGuiDef.Table());
         } else if (retValue.equals("Table")) {
             return new MondrianGuiDef.Table();
-
         }
         return null;
          */
@@ -152,14 +150,13 @@ public class SchemaTreeCellEditor extends javax.swing.tree.DefaultTreeCellEditor
 
     public void setValueAt(JTree tree) {
         String retValue;
-        MondrianGuiDef.RelationOrJoin relationObj=null;
+        MondrianGuiDef.RelationOrJoin relationObj = null;
 
         retValue = (String) getCellEditorValue();
         if (retValue.equals("Join")) {
-            relationObj= new MondrianGuiDef.Join("","",new MondrianGuiDef.Table("","Table 1",""), "", "", new MondrianGuiDef.Table("","Table 2",""));
+            relationObj = new MondrianGuiDef.Join("","",new MondrianGuiDef.Table("","Table 1",""), "", "", new MondrianGuiDef.Table("","Table 2",""));
         } else if (retValue.equals("Table")) {
-            relationObj= new MondrianGuiDef.Table("","Table","");
-
+            relationObj = new MondrianGuiDef.Table("","Table","");
         }
 
         TreePath tpath = tree.getSelectionPath();
@@ -175,8 +172,12 @@ public class SchemaTreeCellEditor extends javax.swing.tree.DefaultTreeCellEditor
                 } else if (parent instanceof MondrianGuiDef.Join) {
                     int indexOfChild = tree.getModel().getIndexOfChild(parent, value);
                     switch (indexOfChild) {
-                        case 0: ((MondrianGuiDef.Join) parent).left = relationObj; break;
-                        case 1: ((MondrianGuiDef.Join) parent).right = relationObj; break;
+                    case 0:
+                        ((MondrianGuiDef.Join) parent).left = relationObj;
+                        break;
+                    case 1:
+                        ((MondrianGuiDef.Join) parent).right = relationObj;
+                        break;
                     }
                 }
                 tree.setSelectionPath(parentpath.pathByAddingChild(relationObj));

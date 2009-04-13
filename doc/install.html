@@ -1,11 +1,11 @@
 <html>
 <!--
-  == $Id: //open/mondrian-release/3.0/doc/install.html#3 $
+  == $Id: //open/mondrian/doc/install.html#78 $
   == This software is subject to the terms of the Common Public License
   == Agreement, available at the following URL:
   == http://www.opensource.org/licenses/cpl.html.
   == Copyright (C) 2001-2002 Kana Software, Inc.
-  == Copyright (C) 2002-2008 Julian Hyde and others
+  == Copyright (C) 2002-2009 Julian Hyde and others
   == All Rights Reserved.
   == You must accept the terms of that agreement to use this software.
   -->
@@ -20,12 +20,22 @@
 <div class="contentheading">How to install Mondrian</div>
 <!-- end page title -->
 
+<p><strong>This package is for Mondrian developers and power users. If you are interested solely in Mondrian's analysis capabilities from a user standpoint, download the <a href="http://sourceforge.net/project/showfiles.php?group_id=140317&package_id=160028">Pentaho Business Intelligence Server</a> instead.</strong></p>
+
 <hr noshade="noshade" size="1">
 <ol>
   <li><a href="#1_Introduction">Introduction</a></li>
   <li><a href="#2_Set_up_test_data">Set up test data with a non-embedded database</a><ol>
     <li><a href="#2_1_Microsoft_Access">Microsoft Access</a></li>
     <li><a href="#2_2_Non_Access_setup">Other database</a></li>
+    <ul>
+    <li><a href="#Examples">Examples</a></li>
+    <ol>
+    <li><a href="#MySQL_on_Linux_example">MySQL on Linux</a></li>
+    <li><a href="#PostgreSQL_on_Windows_example">PostgreSQL on Windows</a></li>
+    </ol>
+    </ul>
+    <li><a href="#2_3_Optional_data_sets">Optional data sets</a></li>
   </ol>
   <li><a href="#3_Deploy_and_run_the_web_app">Deploy and run the web application
 with a non-embedded database</a></li>
@@ -46,6 +56,13 @@ configure Mondrian as an XML/A provider</a><ol>
     <li><a href="#6_2_Cache_setup">Cache setup</a></li>
   </ol>
   <li><a href="#7_Database_compatibility">Database compatibility</a></li>
+  <ol>
+    <li><a href="#Infobright">Infobright</a></li>
+    <li><a href="#Ingres">Ingres</a></li>
+    <li><a href="#MySQL">MySQL</a></li>
+    <li><a href="#PostgreSQL">PostgreSQL</a></li>
+    <li><a href="#Sybase">Sybase</a></li>
+  </ol>
   <li><a href="#8_Compatibility_issues">Compatibility issues</a></li>
   <ol>
     <li><a href="#8_1_Weblogic_6_1_and_Xerces">Weblogic 6.1 and Xerces</a></li>
@@ -116,8 +133,25 @@ JDBC connect string "<code>jdbc:odbc:MondrianFoodMart</code>".</p>
 
 <h3>2.2. Other database<a name="2_2_Non_Access_setup">&nbsp;</a></h3>
 
-<p>If not using Access, use the MondrianFoodMartLoader utility to
-create a database, and load data from a SQL script.</p>
+<p>If you are not using Access, you can use the MondrianFoodMartLoader utility to
+create a database and load data from an SQL script (<code>[-inputFile=&lt;file name&gt;]</code>). But if you
+have already loaded the data into one JDBC data source (say Microsoft
+Access), use the <code>
+-inputJdbcURL</code> and related options to copy the data to another JDBC
+database.</p>
+<p>The loader uses the standard J2SE JDBC, relevant JDBC driver JARs,
+and some classes out of Mondrian that do not rely on additional JARs.
+It has been tested against Oracle, PostgreSQL, MySQL, and Microsoft Access.</p>
+<p>If the target is a JDBC database, you must create the necessary
+database or schema first. This is database-specific.</p>
+<p>You can safely ignore any log4j warnings:</p>
+
+<blockquote>
+  <code>log4j:WARN No appenders could be found for logger
+(mondrian.rolap.RolapUtil).&nbsp;<br>
+log4j:WARN Please initialize the log4j system properly.</code>
+</blockquote>
+
 <h4>Syntax</h4>
 <blockquote>
 	<code>MondrianFoodMartLoader<br>
@@ -228,33 +262,14 @@ given, assumes data comes from this file of INSERT statements.</td>
     </tbody>
   </table>
 
-<p>The usual source for the MondrianFoodMartLoader utility is
-a SQL script (<code>[-inputFile=&lt;file name&gt;]</code>). But you
-have already loaded the data into one JDBC data source (say Microsoft
-Access), use the <code>
--inputJdbcURL</code> and related options to copy data to another JDBC
-database.</p>
-<p>The loader uses standard J2SE JDBC, the relevant JDBC driver JARs,
-and some classes out of Mondrian that do not rely on additional JARs.
-It has been tested against Oracle, Postgres, MySQL and Microsoft Access.</p>
-<p>If you the target is a JDBC database, you must create the necessary
-database or schema first. This is database-specific.</p>
-<p>You can safely ignore any log4j warnings:</p>
-
-<blockquote>
-  <code>log4j:WARN No appenders could be found for logger
-(mondrian.rolap.RolapUtil).&nbsp;<br>
-log4j:WARN Please initialize the log4j system properly.</code>
-</blockquote>
-
-<h4>Examples</h4>
+<h4>Examples<a name="Examples">&nbsp;</a></h4>
 
 <p>Here are some examples to give you a general idea how
 <code>MondrianFoodMartLoader</code> is invoked. The command line you use
 will vary depending upon your operating system, and intended
 source and target data sources.</p>
 
-<h5>Example 1. Loading MySQL from a file on Linux</h5>
+<h5>Example 1. Loading MySQL from a file on Linux<a name="MySQL_on_Linux_example">&nbsp;</a></h5>
 
 <p>The following example is a Linux command line to
 create a MySQL schema called 'foodmart', and create
@@ -277,7 +292,7 @@ user:</p>
 
 <blockquote>
   <code><b><i>$</i></b> java -cp
-"/mondrian/lib/mondrian.jar:/mondrian/lib/log4j.jar:/mondrian/lib/eigenbase-xom.jar:/mondrian/lib/eigenbase-resgen.jar:/mondrian/lib/eigenbase-properties.jar:/usr/local/mysql/mysql-connector-java-5.0.5-bin.jar"<br>
+"/mondrian/lib/mondrian.jar:/mondrian/lib/log4j.jar:/mondrian/lib/commons-logging.jar:/mondrian/lib/eigenbase-xom.jar:/mondrian/lib/eigenbase-resgen.jar:/mondrian/lib/eigenbase-properties.jar:/usr/local/mysql/mysql-connector-java-5.0.5-bin.jar"<br>
 &nbsp;&nbsp;&nbsp;&nbsp; mondrian.test.loader.MondrianFoodMartLoader<br>
 &nbsp;&nbsp;&nbsp;&nbsp; -verbose -tables -data -indexes<br>
 &nbsp;&nbsp;&nbsp;&nbsp; -jdbcDrivers=com.mysql.jdbc.Driver<br>
@@ -285,7 +300,7 @@ user:</p>
 &nbsp;&nbsp;&nbsp;&nbsp; -outputJdbcURL="jdbc:mysql://localhost/foodmart?user=foodmart&amp;password=foodmart"</code>
 </blockquote>
 
-<h5>Example 2. Loading PostgreSQL from Access on Windows</h5>
+<h5>Example 2. Loading PostgreSQL from Access on Windows<a name="PostgreSQL_on_Windows_example">&nbsp;</a></h5>
 
 <p>The following example is a Windows command line to
 create FoodMart tables for PostgreSQL from the test
@@ -293,7 +308,7 @@ dataset in the Access database:</p>
 
 <blockquote>
 	<code><i><b>C:\mondrian&gt;</b></i> java -cp
-"C:\mondrian\lib\mondrian.jar;C:\mondrian\lib\log4j.jar; C:\mondrian\lib\eigenbase-xom.jar; C:\mondrian\lib\eigenbase-resgen.jar; C:\mondrian\lib\eigenbase-properties.jar; C:\mondrian\lib\postgres-jdbc.jar"<br>
+"C:\mondrian\lib\mondrian.jar; C:\mondrian\lib\log4j.jar; C:\mondrian\lib\commons-logging.jar; C:\mondrian\lib\eigenbase-xom.jar; C:\mondrian\lib\eigenbase-resgen.jar; C:\mondrian\lib\eigenbase-properties.jar; C:\mondrian\lib\postgres-jdbc.jar"<br>
 &nbsp;&nbsp;&nbsp;&nbsp; mondrian.test.loader.MondrianFoodMartLoader<br>
 &nbsp;&nbsp;&nbsp;&nbsp; -verbose -tables -data -indexes<br>
 &nbsp;&nbsp;&nbsp;&nbsp; -jdbcDrivers="org.postgresql.Driver,sun.jdbc.odbc.JdbcOdbcDriver"<br>
@@ -303,13 +318,32 @@ dataset in the Access database:</p>
 &nbsp;&nbsp;&nbsp;&nbsp; -outputJdbcPassword=password</code>
 </blockquote>
 
+<h3>2.3. Optional data sets<a name="2_3_Optional_data_sets">&nbsp;</a></h3>
+
+<p>The Steel Wheels data set is optional. To install the Steel Wheels
+data set on MySQL, run <code>demo/mysql/SteelWheels.sql</code> in
+MySQL:</p>
+
+<blockquote>
+  <code><i><b>$</b></i> mysql -ufoodmart -pfoodmart < demo/mysql/SteelWheels.sql</code>
+</blockquote>
+
+<p>There is no supported process to load the data set on other
+databases. (Contributions welcome!)</p>
+
+<p>Mondrian's test suite assumes that the data set is in a MySQL
+database called 'steelwheels', and uses the schema definition
+'SteelWheels.mondrian.xml'. If Mondrian detects the schema, the test
+suite will run some additional tests; if not, those tests will
+trivially succeed.</p>
+
 <h2>3. Deploy and run the web application with a non-embedded database<a name="3_Deploy_and_run_the_web_app">&nbsp;</a></h2>
 
 <ol>
   <li>Install Tomcat (version 5.0.25 or later).</li>
   <li>From the unzipped binary release, explode <code>lib/mondrian.war</code>
 to <code><i>TOMCAT_HOME</i>/webapps/mondrian</code></li>
-  <li>Open the mondrian.properties file in <code><i>TOMCAT_HOME</i>/webapps/mondrian</code> and customize the&nbsp; 
+  <li>Create or open the mondrian.properties file in <code><i>TOMCAT_HOME</i>/webapps/mondrian</code> and customize the&nbsp; 
   <code>mondrian.jdbcDrivers</code>
 properties for the database you set up from the instructions above.</li>
   <li>Open the web.xml file in <code><i>TOMCAT_HOME</i>/webapps/mondrian/WEB-INF</code> and customize the two
@@ -327,7 +361,7 @@ connect strings there to the same database parameters for the FoodMart database
   </blockquote>
   </li>
 
-  <li>Modify the <code>fourheir.jsp</code>, <code>mondrian.jsp</code>, <code>colors.jsp</code>
+  <li>Modify the <code>fourhier.jsp</code>, <code>mondrian.jsp</code>, <code>colors.jsp</code>
 and <code>arrows.jsp </code>files in the <code><i>TOMCAT_HOME</i>/webapps/mondrian/WEB-INF/queries</code> 
   folder. 
   Modify the line
@@ -357,6 +391,7 @@ catalogUri="/WEB-INF/queries/FoodMart.xml"&gt;</code>
   </ul>
   </li>
   <li>Start your database, if needed.</li>
+  <li>Start Tomcat.</li>
   <li>Hit <a href="http://localhost:8080/mondrian" target="_new">http://localhost:8080/mondrian</a>.</li>
 </ol>
 
@@ -477,6 +512,7 @@ for the Java VM.</p>
   <li>Firebird</li>
   <li>hsqldb</li>
   <li>IBM DB2</li>
+  <li>Infobright</li>
   <li>Informix</li>
   <li>Ingres</li>
   <li>Interbase</li>
@@ -505,7 +541,45 @@ property settings, and any other tweaks which were required.</p>
 <code><a href="http://p4web.eigenbase.org/open/mondrian/mondrian.properties">mondrian.properties</a></code>.  There are are sample connect
 strings for most databases in there.</p>
 
-<h3>PostgreSQL</h3>
+<h3>Infobright <a name="Infobright">&nbsp;</a></h3>
+
+<p>Infobright is a variant of the MySQL system. In fact, Infobright uses the
+regular MySQL driver, and even reports its product name as 'MySQL'! Mondrian
+detects Infobright by looking in the <code>INFORMATION_SCHEMA.engines</code>
+table; if there is an engine called "BRIGHTHOUSE", mondrian assumes the
+Infobright dialect.</p>
+
+<p>First download and
+<a href="http://www.infobright.org/wiki/Install_Guide/">install</a>
+Infobright Community Edition (ICE). To create and populate the FoodMart schema,
+most steps are the same as for <a href="#MySQL">MySQL</a>. ICE does not support
+the <code>INSERT</code> command, so MondrianFoodMartLoader automatically uses
+the <code>LOAD DATA INFILE</code> command.</p>
+
+<p>If the JDBC driver gives the error <code>Unknown character set: 'usa7'</code>,
+try adding <code>&amp;characterEncoding=UTF-8</code> to the end of the JDBC
+connect string.</p>
+
+<h3>Ingres<a name="Ingres">&nbsp;</a></h3>
+
+<p>Andy Grimm writes:</p>
+<blockquote>
+    <p>In addition, I had to run a perl script against the demo sql file:<br>
+    <br>
+    &gt; <code>perl -pi -e &quot;s/:00\.0/:00/g&quot; FoodMartCreateData.sql</code><br>
+    <br>
+    That drops the &quot;.0&quot; off each timestamp to make it a valid DATE. Our next 
+    release will support timestamps, so this is a short-term fix that could go 
+    into Release Notes.</p>
+</blockquote>
+
+<h3>MySQL <a name="MySQL">&nbsp;</a></h3>
+
+<p>See the <a href="#MySQL_on_Linux_example">MySQL example</a>.</p>
+
+<h3>PostgreSQL<a name="PostgreSQL">&nbsp;</a></h3>
+
+<p>See <a href="#PostgreSQL_example">PostgreSQL example</a>.</p>
 
 <p>To install PostgreSQL 8.2 and its JDBC driver on Ubuntu, I typed:</p>
 
@@ -526,19 +600,7 @@ strings for most databases in there.</p>
     $ sudo -u postgres  createuser -D -A -P foodmart<br/>
     $ sudo -u postgres createdb -O foodmart foodmart</code></blockquote>
 
-<h3>Ingres</h3>
-<p>Andy Grimm writes:</p>
-<blockquote>
-    <p>In addition, I had to run a perl script against the demo sql file:<br>
-    <br>
-    &gt; <code>perl -pi -e &quot;s/:00\.0/:00/g&quot; FoodMartCreateData.sql</code><br>
-    <br>
-    That drops the &quot;.0&quot; off each timestamp to make it a valid DATE. Our next 
-    release will support timestamps, so this is a short-term fix that could go 
-    into Release Notes.</p>
-</blockquote>
-<h3>&nbsp;</h3>
-<h3>Sybase</h3>
+<h3>Sybase<a name="Sybase">&nbsp;</a></h3>
 
 <p><a href="http://forums.pentaho.org/showthread.php?t=47918">mizar_sf writes</a>:</p>
 <blockquote>
@@ -592,11 +654,11 @@ Mondrian WAR.</p>
 <hr>
 
 <p>
-    Author: Julian Hyde and others; last updated July, 2008.<br/>
-    Version: $Id: //open/mondrian-release/3.0/doc/install.html#3 $
+    Author: Julian Hyde and others; last updated March, 2009.<br/>
+    Version: $Id: //open/mondrian/doc/install.html#78 $
     (<a href="http://p4web.eigenbase.org/open/mondrian/doc/install.html?ac=22">log</a>)<br/>
     Copyright (C) 2001-2002 Kana Software, Inc.<br/>
-    Copyright (C) 2002-2008 Julian Hyde and others
+    Copyright (C) 2002-2009 Julian Hyde and others
 </p>
 
 <br/>

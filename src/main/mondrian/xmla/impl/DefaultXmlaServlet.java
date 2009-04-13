@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/xmla/impl/DefaultXmlaServlet.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/xmla/impl/DefaultXmlaServlet.java#20 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2007 Julian Hyde
+// Copyright (C) 2005-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -75,10 +75,10 @@ public class DefaultXmlaServlet extends XmlaServlet {
     }
 
     protected void unmarshallSoapMessage(
-            HttpServletRequest request,
-            Element[] requestSoapParts)
-            throws XmlaException {
-
+        HttpServletRequest request,
+        Element[] requestSoapParts)
+        throws XmlaException
+    {
         try {
             InputStream inputStream;
             try {
@@ -182,7 +182,6 @@ public class DefaultXmlaServlet extends XmlaServlet {
                     new SAXException(msg));
             }
             requestSoapParts[1] = childs[0];
-
         } catch (XmlaException xex) {
             throw xex;
         } catch (Exception ex) {
@@ -208,11 +207,11 @@ public class DefaultXmlaServlet extends XmlaServlet {
      *
      */
     protected void handleSoapHeader(
-            HttpServletResponse response,
-            Element[] requestSoapParts,
-            byte[][] responseSoapParts,
-            Map<String, Object> context) throws XmlaException {
-
+        HttpServletResponse response,
+        Element[] requestSoapParts,
+        byte[][] responseSoapParts,
+        Map<String, Object> context) throws XmlaException
+    {
         try {
             Element hdrElem = requestSoapParts[0];
             if ((hdrElem == null) || (! hdrElem.hasChildNodes())) {
@@ -291,8 +290,7 @@ public class DefaultXmlaServlet extends XmlaServlet {
                             MUST_UNDERSTAND_FAULT_FC,
                             HSH_MUST_UNDERSTAND_CODE,
                             HSH_MUST_UNDERSTAND_FAULT_FS,
-                            new RuntimeException(msg)
-                            );
+                            new RuntimeException(msg));
                     }
 
                     StringBuilder buf = new StringBuilder(100);
@@ -305,11 +303,9 @@ public class DefaultXmlaServlet extends XmlaServlet {
                     buf.append(NS_XMLA);
                     buf.append("\" />");
                     bytes = buf.toString().getBytes(encoding);
-
                 }
             }
             responseSoapParts[0] = bytes;
-
         } catch (XmlaException xex) {
             throw xex;
         } catch (Exception ex) {
@@ -383,8 +379,7 @@ public class DefaultXmlaServlet extends XmlaServlet {
                     CLIENT_FAULT_FC,
                     HSB_BAD_SOAP_BODY_CODE,
                     HSB_BAD_SOAP_BODY_FAULT_FS,
-                    new RuntimeException(msg)
-                    );
+                    new RuntimeException(msg));
             }
 
             Element xmlaReqElem = (dreqs.length == 0 ? ereqs[0] : dreqs[0]);
@@ -419,7 +414,6 @@ public class DefaultXmlaServlet extends XmlaServlet {
             }
 
             responseSoapParts[1] = osBuf.toByteArray();
-
         } catch (XmlaException xex) {
             throw xex;
         } catch (Exception ex) {
@@ -432,10 +426,10 @@ public class DefaultXmlaServlet extends XmlaServlet {
     }
 
     protected void marshallSoapMessage(
-            HttpServletResponse response,
-            byte[][] responseSoapParts)
-            throws XmlaException {
-
+        HttpServletResponse response,
+        byte[][] responseSoapParts)
+        throws XmlaException
+    {
         try {
             // If CharacterEncoding was set in web.xml, use this value
             String encoding = (charEncoding != null)
@@ -517,7 +511,6 @@ public class DefaultXmlaServlet extends XmlaServlet {
                 buf.append(nl);
 
                 byteChunks[4] = buf.toString().getBytes(encoding);
-
             } catch (UnsupportedEncodingException uee) {
                 LOGGER.warn("This should be handled at begin of processing request", uee);
             }
@@ -568,7 +561,7 @@ public class DefaultXmlaServlet extends XmlaServlet {
                     rch.close();
                 }
                 outputStream.flush();
-            } catch(IOException ioe) {
+            } catch (IOException ioe) {
                 LOGGER.error("Damn exception when transferring bytes over sockets", ioe);
             }
         } catch (XmlaException xex) {
@@ -587,11 +580,11 @@ public class DefaultXmlaServlet extends XmlaServlet {
      *
      */
     protected void handleFault(
-                    HttpServletResponse response,
-                    byte[][] responseSoapParts,
-                    Phase phase,
-                    Throwable t) {
-
+        HttpServletResponse response,
+        byte[][] responseSoapParts,
+        Phase phase,
+        Throwable t)
+    {
         // Regardless of whats been put into the response so far, clear
         // it out.
         response.reset();
@@ -640,7 +633,7 @@ public class DefaultXmlaServlet extends XmlaServlet {
         try {
             SaxWriter writer = new DefaultSaxWriter(osBuf, encoding);
             writer.startDocument();
-            writer.startElement(SOAP_PREFIX +":Fault");
+            writer.startElement(SOAP_PREFIX + ":Fault");
 
             // The faultcode element is intended for use by software to provide
             // an algorithmic mechanism for identifying the fault. The faultcode
@@ -672,8 +665,8 @@ public class DefaultXmlaServlet extends XmlaServlet {
             // header entries.
             if (phase != Phase.PROCESS_HEADER) {
                 writer.startElement("detail");
-                writer.startElement(FAULT_NS_PREFIX +":error", new String[] {
-                        "xmlns:" +FAULT_NS_PREFIX, MONDRIAN_NAMESPACE
+                writer.startElement(FAULT_NS_PREFIX + ":error", new String[] {
+                        "xmlns:" + FAULT_NS_PREFIX, MONDRIAN_NAMESPACE
                 });
                 writer.startElement("code");
                 writer.characters(code);

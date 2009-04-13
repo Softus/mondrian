@@ -2,7 +2,7 @@
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2007 Julian Hyde
+// Copyright (C) 2006-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -27,7 +27,7 @@ import java.util.Vector;
  * Unit test for DynamicDatasourceXmlaServlet
  *
  * @author Thiyagu, Ajit
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/xmla/impl/DynamicDatasourceXmlaServletTest.java#2 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/xmla/impl/DynamicDatasourceXmlaServletTest.java#5 $
  * @since Mar 30, 2007
  */
 public class DynamicDatasourceXmlaServletTest extends TestCase {
@@ -161,13 +161,11 @@ public class DynamicDatasourceXmlaServletTest extends TestCase {
             assertTrue(xmlaServlet.containsCatalog(DATASOURCE_1_NAME, CATALOG_0_NAME));
             assertTrue(xmlaServlet.containsCatalog(DATASOURCE_1_NAME, CATALOG_1_NAME));
             assertFalse(xmlaServlet.containsCatalog(DATASOURCE_1_NAME, CATALOG_2_NAME));
-
         } finally {
             if (dsFile != null) {
                 dsFile.delete();
             }
         }
-
     }
 
 
@@ -179,12 +177,13 @@ public class DynamicDatasourceXmlaServletTest extends TestCase {
         }
 
         public boolean containsCatalog(String datasourceName, String catalogName) {
-
             return locateCatalog(datasourceName, catalogName) != null;
-
         }
 
-        public DataSourcesConfig.Catalog locateCatalog(String datasourceName, String catalogName) {
+        public DataSourcesConfig.Catalog locateCatalog(
+            String datasourceName,
+            String catalogName)
+        {
             for (DataSourcesConfig.DataSource ds : dataSources.dataSources) {
                 if (ds.name.equals(datasourceName)) {
                     for (DataSourcesConfig.Catalog catalog : ds.catalogs.catalogs) {

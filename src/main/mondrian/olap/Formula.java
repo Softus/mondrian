@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/Formula.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/Formula.java#43 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2000-2002 Kana Software, Inc.
-// Copyright (C) 2001-2007 Julian Hyde and others
+// Copyright (C) 2001-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -162,15 +162,16 @@ public class Formula extends QueryPart {
             OlapElement mdxElement = q.getCube();
             final SchemaReader schemaReader = q.getSchemaReader(true);
             for (int i = 0; i < id.getSegments().size(); i++) {
-            	Id.Segment segment = id.getSegments().get(i);
+                Id.Segment segment = id.getSegments().get(i);
                 OlapElement parent = mdxElement;
                 mdxElement = null;
                 // BCHOW: The last segment of the id is the name of the calculated member
                 // so no need to look for a pre-existing child.  This avoids
                 // unnecessarily executing SQL and loading children into cache.
-                if (i != id.getSegments().size() - 1)
+                if (i != id.getSegments().size() - 1) {
                     mdxElement = schemaReader.getElementChild(parent, segment);
-                
+                }
+
                 // Don't try to look up the member which the formula is
                 // defining. We would only find one if the member is overriding
                 // a member at the cube or schema level, and we don't want to
@@ -257,7 +258,7 @@ public class Formula extends QueryPart {
     public Id getIdentifier() {
         return id;
     }
-    
+
     /** Returns this formula's name. */
     public String getName() {
         return (isMember)
@@ -378,9 +379,9 @@ public class Formula extends QueryPart {
                 if (number == null) {
                     return null;
                 } else if (number instanceof Integer) {
-                    return -number.intValue();
+                    return - number.intValue();
                 } else {
-                    return -number.doubleValue();
+                    return - number.doubleValue();
                 }
             }
         }
@@ -485,8 +486,8 @@ public class Formula extends QueryPart {
             returnFormula(member);
             if (member.isCalculated()
                     && member instanceof RolapCalculatedMember
-                    && !hasCyclicReference(memberExpr)){
-
+                    && !hasCyclicReference(memberExpr))
+            {
                 Formula formula = ((RolapCalculatedMember) member).getFormula();
                 formula.accept(validator);
                 returnFormula(member);
@@ -509,7 +510,7 @@ public class Formula extends QueryPart {
         private boolean hasCyclicReference(Exp expr, List<MemberExpr> expList) {
             if (expr instanceof MemberExpr) {
                 MemberExpr memberExpr = (MemberExpr) expr;
-                if(expList.contains(expr)){
+                if (expList.contains(expr)) {
                     return true;
                 }
                 expList.add(memberExpr);
@@ -524,7 +525,7 @@ public class Formula extends QueryPart {
                 FunCall funCall = (FunCall) expr;
                 Exp[] exps = funCall.getArgs();
                 for (int i = 0; i < exps.length; i++) {
-                    if(hasCyclicReference(exps[i], cloneForEachBranch(expList))) {
+                    if (hasCyclicReference(exps[i], cloneForEachBranch(expList))) {
                         return true;
                     }
                 }

@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/DrilldownLevelFunDef.java#3 $
+// $Id: //open/mondrian/src/main/mondrian/olap/fun/DrilldownLevelFunDef.java#5 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2007 Julian Hyde
+// Copyright (C) 2006-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -28,7 +28,7 @@ import java.util.*;
  * </pre></blockquote>
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/DrilldownLevelFunDef.java#3 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/DrilldownLevelFunDef.java#5 $
  * @since Mar 23, 2006
  */
 class DrilldownLevelFunDef extends FunDefBase {
@@ -86,9 +86,9 @@ class DrilldownLevelFunDef extends FunDefBase {
                     for (Member member : list) {
                         result.add(member);
                         if (index == 0) {
-                            final Member[] children =
+                            final List<Member> children =
                                 schemaReader.getMemberChildren(member);
-                            result.addAll(Arrays.asList(children));
+                            result.addAll(children);
                         }
                     }
                     return result;
@@ -108,7 +108,7 @@ class DrilldownLevelFunDef extends FunDefBase {
                     for (Member[] tuple : list) {
                         result.add(tuple);
                         if (index >= 0 && index < tuple.length) {
-                            final Member[] children =
+                            final List<Member> children =
                                 schemaReader.getMemberChildren(tuple[index]);
                             for (Member child : children) {
                                 final Member[] tupleClone = tuple.clone();
@@ -155,7 +155,8 @@ class DrilldownLevelFunDef extends FunDefBase {
             //
             if (member.getLevel().getDepth() == searchDepth
                     && !FunUtil.isAncestorOf(member, nextMember, true)) {
-                Member[] childMembers = evaluator.getSchemaReader().getMemberChildren(member);
+                final List<Member> childMembers =
+                    evaluator.getSchemaReader().getMemberChildren(member);
                 for (Member childMember : childMembers) {
                     drilledSet.add(childMember);
                 }

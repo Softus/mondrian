@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/xmla/XmlaBaseTestCase.java#2 $
+// $Id: //open/mondrian/testsrc/main/mondrian/xmla/XmlaBaseTestCase.java#15 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2007 Julian Hyde and others
+// Copyright (C) 2006-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -38,7 +38,7 @@ import java.util.*;
  * functionality, for example LAST_SCHEMA_UPDATE
  *
  * @author mkambol
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/xmla/XmlaBaseTestCase.java#2 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/xmla/XmlaBaseTestCase.java#15 $
  */
 public abstract class XmlaBaseTestCase extends FoodMartTestCase {
     protected static final String LAST_SCHEMA_UPDATE_DATE_PROP = "last.schema.update.date";
@@ -57,7 +57,7 @@ public abstract class XmlaBaseTestCase extends FoodMartTestCase {
     public static final String DATA_SOURCE_INFO_PROP = "data.source.info";
     public static final String DATA_SOURCE_INFO = "MondrianFoodMart";// catalog
     public static final String CATALOG_PROP     = "catalog";
-    public static final String CATALOG_NAME_PROP= "catalog.name";
+    public static final String CATALOG_NAME_PROP = "catalog.name";
     public static final String CATALOG          = "FoodMart";// cube
     public static final String CUBE_NAME_PROP   = "cube.name";
     public static final String SALES_CUBE       = "Sales";// format
@@ -131,7 +131,7 @@ System.out.println("XmlaBaseTestCase.CallBack.processHttpHeader: has Role");
 
     protected Document replaceLastSchemaUpdateDate(Document doc) {
         NodeList elements = doc.getElementsByTagName(LAST_SCHEMA_UPDATE_NODE_NAME);
-        if(elements.getLength() ==0){
+        if (elements.getLength() == 0) {
             return doc;
         }
 
@@ -243,6 +243,7 @@ System.out.println("XmlaBaseTestCase.CallBack.processHttpHeader: has Role");
         Role role) throws Exception
     {
         String requestText = fileToString("request");
+        requestText = testContext.upgradeQuery(requestText);
         doTestInline(
             requestType, requestText, "${response}",
             props, testContext, role);
@@ -287,7 +288,8 @@ System.out.println("XmlaBaseTestCase.CallBack.processHttpHeader: has Role");
                 responseDoc, new String[][] {{"content", "schemadata"}}, ns)
             : null;
         doTests(
-            requestText, props, null, connectString, catalogNameUrls,
+            requestText, props,
+            testContext, null, connectString, catalogNameUrls,
             expectedDoc, XmlaBasicTest.CONTENT_SCHEMADATA, role);
 
         if (requestType.equals("EXECUTE")) {
@@ -299,48 +301,40 @@ System.out.println("XmlaBaseTestCase.CallBack.processHttpHeader: has Role");
                 responseDoc, new String[][] {{"content", "none"}}, ns)
             : null;
 
-        doTests(requestText, props, null, connectString, catalogNameUrls,
-                expectedDoc, XmlaBasicTest.CONTENT_NONE, role);
+        doTests(
+            requestText, props,
+            testContext, null, connectString, catalogNameUrls,
+            expectedDoc, XmlaBasicTest.CONTENT_NONE, role);
 
         expectedDoc = (responseDoc != null)
             ? XmlaSupport.transformSoapXmla(
                 responseDoc, new String[][] {{"content", "data"}}, ns)
             : null;
-        doTests(requestText, props, null, connectString, catalogNameUrls,
-                expectedDoc, XmlaBasicTest.CONTENT_DATA, role);
+        doTests(
+            requestText, props,
+            testContext, null, connectString, catalogNameUrls,
+            expectedDoc, XmlaBasicTest.CONTENT_DATA, role);
 
         expectedDoc = (responseDoc != null)
             ? XmlaSupport.transformSoapXmla(
                 responseDoc, new String[][] {{"content", "schema"}}, ns)
             : null;
-        doTests(requestText, props, null, connectString, catalogNameUrls,
-                expectedDoc, XmlaBasicTest.CONTENT_SCHEMA, role);
-    }
-
-    protected void doTests(
-            String soapRequestText,
-            Properties props,
-            String soapResponseText,
-            String connectString,
-            Map<String, String> catalogNameUrls,
-            Document expectedDoc,
-            String content) throws Exception
-    {
         doTests(
-            soapRequestText, props, soapResponseText,
-            connectString, catalogNameUrls, expectedDoc,
-                content, null);
+            requestText, props,
+            testContext, null, connectString, catalogNameUrls,
+            expectedDoc, XmlaBasicTest.CONTENT_SCHEMA, role);
     }
 
     protected void doTests(
-            String soapRequestText,
-            Properties props,
-            String soapResponseText,
-            String connectString,
-            Map<String, String> catalogNameUrls,
-            Document expectedDoc,
-            String content,
-            Role role) throws Exception
+        String soapRequestText,
+        Properties props,
+        TestContext testContext,
+        String soapResponseText,
+        String connectString,
+        Map<String, String> catalogNameUrls,
+        Document expectedDoc,
+        String content,
+        Role role) throws Exception
     {
         if (content != null) {
             props.setProperty(XmlaBasicTest.CONTENT_PROP, content);
@@ -349,7 +343,7 @@ System.out.println("XmlaBaseTestCase.CallBack.processHttpHeader: has Role");
             soapRequestText, Util.toMap(props));
 
 if (DEBUG) {
-System.out.println("XmlaBaseTestCase.doTests: soapRequestText="+soapRequestText);
+System.out.println("XmlaBaseTestCase.doTests: soapRequestText=" + soapRequestText);
 }
         Document soapReqDoc = XmlUtil.parseString(soapRequestText);
 
@@ -360,7 +354,7 @@ System.out.println("XmlaBaseTestCase.doTests: soapRequestText="+soapRequestText)
             XmlaSupport.processXmla(xmlaReqDoc, connectString, catalogNameUrls, role);
         String response = new String(bytes);
 if (DEBUG) {
-System.out.println("XmlaBaseTestCase.doTests: xmla response="+response);
+System.out.println("XmlaBaseTestCase.doTests: xmla response=" + response);
 }
         if (XmlUtil.supportsValidation()) {
             if (XmlaSupport.validateXmlaUsingXpath(bytes)) {
@@ -390,7 +384,7 @@ if (DEBUG) {
         }
         response = new String(bytes);
 if (DEBUG) {
-System.out.println("XmlaBaseTestCase.doTests: soap response="+response);
+System.out.println("XmlaBaseTestCase.doTests: soap response=" + response);
 }
         if (XmlUtil.supportsValidation()) {
             if (XmlaSupport.validateSoapXmlaUsingXpath(bytes)) {
@@ -403,11 +397,12 @@ if (DEBUG) {
         Document gotDoc = ignoreLastUpdateDate(XmlUtil.parse(bytes));
         String gotStr = XmlUtil.toString(gotDoc, true);
         gotStr = Util.maskVersion(gotStr);
+        gotStr = testContext.upgradeActual(gotStr);
         if (expectedDoc != null) {
             String expectedStr = XmlUtil.toString(expectedDoc, true);
 if (DEBUG) {
-System.out.println("XmlaBaseTestCase.doTests: GOT:\n"+gotStr);
-System.out.println("XmlaBaseTestCase.doTests: EXPECTED:\n"+expectedStr);
+System.out.println("XmlaBaseTestCase.doTests: GOT:\n" + gotStr);
+System.out.println("XmlaBaseTestCase.doTests: EXPECTED:\n" + expectedStr);
 System.out.println("XmlaBaseTestCase.doTests: BEFORE ASSERT");
 }
             try {
@@ -418,7 +413,10 @@ System.out.println("XmlaBaseTestCase.doTests: BEFORE ASSERT");
                     // a textual difference, and will update the logfile,
                     // XmlaBasicTest.log.xml. If you agree with the change,
                     // copy this file to XmlaBasicTest.ref.xml.
-                    getDiffRepos().assertEquals("response", "${response}", gotStr);
+                    getDiffRepos().assertEquals(
+                        "response",
+                        "${response}",
+                        gotStr);
                 } else {
                     throw e;
                 }
@@ -431,17 +429,17 @@ System.out.println("XmlaBaseTestCase.doTests: BEFORE ASSERT");
     }
 
     private Document ignoreLastUpdateDate(Document document) {
-		NodeList elements = document.getElementsByTagName("LAST_SCHEMA_UPDATE");
-		for (int i = elements.getLength(); i > 0; i--) {
-			removeNode(elements.item(i-1));
-		}
-		return document;
-	}
+        NodeList elements = document.getElementsByTagName("LAST_SCHEMA_UPDATE");
+        for (int i = elements.getLength(); i > 0; i--) {
+            removeNode(elements.item(i - 1));
+        }
+        return document;
+    }
 
     private void removeNode(Node node) {
-		Node parentNode = node.getParentNode();
-		parentNode.removeChild(node);
-	}
+        Node parentNode = node.getParentNode();
+        parentNode.removeChild(node);
+    }
 
     enum Action {
         CREATE,

@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/UdfResolver.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/fun/UdfResolver.java#18 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -16,12 +16,14 @@ import mondrian.calc.*;
 import mondrian.calc.impl.GenericCalc;
 import mondrian.mdx.ResolvedFunCall;
 
+import java.util.List;
+
 /**
  * Resolver for user-defined functions.
  *
  * @author jhyde
  * @since 2.0
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/UdfResolver.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/UdfResolver.java#18 $
  */
 public class UdfResolver implements Resolver {
     private final UserDefinedFunction udf;
@@ -67,7 +69,10 @@ public class UdfResolver implements Resolver {
     }
 
     public FunDef resolve(
-            Exp[] args, Validator validator, int[] conversionCount) {
+            Exp[] args,
+            Validator validator,
+            List<Conversion> conversions)
+    {
         final Type[] parameterTypes = udf.getParameterTypes();
         if (args.length != parameterTypes.length) {
             return null;
@@ -80,7 +85,7 @@ public class UdfResolver implements Resolver {
             final Type argType = arg.getType();
             final int parameterCategory = TypeUtil.typeToCategory(parameterType);
             if (!validator.canConvert(
-                    arg, parameterCategory, conversionCount)) {
+                    arg, parameterCategory, conversions)) {
                 return null;
             }
             parameterCategories[i] = parameterCategory;
@@ -135,7 +140,7 @@ public class UdfResolver implements Resolver {
                 final Calc scalarCalc = compiler.compileScalar(arg, true);
                 expCalcs[i] = new CalcExp(calc, scalarCalc);
             }
-            
+
             return new CalcImpl(call, calcs, udf, expCalcs);
         }
     }

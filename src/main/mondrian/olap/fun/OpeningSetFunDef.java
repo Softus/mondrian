@@ -195,7 +195,7 @@ public class OpeningSetFunDef extends FunDefBase {
 			final Validator validator = compiler.getValidator();
 			final ResolvedFunCall currentTuple =
 				new ResolvedFunCall
-					( validator.getFunTable().getDef(args, validator, "()", Syntax.Parentheses)
+					( validator.getDef(args, "()", Syntax.Parentheses)
 					, args
 					, setElementType
 					);

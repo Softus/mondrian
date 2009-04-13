@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/gui/PropertyTableModel.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/gui/PropertyTableModel.java#15 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2002-2007 Julian Hyde and others
+// Copyright (C) 2002-2008 Julian Hyde and others
 // Copyright (C) 2006-2007 Cincom Systems, Inc.
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
@@ -18,7 +18,7 @@ import org.apache.log4j.Logger;
 /**
  *
  * @author  sean
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/gui/PropertyTableModel.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/gui/PropertyTableModel.java#15 $
  */
 public class PropertyTableModel extends javax.swing.table.AbstractTableModel {
 
@@ -44,7 +44,7 @@ public class PropertyTableModel extends javax.swing.table.AbstractTableModel {
     public String getColumnName(int i) {
         if (i == 0) {
             return workbench.getResourceConverter().getString("propertyTableModel.attribute","Attribute");
-        } else if (i==1) {
+        } else if (i == 1) {
             return workbench.getResourceConverter().getString("propertyTableModel.value","Value");
         }
 
@@ -55,7 +55,7 @@ public class PropertyTableModel extends javax.swing.table.AbstractTableModel {
     public String getRowName(int i) {
         String pName = propertyNames[i];
         int j=-1;
-        if ((j=pName.indexOf('|')) != -1) {  //"|"
+        if ((j = pName.indexOf('|')) != -1) {  //"|"
             return pName.substring(0,j).trim();
         } else {
             return propertyNames[i];   }
@@ -120,10 +120,10 @@ public class PropertyTableModel extends javax.swing.table.AbstractTableModel {
                      */
                     Object obj = null;
                     String[] pNames = pName.split("\\|",0); // split field names on | to form an array of property names strings that are optional.
-                    for(int j=0; j<pNames.length; j++) {
+                    for (int j = 0; j < pNames.length; j++) {
                         if ((pNames[j].indexOf('.')) != -1) {
                             String[] pNamesField = pNames[j].trim().split("\\.",0); // split string on . to form an array of property name within the property name.
-                            if(pNamesField.length >1) {
+                            if (pNamesField.length > 1) {
                                 Field f = target.getClass().getField(pNamesField[0].trim());
                                 obj = f.get(target);
                                 if (obj != null) {
@@ -161,27 +161,26 @@ public class PropertyTableModel extends javax.swing.table.AbstractTableModel {
         try {
             String pName = propertyNames[rowIndex];
             int i=-1;
-            if ((i=pName.indexOf('|')) != -1) {   //"formula | formulaElement.cdata"
+            if ((i = pName.indexOf('|')) != -1) {   //"formula | formulaElement.cdata"
                 Field f = target.getClass().getField(propertyNames[rowIndex].substring(0,i).trim());    // save value in the first field name
                 f.set(target,aValue);
                 // delete the value from second and remaining field names
                 String[] pNames = pName.split("\\|",0); // split field names on | to form an array of property names strings that are optional.
-                for(int j=1; j<pNames.length; j++) {
+                for (int j = 1; j < pNames.length; j++) {
                     String[] pNamesField = pNames[j].trim().split("\\.",0); // split string on . to form an array of property name within the property name.
                     Field f2 = target.getClass().getField(pNamesField[0].trim());
                     f2.set(target,null);
                 }
 
-            } else if ( (target instanceof MondrianGuiDef.Level) && (pName.equals("ordinalExp")) )  {
+            } else if ((target instanceof MondrianGuiDef.Level) && (pName.equals("ordinalExp")))  {
                 ((MondrianGuiDef.Level) target).ordinalExp.expressions[0] = (MondrianGuiDef.SQL) aValue;
                     /*
                     Field f = target.getClass().getField(propertyNames[rowIndex]);
                     f.set(((MondrianGuiDef.Level) target).ordinalExp.expressions[0], aValue);
                      */
-            } else if ( (target instanceof MondrianGuiDef.Table && pName.equals("name")) ||
+            } else if ((target instanceof MondrianGuiDef.Table && pName.equals("name")) ||
                     (target instanceof MondrianGuiDef.Hierarchy && pName.equals("primaryKeyTable")) ||
-                    (target instanceof MondrianGuiDef.Level && pName.equals("table"))
-                    )  {
+                    (target instanceof MondrianGuiDef.Level && pName.equals("table")))  {
                 // updating all table values
                 if (aValue != null) {   // split and save only if value exists
                     String[] aValues = ((String) aValue).split("->");
@@ -195,12 +194,13 @@ public class PropertyTableModel extends javax.swing.table.AbstractTableModel {
                             f.set(target,aValues[1]);
                         }
                     } else {
+                        //EC: Avoids table="" to be set on schema
                         Field f = target.getClass().getField(propertyNames[rowIndex]);
-                        f.set(target,aValue);
+                        setFieldValue(f, aValue);
                     }
                 }
 
-            } else if ( (target instanceof MondrianGuiDef.Dimension && pName.equals("foreignKey")) ||
+            } else if ((target instanceof MondrianGuiDef.Dimension && pName.equals("foreignKey")) ||
                     (target instanceof MondrianGuiDef.DimensionUsage && pName.equals("foreignKey")) ||
                     (target instanceof MondrianGuiDef.Measure && pName.equals("column")) ||
                     (target instanceof MondrianGuiDef.Hierarchy && pName.equals("primaryKey")) ||
@@ -210,31 +210,41 @@ public class PropertyTableModel extends javax.swing.table.AbstractTableModel {
                     (target instanceof MondrianGuiDef.Level && pName.equals("parentColumn")) ||
                     (target instanceof MondrianGuiDef.Level && pName.equals("captionColumn")) ||
                     (target instanceof MondrianGuiDef.Closure && pName.equals("parentColumn")) ||
-                    (target instanceof MondrianGuiDef.Closure && pName.equals("childColumn")) ||                    
-                    (target instanceof MondrianGuiDef.Property && pName.equals("column"))
-                    )  {
+                    (target instanceof MondrianGuiDef.Closure && pName.equals("childColumn")) ||
+                    (target instanceof MondrianGuiDef.Property && pName.equals("column")))  {
                 // updating all column values
                 if (aValue != null) {   // split and save only if value exists
                     String[] aValues = ((String) aValue).split("->");
                     Field f = target.getClass().getField(propertyNames[rowIndex]);
-                    f.set(target, aValues[aValues.length-1]);    // save the last value in the array from split
+                    //EC: Avoids *Column="" to be set on schema
+                    aValue = aValues[aValues.length - 1];
+                    setFieldValue(f, aValue);
                 }
 
             } else {
-                if ( propertyNames[rowIndex].equals("name")
+                if (propertyNames[rowIndex].equals("name")
                 && (! (target instanceof MondrianGuiDef.Table))
                 && (! aValue.equals(target.getClass().getField(propertyNames[rowIndex]).get(target)))
-                && duplicateName(aValue) ) {
-                    setErrorMsg(workbench.getResourceConverter().getFormattedString("propertyTableModel.duplicateValue.error", 
-                            "Error setting name property. {0} already exists", 
+                && duplicateName(aValue)) {
+                    setErrorMsg(workbench.getResourceConverter().getFormattedString("propertyTableModel.duplicateValue.error",
+                            "Error setting name property. {0} already exists",
                                 new String[] { aValue.toString() }));
                 } else {
                     Field f = target.getClass().getField(propertyNames[rowIndex]);
-                    f.set(target,aValue);
+                    //EC: Avoids property to be set on schema with an empty value.
+                    setFieldValue(f, aValue);
                 }
             }
         } catch (Exception ex) {
             LOGGER.error("setValueAt(aValue, row, index)", ex);
+        }
+    }
+
+    private void setFieldValue(Field aField, Object aValue) throws IllegalAccessException {
+        if (aValue != null && aValue.toString().trim().length() == 0) {
+            aField.set(target,null);
+        } else {
+            aField.set(target,aValue);
         }
     }
 
@@ -267,7 +277,7 @@ public class PropertyTableModel extends javax.swing.table.AbstractTableModel {
     }
 
     private boolean duplicateName(Object aValue) {
-        return (names!=null && names.contains(aValue));
+        return (names != null && names.contains(aValue));
     }
 
     public ArrayList getNames() {

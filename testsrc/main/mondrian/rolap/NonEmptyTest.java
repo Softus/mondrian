@@ -3,7 +3,7 @@
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2004-2005 TONBELLER AG
-// Copyright (C) 2005-2007 Julian Hyde and others
+// Copyright (C) 2005-2009 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -11,10 +11,11 @@ package mondrian.rolap;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 import junit.framework.Assert;
+import mondrian.calc.ResultStyle;
 import mondrian.olap.Axis;
 import mondrian.olap.Cell;
 import mondrian.olap.Connection;
@@ -23,9 +24,9 @@ import mondrian.olap.Id;
 import mondrian.olap.Level;
 import mondrian.olap.Member;
 import mondrian.olap.MondrianProperties;
+import mondrian.olap.NativeEvaluationUnsupportedException;
 import mondrian.olap.Query;
 import mondrian.olap.Result;
-import mondrian.olap.NativeEvaluationUnsupportedException;
 import mondrian.rolap.RolapConnection.NonEmptyResult;
 import mondrian.rolap.RolapNative.Listener;
 import mondrian.rolap.RolapNative.NativeEvent;
@@ -33,13 +34,19 @@ import mondrian.rolap.RolapNative.TupleEvent;
 import mondrian.rolap.cache.HardSmartCache;
 import mondrian.rolap.sql.MemberChildrenConstraint;
 import mondrian.rolap.sql.TupleConstraint;
-import mondrian.test.TestContext;
 import mondrian.test.SqlPattern;
+import mondrian.test.TestContext;
+import mondrian.test.PropertySaver;
 import mondrian.util.Bug;
+import mondrian.spi.Dialect;
 
-import org.apache.log4j.*;
-import org.apache.log4j.spi.*;
-import org.eigenbase.util.property.*;
+import org.apache.log4j.Appender;
+import org.apache.log4j.AppenderSkeleton;
+import org.apache.log4j.Logger;
+import org.apache.log4j.spi.LoggingEvent;
+import org.eigenbase.util.property.BooleanProperty;
+import org.eigenbase.util.property.StringProperty;
+import org.eigenbase.util.property.IntegerProperty;
 
 /**
  * Tests for NON EMPTY Optimization, includes SqlConstraint type hierarchy and
@@ -47,12 +54,11 @@ import org.eigenbase.util.property.*;
  *
  * @author av
  * @since Nov 21, 2005
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/rolap/NonEmptyTest.java#4 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/rolap/NonEmptyTest.java#104 $
  */
 public class NonEmptyTest extends BatchTestCase {
     private static Logger logger = Logger.getLogger(NonEmptyTest.class);
     SqlConstraintFactory scf = SqlConstraintFactory.instance();
-
 
     public NonEmptyTest() {
         super();
@@ -60,6 +66,124 @@ public class NonEmptyTest extends BatchTestCase {
 
     public NonEmptyTest(String name) {
         super(name);
+    }
+
+    public void testBugCantRestrictSlicerToCalcMember() throws Exception {
+        TestContext ctx = TestContext.instance();
+        ctx.assertQueryReturns(
+        "WITH MEMBER [Time].[Aggr] AS 'Aggregate({[Time].[1998].[Q1], [Time].[1998].[Q2]})' " +
+        "SELECT {[Measures].[Store Sales]} ON COLUMNS, " +
+        "NON EMPTY Order(TopCount([Customers].[Name].Members,3,[Measures].[Store Sales]),[Measures].[Store Sales],BASC) ON ROWS " +
+        "FROM [Sales] " +
+        "WHERE ([Time].[Aggr])",
+
+        fold("Axis #0:\n" +
+        "{[Time].[Aggr]}\n" +
+        "Axis #1:\n" +
+        "{[Measures].[Store Sales]}\n" +
+        "Axis #2:\n"));
+    }
+    public void testBug1961163() throws Exception {
+        TestContext ctx = TestContext.instance();
+        ctx.assertQueryReturns(
+        "with member [Measures].[AvgRevenue] as 'Avg([Store].[Store Name].Members, [Measures].[Store Sales])' " +
+        "select NON EMPTY {[Measures].[Store Sales], [Measures].[AvgRevenue]} ON COLUMNS, " +
+        "NON EMPTY Filter([Store].[Store Name].Members, ([Measures].[AvgRevenue] < [Measures].[Store Sales])) ON ROWS " +
+        "from [Sales]",
+
+        "Axis #0:" + nl +
+        "{}" + nl +
+        "Axis #1:" + nl +
+        "{[Measures].[Store Sales]}" + nl +
+        "{[Measures].[AvgRevenue]}" + nl +
+        "Axis #2:" + nl +
+        "{[Store].[All Stores].[USA].[CA].[Beverly Hills].[Store 6]}" + nl +
+        "{[Store].[All Stores].[USA].[CA].[Los Angeles].[Store 7]}" + nl +
+        "{[Store].[All Stores].[USA].[CA].[San Diego].[Store 24]}" + nl +
+        "{[Store].[All Stores].[USA].[OR].[Portland].[Store 11]}" + nl +
+        "{[Store].[All Stores].[USA].[OR].[Salem].[Store 13]}" + nl +
+        "{[Store].[All Stores].[USA].[WA].[Bremerton].[Store 3]}" + nl +
+        "{[Store].[All Stores].[USA].[WA].[Seattle].[Store 15]}" + nl +
+        "{[Store].[All Stores].[USA].[WA].[Spokane].[Store 16]}" + nl +
+        "{[Store].[All Stores].[USA].[WA].[Tacoma].[Store 17]}" + nl +
+        "Row #0: 45,750.24" + nl +
+        "Row #0: 43,479.86" + nl +
+        "Row #1: 54,545.28" + nl +
+        "Row #1: 43,479.86" + nl +
+        "Row #2: 54,431.14" + nl +
+        "Row #2: 43,479.86" + nl +
+        "Row #3: 55,058.79" + nl +
+        "Row #3: 43,479.86" + nl +
+        "Row #4: 87,218.28" + nl +
+        "Row #4: 43,479.86" + nl +
+        "Row #5: 52,896.30" + nl +
+        "Row #5: 43,479.86" + nl +
+        "Row #6: 52,644.07" + nl +
+        "Row #6: 43,479.86" + nl +
+        "Row #7: 49,634.46" + nl +
+        "Row #7: 43,479.86" + nl +
+        "Row #8: 74,843.96" + nl +
+        "Row #8: 43,479.86" + nl);
+    }
+
+    public void testTopCountWithCalcMemberInSlicer() {
+        // Internal error: can not restrict SQL to calculated Members
+        TestContext ctx = TestContext.instance();
+        ctx.assertQueryReturns(
+            "with member [Time].[First Term] as 'Aggregate({[Time].[1997].[Q1], [Time].[1997].[Q2]})' " +
+            "select {[Measures].[Unit Sales]} ON COLUMNS, " +
+            "TopCount([Product].[Product Subcategory].Members, 3, [Measures].[Unit Sales]) ON ROWS " +
+            "from [Sales] " +
+            "where ([Time].[First Term]) ",
+            "Axis #0:" + nl +
+            "{[Time].[First Term]}" + nl +
+            "Axis #1:" + nl +
+            "{[Measures].[Unit Sales]}" + nl +
+            "Axis #2:" + nl +
+            "{[Product].[All Products].[Food].[Produce].[Vegetables].[Fresh Vegetables]}" + nl +
+            "{[Product].[All Products].[Food].[Produce].[Fruit].[Fresh Fruit]}" + nl +
+            "{[Product].[All Products].[Food].[Canned Foods].[Canned Soup].[Soup]}" + nl +
+            "Row #0: 10,215" + nl +
+            "Row #1: 5,711" + nl +
+            "Row #2: 3,926" + nl);
+    }
+
+    public void testTopCountCacheKeyMustIncludeCount() {
+        /**
+         * When caching topcount results, the number of elements must
+         * be part of the cache key
+         */
+        TestContext ctx = TestContext.instance();
+        // fill cache
+        ctx.assertQueryReturns(
+            "select {[Measures].[Unit Sales]} ON COLUMNS, " +
+            "TopCount([Product].[Product Subcategory].Members, 2, [Measures].[Unit Sales]) ON ROWS " +
+            "from [Sales]",
+            "Axis #0:" + nl +
+            "{}" + nl +
+            "Axis #1:" + nl +
+            "{[Measures].[Unit Sales]}" + nl +
+            "Axis #2:" + nl +
+            "{[Product].[All Products].[Food].[Produce].[Vegetables].[Fresh Vegetables]}" + nl +
+            "{[Product].[All Products].[Food].[Produce].[Fruit].[Fresh Fruit]}" + nl +
+            "Row #0: 20,739" + nl +
+            "Row #1: 11,767" + nl);
+        // run again with different count
+        ctx.assertQueryReturns(
+            "select {[Measures].[Unit Sales]} ON COLUMNS, " +
+            "TopCount([Product].[Product Subcategory].Members, 3, [Measures].[Unit Sales]) ON ROWS " +
+            "from [Sales]",
+            "Axis #0:" + nl +
+            "{}" + nl +
+            "Axis #1:" + nl +
+            "{[Measures].[Unit Sales]}" + nl +
+            "Axis #2:" + nl +
+            "{[Product].[All Products].[Food].[Produce].[Vegetables].[Fresh Vegetables]}" + nl +
+            "{[Product].[All Products].[Food].[Produce].[Fruit].[Fresh Fruit]}" + nl +
+            "{[Product].[All Products].[Food].[Canned Foods].[Canned Soup].[Soup]}" + nl +
+            "Row #0: 20,739" + nl +
+            "Row #1: 11,767" + nl +
+            "Row #2: 8,006" + nl);
     }
 
     public void testStrMeasure() {
@@ -79,13 +203,11 @@ public class NonEmptyTest extends BatchTestCase {
         ctx.assertQueryReturns(
             "select {[Measures].[Media]} on columns " +
             "from [StrMeasure]",
-            "Axis #0:" + nl +
-            "{}" + nl +
-            "Axis #1:" + nl +
-            "{[Measures].[Media]}" + nl +
-            "Row #0: TV" + nl
-
-        );
+            fold("Axis #0:\n" +
+            "{}\n" +
+            "Axis #1:\n" +
+            "{[Measures].[Media]}\n" +
+            "Row #0: TV\n"));
     }
 
     public void testBug1515302() {
@@ -118,49 +240,48 @@ public class NonEmptyTest extends BatchTestCase {
                 "Descendants([Customers].[USA], [City], " +
                 "SELF_AND_BEFORE)) on rows " +
                 "from [Bug1515302]",
-                "Axis #0:" + nl +
-                "{}" + nl +
-                "Axis #1:" + nl +
-                "{[Measures].[Unit Sales]}" + nl +
-                "Axis #2:" + nl +
-                "{[Promotions].[Big Promo], [Customers].[All Customers].[USA]}" + nl +
-                "{[Promotions].[Big Promo], [Customers].[All Customers].[USA].[WA]}" + nl +
-                "{[Promotions].[Big Promo], [Customers].[All Customers].[USA].[WA].[Anacortes]}" + nl +
-                "{[Promotions].[Big Promo], [Customers].[All Customers].[USA].[WA].[Ballard]}" + nl +
-                "{[Promotions].[Big Promo], [Customers].[All Customers].[USA].[WA].[Bellingham]}" + nl +
-                "{[Promotions].[Big Promo], [Customers].[All Customers].[USA].[WA].[Burien]}" + nl +
-                "{[Promotions].[Big Promo], [Customers].[All Customers].[USA].[WA].[Everett]}" + nl +
-                "{[Promotions].[Big Promo], [Customers].[All Customers].[USA].[WA].[Issaquah]}" + nl +
-                "{[Promotions].[Big Promo], [Customers].[All Customers].[USA].[WA].[Kirkland]}" + nl +
-                "{[Promotions].[Big Promo], [Customers].[All Customers].[USA].[WA].[Lynnwood]}" + nl +
-                "{[Promotions].[Big Promo], [Customers].[All Customers].[USA].[WA].[Marysville]}" + nl +
-                "{[Promotions].[Big Promo], [Customers].[All Customers].[USA].[WA].[Olympia]}" + nl +
-                "{[Promotions].[Big Promo], [Customers].[All Customers].[USA].[WA].[Puyallup]}" + nl +
-                "{[Promotions].[Big Promo], [Customers].[All Customers].[USA].[WA].[Redmond]}" + nl +
-                "{[Promotions].[Big Promo], [Customers].[All Customers].[USA].[WA].[Renton]}" + nl +
-                "{[Promotions].[Big Promo], [Customers].[All Customers].[USA].[WA].[Seattle]}" + nl +
-                "{[Promotions].[Big Promo], [Customers].[All Customers].[USA].[WA].[Sedro Woolley]}" + nl +
-                "{[Promotions].[Big Promo], [Customers].[All Customers].[USA].[WA].[Tacoma]}" + nl +
-                "Row #0: 1,789" + nl +
-                "Row #1: 1,789" + nl +
-                "Row #2: 20" + nl +
-                "Row #3: 35" + nl +
-                "Row #4: 15" + nl +
-                "Row #5: 18" + nl +
-                "Row #6: 60" + nl +
-                "Row #7: 42" + nl +
-                "Row #8: 36" + nl +
-                "Row #9: 79" + nl +
-                "Row #10: 58" + nl +
-                "Row #11: 520" + nl +
-                "Row #12: 438" + nl +
-                "Row #13: 14" + nl +
-                "Row #14: 20" + nl +
-                "Row #15: 65" + nl +
-                "Row #16: 3" + nl +
-                "Row #17: 366" + nl
-
-        );
+            fold(
+                "Axis #0:\n" +
+                "{}\n" +
+                "Axis #1:\n" +
+                "{[Measures].[Unit Sales]}\n" +
+                "Axis #2:\n" +
+                "{[Promotions].[Big Promo], [Customers].[All Customers].[USA]}\n" +
+                "{[Promotions].[Big Promo], [Customers].[All Customers].[USA].[WA]}\n" +
+                "{[Promotions].[Big Promo], [Customers].[All Customers].[USA].[WA].[Anacortes]}\n" +
+                "{[Promotions].[Big Promo], [Customers].[All Customers].[USA].[WA].[Ballard]}\n" +
+                "{[Promotions].[Big Promo], [Customers].[All Customers].[USA].[WA].[Bellingham]}\n" +
+                "{[Promotions].[Big Promo], [Customers].[All Customers].[USA].[WA].[Burien]}\n" +
+                "{[Promotions].[Big Promo], [Customers].[All Customers].[USA].[WA].[Everett]}\n" +
+                "{[Promotions].[Big Promo], [Customers].[All Customers].[USA].[WA].[Issaquah]}\n" +
+                "{[Promotions].[Big Promo], [Customers].[All Customers].[USA].[WA].[Kirkland]}\n" +
+                "{[Promotions].[Big Promo], [Customers].[All Customers].[USA].[WA].[Lynnwood]}\n" +
+                "{[Promotions].[Big Promo], [Customers].[All Customers].[USA].[WA].[Marysville]}\n" +
+                "{[Promotions].[Big Promo], [Customers].[All Customers].[USA].[WA].[Olympia]}\n" +
+                "{[Promotions].[Big Promo], [Customers].[All Customers].[USA].[WA].[Puyallup]}\n" +
+                "{[Promotions].[Big Promo], [Customers].[All Customers].[USA].[WA].[Redmond]}\n" +
+                "{[Promotions].[Big Promo], [Customers].[All Customers].[USA].[WA].[Renton]}\n" +
+                "{[Promotions].[Big Promo], [Customers].[All Customers].[USA].[WA].[Seattle]}\n" +
+                "{[Promotions].[Big Promo], [Customers].[All Customers].[USA].[WA].[Sedro Woolley]}\n" +
+                "{[Promotions].[Big Promo], [Customers].[All Customers].[USA].[WA].[Tacoma]}\n" +
+                "Row #0: 1,789\n" +
+                "Row #1: 1,789\n" +
+                "Row #2: 20\n" +
+                "Row #3: 35\n" +
+                "Row #4: 15\n" +
+                "Row #5: 18\n" +
+                "Row #6: 60\n" +
+                "Row #7: 42\n" +
+                "Row #8: 36\n" +
+                "Row #9: 79\n" +
+                "Row #10: 58\n" +
+                "Row #11: 520\n" +
+                "Row #12: 438\n" +
+                "Row #13: 14\n" +
+                "Row #14: 20\n" +
+                "Row #15: 65\n" +
+                "Row #16: 3\n" +
+                "Row #17: 366\n"));
     }
 
     /**
@@ -205,20 +326,16 @@ public class NonEmptyTest extends BatchTestCase {
     public void testNativeFilter() {
         String query =
             "select {[Measures].[Store Sales]} ON COLUMNS, "
-            + "Order(Filter(Descendants([Customers].[All Customers].[USA].[CA], [Customers].[Name]), ([Measures].[Store Sales] > 200.0)), [Measures].[Store Sales], DESC) ON ROWS "
+            + "NON EMPTY Order(Filter(Descendants([Customers].[All Customers].[USA].[CA], [Customers].[Name]), ([Measures].[Store Sales] > 200.0)), [Measures].[Store Sales], DESC) ON ROWS "
             + "from [Sales] "
             + "where ([Time].[1997])";
 
-        boolean origNativeFilter =
-            MondrianProperties.instance().EnableNativeFilter.get();
-        MondrianProperties.instance().EnableNativeFilter.set(true);
+        propSaver.set(MondrianProperties.instance().EnableNativeFilter, true);
 
         // Get a fresh connection; Otherwise the mondrian property setting
         // is not refreshed for this parameter.
         boolean requestFreshConnection = true;
         checkNative(32, 18, query, null, requestFreshConnection);
-
-        MondrianProperties.instance().EnableNativeFilter.set(origNativeFilter);
     }
 
     /**
@@ -282,23 +399,18 @@ public class NonEmptyTest extends BatchTestCase {
               "Row #7: 1.81\n" +
               "Row #7: 79.58\n";
 
-        boolean origNativeFilter =
-            MondrianProperties.instance().EnableNativeFilter.get();
-        MondrianProperties.instance().EnableNativeFilter.set(true);
+        propSaver.set(MondrianProperties.instance().EnableNativeFilter, true);
 
         // Get a fresh connection; Otherwise the mondrian property setting
         // is not refreshed for this parameter.
         boolean requestFreshConnection = true;
         checkNative(0, 8, query, fold(result), requestFreshConnection);
-
-        MondrianProperties.instance().EnableNativeFilter.set(origNativeFilter);
-
     }
 
     public void testNonNativeFilterWithNullMeasure() {
         String query =
             "select Filter([Store].[Store Name].members, " +
-            "              Not ([Measures].[Store Sqft] - [Measures].[Grocery Sqft] < 10000) ) on rows, " +
+            "              Not ([Measures].[Store Sqft] - [Measures].[Grocery Sqft] < 10000)) on rows, " +
             "{[Measures].[Store Sqft], [Measures].[Grocery Sqft]} on columns " +
             "from [Store]";
 
@@ -337,21 +449,15 @@ public class NonEmptyTest extends BatchTestCase {
             "Row #8: \n" +
             "Row #8: \n";
 
-        boolean origNativeFilter =
-            MondrianProperties.instance().EnableNativeFilter.get();
-        MondrianProperties.instance().EnableNativeFilter.set(false);
-
+        propSaver.set(MondrianProperties.instance().EnableNativeFilter, false);
         checkNotNative(9, query, fold(result));
-
-        MondrianProperties.instance().EnableNativeFilter.set(origNativeFilter);
-
     }
 
     public void testNativeFilterWithNullMeasure() {
         // Currently this behaves differently from the non-native evaluation.
         String query =
             "select Filter([Store].[Store Name].members, " +
-            "              Not ([Measures].[Store Sqft] - [Measures].[Grocery Sqft] < 10000) ) on rows, " +
+            "              Not ([Measures].[Store Sqft] - [Measures].[Grocery Sqft] < 10000)) on rows, " +
             "{[Measures].[Store Sqft], [Measures].[Grocery Sqft]} on columns " +
             "from [Store]";
 
@@ -374,18 +480,13 @@ public class NonEmptyTest extends BatchTestCase {
             "Row #2: 24,390\n" +
             "Row #3: 33,858\n" +
             "Row #3: 22,123\n";
-
-        boolean origNativeFilter =
-            MondrianProperties.instance().EnableNativeFilter.get();
-        MondrianProperties.instance().EnableNativeFilter.set(true);
+        propSaver.set(MondrianProperties.instance().EnableNativeFilter, true);
 
         // Get a fresh connection; Otherwise the mondrian property setting
         // is not refreshed for this parameter.
         Connection conn = getTestContext().getFoodMartConnection(false);
         TestContext context = getTestContext(conn);
         context.assertQueryReturns(query, fold(result));
-
-        MondrianProperties.instance().EnableNativeFilter.set(origNativeFilter);
     }
 
     public void testNonNativeFilterWithCalcMember() {
@@ -412,12 +513,8 @@ public class NonEmptyTest extends BatchTestCase {
             "Row #1: 67,659\n" +
             "Row #2: 124,366\n";
 
-        boolean origNativeFilter =
-            MondrianProperties.instance().EnableNativeFilter.get();
-        MondrianProperties.instance().EnableNativeFilter.set(false);
-
+        propSaver.set(MondrianProperties.instance().EnableNativeFilter, false);
         checkNotNative(3, query, fold(result));
-        MondrianProperties.instance().EnableNativeFilter.set(origNativeFilter);
     }
 
     /**
@@ -428,27 +525,44 @@ public class NonEmptyTest extends BatchTestCase {
         String query =
             "select Filter(CrossJoin([Store].[Store Name].members, " +
             "                        [Store Type].[Store Type].members), " +
-            "                        Not IsEmpty([Measures].[Store Sqft]) ) on rows, " +
+            "                        Not IsEmpty([Measures].[Store Sqft])) on rows, " +
             "{[Measures].[Store Sqft]} on columns " +
             "from [Store]";
 
-        boolean origNativeFilter =
-            MondrianProperties.instance().EnableNativeFilter.get();
-        MondrianProperties.instance().EnableNativeFilter.set(true);
+        propSaver.set(MondrianProperties.instance().EnableNativeFilter, true);
 
         // Get a fresh connection; Otherwise the mondrian property setting
         // is not refreshed for this parameter.
         boolean requestFreshConnection = true;
         checkNative(0, 20, query, null, requestFreshConnection);
-
-        MondrianProperties.instance().EnableNativeFilter.set(origNativeFilter);
     }
+
+    /**
+     *  verifies that redundant set braces do not prevent native evaluation
+     *  for example, {[Store].[Store Name].members} and
+     *  {{[Store Type].[Store Type].members}}
+     */
+    public void testNativeCJWithRedundantSetBraces() {
+            String query =
+                "select non empty {CrossJoin({[Store].[Store Name].members}, " +
+                "                        {{[Store Type].[Store Type].members}})}" +
+                "                         on rows, " +
+                "{[Measures].[Store Sqft]} on columns " +
+                "from [Store]";
+
+            propSaver.set(MondrianProperties.instance().EnableNativeCrossJoin, true);
+
+            // Get a fresh connection; Otherwise the mondrian property setting
+            // is not refreshed for this parameter.
+            boolean requestFreshConnection = true;
+            checkNative(0, 20, query, null, requestFreshConnection);
+        }
+
 
     /**
      * Verify that CrossJoins with two non native inputs can be natively evaluated.
      */
     public void testExpandAllNonNativeInputs() {
-
         // This query will not run natively unless the <Dimension>.Children
         // expression is expanded to a member list.
         //
@@ -458,7 +572,7 @@ public class NonEmptyTest extends BatchTestCase {
 
         String query =
             "select " +
-            "NonEmptyCrossJoin([Gender].Children, [Store].Children) on rows " +
+            "NonEmptyCrossJoin([Gender].Children, [Store].Children) on columns " +
             "from [Sales]";
 
         String result =
@@ -470,27 +584,19 @@ public class NonEmptyTest extends BatchTestCase {
             "Row #0: 131,558\n" +
             "Row #0: 135,215\n";
 
-        boolean origExpandNonNative =
-            MondrianProperties.instance().ExpandNonNative.get();
-        boolean origNativeCrossJoin =
-            MondrianProperties.instance().EnableNativeCrossJoin.get();
-        MondrianProperties.instance().ExpandNonNative.set(true);
-        MondrianProperties.instance().EnableNativeCrossJoin.set(true);
+        propSaver.set(MondrianProperties.instance().ExpandNonNative, true);
+        propSaver.set(MondrianProperties.instance().EnableNativeCrossJoin, true);
 
         // Get a fresh connection; Otherwise the mondrian property setting
         // is not refreshed for this parameter.
         boolean requestFreshConnection = true;
         checkNative(0, 2, query, fold(result), requestFreshConnection);
-
-        MondrianProperties.instance().ExpandNonNative.set(origExpandNonNative);
-        MondrianProperties.instance().EnableNativeCrossJoin.set(origNativeCrossJoin);
     }
 
     /**
      * Verify that CrossJoins with one non native inputs can be natively evaluated.
      */
     public void testExpandOneNonNativeInput() {
-
         // This query will not be evaluated natively unless the Filter
         // expression is expanded to a member list.
 
@@ -508,20 +614,37 @@ public class NonEmptyTest extends BatchTestCase {
             "{[Store].[All Stores].[USA], [Product].[All Products].[Food].[Snack Foods].[Snack Foods].[Dried Fruit].[Fast].[Fast Raisins]}\n" +
             "Row #0: 152\n";
 
-        boolean origExpandNonNative =
-            MondrianProperties.instance().ExpandNonNative.get();
-        boolean origNativeCrossJoin =
-            MondrianProperties.instance().EnableNativeCrossJoin.get();
-        MondrianProperties.instance().ExpandNonNative.set(true);
-        MondrianProperties.instance().EnableNativeCrossJoin.set(true);
+        propSaver.set(MondrianProperties.instance().ExpandNonNative, true);
+        propSaver.set(MondrianProperties.instance().EnableNativeCrossJoin, true);
 
         // Get a fresh connection; Otherwise the mondrian property setting
         // is not refreshed for this parameter.
         boolean requestFreshConnection = true;
         checkNative(0, 1, query, fold(result), requestFreshConnection);
+    }
 
-        MondrianProperties.instance().ExpandNonNative.set(origExpandNonNative);
-        MondrianProperties.instance().EnableNativeCrossJoin.set(origNativeCrossJoin);
+    /**
+     * Check that the ExpandNonNative does not create Joins with input lists
+     * containing large number of members.
+     */
+    public void testExpandNonNativeResourceLimitFailure() {
+        String query =
+            "select " +
+            "NonEmptyCrossJoin({[Gender].Children, [Gender].[F]}, {[Store].Children, [Store].[Mexico]}) on columns " +
+            "from [Sales]";
+
+        propSaver.set(MondrianProperties.instance().ExpandNonNative, true);
+        propSaver.set(MondrianProperties.instance().EnableNativeCrossJoin, true);
+        propSaver.set(MondrianProperties.instance().ResultLimit, 2);
+
+        try {
+            executeQuery(query);
+            fail("Expected error did not occur");
+        } catch (Throwable e) {
+            String expectedErrorMsg =
+                "Mondrian Error:Size of CrossJoin result (3) exceeded limit (2)";
+            assertEquals(expectedErrorMsg, e.getMessage());
+        }
     }
 
     /**
@@ -529,7 +652,6 @@ public class NonEmptyTest extends BatchTestCase {
      * evaluation, even when ExpandNonNative is true.
      */
     public void testExpandAllMembersInAllInputs() {
-
         // This query will not be evaluated natively, even if the Hierarchize
         // expression is expanded to a member list. The reason is that the
         // expanded list contains ALL members.
@@ -551,17 +673,9 @@ public class NonEmptyTest extends BatchTestCase {
             "{[Store].[All Stores], [Product].[All Products]}\n" +
             "Row #0: 266,773\n";
 
-        boolean origExpandNonNative =
-            MondrianProperties.instance().ExpandNonNative.get();
-        boolean origNativeCrossJoin =
-            MondrianProperties.instance().EnableNativeCrossJoin.get();
-        MondrianProperties.instance().ExpandNonNative.set(true);
-        MondrianProperties.instance().EnableNativeCrossJoin.set(true);
-
+        propSaver.set(MondrianProperties.instance().ExpandNonNative, true);
+        propSaver.set(MondrianProperties.instance().EnableNativeCrossJoin, true);
         checkNotNative(1, query, fold(result));
-
-        MondrianProperties.instance().ExpandNonNative.set(origExpandNonNative);
-        MondrianProperties.instance().EnableNativeCrossJoin.set(origNativeCrossJoin);
     }
 
     /**
@@ -569,7 +683,6 @@ public class NonEmptyTest extends BatchTestCase {
      * evaluation, even when ExpandNonNative is true.
      */
     public void testExpandCalcMembersInAllInputs() {
-
         // This query will not be evaluated natively, even if the Hierarchize
         // expression is expanded to a member list. The reason is that the
         // expanded list contains ALL members.
@@ -580,7 +693,7 @@ public class NonEmptyTest extends BatchTestCase {
             "Member [Gender].[*CTX_MEMBER_SEL~SUM] as 'Sum({[Gender].[All Gender]})' " +
             "Select " +
             "NonEmptyCrossJoin({[Gender].[*CTX_MEMBER_SEL~SUM]},{[Product].[*CTX_MEMBER_SEL~SUM]}) " +
-            "on rows " +
+            "on columns " +
             "From [Sales]";
 
         String result =
@@ -590,22 +703,14 @@ public class NonEmptyTest extends BatchTestCase {
             "{[Gender].[*CTX_MEMBER_SEL~SUM], [Product].[*CTX_MEMBER_SEL~SUM]}\n" +
             "Row #0: 266,773\n";
 
-        boolean origExpandNonNative =
-            MondrianProperties.instance().ExpandNonNative.get();
-        boolean origNativeCrossJoin =
-            MondrianProperties.instance().EnableNativeCrossJoin.get();
-        MondrianProperties.instance().ExpandNonNative.set(true);
-        MondrianProperties.instance().EnableNativeCrossJoin.set(true);
-
+        propSaver.set(MondrianProperties.instance().ExpandNonNative, true);
+        propSaver.set(MondrianProperties.instance().EnableNativeCrossJoin, true);
         checkNotNative(1, query, fold(result));
-
-        MondrianProperties.instance().ExpandNonNative.set(origExpandNonNative);
-        MondrianProperties.instance().EnableNativeCrossJoin.set(origNativeCrossJoin);
     }
 
     /**
-     * Check that if both inputs to NECJ are either 
-     * AllMember(currentMember, defaultMember are also AllMember) 
+     * Check that if both inputs to NECJ are either
+     * AllMember(currentMember, defaultMember are also AllMember)
      * or Calcculated member
      * native CJ is not used.
      */
@@ -629,19 +734,13 @@ public class NonEmptyTest extends BatchTestCase {
             "{[Product].[All Products].[Food].[CalcSum], [Education Level].[All Education Levels]}\n" +
             "Row #0: 163,270.72\n";
 
-        boolean origExpandNonNative =
-            MondrianProperties.instance().ExpandNonNative.get();
-        MondrianProperties.instance().ExpandNonNative.set(true);
-        try {
-            checkNotNative(1, query, fold(result));
-        } finally {
-            MondrianProperties.instance().ExpandNonNative.set(origExpandNonNative);
-        }
+        propSaver.set(MondrianProperties.instance().ExpandNonNative, true);
+        checkNotNative(1, query, fold(result));
     }
 
     /**
-     * Native evaluation is no longer possible after the fix to testCjEnumCalcMembersBug() testt
-     *
+     * Native evaluation is no longer possible after the fix to
+     * {@link #testCjEnumCalcMembersBug()} test.
      */
     public void testExpandCalcMembers() {
         String query =
@@ -653,8 +752,8 @@ public class NonEmptyTest extends BatchTestCase {
             "    [Store Type].[All Store Types].[HeadQuarters], " +
             "    [Store Type].[All Store Types].[S]} " +
             "set [Filtered Enum Store Types] as Filter([Enum Store Types], [Measures].[Unit Sales] > 0)" +
-            "select NonEmptyCrossJoin([Product].[All Products].Children, [Filtered Enum Store Types])  on rows from [Sales]";
-        
+            "select NonEmptyCrossJoin([Product].[All Products].Children, [Filtered Enum Store Types])  on columns from [Sales]";
+
         String result =
             "Axis #0:\n" +
             "{}\n" +
@@ -678,28 +777,20 @@ public class NonEmptyTest extends BatchTestCase {
             "Row #0: 28,275\n" +
             "Row #0: 50,236\n";
 
-        boolean origExpandNonNative =
-            MondrianProperties.instance().ExpandNonNative.get();
-        MondrianProperties.instance().ExpandNonNative.set(true);
-
-        try {
-            checkNotNative(9, query, fold(result));
-        } finally {
-            MondrianProperties.instance().ExpandNonNative.set(origExpandNonNative);
-        }
+        propSaver.set(MondrianProperties.instance().ExpandNonNative, true);
+        checkNotNative(9, query, fold(result));
     }
-    
+
     /**
      * Verify that evaluation is native for expressions with nested non native
      * inputs that preduce MemberList results.
      */
     public void testExpandNestedNonNativeInputs() {
-
         String query =
             "select " +
             "NonEmptyCrossJoin(" +
             "  NonEmptyCrossJoin([Gender].Children, [Store].Children), " +
-            "  [Product].Children) on rows " +
+            "  [Product].Children) on columns " +
             "from [Sales]";
 
         String result =
@@ -719,20 +810,13 @@ public class NonEmptyTest extends BatchTestCase {
             "Row #0: 97,126\n" +
             "Row #0: 25,694\n";
 
-        boolean origExpandNonNative =
-            MondrianProperties.instance().ExpandNonNative.get();
-        boolean origNativeCrossJoin =
-            MondrianProperties.instance().EnableNativeCrossJoin.get();
-        MondrianProperties.instance().ExpandNonNative.set(true);
-        MondrianProperties.instance().EnableNativeCrossJoin.set(true);
-        
+        propSaver.set(MondrianProperties.instance().ExpandNonNative, true);
+        propSaver.set(MondrianProperties.instance().EnableNativeCrossJoin, true);
+
         // Get a fresh connection; Otherwise the mondrian property setting
         // is not refreshed for this parameter.
-        boolean requestFreshConnection = true;        
+        boolean requestFreshConnection = true;
         checkNative(0, 6, query, fold(result), requestFreshConnection);
-
-        MondrianProperties.instance().ExpandNonNative.set(origExpandNonNative);
-        MondrianProperties.instance().EnableNativeCrossJoin.set(origNativeCrossJoin);
     }
 
     /**
@@ -743,7 +827,7 @@ public class NonEmptyTest extends BatchTestCase {
         String query =
             "select NonEmptyCrossJoin(" +
             "    Filter([Store Type].Children, [Measures].[Unit Sales] > 10000), " +
-            "    [Product].Children) on rows " +
+            "    [Product].Children) on columns " +
             "from [Sales]";
 
         String result =
@@ -775,55 +859,60 @@ public class NonEmptyTest extends BatchTestCase {
             "Row #0: 108,188\n" +
             "Row #0: 28,275\n";
 
-        int origMaxConstraint =
-            MondrianProperties.instance().MaxConstraints.get();
-        boolean origExpandNonNative =
-            MondrianProperties.instance().ExpandNonNative.get();
-        MondrianProperties.instance().MaxConstraints.set(2);
-        MondrianProperties.instance().ExpandNonNative.set(true);
-
-        try {
-            checkNotNative(12, query, fold(result));
-        } finally {
-            MondrianProperties.instance().MaxConstraints.set(origMaxConstraint);
-            MondrianProperties.instance().ExpandNonNative.set(origExpandNonNative);
-        }
+        propSaver.set(MondrianProperties.instance().MaxConstraints, 2);
+        propSaver.set(MondrianProperties.instance().ExpandNonNative, true);
+        checkNotNative(12, query, fold(result));
     }
 
     /**
      * Verify that native evaluation is not enabled if expanded member list will
      * contain members from different levels, even if ExpandNonNative is set.
-     *
      */
     public void testExpandDifferentLevels() {
         String query =
             "select NonEmptyCrossJoin(" +
             "    Descendants([Customers].[All Customers].[USA].[WA].[Yakima]), " +
-            "    [Product].Children) on rows " +
+            "    [Product].Children) on columns " +
             "from [Sales]";
 
-        boolean origExpandNonNative =
-            MondrianProperties.instance().ExpandNonNative.get();
-        MondrianProperties.instance().ExpandNonNative.set(true);
-
-        try {
-            checkNotNative(278, query, null);
-        } finally {
-            MondrianProperties.instance().ExpandNonNative.set(origExpandNonNative);
-        }
+        propSaver.set(MondrianProperties.instance().ExpandNonNative, true);
+        checkNotNative(278, query, null);
     }
 
     /**
      * Verify that native evaluation is turned off for tuple inputs, even if
      * ExpandNonNative is set.
      */
-    public void testExpandTupleInputs() {
+    public void testExpandTupleInputs1() {
+        String query =
+            "with " +
+            "set [Tuple Set] as {([Store Type].[All Store Types].[HeadQuarters], [Product].[All Products].[Drink]), ([Store Type].[All Store Types].[Supermarket], [Product].[All Products].[Food])} " +
+            "set [Filtered Tuple Set] as Filter([Tuple Set], 1=1) " +
+            "set [NECJ] as NonEmptyCrossJoin([Store].Children, [Filtered Tuple Set]) " +
+            "select [NECJ] on columns from [Sales]";
+
+        String result =
+            "Axis #0:\n" +
+            "{}\n" +
+            "Axis #1:\n" +
+            "{[Store].[All Stores].[USA], [Store Type].[All Store Types].[Supermarket], [Product].[All Products].[Food]}\n" +
+            "Row #0: 108,188\n";
+
+        propSaver.set(MondrianProperties.instance().ExpandNonNative, true);
+        checkNotNative(1, query, fold(result));
+    }
+
+    /**
+     * Verify that native evaluation is turned off for tuple inputs, even if
+     * ExpandNonNative is set.
+     */
+    public void testExpandTupleInputs2() {
         String query =
             "with " +
             "set [Tuple Set] as {([Store Type].[All Store Types].[HeadQuarters], [Product].[All Products].[Drink]), ([Store Type].[All Store Types].[Supermarket], [Product].[All Products].[Food])} " +
             "set [Filtered Tuple Set] as Filter([Tuple Set], 1=1) " +
             "set [NECJ] as NonEmptyCrossJoin([Filtered Tuple Set], [Store].Children) " +
-            "select [NECJ] on rows from [Sales]";
+            "select [NECJ] on columns from [Sales]";
 
         String result =
             "Axis #0:\n" +
@@ -832,17 +921,71 @@ public class NonEmptyTest extends BatchTestCase {
             "{[Store Type].[All Store Types].[Supermarket], [Product].[All Products].[Food], [Store].[All Stores].[USA]}\n" +
             "Row #0: 108,188\n";
 
-        boolean origExpandNonNative =
-            MondrianProperties.instance().ExpandNonNative.get();
-        MondrianProperties.instance().ExpandNonNative.set(true);
-
-        try {
-            checkNotNative(1, query, fold(result));
-        } finally {
-            MondrianProperties.instance().ExpandNonNative.set(origExpandNonNative);
-        }
+        propSaver.set(MondrianProperties.instance().ExpandNonNative, true);
+        checkNotNative(1, query, fold(result));
     }
-    
+
+    /**
+     * Verify that native evaluation is on when ExpendNonNative is set, even if
+     * the input list is empty.
+     */
+    public void testExpandWithOneEmptyInput() {
+        propSaver.set(MondrianProperties.instance().ExpandNonNative, true);
+        String query =
+            "With " +
+            "Set [*NATIVE_CJ_SET] as 'NonEmptyCrossJoin([*BASE_MEMBERS_Gender],[*BASE_MEMBERS_Product])' " +
+            "Set [*BASE_MEMBERS_Measures] as '{[Measures].[*FORMATTED_MEASURE_0]}' " +
+            "Set [*BASE_MEMBERS_Gender] as 'Filter([Gender].[Gender].Members,[Gender].CurrentMember.Name Matches (\"abc\"))' " +
+            "Set [*NATIVE_MEMBERS_Gender] as 'Generate([*NATIVE_CJ_SET], {[Gender].CurrentMember})' " +
+            "Set [*BASE_MEMBERS_Product] as '[Product].[Product Name].Members' " +
+            "Set [*NATIVE_MEMBERS_Product] as 'Generate([*NATIVE_CJ_SET], {[Product].CurrentMember})' " +
+            "Member [Measures].[*FORMATTED_MEASURE_0] as '[Measures].[Unit Sales]', FORMAT_STRING = '#,##0', SOLVE_ORDER=400 " +
+            "Select " +
+            "[*BASE_MEMBERS_Measures] on columns, " +
+            "Non Empty Generate([*NATIVE_CJ_SET], {([Gender].CurrentMember,[Product].CurrentMember)}) on rows " +
+            "From [Sales]";
+
+        String result =
+            "Axis #0:\n" +
+            "{}\n" +
+            "Axis #1:\n" +
+            "{[Measures].[*FORMATTED_MEASURE_0]}\n" +
+            "Axis #2:\n";
+
+        boolean requestFreshConnection = true;
+        // Query should return empty result.
+        checkNative(0, 0, fold(query), fold(result), requestFreshConnection);
+    }
+
+    public void testExpandWithTwoEmptyInputs() {
+        getConnection().getCacheControl(null).flushSchemaCache();
+        propSaver.set(MondrianProperties.instance().ExpandNonNative, true);
+
+        String query =
+            "With " +
+            "Set [*NATIVE_CJ_SET] as 'NonEmptyCrossJoin([*BASE_MEMBERS_Gender],[*BASE_MEMBERS_Product])' " +
+            "Set [*BASE_MEMBERS_Measures] as '{[Measures].[*FORMATTED_MEASURE_0]}' " +
+            "Set [*BASE_MEMBERS_Gender] as 'Filter([Gender].[Gender].Members,[Gender].CurrentMember.Name Matches (\"abc\"))' " +
+            "Set [*NATIVE_MEMBERS_Gender] as 'Generate([*NATIVE_CJ_SET], {[Gender].CurrentMember})' " +
+            "Set [*BASE_MEMBERS_Product] as 'Filter([Product].[Product Name].Members, [Product].[Product Name].CurrentMember.Name Matches (\"abc\"))' " +
+            "Set [*NATIVE_MEMBERS_Product] as 'Generate([*NATIVE_CJ_SET], {[Product].CurrentMember})' " +
+            "Member [Measures].[*FORMATTED_MEASURE_0] as '[Measures].[Unit Sales]', FORMAT_STRING = '#,##0', SOLVE_ORDER=400 " +
+            "Select " +
+            "[*BASE_MEMBERS_Measures] on columns, " +
+            "Non Empty Generate([*NATIVE_CJ_SET], {([Gender].CurrentMember,[Product].CurrentMember)}) on rows " +
+            "From [Sales]";
+
+        String result =
+            "Axis #0:\n" +
+            "{}\n" +
+            "Axis #1:\n" +
+            "{[Measures].[*FORMATTED_MEASURE_0]}\n" +
+            "Axis #2:\n";
+
+        // Query should return empty result.
+        checkNotNative(0, fold(query), fold(result));
+    }
+
     /**
      * Verify that native MemberLists inputs are subject to SQL constriant
      * limitation. If mondrian.rolap.maxConstraints is set too low, native
@@ -862,9 +1005,9 @@ public class NonEmptyTest extends BatchTestCase {
                 "[Product].[All Products].[Food], " +
                 "[Product].[All Products].[Non-Consumable]} " +
             "select " +
-            "NonEmptyCrossJoin( " +
+            "NonEmptyCrossJoin(" +
                 "Filter([All Store Types], ([Measures].[Unit Sales] > 10000)), " +
-                "[All Products]) on rows " +
+                "[All Products]) on columns " +
             "from [Sales]";
 
         String result =
@@ -896,15 +1039,8 @@ public class NonEmptyTest extends BatchTestCase {
             "Row #0: 108,188\n" +
             "Row #0: 28,275\n";
 
-        int origMaxConstraint =
-            MondrianProperties.instance().MaxConstraints.get();
-        MondrianProperties.instance().MaxConstraints.set(2);
-
-        try {
-            checkNotNative(12, query, fold(result));
-        } finally {
-            MondrianProperties.instance().MaxConstraints.set(origMaxConstraint);
-        }
+        propSaver.set(MondrianProperties.instance().MaxConstraints, 2);
+        checkNotNative(12, query, fold(result));
     }
 
     /**
@@ -912,12 +1048,11 @@ public class NonEmptyTest extends BatchTestCase {
      * evaluation.
      */
     public void testAllMembersNECJ1() {
-
         // This query cannot be evaluated natively because of the "All" member.
 
         String query =
             "select " +
-            "NonEmptyCrossJoin({[Store].[All Stores]}, {[Product].[All Products]}) on rows " +
+            "NonEmptyCrossJoin({[Store].[All Stores]}, {[Product].[All Products]}) on columns " +
             "from [Sales]";
 
         String result =
@@ -927,13 +1062,8 @@ public class NonEmptyTest extends BatchTestCase {
             "{[Store].[All Stores], [Product].[All Products]}\n" +
             "Row #0: 266,773\n";
 
-        boolean origNativeCrossJoin =
-            MondrianProperties.instance().EnableNativeCrossJoin.get();
-        MondrianProperties.instance().EnableNativeCrossJoin.set(true);
-
+        propSaver.set(MondrianProperties.instance().EnableNativeCrossJoin, true);
         checkNotNative(1, query, fold(result));
-
-        MondrianProperties.instance().EnableNativeCrossJoin.set(origNativeCrossJoin);
     }
 
     /**
@@ -941,7 +1071,6 @@ public class NonEmptyTest extends BatchTestCase {
      * contain the All member.
      */
     public void testAllMembersNECJ2() {
-
         // This query can be evaluated natively because there is at least one
         // non "All" member.
         //
@@ -951,7 +1080,7 @@ public class NonEmptyTest extends BatchTestCase {
 
         String query =
             "select " +
-            "NonEmptyCrossJoin([Product].[All Products].Children, {[Store].[All Stores]}) on rows " +
+            "NonEmptyCrossJoin([Product].[All Products].Children, {[Store].[All Stores]}) on columns " +
             "from [Sales]";
 
         String result =
@@ -965,16 +1094,12 @@ public class NonEmptyTest extends BatchTestCase {
             "Row #0: 191,940\n" +
             "Row #0: 50,236\n";
 
-        boolean origNativeCrossJoin =
-            MondrianProperties.instance().EnableNativeCrossJoin.get();
-        MondrianProperties.instance().EnableNativeCrossJoin.set(true);
+        propSaver.set(MondrianProperties.instance().EnableNativeCrossJoin, true);
 
         // Get a fresh connection; Otherwise the mondrian property setting
         // is not refreshed for this parameter.
         boolean requestFreshConnection = true;
         checkNative(0, 3, query, fold(result), requestFreshConnection);
-
-        MondrianProperties.instance().EnableNativeCrossJoin.set(origNativeCrossJoin);
     }
 
     /**
@@ -982,12 +1107,11 @@ public class NonEmptyTest extends BatchTestCase {
      */
     public void testAllLevelMembers() {
         checkNative(
-                14,
-                14,
-                "select {[Measures].[Store Sales]} ON COLUMNS, "
-                        + "NON EMPTY Crossjoin([Product].[(All)].Members, [Promotion Media].[All Media].Children) ON ROWS "
-                        + "from [Sales]");
-
+            14,
+            14,
+            "select {[Measures].[Store Sales]} ON COLUMNS, "
+            + "NON EMPTY Crossjoin([Product].[(All)].Members, [Promotion Media].[All Media].Children) ON ROWS "
+            + "from [Sales]");
     }
 
     /**
@@ -1016,8 +1140,15 @@ public class NonEmptyTest extends BatchTestCase {
                         + "  [Time].[1997].[Q1].[1])");
     }
 
-    /** check that top count is executed native unless disabled */
+    /**
+     * Checks that TopCount is executed natively unless disabled.
+     */
     public void testNativeTopCount() {
+        switch (getTestContext().getDialect().getDatabaseProduct()) {
+        case INFOBRIGHT:
+            // Hits same Infobright bug as NamedSetTest.testNamedSetOnMember.
+            return;
+        }
 
         String query =
             "select {[Measures].[Store Sales]} on columns,"
@@ -1028,20 +1159,23 @@ public class NonEmptyTest extends BatchTestCase {
             + "  [Store].[All Stores].[USA].[CA].[San Francisco].[Store 14],"
             + "  [Time].[1997].[Q1].[1])";
 
-        boolean origNativeTopCount =
-            MondrianProperties.instance().EnableNativeTopCount.get();
-        MondrianProperties.instance().EnableNativeTopCount.set(true);
+        propSaver.set(MondrianProperties.instance().EnableNativeTopCount, true);
 
         // Get a fresh connection; Otherwise the mondrian property setting
         // is not refreshed for this parameter.
         boolean requestFreshConnection = true;
         checkNative(3, 3, query, null, requestFreshConnection);
-
-        MondrianProperties.instance().EnableNativeTopCount.set(origNativeTopCount);
     }
 
-    /** check that top count is executed native with calculated member */
+    /**
+     * Checks that TopCount is executed natively with calculated member.
+     */
     public void testCmNativeTopCount() {
+        switch (getTestContext().getDialect().getDatabaseProduct()) {
+        case INFOBRIGHT:
+            // Hits same Infobright bug as NamedSetTest.testNamedSetOnMember.
+            return;
+        }
         String query =
             "with member [Measures].[Store Profit Rate] as '([Measures].[Store Sales]-[Measures].[Store Cost])/[Measures].[Store Cost]', format = '#.00%' "
             + "select {[Measures].[Store Sales]} on columns,"
@@ -1050,28 +1184,29 @@ public class NonEmptyTest extends BatchTestCase {
             + "        3, [Measures].[Store Profit Rate] / 2) ON ROWS"
             + " from [Sales]";
 
-        boolean origNativeTopCount =
-            MondrianProperties.instance().EnableNativeTopCount.get();
-        MondrianProperties.instance().EnableNativeTopCount.set(true);
+        propSaver.set(MondrianProperties.instance().EnableNativeTopCount, true);
 
         // Get a fresh connection; Otherwise the mondrian property setting
         // is not refreshed for this parameter.
         boolean requestFreshConnection = true;
         checkNative(3, 3, query, null, requestFreshConnection);
-
-        MondrianProperties.instance().EnableNativeTopCount.set(origNativeTopCount);
     }
 
     public void testMeasureAndAggregateInSlicer() {
-        String result = "Axis #0:"
-                + nl
-                + "{[Store Type].[All Store Types].[All Types], [Measures].[Unit Sales], [Customers].[All Customers].[USA], [Product].[All Products].[Drink]}"
-                + nl + "Axis #1:" + nl + "{[Time].[1997]}" + nl + "Axis #2:" + nl
-                + "{[Store].[All Stores].[USA].[CA].[Beverly Hills]}" + nl
-                + "{[Store].[All Stores].[USA].[CA].[Los Angeles]}" + nl
-                + "{[Store].[All Stores].[USA].[CA].[San Diego]}" + nl
-                + "{[Store].[All Stores].[USA].[CA].[San Francisco]}" + nl + "Row #0: 1,945" + nl
-                + "Row #1: 2,422" + nl + "Row #2: 2,560" + nl + "Row #3: 175" + nl;
+        String result = fold(
+            "Axis #0:\n"
+                + "{[Store Type].[All Store Types].[All Types], [Measures].[Unit Sales], [Customers].[All Customers].[USA], [Product].[All Products].[Drink]}\n"
+                + "Axis #1:\n"
+                + "{[Time].[1997]}\n"
+                + "Axis #2:\n"
+                + "{[Store].[All Stores].[USA].[CA].[Beverly Hills]}\n"
+                + "{[Store].[All Stores].[USA].[CA].[Los Angeles]}\n"
+                + "{[Store].[All Stores].[USA].[CA].[San Diego]}\n"
+                + "{[Store].[All Stores].[USA].[CA].[San Francisco]}\n"
+                + "Row #0: 1,945\n"
+                + "Row #1: 2,422\n"
+                + "Row #2: 2,560\n"
+                + "Row #3: 175\n");
         assertQueryReturns(
                 "with member [Store Type].[All Store Types].[All Types] as 'Aggregate({[Store Type].[All Store Types].[Deluxe Supermarket],  "
                         + "[Store Type].[All Store Types].[Gourmet Supermarket],  "
@@ -1084,26 +1219,29 @@ public class NonEmptyTest extends BatchTestCase {
                         + "from [Sales] "
                         + "where ([Store Type].[All Store Types].[All Types], [Measures].[Unit Sales], [Customers].[All Customers].[USA], [Product].[All Products].[Drink])  ",
                 result);
-
     }
 
     public void testMeasureInSlicer() {
-        String result = "Axis #0:"
-                + nl
-                + "{[Measures].[Unit Sales], [Customers].[All Customers].[USA], [Product].[All Products].[Drink]}"
-                + nl + "Axis #1:" + nl + "{[Time].[1997]}" + nl + "Axis #2:" + nl
-                + "{[Store].[All Stores].[USA].[CA].[Beverly Hills]}" + nl
-                + "{[Store].[All Stores].[USA].[CA].[Los Angeles]}" + nl
-                + "{[Store].[All Stores].[USA].[CA].[San Diego]}" + nl
-                + "{[Store].[All Stores].[USA].[CA].[San Francisco]}" + nl + "Row #0: 1,945" + nl
-                + "Row #1: 2,422" + nl + "Row #2: 2,560" + nl + "Row #3: 175" + nl;
+        String result = fold(
+            "Axis #0:\n"
+                + "{[Measures].[Unit Sales], [Customers].[All Customers].[USA], [Product].[All Products].[Drink]}\n"
+                + "Axis #1:\n"
+                + "{[Time].[1997]}\n"
+                + "Axis #2:\n"
+                + "{[Store].[All Stores].[USA].[CA].[Beverly Hills]}\n"
+                + "{[Store].[All Stores].[USA].[CA].[Los Angeles]}\n"
+                + "{[Store].[All Stores].[USA].[CA].[San Diego]}\n"
+                + "{[Store].[All Stores].[USA].[CA].[San Francisco]}\n"
+                + "Row #0: 1,945\n"
+                + "Row #1: 2,422\n"
+                + "Row #2: 2,560\n"
+                + "Row #3: 175\n");
         assertQueryReturns(
                 "select NON EMPTY {[Time].[1997]} ON COLUMNS,   "
                         + "NON EMPTY [Store].[All Stores].[USA].[CA].Children ON ROWS  "
                         + "from [Sales]  "
                         + "where ([Measures].[Unit Sales], [Customers].[All Customers].[USA], [Product].[All Products].[Drink])",
                 result);
-
     }
 
     /**
@@ -1117,7 +1255,9 @@ public class NonEmptyTest extends BatchTestCase {
                 + "NON EMPTY TopCount({[Time].[Jan]}, 2) ON rows from [Sales] ");
     }
 
-    /** calc member in slicer can not be executed natively */
+    /**
+     * Calc member in slicer cannot be executed natively.
+     */
     public void testCmInSlicer() {
         checkNotNative(3, "with member [Time].[Jan] as  "
                 + "'Aggregate({[Time].[1998].[Q1].[1], [Time].[1997].[Q1].[1]})'  "
@@ -1138,44 +1278,34 @@ public class NonEmptyTest extends BatchTestCase {
                 + "  [Time].[1997].[Q1].[1])");
     }
 
-    /** use SQL even when all members are known */
+    /**
+     * use SQL even when all members are known
+     */
     public void testCjEnumEnum() {
         // Make sure maxConstraint settting is high enough
-        int origMaxConstraints =
-            MondrianProperties.instance().MaxConstraints.get();
         int minConstraints = 2;
-
-        if (origMaxConstraints < minConstraints) {
-            MondrianProperties.instance().MaxConstraints.set(minConstraints);
+        if (MondrianProperties.instance().MaxConstraints.get() < minConstraints) {
+            propSaver.set(MondrianProperties.instance().MaxConstraints, minConstraints);
         }
-
-        try {
-            checkNative(
-                4,
-                4,
-                "select {[Measures].[Unit Sales]} ON COLUMNS, "
-                + "NonEmptyCrossjoin({[Product].[All Products].[Drink].[Beverages], [Product].[All Products].[Drink].[Dairy]}, {[Customers].[All Customers].[USA].[OR].[Portland], [Customers].[All Customers].[USA].[OR].[Salem]}) ON ROWS "
-                + "from [Sales] ");
-        } finally {
-            MondrianProperties.instance().MaxConstraints.set(origMaxConstraints);
-        }
+        checkNative(
+            4,
+            4,
+            "select {[Measures].[Unit Sales]} ON COLUMNS, "
+            + "NonEmptyCrossjoin({[Product].[All Products].[Drink].[Beverages], [Product].[All Products].[Drink].[Dairy]}, {[Customers].[All Customers].[USA].[OR].[Portland], [Customers].[All Customers].[USA].[OR].[Salem]}) ON ROWS "
+            + "from [Sales] ");
     }
 
-    /** set containing only null member should not prevent usage of native */
+    /**
+     * Set containing only null member should not prevent usage of native.
+     */
     public void testCjNullInEnum() {
-        MondrianProperties properties = MondrianProperties.instance();
-        boolean savedInvalidProp =
-            properties.IgnoreInvalidMembersDuringQuery.get();
-        try {
-            properties.IgnoreInvalidMembersDuringQuery.set(true);
-            checkNative(
-                20, 0,
-                "select {[Measures].[Unit Sales]} ON COLUMNS, "
-                + "NON EMPTY Crossjoin({[Gender].[All Gender].[emale]}, [Customers].[All Customers].[USA].children) ON ROWS "
-                + "from [Sales] ");
-        } finally {
-            properties.IgnoreInvalidMembersDuringQuery.set(savedInvalidProp);
-        }
+        propSaver.set(MondrianProperties.instance().IgnoreInvalidMembersDuringQuery, true);
+        checkNative(
+            20,
+            0,
+            "select {[Measures].[Unit Sales]} ON COLUMNS, "
+            + "NON EMPTY Crossjoin({[Gender].[All Gender].[emale]}, [Customers].[All Customers].[USA].children) ON ROWS "
+            + "from [Sales] ");
     }
 
     /**
@@ -1184,65 +1314,51 @@ public class NonEmptyTest extends BatchTestCase {
      */
     public void testCjDescendantsEnumAll() {
         checkNotNative(
-                13,
-                "select {[Measures].[Unit Sales]} ON COLUMNS, "
-                        + "NON EMPTY Crossjoin("
-                        + "  Descendants([Customers].[All Customers].[USA], [Customers].[City]), "
-                        + "  {[Product].[All Products], [Product].[All Products].[Drink].[Dairy]}) ON ROWS "
-                        + "from [Sales] "
-                        + "where ([Promotions].[All Promotions].[Bag Stuffers])");
+            13,
+            "select {[Measures].[Unit Sales]} ON COLUMNS, "
+            + "NON EMPTY Crossjoin("
+            + "  Descendants([Customers].[All Customers].[USA], [Customers].[City]), "
+            + "  {[Product].[All Products], [Product].[All Products].[Drink].[Dairy]}) ON ROWS "
+            + "from [Sales] "
+            + "where ([Promotions].[All Promotions].[Bag Stuffers])");
     }
 
     public void testCjDescendantsEnum() {
         // Make sure maxConstraint settting is high enough
-        int origMaxConstraints =
-            MondrianProperties.instance().MaxConstraints.get();
         int minConstraints = 2;
-
-        if (origMaxConstraints < minConstraints) {
-            MondrianProperties.instance().MaxConstraints.set(minConstraints);
+        if (MondrianProperties.instance().MaxConstraints.get() < minConstraints) {
+            propSaver.set(MondrianProperties.instance().MaxConstraints, minConstraints);
         }
-
-        try {
-            checkNative(
-                11,
-                11,
-                "select {[Measures].[Unit Sales]} ON COLUMNS, "
-                + "NON EMPTY Crossjoin("
-                + "  Descendants([Customers].[All Customers].[USA], [Customers].[City]), "
-                + "  {[Product].[All Products].[Drink].[Beverages], [Product].[All Products].[Drink].[Dairy]}) ON ROWS "
-                + "from [Sales] "
-                + "where ([Promotions].[All Promotions].[Bag Stuffers])");
-        } finally {
-            MondrianProperties.instance().MaxConstraints.set(origMaxConstraints);
-        }
+        checkNative(
+            11,
+            11,
+            "select {[Measures].[Unit Sales]} ON COLUMNS, "
+            + "NON EMPTY Crossjoin("
+            + "  Descendants([Customers].[All Customers].[USA], [Customers].[City]), "
+            + "  {[Product].[All Products].[Drink].[Beverages], [Product].[All Products].[Drink].[Dairy]}) ON ROWS "
+            + "from [Sales] "
+            + "where ([Promotions].[All Promotions].[Bag Stuffers])");
     }
 
     public void testCjEnumChildren() {
         // Make sure maxConstraint settting is high enough
-        int origMaxConstraints =
-            MondrianProperties.instance().MaxConstraints.get();
+        // Make sure maxConstraint settting is high enough
         int minConstraints = 2;
-
-        if (origMaxConstraints < minConstraints) {
-            MondrianProperties.instance().MaxConstraints.set(minConstraints);
+        if (MondrianProperties.instance().MaxConstraints.get() < minConstraints) {
+            propSaver.set(MondrianProperties.instance().MaxConstraints, minConstraints);
         }
-
-        try {
-            checkNative(
-                3,
-                3,
-                "select {[Measures].[Unit Sales]} ON COLUMNS, "
-                + "NON EMPTY Crossjoin("
-                + "  {[Product].[All Products].[Drink].[Beverages], [Product].[All Products].[Drink].[Dairy]}, "
-                + "  [Customers].[All Customers].[USA].[WA].Children) ON ROWS "
-                + "from [Sales] " + "where ([Promotions].[All Promotions].[Bag Stuffers])");
-        } finally {
-            MondrianProperties.instance().MaxConstraints.set(origMaxConstraints);
-        }
+        checkNative(
+            3,
+            3,
+            "select {[Measures].[Unit Sales]} ON COLUMNS, "
+            + "NON EMPTY Crossjoin("
+            + "  {[Product].[All Products].[Drink].[Beverages], [Product].[All Products].[Drink].[Dairy]}, "
+            + "  [Customers].[All Customers].[USA].[WA].Children) ON ROWS "
+            + "from [Sales] " + "where ([Promotions].[All Promotions].[Bag Stuffers])");
     }
 
-    /** {} contains members from different levels, this can not be handled by
+    /**
+     * {} contains members from different levels, this can not be handled by
      * the current native crossjoin.
      */
     public void testCjEnumDifferentLevelsChildren() {
@@ -1313,7 +1429,7 @@ public class NonEmptyTest extends BatchTestCase {
                 3,
                 3,
                 "select {[Measures].[Store Sales]} on columns, "
-                        + "  NON EMPTY Crossjoin( "
+                        + "  NON EMPTY Crossjoin("
                         + "    [Product].[All Products].[Drink].[Alcoholic Beverages].[Beer and Wine].[Wine].children, "
                         + "    [Customers].[All Customers].[USA].[CA].CHILDREN) ON rows"
                         + " from [Sales] where ("
@@ -1336,7 +1452,7 @@ public class NonEmptyTest extends BatchTestCase {
             " [Store].[USA].[CA].[San Francisco], " +
             " [Store].[USA].[WA].[Tacoma]} " +
             "set [NECJ] as NonEmptyCrossJoin([Filtered Store City Set], {[Product].[Product Family].Food}) " +
-            "select [NECJ] on rows from [Sales]";
+            "select [NECJ] on columns from [Sales]";
 
         String necjSqlDerby =
                 "select " +
@@ -1370,11 +1486,17 @@ public class NonEmptyTest extends BatchTestCase {
             "order by ISNULL(`store`.`store_country`), `store`.`store_country` ASC, ISNULL(`store`.`store_state`), `store`.`store_state` ASC, " +
             "ISNULL(`store`.`store_city`), `store`.`store_city` ASC, ISNULL(`product_class`.`product_family`), `product_class`.`product_family` ASC";
 
-        SqlPattern[] patterns =
-            new SqlPattern[] {
-                new SqlPattern(SqlPattern.Dialect.DERBY, necjSqlDerby, necjSqlDerby),
-                new SqlPattern(SqlPattern.Dialect.MYSQL, necjSqlMySql, necjSqlMySql)
-            };
+        if (MondrianProperties.instance().UseAggregates.get() &&
+            MondrianProperties.instance().ReadAggregates.get()) {
+            // slightly different sql expected, uses agg table now for join
+            necjSqlMySql = necjSqlMySql.replaceAll("sales_fact_1997", "agg_c_14_sales_fact_1997");
+            necjSqlDerby = necjSqlDerby.replaceAll("sales_fact_1997", "agg_c_14_sales_fact_1997");
+        }
+
+        SqlPattern[] patterns = {
+            new SqlPattern(Dialect.DatabaseProduct.DERBY, necjSqlDerby, necjSqlDerby),
+            new SqlPattern(Dialect.DatabaseProduct.MYSQL, necjSqlMySql, necjSqlMySql)
+        };
 
         assertQuerySql(query, patterns);
     }
@@ -1416,7 +1538,7 @@ public class NonEmptyTest extends BatchTestCase {
             "{[Warehouse2].[#null].[#null].[5617 Saclan Terrace].[Arnold and Sons]," +
             " [Warehouse2].[#null].[#null].[3377 Coachman Place].[Jones International]} " +
             "set [NECJ] as NonEmptyCrossJoin([Filtered Warehouse Set], {[Product].[Product Family].Food}) " +
-            "select [NECJ] on rows from [Warehouse2]";
+            "select [NECJ] on columns from [Warehouse2]";
 
         String necjSqlDerby =
             "select \"warehouse\".\"wa_address3\", \"warehouse\".\"wa_address2\", \"warehouse\".\"wa_address1\", \"warehouse\".\"warehouse_name\", \"product_class\".\"product_family\" " +
@@ -1428,7 +1550,7 @@ public class NonEmptyTest extends BatchTestCase {
             "and (\"product_class\".\"product_family\" = 'Food') group by \"warehouse\".\"wa_address3\", \"warehouse\".\"wa_address2\", \"warehouse\".\"wa_address1\", " +
             "\"warehouse\".\"warehouse_name\", \"product_class\".\"product_family\" order by \"warehouse\".\"wa_address3\" ASC, \"warehouse\".\"wa_address2\" ASC, " +
             "\"warehouse\".\"wa_address1\" ASC, \"warehouse\".\"warehouse_name\" ASC, \"product_class\".\"product_family\" ASC";
-        
+
         String necjSqlMySql =
             "select `warehouse`.`wa_address3` as `c0`, `warehouse`.`wa_address2` as `c1`, `warehouse`.`wa_address1` as `c2`, `warehouse`.`warehouse_name` as `c3`, " +
             "`product_class`.`product_family` as `c4` from `warehouse` as `warehouse`, `inventory_fact_1997` as `inventory_fact_1997`, `product` as `product`, " +
@@ -1440,7 +1562,7 @@ public class NonEmptyTest extends BatchTestCase {
             "order by ISNULL(`warehouse`.`wa_address3`), `warehouse`.`wa_address3` ASC, ISNULL(`warehouse`.`wa_address2`), `warehouse`.`wa_address2` ASC, " +
             "ISNULL(`warehouse`.`wa_address1`), `warehouse`.`wa_address1` ASC, ISNULL(`warehouse`.`warehouse_name`), `warehouse`.`warehouse_name` ASC, " +
             "ISNULL(`product_class`.`product_family`), `product_class`.`product_family` ASC";
-        
+
         TestContext testContext =
             TestContext.create(
                 dimension,
@@ -1450,11 +1572,10 @@ public class NonEmptyTest extends BatchTestCase {
                 null,
                 null);
 
-        SqlPattern[] patterns =
-            new SqlPattern[] {
-                new SqlPattern(SqlPattern.Dialect.DERBY, necjSqlDerby, necjSqlDerby),
-                new SqlPattern(SqlPattern.Dialect.MYSQL, necjSqlMySql, necjSqlMySql)
-            };
+        SqlPattern[] patterns = {
+            new SqlPattern(Dialect.DatabaseProduct.DERBY, necjSqlDerby, necjSqlDerby),
+            new SqlPattern(Dialect.DatabaseProduct.MYSQL, necjSqlMySql, necjSqlMySql)
+        };
 
         assertQuerySql(testContext, query, patterns);
     }
@@ -1497,7 +1618,7 @@ public class NonEmptyTest extends BatchTestCase {
             "{[Warehouse2].[#null].[234 West Covina Pkwy].[Freeman And Co]," +
             " [Warehouse2].[971-555-6213].[3377 Coachman Place].[Jones International]} " +
             "set [NECJ] as NonEmptyCrossJoin([Filtered Warehouse Set], {[Product].[Product Family].Food}) " +
-            "select [NECJ] on rows from [Warehouse2]";
+            "select [NECJ] on columns from [Warehouse2]";
 
         String necjSqlDerby =
             "select \"warehouse\".\"warehouse_fax\", \"warehouse\".\"wa_address1\", \"warehouse\".\"warehouse_name\", \"product_class\".\"product_family\" " +
@@ -1527,7 +1648,7 @@ public class NonEmptyTest extends BatchTestCase {
             "order by ISNULL(`warehouse`.`warehouse_fax`), `warehouse`.`warehouse_fax` ASC, " +
             "ISNULL(`warehouse`.`wa_address1`), `warehouse`.`wa_address1` ASC, ISNULL(`warehouse`.`warehouse_name`), " +
             "`warehouse`.`warehouse_name` ASC, ISNULL(`product_class`.`product_family`), `product_class`.`product_family` ASC";
-        
+
         TestContext testContext =
             TestContext.create(
                 dimension,
@@ -1537,15 +1658,14 @@ public class NonEmptyTest extends BatchTestCase {
                 null,
                 null);
 
-        SqlPattern[] patterns =
-            new SqlPattern[] {
-                new SqlPattern(SqlPattern.Dialect.DERBY, necjSqlDerby, necjSqlDerby),
-                new SqlPattern(SqlPattern.Dialect.MYSQL, necjSqlMySql, necjSqlMySql)
-            };
+        SqlPattern[] patterns = {
+            new SqlPattern(Dialect.DatabaseProduct.DERBY, necjSqlDerby, necjSqlDerby),
+            new SqlPattern(Dialect.DatabaseProduct.MYSQL, necjSqlMySql, necjSqlMySql)
+        };
 
         assertQuerySql(testContext, query, patterns);
     }
-    
+
     /**
      * Check that multi-level member list generates compact form of SQL where clause:
      * (1) Use IN list if possible(not possible if there are null values because
@@ -1568,7 +1688,7 @@ public class NonEmptyTest extends BatchTestCase {
             "    <Level name=\"fax\" column=\"warehouse_fax\" uniqueMembers=\"false\"/>\n" +
             "  </Hierarchy>\n" +
             "</Dimension>\n";
-        
+
         String cube =
             "<Cube name=\"Warehouse2\">\n" +
             "  <Table name=\"inventory_fact_1997\"/>\n" +
@@ -1584,8 +1704,8 @@ public class NonEmptyTest extends BatchTestCase {
             "{[Warehouse2].[#null].[#null].[#null]," +
             " [Warehouse2].[#null].[#null].[971-555-6213]} " +
             "set [NECJ] as NonEmptyCrossJoin([Filtered Warehouse Set], {[Product].[Product Family].Food}) " +
-            "select [NECJ] on rows from [Warehouse2]";
-        
+            "select [NECJ] on columns from [Warehouse2]";
+
         String necjSqlDerby =
             "select \"warehouse\".\"wa_address3\", \"warehouse\".\"wa_address2\", \"warehouse\".\"warehouse_fax\", \"product_class\".\"product_family\" " +
             "from \"warehouse\" as \"warehouse\", \"inventory_fact_1997\" as \"inventory_fact_1997\", \"product\" as \"product\", \"product_class\" as \"product_class\" " +
@@ -1612,7 +1732,7 @@ public class NonEmptyTest extends BatchTestCase {
             "order by ISNULL(`warehouse`.`wa_address3`), `warehouse`.`wa_address3` ASC, ISNULL(`warehouse`.`wa_address2`), " +
             "`warehouse`.`wa_address2` ASC, ISNULL(`warehouse`.`warehouse_fax`), `warehouse`.`warehouse_fax` ASC, " +
             "ISNULL(`product_class`.`product_family`), `product_class`.`product_family` ASC";
-        
+
         TestContext testContext =
             TestContext.create(
                 dimension,
@@ -1622,28 +1742,27 @@ public class NonEmptyTest extends BatchTestCase {
                 null,
                 null);
 
-        SqlPattern[] patterns =
-            new SqlPattern[] {
-                new SqlPattern(SqlPattern.Dialect.DERBY, necjSqlDerby, necjSqlDerby),
-                new SqlPattern(SqlPattern.Dialect.MYSQL, necjSqlMySql, necjSqlMySql)
-            };
+        SqlPattern[] patterns = {
+            new SqlPattern(Dialect.DatabaseProduct.DERBY, necjSqlDerby, necjSqlDerby),
+            new SqlPattern(Dialect.DatabaseProduct.MYSQL, necjSqlMySql, necjSqlMySql)
+        };
 
         assertQuerySql(testContext, query, patterns);
     }
-    
+
     public void testNonEmptyUnionQuery() {
         Result result = executeQuery(
                 "select {[Measures].[Unit Sales], [Measures].[Store Cost], [Measures].[Store Sales]} on columns,\n" +
-                " NON EMPTY Hierarchize( \n" +
+                " NON EMPTY Hierarchize(\n" +
                 "   Union(\n" +
                 "     Crossjoin(\n" +
                 "       Crossjoin([Gender].[All Gender].children,\n" +
-                "                 [Marital Status].[All Marital Status].children ),\n" +
+                "                 [Marital Status].[All Marital Status].children),\n" +
                 "       Crossjoin([Customers].[All Customers].children,\n" +
-                "                 [Product].[All Products].children ) ),\n" +
-                "     Crossjoin( {([Gender].[All Gender].[M], [Marital Status].[All Marital Status].[M] )},\n" +
+                "                 [Product].[All Products].children) ),\n" +
+                "     Crossjoin({([Gender].[All Gender].[M], [Marital Status].[All Marital Status].[M])},\n" +
                 "       Crossjoin(\n" + "         [Customers].[All Customers].[USA].children,\n" +
-                "         [Product].[All Products].children ) ) )) on rows\n" +
+                "         [Product].[All Products].children) ) )) on rows\n" +
                 "from Sales where ([Time].[1997])");
         final Axis rowsAxis = result.getAxes()[1];
         Assert.assertEquals(21, rowsAxis.getPositions().size());
@@ -1659,13 +1778,12 @@ public class NonEmptyTest extends BatchTestCase {
             // test.
             return;
         }
-        
+
         // there currently isn't a cube member to children cache, only a shared cache
         // so use the shared smart member reader
-        RolapCubeHierarchy.RolapCubeHierarchyMemberReader smr = 
-            getSmartMemberReader("Store");
+        SmartMemberReader smr = getSmartMemberReader("Store");
         MemberCacheHelper smrch = smr.cacheHelper;
-        MemberCacheHelper rcsmrch = smr.getRolapCubeMemberCacheHelper();
+        MemberCacheHelper rcsmrch = ((RolapCubeHierarchy.RolapCubeHierarchyMemberReader) smr).getRolapCubeMemberCacheHelper();
         SmartMemberReader ssmr = getSharedSmartMemberReader("Store");
         MemberCacheHelper ssmrch = ssmr.cacheHelper;
         clearAndHardenCache(smrch);
@@ -1678,10 +1796,10 @@ public class NonEmptyTest extends BatchTestCase {
                 ssmrch.mapKeyToMember.size() <= 5);
         RolapMember sf = (RolapMember) result.getAxes()[0].getPositions().get(0).get(0);
         RolapMember ca = sf.getParentMember();
-        
+
         // convert back to shared members
-        ca = ((RolapCubeMember)ca).getRolapMember();
-        sf = ((RolapCubeMember)sf).getRolapMember();
+        ca = ((RolapCubeMember) ca).getRolapMember();
+        sf = ((RolapCubeMember) sf).getRolapMember();
 
         List list = ssmrch.mapMemberToChildren.get(ca, scf.getMemberChildrenConstraint(null));
         assertNull("children of [CA] are not in cache", list);
@@ -1708,18 +1826,14 @@ public class NonEmptyTest extends BatchTestCase {
      * Non Empty CrossJoin (A,B) gets turned into CrossJoin (Non Empty(A), Non Empty(B))
      * Verify that there is no crash when the length of B could be non-zero length before the non emptyy
      * and 0 after the non empty.
-     *
      */
     public void testNonEmptyCrossJoinList() {
-    	boolean oldEnableNativeCJ = MondrianProperties.instance().EnableNativeCrossJoin.get();
-    	MondrianProperties.instance().EnableNativeCrossJoin.set(false);
-    	boolean oldEnableNativeNonEmpty = MondrianProperties.instance().EnableNativeNonEmpty.get();
-    	MondrianProperties.instance().EnableNativeNonEmpty.set(false);
+        propSaver.set(MondrianProperties.instance().EnableNativeCrossJoin, false);
+        boolean oldEnableNativeNonEmpty = MondrianProperties.instance().EnableNativeNonEmpty.get();
+        MondrianProperties.instance().EnableNativeNonEmpty.set(false);
 
-    	executeQuery("select non empty CrossJoin([Customers].[Name].Members, {[Promotions].[All Promotions].[Fantastic Discounts]}) ON COLUMNS FROM [Sales]");
-
-    	MondrianProperties.instance().EnableNativeCrossJoin.set(oldEnableNativeCJ);
-    	MondrianProperties.instance().EnableNativeNonEmpty.set(oldEnableNativeNonEmpty);
+        executeQuery("select non empty CrossJoin([Customers].[Name].Members, {[Promotions].[All Promotions].[Fantastic Discounts]}) ON COLUMNS FROM [Sales]");
+        MondrianProperties.instance().EnableNativeNonEmpty.set(oldEnableNativeNonEmpty);
     }
 
     /**
@@ -1742,8 +1856,8 @@ public class NonEmptyTest extends BatchTestCase {
                 + "NON EMPTY{[Measures].[CustomerCount]} ON columns,\n"
                 + "NON EMPTY{[Product].[All Products]} ON rows\n"
                 + "from [Sales]\n"
-                + "where ([Store].[All Stores].[USA].[CA].[San Francisco].[Store 14], [Time].[1997].[Q1].[1] )");
-        Cell c = result.getCell(new int[] { 0, 0});
+                + "where ([Store].[All Stores].[USA].[CA].[San Francisco].[Store 14], [Time].[1997].[Q1].[1])");
+        Cell c = result.getCell(new int[] {0, 0});
         // we expect 10281 customers, although there are only 20 non-empty ones
         // @see #testLevelMembers
         assertEquals("10,281", c.getFormattedValue());
@@ -1793,11 +1907,9 @@ public class NonEmptyTest extends BatchTestCase {
             try {
                 monLimit.set(this.resultLimit);
                 Result result = executeQuery(query, con);
-                /*
-                 * rows are on the last axis.
-                 */
+                // rows are on the last axis.
                 int numAxes = result.getAxes().length;
-                Axis a = result.getAxes()[numAxes-1];
+                Axis a = result.getAxes()[numAxes - 1];
                 assertEquals(rowCount, a.getPositions().size());
                 return result;
             } finally {
@@ -1814,11 +1926,11 @@ public class NonEmptyTest extends BatchTestCase {
         }
         SmartMemberReader smr = getSmartMemberReader("Customers");
         // use the RolapCubeHierarchy's member cache for levels
-        MemberCacheHelper smrch = ((RolapCubeHierarchy.RolapCubeHierarchyMemberReader)smr).rolapCubeCacheHelper;
+        MemberCacheHelper smrch = ((RolapCubeHierarchy.CacheRolapCubeHierarchyMemberReader) smr).rolapCubeCacheHelper;
         clearAndHardenCache(smrch);
-        MemberCacheHelper smrich = ((RolapCubeHierarchy.RolapCubeHierarchyMemberReader)smr).cacheHelper;
+        MemberCacheHelper smrich = smr.cacheHelper;
         clearAndHardenCache(smrich);
-        
+
         // use the shared member cache for mapMemberToChildren
         SmartMemberReader ssmr = getSharedSmartMemberReader("Customers");
         MemberCacheHelper ssmrch = ssmr.cacheHelper;
@@ -1831,19 +1943,19 @@ public class NonEmptyTest extends BatchTestCase {
                         + "{[Measures].[Unit Sales]} ON columns,\n"
                         + "NON EMPTY {[Customers].[All Customers], [Customers].[Name].Members} ON rows\n"
                         + "from [Sales]\n"
-                        + "where ([Store].[All Stores].[USA].[CA].[San Francisco].[Store 14], [Time].[1997].[Q1].[1] )");
+                        + "where ([Store].[All Stores].[USA].[CA].[San Francisco].[Store 14], [Time].[1997].[Q1].[1])");
         Result r = c.run();
         Level[] levels = smr.getHierarchy().getLevels();
         Level nameLevel = levels[levels.length - 1];
 
         // evaluator for [All Customers], [Store 14], [1/1/1997]
-        Evaluator context = getEvaluator(r, new int[] { 0, 0});
+        Evaluator context = getEvaluator(r, new int[]{0, 0});
 
         // make sure that [Customers].[Name].Members is NOT in cache
         TupleConstraint lmc = scf.getLevelMembersConstraint(null);
         assertNull(smrch.mapLevelToMembers.get((RolapLevel) nameLevel, lmc));
         // make sure that NON EMPTY [Customers].[Name].Members IS in cache
-        lmc = scf.getLevelMembersConstraint(context);
+        lmc = scf.getLevelMembersConstraint(context.push(true));
         List list = smrch.mapLevelToMembers.get((RolapLevel) nameLevel, lmc);
         if (MondrianProperties.instance().EnableRolapCubeMemberCache.get()) {
             assertNotNull(list);
@@ -1854,30 +1966,29 @@ public class NonEmptyTest extends BatchTestCase {
         // [Customers].[All Customers].[USA].[CA].[Burlingame].[Peggy Justice]
         Member member = r.getAxes()[1].getPositions().get(1).get(0);
         Member parent = member.getParentMember();
-        parent = ((RolapCubeMember)parent).getRolapMember();
-        member = ((RolapCubeMember)member).getRolapMember();
+        parent = ((RolapCubeMember) parent).getRolapMember();
+        member = ((RolapCubeMember) member).getRolapMember();
 
         // lookup all children of [Burlingame] -> not in cache
         MemberChildrenConstraint mcc = scf.getMemberChildrenConstraint(null);
         assertNull(ssmrch.mapMemberToChildren.get((RolapMember) parent, mcc));
 
         // lookup NON EMPTY children of [Burlingame] -> yes these are in cache
-        mcc = scf.getMemberChildrenConstraint(context);
+        mcc = scf.getMemberChildrenConstraint(context.push(true));
         list = smrich.mapMemberToChildren.get((RolapMember) parent, mcc);
         assertNotNull(list);
         assertTrue(list.contains(member));
     }
 
     public void testLevelMembersWithoutNonEmpty() {
-        
         SmartMemberReader smr = getSmartMemberReader("Customers");
-        
-        MemberCacheHelper smrch = ((RolapCubeHierarchy.RolapCubeHierarchyMemberReader)smr).rolapCubeCacheHelper;
+
+        MemberCacheHelper smrch = ((RolapCubeHierarchy.CacheRolapCubeHierarchyMemberReader) smr).rolapCubeCacheHelper;
         clearAndHardenCache(smrch);
 
-        MemberCacheHelper smrich = ((RolapCubeHierarchy.RolapCubeHierarchyMemberReader)smr).cacheHelper;
+        MemberCacheHelper smrich = smr.cacheHelper;
         clearAndHardenCache(smrich);
-        
+
         SmartMemberReader ssmr = getSharedSmartMemberReader("Customers");
         MemberCacheHelper ssmrch = ssmr.cacheHelper;
         clearAndHardenCache(ssmrch);
@@ -1886,12 +1997,12 @@ public class NonEmptyTest extends BatchTestCase {
                 + "{[Measures].[Unit Sales]} ON columns,\n"
                 + "{[Customers].[All Customers], [Customers].[Name].Members} ON rows\n"
                 + "from [Sales]\n"
-                + "where ([Store].[All Stores].[USA].[CA].[San Francisco].[Store 14], [Time].[1997].[Q1].[1] )");
+                + "where ([Store].[All Stores].[USA].[CA].[San Francisco].[Store 14], [Time].[1997].[Q1].[1])");
         Level[] levels = smr.getHierarchy().getLevels();
         Level nameLevel = levels[levels.length - 1];
 
         // evaluator for [All Customers], [Store 14], [1/1/1997]
-        Evaluator context = getEvaluator(r, new int[] { 0, 0});
+        Evaluator context = getEvaluator(r, new int[] {0, 0});
 
         // make sure that [Customers].[Name].Members IS in cache
         TupleConstraint lmc = scf.getLevelMembersConstraint(null);
@@ -1901,7 +2012,7 @@ public class NonEmptyTest extends BatchTestCase {
             assertEquals(10281, list.size());
         }
         // make sure that NON EMPTY [Customers].[Name].Members is NOT in cache
-        lmc = scf.getLevelMembersConstraint(context);
+        lmc = scf.getLevelMembersConstraint(context.push(true));
         assertNull(smrch.mapLevelToMembers.get((RolapLevel) nameLevel, lmc));
 
         // make sure that the parent/child for the context are cached
@@ -1910,9 +2021,9 @@ public class NonEmptyTest extends BatchTestCase {
         Member member = r.getAxes()[1].getPositions().get(1).get(0);
         Member parent = member.getParentMember();
 
-        parent = ((RolapCubeMember)parent).getRolapMember();
-        member = ((RolapCubeMember)member).getRolapMember();
-        
+        parent = ((RolapCubeMember) parent).getRolapMember();
+        member = ((RolapCubeMember) member).getRolapMember();
+
         // lookup all children of [Burnaby] -> yes, found in cache
         MemberChildrenConstraint mcc = scf.getMemberChildrenConstraint(null);
         list = ssmrch.mapMemberToChildren.get((RolapMember) parent, mcc);
@@ -1920,7 +2031,7 @@ public class NonEmptyTest extends BatchTestCase {
         assertTrue(list.contains(member));
 
         // lookup NON EMPTY children of [Burlingame] -> not in cache
-        mcc = scf.getMemberChildrenConstraint(context);
+        mcc = scf.getMemberChildrenConstraint(context.push(true));
         list = ssmrch.mapMemberToChildren.get((RolapMember) parent, mcc);
         assertNull(list);
     }
@@ -1940,7 +2051,7 @@ public class NonEmptyTest extends BatchTestCase {
                         + "{[Measures].[Unit Sales]} ON columns,\n"
                         + "NON EMPTY [Customers].Members ON rows\n"
                         + "from [Sales]\n"
-                        + "where ([Store].[All Stores].[USA].[CA].[San Francisco].[Store 14], [Time].[1997].[Q1].[1] )");
+                        + "where ([Store].[All Stores].[USA].[CA].[San Francisco].[Store 14], [Time].[1997].[Q1].[1])");
         c.run();
     }
 
@@ -1955,7 +2066,7 @@ public class NonEmptyTest extends BatchTestCase {
                         + "{[Measures].[Unit Sales]} ON columns,\n"
                         + "NON EMPTY [Customers].[All Customers].[USA].[CA].[Palo Alto].Children ON rows\n"
                         + "from [Sales]\n"
-                        + "where ([Store].[All Stores].[USA].[CA].[San Francisco].[Store 14], [Time].[1997].[Q1].[1] )");
+                        + "where ([Store].[All Stores].[USA].[CA].[San Francisco].[Store 14], [Time].[1997].[Q1].[1])");
         c.run();
     }
 
@@ -1965,7 +2076,7 @@ public class NonEmptyTest extends BatchTestCase {
     public void testMemberChildrenOfAllMember() {
         TestCase c = new TestCase(50, 14, "select {[Measures].[Unit Sales]} ON columns,\n"
                 + "NON EMPTY [Promotions].[All Promotions].Children ON rows from [Sales]\n"
-                + "where ([Time].[1997].[Q1].[1] )");
+                + "where ([Time].[1997].[Q1].[1])");
         c.run();
     }
 
@@ -1973,7 +2084,6 @@ public class NonEmptyTest extends BatchTestCase {
      * Tests non empty children of All member w/o WHERE clause
      */
     public void testMemberChildrenNoWhere() {
-
         // the time dimension is joined because there is no (All) level in the Time
         // hierarchy:
         //
@@ -2034,7 +2144,7 @@ public class NonEmptyTest extends BatchTestCase {
                 "select \n"
                         + "{[Measures].[Unit Sales]} ON columns,\n"
                         + "NON EMPTY Crossjoin({[Store].[All Stores].[USA].[CA].[San Francisco].[Store 14]}, [Customers].[All Customers].[USA].[CA].[Palo Alto].Children) ON rows\n"
-                        + "from [Sales] where ([Time].[1997].[Q1].[1] )");
+                        + "from [Sales] where ([Time].[1997].[Q1].[1])");
         c.run();
     }
 
@@ -2055,7 +2165,7 @@ public class NonEmptyTest extends BatchTestCase {
         SmartMemberReader smr = getSmartMemberReader(con, "Customers");
         MemberCacheHelper smrch = smr.cacheHelper;
         clearAndHardenCache(smrch);
-        
+
         SmartMemberReader ssmr = getSmartMemberReader(con, "Customers");
         MemberCacheHelper ssmrch = ssmr.cacheHelper;
         clearAndHardenCache(ssmrch);
@@ -2068,21 +2178,21 @@ public class NonEmptyTest extends BatchTestCase {
                         + "{[Measures].[Unit Sales]} ON columns, "
                         + "NON EMPTY {[Customers].[All Customers], Descendants([Customers].[All Customers].[USA].[CA], [Customers].[Name])} on rows "
                         + "from [Sales] "
-                        + "where ([Store].[All Stores].[USA].[CA].[San Francisco].[Store 14], [Time].[1997].[Q1].[1] )");
+                        + "where ([Store].[All Stores].[USA].[CA].[San Francisco].[Store 14], [Time].[1997].[Q1].[1])");
         Result result = c.run();
         // [Customers].[All Customers].[USA].[CA].[Burlingame].[Peggy Justice]
         RolapMember peggy = (RolapMember) result.getAxes()[1].getPositions().get(1).get(0);
         RolapMember burlingame = peggy.getParentMember();
-        
-        peggy = ((RolapCubeMember)peggy).getRolapMember();
-        burlingame = ((RolapCubeMember)burlingame).getRolapMember();
-        
+
+        peggy = ((RolapCubeMember) peggy).getRolapMember();
+        burlingame = ((RolapCubeMember) burlingame).getRolapMember();
+
         // all children of burlingame are not in cache
         MemberChildrenConstraint mcc = scf.getMemberChildrenConstraint(null);
         assertNull(ssmrch.mapMemberToChildren.get(burlingame, mcc));
         // but non empty children is
-        Evaluator evaluator = getEvaluator(result, new int[] { 0, 0});
-        mcc = scf.getMemberChildrenConstraint(evaluator);
+        Evaluator evaluator = getEvaluator(result, new int[] {0, 0});
+        mcc = scf.getMemberChildrenConstraint(evaluator.push(true));
         List list = ssmrch.mapMemberToChildren.get(burlingame, mcc);
         assertNotNull(list);
         assertTrue(list.contains(peggy));
@@ -2126,9 +2236,10 @@ public class NonEmptyTest extends BatchTestCase {
                     "Row #1: $339,610.90\n"));
     }
 
-    public void testVirtualCubeCrossJoin()
-    {
-        checkNative(18, 3,
+    public void testVirtualCubeCrossJoin() {
+        checkNative(
+            18,
+            3,
             "select " +
             "{[Measures].[Units Ordered], [Measures].[Store Sales]} on columns, " +
             "non empty crossjoin([Product].[All Products].children, " +
@@ -2136,9 +2247,10 @@ public class NonEmptyTest extends BatchTestCase {
             "from [Warehouse and Sales]");
     }
 
-    public void testVirtualCubeNonEmptyCrossJoin()
-    {
-        checkNative(18, 3,
+    public void testVirtualCubeNonEmptyCrossJoin() {
+        checkNative(
+            18,
+            3,
             "select " +
             "{[Measures].[Units Ordered], [Measures].[Store Sales]} on columns, " +
             "NonEmptyCrossJoin([Product].[All Products].children, " +
@@ -2146,9 +2258,10 @@ public class NonEmptyTest extends BatchTestCase {
             "from [Warehouse and Sales]");
     }
 
-    public void testVirtualCubeNonEmptyCrossJoin3Args()
-    {
-        checkNative(3, 3,
+    public void testVirtualCubeNonEmptyCrossJoin3Args() {
+        checkNative(
+            3,
+            3,
             "select " +
             "{[Measures].[Store Sales]} on columns, " +
             "nonEmptyCrossJoin([Product].[All Products].children, " +
@@ -2157,59 +2270,52 @@ public class NonEmptyTest extends BatchTestCase {
             "from [Warehouse and Sales]");
     }
 
-    public void testVirtualCubeCrossJoinNonConformingDim()
-    {
+    public void testVirtualCubeCrossJoinNonConformingDim() {
         // for this test, verify that no alert is raised even though
         // native evaluation isn't supported, because lack of
         // support is intentional
-        StringProperty alertProperty =
-            MondrianProperties.instance().AlertNativeEvaluationUnsupported;
-        String oldAlert = alertProperty.get();
-        alertProperty.set("ERROR");
+        propSaver.set(
+            MondrianProperties.instance().AlertNativeEvaluationUnsupported,
+            "ERROR");
 
-        try {
-
-            // cross join involves non-conforming dimensions should not use
-            // native cross joins because it will result in a cartesian
-            // product join
-            checkNotNative(0,
-                "select " +
+        // cross join involves non-conforming dimensions should not use
+        // native cross joins because it will result in a cartesian
+        // product join
+        checkNotNative(
+            0,
+            "select " +
                 "{[Measures].[Units Ordered], [Measures].[Store Sales]} on columns, " +
                 "NonEmptyCrossJoin([Customers].[All Customers].children, " +
                 "[Warehouse].[All Warehouses].children) on rows " +
                 "from [Warehouse and Sales]");
-        } finally {
-            alertProperty.set(oldAlert);
-        }
     }
 
-    public void testNotNativeVirtualCubeCrossJoin1()
-    {
+    public void testNotNativeVirtualCubeCrossJoin1() {
+        switch (getTestContext().getDialect().getDatabaseProduct()) {
+        case INFOBRIGHT:
+            // Hits same Infobright bug as NamedSetTest.testNamedSetOnMember.
+            return;
+        }
         // for this test, verify that no alert is raised even though
         // native evaluation isn't supported, because query
         // doesn't use explicit NonEmptyCrossJoin
-        StringProperty alertProperty =
-            MondrianProperties.instance().AlertNativeEvaluationUnsupported;
-        String oldAlert = alertProperty.get();
-        alertProperty.set("ERROR");
-
-        try {
-            // native cross join cannot be used due to AllMembers
-            checkNotNative(3,
-                "select " +
+        propSaver.set(
+            MondrianProperties.instance().AlertNativeEvaluationUnsupported,
+            "ERROR");
+        // native cross join cannot be used due to AllMembers
+        checkNotNative(
+            3,
+            "select " +
                 "{[Measures].AllMembers} on columns, " +
                 "non empty crossjoin([Product].[All Products].children, " +
                 "[Store].[All Stores].children) on rows " +
                 "from [Warehouse and Sales]");
-        } finally {
-            alertProperty.set(oldAlert);
-        }
     }
 
-    public void testNotNativeVirtualCubeCrossJoin2()
-    {
+    public void testNotNativeVirtualCubeCrossJoin2() {
         // native cross join cannot be used due to the range operator
-        checkNotNative(3,
+        checkNotNative(
+            3,
             "select " +
             "{[Measures].[Sales Count] : [Measures].[Unit Sales]} on columns, " +
             "non empty crossjoin([Product].[All Products].children, " +
@@ -2217,10 +2323,16 @@ public class NonEmptyTest extends BatchTestCase {
             "from [Warehouse and Sales]");
     }
 
-    public void testNotNativeVirtualCubeCrossJoinUnsupported()
-    {
-        BooleanProperty enableProperty =
+    public void testNotNativeVirtualCubeCrossJoinUnsupported() {
+        switch (getTestContext().getDialect().getDatabaseProduct()) {
+        case INFOBRIGHT:
+            // Hits same Infobright bug as NamedSetTest.testNamedSetOnMember.
+            return;
+        }
+        final BooleanProperty enableProperty =
             MondrianProperties.instance().EnableNativeCrossJoin;
+        final StringProperty alertProperty =
+            MondrianProperties.instance().AlertNativeEvaluationUnsupported;
         if (!enableProperty.get()) {
             // When native cross joins are explicitly disabled, no alerts
             // are supposed to be raised.
@@ -2237,12 +2349,15 @@ public class NonEmptyTest extends BatchTestCase {
         final List<LoggingEvent> events = new ArrayList<LoggingEvent>();
 
         // set up log4j listener to detect alerts
-        Appender alertListener = new AppenderSkeleton() {
+        Appender alertListener =
+            new AppenderSkeleton() {
                 protected void append(LoggingEvent event) {
                     events.add(event);
                 }
+
                 public void close() {
                 }
+
                 public boolean requiresLayout() {
                     return false;
                 }
@@ -2253,17 +2368,16 @@ public class NonEmptyTest extends BatchTestCase {
             "Unable to use native SQL evaluation for 'NonEmptyCrossJoin'";
 
         // verify that exception is thrown if alerting is set to ERROR
-        StringProperty alertProperty =
-            MondrianProperties.instance().AlertNativeEvaluationUnsupported;
-        String oldAlert = alertProperty.get();
-        alertProperty.set(org.apache.log4j.Level.ERROR.toString());
+        propSaver.set(
+            alertProperty,
+            org.apache.log4j.Level.ERROR.toString());
         try {
             checkNotNative(3, mdx);
             fail("Expected NativeEvaluationUnsupportedException");
         } catch (NativeEvaluationUnsupportedException ex) {
             // Expected
         } finally {
-            alertProperty.set(oldAlert);
+            propSaver.reset();
         }
 
         // should have gotten one ERROR
@@ -2276,11 +2390,13 @@ public class NonEmptyTest extends BatchTestCase {
 
         // verify that exactly one warning is posted but execution succeeds
         // if alerting is set to WARN
-        alertProperty.set(org.apache.log4j.Level.WARN.toString());
+        propSaver.set(
+            alertProperty,
+            org.apache.log4j.Level.WARN.toString());
         try {
             checkNotNative(3, mdx);
         } finally {
-            alertProperty.set(oldAlert);
+            propSaver.reset();
         }
 
         // should have gotten one WARN
@@ -2293,13 +2409,16 @@ public class NonEmptyTest extends BatchTestCase {
 
         // verify that no warning is posted if native evaluation is
         // explicitly disabled
-        alertProperty.set(org.apache.log4j.Level.WARN.toString());
-        enableProperty.set(false);
+        propSaver.set(
+            alertProperty,
+            org.apache.log4j.Level.WARN.toString());
+        propSaver.set(
+            enableProperty,
+            false);
         try {
             checkNotNative(3, mdx);
         } finally {
-            alertProperty.set(oldAlert);
-            enableProperty.set(true);
+            propSaver.reset();
         }
 
         // should have gotten no WARN
@@ -2333,10 +2452,11 @@ public class NonEmptyTest extends BatchTestCase {
         return filteredEventCount;
     }
 
-    public void testVirtualCubeCrossJoinCalculatedMember1()
-    {
+    public void testVirtualCubeCrossJoinCalculatedMember1() {
         // calculated member appears in query
-        checkNative(18, 3,
+        checkNative(
+            18,
+            3,
             "WITH MEMBER [Measures].[Total Cost] as " +
             "'[Measures].[Store Cost] + [Measures].[Warehouse Cost]' " +
             "select " +
@@ -2346,10 +2466,11 @@ public class NonEmptyTest extends BatchTestCase {
             "from [Warehouse and Sales]");
     }
 
-    public void testVirtualCubeCrossJoinCalculatedMember2()
-    {
+    public void testVirtualCubeCrossJoinCalculatedMember2() {
         // calculated member defined in schema
-        checkNative(18, 3,
+        checkNative(
+            18,
+            3,
             "select " +
             "{[Measures].[Profit Per Unit Shipped]} on columns, " +
             "non empty crossjoin([Product].[All Products].children, " +
@@ -2357,11 +2478,11 @@ public class NonEmptyTest extends BatchTestCase {
             "from [Warehouse and Sales]");
     }
 
-    public void testNotNativeVirtualCubeCrossJoinCalculatedMember()
-    {
+    public void testNotNativeVirtualCubeCrossJoinCalculatedMember() {
         // native cross join cannot be used due to CurrentMember in the
         // calculated member
-        checkNotNative(3,
+        checkNotNative(
+            3,
             "WITH MEMBER [Measures].[CurrMember] as " +
             "'[Measures].CurrentMember' " +
             "select " +
@@ -2371,8 +2492,7 @@ public class NonEmptyTest extends BatchTestCase {
             "from [Warehouse and Sales]");
     }
 
-    public void testCjEnumCalcMembers()
-    {
+    public void testCjEnumCalcMembers() {
         // 3 cross joins -- 2 of the 4 arguments to the cross joins are
         // enumerated sets with calculated members
         // should be non-native due to the fix to testCjEnumCalcMembersBug()
@@ -2392,9 +2512,9 @@ public class NonEmptyTest extends BatchTestCase {
             "select " +
             "{[Measures].[Unit Sales]} on columns, " +
             "non empty " +
-            "    crossjoin( " +
-            "        crossjoin( " +
-            "            crossjoin( " +
+            "    crossjoin(" +
+            "        crossjoin(" +
+            "            crossjoin(" +
             "                {[Product].[All Products].[Drink].[*SUBTOTAL_MEMBER_SEL~SUM], " +
             "                    [Product].[All Products].[Non-Consumable].[*SUBTOTAL_MEMBER_SEL~SUM]}, " +
             "                [Education Level].[Education Level].Members), " +
@@ -2415,14 +2535,16 @@ public class NonEmptyTest extends BatchTestCase {
             "    [Store Type].[All Store Types].[Small Grocery], " +
             "    [Store Type].[All Store Types].[Supermarket], " +
             "    [Store Type].[All Store Types].[S]}" +
-            "select " +
-            "    NonEmptyCrossJoin([Product].[All Products].Children, [Enum Store Types]) on rows " +
+            "select [Measures] on columns,\n" +
+            "    NonEmptyCrossJoin([Product].[All Products].Children, [Enum Store Types]) on rows\n" +
             "from [Sales]";
 
         String result =
             "Axis #0:\n" +
             "{}\n" +
             "Axis #1:\n" +
+            "{[Measures].[Unit Sales]}\n" +
+            "Axis #2:\n" +
             "{[Product].[All Products].[Drink], [Store Type].[All Store Types].[Small Grocery]}\n" +
             "{[Product].[All Products].[Drink], [Store Type].[All Store Types].[Supermarket]}\n" +
             "{[Product].[All Products].[Drink], [Store Type].[All Store Types].[S]}\n" +
@@ -2433,68 +2555,53 @@ public class NonEmptyTest extends BatchTestCase {
             "{[Product].[All Products].[Non-Consumable], [Store Type].[All Store Types].[Supermarket]}\n" +
             "{[Product].[All Products].[Non-Consumable], [Store Type].[All Store Types].[S]}\n" +
             "Row #0: 574\n" +
-            "Row #0: 14,092\n" +
-            "Row #0: 24,597\n" +
-            "Row #0: 4,764\n" +
-            "Row #0: 108,188\n" +
-            "Row #0: 191,940\n" +
-            "Row #0: 1,219\n" +
-            "Row #0: 28,275\n" +
-            "Row #0: 50,236\n";
+            "Row #1: 14,092\n" +
+            "Row #2: 24,597\n" +
+            "Row #3: 4,764\n" +
+            "Row #4: 108,188\n" +
+            "Row #5: 191,940\n" +
+            "Row #6: 1,219\n" +
+            "Row #7: 28,275\n" +
+            "Row #8: 50,236\n";
 
         // make sure NECJ is forced to be non-native
         // before the fix, the query is natively evaluated and result
         // has empty rows for [Store Type].[All Store Types].[HeadQuarters]
-        boolean origNativeCJ =
-            MondrianProperties.instance().EnableNativeCrossJoin.get();
-        MondrianProperties.instance().EnableNativeCrossJoin.set(true);
-        boolean origExpandNonNative =
-            MondrianProperties.instance().ExpandNonNative.get();
-        MondrianProperties.instance().ExpandNonNative.set(true);
+        propSaver.set(MondrianProperties.instance().EnableNativeCrossJoin, true);
+        propSaver.set(MondrianProperties.instance().ExpandNonNative, true);
         checkNotNative(9, query, fold(result));
-        MondrianProperties.instance().EnableNativeCrossJoin.set(origNativeCJ);
-        MondrianProperties.instance().ExpandNonNative.set(origExpandNonNative);
     }
 
-    public void testCjEnumEmptyCalcMembers()
-    {
+    public void testCjEnumEmptyCalcMembers() {
         // Make sure maxConstraint settting is high enough
-        int origMaxConstraints =
-            MondrianProperties.instance().MaxConstraints.get();
         int minConstraints = 3;
-
-        if (origMaxConstraints < minConstraints) {
-            MondrianProperties.instance().MaxConstraints.set(minConstraints);
+        if (MondrianProperties.instance().MaxConstraints.get() < minConstraints) {
+            propSaver.set(MondrianProperties.instance().MaxConstraints, minConstraints);
         }
 
-        try {
-            // enumerated list of calculated members results in some empty cells
-            checkNotNative(
-                5,
-                "with " +
-                "member [Customers].[All Customers].[USA].[*SUBTOTAL_MEMBER_SEL~SUM] as " +
-                "    'sum({[Customers].[All Customers].[USA]})' " +
-                "member [Customers].[All Customers].[Mexico].[*SUBTOTAL_MEMBER_SEL~SUM] as " +
-                "    'sum({[Customers].[All Customers].[Mexico]})' " +
-                "member [Customers].[All Customers].[Canada].[*SUBTOTAL_MEMBER_SEL~SUM] as " +
-                "    'sum({[Customers].[All Customers].[Canada]})' " +
-                "select " +
-                "{[Measures].[Unit Sales]} on columns, " +
-                "non empty " +
-                "    crossjoin( " +
-                "        {[Customers].[All Customers].[Mexico].[*SUBTOTAL_MEMBER_SEL~SUM], " +
-                "            [Customers].[All Customers].[Canada].[*SUBTOTAL_MEMBER_SEL~SUM], " +
-                "            [Customers].[All Customers].[USA].[*SUBTOTAL_MEMBER_SEL~SUM]}, " +
-                "        [Education Level].[Education Level].Members) " +
-                "    on rows " +
-                "from [Sales]");
-        } finally {
-            MondrianProperties.instance().MaxConstraints.set(origMaxConstraints);
-        }
+        // enumerated list of calculated members results in some empty cells
+        checkNotNative(
+            5,
+            "with " +
+            "member [Customers].[All Customers].[USA].[*SUBTOTAL_MEMBER_SEL~SUM] as " +
+            "    'sum({[Customers].[All Customers].[USA]})' " +
+            "member [Customers].[All Customers].[Mexico].[*SUBTOTAL_MEMBER_SEL~SUM] as " +
+            "    'sum({[Customers].[All Customers].[Mexico]})' " +
+            "member [Customers].[All Customers].[Canada].[*SUBTOTAL_MEMBER_SEL~SUM] as " +
+            "    'sum({[Customers].[All Customers].[Canada]})' " +
+            "select " +
+            "{[Measures].[Unit Sales]} on columns, " +
+            "non empty " +
+            "    crossjoin(" +
+            "        {[Customers].[All Customers].[Mexico].[*SUBTOTAL_MEMBER_SEL~SUM], " +
+            "            [Customers].[All Customers].[Canada].[*SUBTOTAL_MEMBER_SEL~SUM], " +
+            "            [Customers].[All Customers].[USA].[*SUBTOTAL_MEMBER_SEL~SUM]}, " +
+            "        [Education Level].[Education Level].Members) " +
+            "    on rows " +
+            "from [Sales]");
     }
 
-    public void testCjUnionEnumCalcMembers()
-    {
+    public void testCjUnionEnumCalcMembers() {
         // non-native due to the fix to testCjEnumCalcMembersBug()
         checkNotNative(
             46,
@@ -2502,12 +2609,12 @@ public class NonEmptyTest extends BatchTestCase {
             "member [Education Level].[*SUBTOTAL_MEMBER_SEL~SUM] as " +
             "    'sum({[Education Level].[All Education Levels]})' " +
             "member [Education Level].[*SUBTOTAL_MEMBER_SEL~AVG] as " +
-             "   'avg([Education Level].[Education Level].Members)' select " +
+            "   'avg([Education Level].[Education Level].Members)' select " +
             "{[Measures].[Unit Sales]} on columns, " +
-            "non empty union (Crossjoin( " +
+            "non empty union (Crossjoin(" +
             "    [Product].[Product Department].Members, " +
             "    {[Education Level].[*SUBTOTAL_MEMBER_SEL~AVG]}), " +
-            "crossjoin( " +
+            "crossjoin(" +
             "    [Product].[Product Department].Members, " +
             "    {[Education Level].[*SUBTOTAL_MEMBER_SEL~SUM]})) on rows " +
             "from [Sales]");
@@ -2518,7 +2625,9 @@ public class NonEmptyTest extends BatchTestCase {
      * member of a hierarchy is not 'all' or the first child.
      */
     public void testNonEmptyWithWeirdDefaultMember() {
-        if (!Bug.Bug1574942Fixed) return;
+        if (!Bug.Bug1574942Fixed) {
+            return;
+        }
         TestContext testContext = TestContext.createSubstitutingCube(
             "Sales",
             "  <Dimension name=\"Time\" type=\"TimeDimension\" foreignKey=\"time_id\">\n" +
@@ -2558,8 +2667,7 @@ public class NonEmptyTest extends BatchTestCase {
                 "Row #1: 21\n"));
     }
 
-    public void testCrossJoinNamedSets1()
-    {
+    public void testCrossJoinNamedSets1() {
         checkNative(
             3,
             3,
@@ -2571,36 +2679,27 @@ public class NonEmptyTest extends BatchTestCase {
             "on rows from [Sales]");
     }
 
-    public void testCrossJoinNamedSets2()
-    {
+    public void testCrossJoinNamedSets2() {
         // Make sure maxConstraint settting is high enough
-        int origMaxConstraints =
-            MondrianProperties.instance().MaxConstraints.get();
         int minConstraints = 3;
-
-        if (origMaxConstraints < minConstraints) {
-            MondrianProperties.instance().MaxConstraints.set(minConstraints);
+        if (MondrianProperties.instance().MaxConstraints.get() < minConstraints) {
+            propSaver.set(MondrianProperties.instance().MaxConstraints, minConstraints);
         }
 
-        try {
-            checkNative(
-                3,
-                3,
-                "with " +
-                "SET [ProductChildren] as '{[Product].[All Products].[Drink], " +
-                "[Product].[All Products].[Food], " +
-                "[Product].[All Products].[Non-Consumable]}' " +
-                "SET [StoreChildren] as '[Store].[All Stores].children' " +
-                "select {[Measures].[Store Sales]} on columns, " +
-                "non empty crossjoin([ProductChildren], [StoreChildren]) on rows from " +
-                "[Sales]");
-        } finally {
-            MondrianProperties.instance().MaxConstraints.set(origMaxConstraints);
-        }
+        checkNative(
+            3,
+            3,
+            "with " +
+            "SET [ProductChildren] as '{[Product].[All Products].[Drink], " +
+            "[Product].[All Products].[Food], " +
+            "[Product].[All Products].[Non-Consumable]}' " +
+            "SET [StoreChildren] as '[Store].[All Stores].children' " +
+            "select {[Measures].[Store Sales]} on columns, " +
+            "non empty crossjoin([ProductChildren], [StoreChildren]) on rows from " +
+            "[Sales]");
     }
 
-    public void testCrossJoinSetWithDifferentParents()
-    {
+    public void testCrossJoinSetWithDifferentParents() {
         // Verify that only the members explicitly referenced in the set
         // are returned.  Note that different members are referenced in
         // each level in the time dimension.
@@ -2613,89 +2712,64 @@ public class NonEmptyTest extends BatchTestCase {
             "{[Time].[1997].[Q1], [Time].[1998].[Q2]}) on rows from Sales");
     }
 
-    public void testCrossJoinSetWithCrossProdMembers()
-    {
+    public void testCrossJoinSetWithCrossProdMembers() {
         // Make sure maxConstraint settting is high enough
-        int origMaxConstraints =
-            MondrianProperties.instance().MaxConstraints.get();
         int minConstraints = 6;
-
-        if (origMaxConstraints < minConstraints) {
-            MondrianProperties.instance().MaxConstraints.set(minConstraints);
+        if (MondrianProperties.instance().MaxConstraints.get() < minConstraints) {
+            propSaver.set(MondrianProperties.instance().MaxConstraints, minConstraints);
         }
 
-        try {
-            // members in set are a cross product of (1997, 1998) and (Q1, Q2, Q3)
-            checkNative(
-                15,
-                15,
-                "select " +
-                "{[Measures].[Unit Sales]} on columns, " +
-                "NonEmptyCrossJoin([Education Level].[Education Level].Members, " +
-                "{[Time].[1997].[Q1], [Time].[1997].[Q2], [Time].[1997].[Q3], " +
-                "[Time].[1998].[Q1], [Time].[1998].[Q2], [Time].[1998].[Q3]})" +
-                "on rows from Sales");
-        } finally {
-            MondrianProperties.instance().MaxConstraints.set(origMaxConstraints);
-        }
+        // members in set are a cross product of (1997, 1998) and (Q1, Q2, Q3)
+        checkNative(
+            15,
+            15,
+            "select " +
+            "{[Measures].[Unit Sales]} on columns, " +
+            "NonEmptyCrossJoin([Education Level].[Education Level].Members, " +
+            "{[Time].[1997].[Q1], [Time].[1997].[Q2], [Time].[1997].[Q3], " +
+            "[Time].[1998].[Q1], [Time].[1998].[Q2], [Time].[1998].[Q3]})" +
+            "on rows from Sales");
     }
 
-    public void testCrossJoinSetWithSameParent()
-    {
+    public void testCrossJoinSetWithSameParent() {
         // Make sure maxConstraint settting is high enough
-        int origMaxConstraints =
-            MondrianProperties.instance().MaxConstraints.get();
         int minConstraints = 2;
-
-        if (origMaxConstraints < minConstraints) {
-            MondrianProperties.instance().MaxConstraints.set(minConstraints);
+        if (MondrianProperties.instance().MaxConstraints.get() < minConstraints) {
+            propSaver.set(MondrianProperties.instance().MaxConstraints, minConstraints);
         }
 
-        try {
-            // members in set have the same parent
-            checkNative(
-                10,
-                10,
-                "select " +
-                "{[Measures].[Unit Sales]} on columns, " +
-                "NonEmptyCrossJoin([Education Level].[Education Level].Members, " +
-                "{[Store].[All Stores].[USA].[CA].[Beverly Hills], " +
-                "[Store].[All Stores].[USA].[CA].[San Francisco]}) " +
-                "on rows from Sales");
-        } finally {
-            MondrianProperties.instance().MaxConstraints.set(origMaxConstraints);
-        }
+        // members in set have the same parent
+        checkNative(
+            10,
+            10,
+            "select " +
+            "{[Measures].[Unit Sales]} on columns, " +
+            "NonEmptyCrossJoin([Education Level].[Education Level].Members, " +
+            "{[Store].[All Stores].[USA].[CA].[Beverly Hills], " +
+            "[Store].[All Stores].[USA].[CA].[San Francisco]}) " +
+            "on rows from Sales");
     }
 
-    public void testCrossJoinSetWithUniqueLevel()
-    {
+    public void testCrossJoinSetWithUniqueLevel() {
         // Make sure maxConstraint settting is high enough
-        int origMaxConstraints =
-            MondrianProperties.instance().MaxConstraints.get();
         int minConstraints = 2;
-
-        if (origMaxConstraints < minConstraints) {
-            MondrianProperties.instance().MaxConstraints.set(minConstraints);
+        if (MondrianProperties.instance().MaxConstraints.get() < minConstraints) {
+            propSaver.set(MondrianProperties.instance().MaxConstraints, minConstraints);
         }
 
-        try {
-            // members in set have different parents but there is a unique level
-            checkNative(
-                10,
-                10,
-                "select " +
-                "{[Measures].[Unit Sales]} on columns, " +
-                "NonEmptyCrossJoin([Education Level].[Education Level].Members, " +
-                "{[Store].[All Stores].[USA].[CA].[Beverly Hills].[Store 6], "+
-                "[Store].[All Stores].[USA].[WA].[Bellingham].[Store 2]}) " +
-                "on rows from Sales");
-        } finally {
-            MondrianProperties.instance().MaxConstraints.set(origMaxConstraints);
-        }
+        // members in set have different parents but there is a unique level
+        checkNative(
+            10,
+            10,
+            "select " +
+            "{[Measures].[Unit Sales]} on columns, " +
+            "NonEmptyCrossJoin([Education Level].[Education Level].Members, " +
+            "{[Store].[All Stores].[USA].[CA].[Beverly Hills].[Store 6], " +
+            "[Store].[All Stores].[USA].[WA].[Bellingham].[Store 2]}) " +
+            "on rows from Sales");
     }
 
-    public void testCrossJoinMultiInExprAllMember()
-    {
+    public void testCrossJoinMultiInExprAllMember() {
         checkNative(
             10,
             10,
@@ -2707,8 +2781,7 @@ public class NonEmptyTest extends BatchTestCase {
             "on rows from Sales");
     }
 
-    public void testCrossJoinEvaluatorContext1()
-    {
+    public void testCrossJoinEvaluatorContext1() {
         // This test ensures that the proper measure members context is
         // set when evaluating a non-empty cross join.  The context should
         // not include the calculated measure [*TOP_BOTTOM_SET].  If it
@@ -2767,20 +2840,16 @@ public class NonEmptyTest extends BatchTestCase {
                 "Row #9: 29,959.28\n"));
     }
 
-    public void testCrossJoinEvaluatorContext2()
-    {
-        int origMaxConstraints =
-            MondrianProperties.instance().MaxConstraints.get();
+    public void testCrossJoinEvaluatorContext2() {
+        // Make sure maxConstraint settting is high enough
         int minConstraints = 2;
-
-        if (origMaxConstraints < minConstraints) {
-            MondrianProperties.instance().MaxConstraints.set(minConstraints);
+        if (MondrianProperties.instance().MaxConstraints.get() < minConstraints) {
+            propSaver.set(MondrianProperties.instance().MaxConstraints, minConstraints);
         }
 
-        try {
-            // calculated measure contains a calculated member
-            assertQueryReturns(
-                "With Set [*NATIVE_CJ_SET] as " +
+        // calculated measure contains a calculated member
+        assertQueryReturns(
+            "With Set [*NATIVE_CJ_SET] as " +
                 "'NonEmptyCrossJoin([*BASE_MEMBERS_Dates], [*BASE_MEMBERS_Stores])' " +
                 "Set [*BASE_MEMBERS_Dates] as '{[Time].[1997].[Q1], [Time].[1997].[Q2]}' " +
                 "Set [*GENERATED_MEMBERS_Dates] as " +
@@ -2816,7 +2885,7 @@ public class NonEmptyTest extends BatchTestCase {
                 "([Measures].[Unit Sales], " +
                 "[Time].[*SUBTOTAL_MEMBER_SEL~SUM]) > 0.0), " +
                 "Not IsEmpty ([Measures].[Unit Sales])), " +
-                "Filter( " +
+                "Filter(" +
                 "{[Store].[*SUBTOTAL_MEMBER_SEL~SUM]}, " +
                 "Not IsEmpty ([Measures].[Unit Sales]))) on rows " +
                 "From [Sales]",
@@ -2840,13 +2909,9 @@ public class NonEmptyTest extends BatchTestCase {
                     "Row #2: 49.72%\n" +
                     "Row #2: 50.28%\n" +
                     "Row #2: 100.00%\n"));
-        } finally {
-            MondrianProperties.instance().MaxConstraints.set(origMaxConstraints);
-        }
     }
 
-    public void testVCNativeCJWithIsEmptyOnMeasure()
-    {
+    public void testVCNativeCJWithIsEmptyOnMeasure() {
         // Don't use checkNative method here because in the case where
         // native cross join isn't used, the query causes a stack overflow.
         //
@@ -2879,27 +2944,28 @@ public class NonEmptyTest extends BatchTestCase {
                 "Row #0: 12,395\n"));
     }
 
-    public void testVCNativeCJWithTopPercent()
-    {
+    public void testVCNativeCJWithTopPercent() {
         // The reference to [Store Sales] inside the topPercent function
         // should not prevent native cross joins from being used
         checkNative(
-            92,
-            1,
-            "select {topPercent(nonemptycrossjoin([Product].[Product Department].members, " +
-            "[Time].[1997].children),10,[Measures].[Store Sales])} on columns, " +
-            "{[Measures].[Store Sales]} on rows from " +
-            "[Warehouse and Sales]");
+                92,
+                1,
+                "select {topPercent(nonemptycrossjoin([Product].[Product Department].members, " +
+                        "[Time].[1997].children),10,[Measures].[Store Sales])} on columns, " +
+                        "{[Measures].[Store Sales]} on rows from " +
+                        "[Warehouse and Sales]");
     }
 
     public void testVCOrdinalExpression() {
         // [Customers].[Name] is an ordinal expression.  Make sure ordering
         // is done on the column corresponding to that expression.
-        checkNative(67, 67,
-                "select {[Measures].[Store Sales]} on columns,"
+        checkNative(
+            67,
+            67,
+            "select {[Measures].[Store Sales]} on columns,"
                 + "  NON EMPTY Crossjoin([Customers].[Name].Members,"
-                + "    [Product].[Product Name].Members) ON rows " +
-                " from [Warehouse and Sales] where ("
+                + "    [Product].[Product Name].Members) ON rows "
+                + " from [Warehouse and Sales] where ("
                 + "  [Store].[All Stores].[USA].[CA].[San Francisco].[Store 14],"
                 + "  [Time].[1997].[Q1].[1])");
     }
@@ -2909,7 +2975,9 @@ public class NonEmptyTest extends BatchTestCase {
      * Modified which calculations are tested for non native, non empty joins
      */
     public void testNonEmptyWithCalcMeasure() {
-        checkNative(15, 6,
+        checkNative(
+            15,
+            6,
         "With " +
         "Set [*NATIVE_CJ_SET] as 'NonEmptyCrossJoin([*BASE_MEMBERS_Store],NonEmptyCrossJoin([*BASE_MEMBERS_Education Level],[*BASE_MEMBERS_Product]))' " +
         "Set [*METRIC_CJ_SET] as 'Filter([*NATIVE_CJ_SET],[Measures].[*Store Sales_SEL~SUM] > 50000.0 And [Measures].[*Unit Sales_SEL~MAX] > 50000.0)' " +
@@ -2932,8 +3000,7 @@ public class NonEmptyTest extends BatchTestCase {
         "Select " +
         "CrossJoin(Generate([*METRIC_CJ_SET], {([Store].CurrentMember)}),[*BASE_MEMBERS_Measures]) on columns, " +
         "Non Empty Generate([*METRIC_CJ_SET], {([Education Level].CurrentMember,[Product].CurrentMember)}) on rows " +
-        "From [Sales]"
-        );
+        "From [Sales]");
     }
 
     public void testCalculatedSlicerMember() {
@@ -2960,8 +3027,7 @@ public class NonEmptyTest extends BatchTestCase {
             "Member [Gender].FILTER2 as 'Aggregate(GM_GENDER)' " +
             "Select " +
             "GM_PRODUCT on rows, GM_MEASURE on columns " +
-            "From [Sales] Where ([Education Level].FILTER1, [Gender].FILTER2)"
-        );
+            "From [Sales] Where ([Education Level].FILTER1, [Gender].FILTER2)");
     }
 
     // next two verify that when NECJ references dimension from slicer,
@@ -2996,17 +3062,14 @@ public class NonEmptyTest extends BatchTestCase {
             "Row #0: \n" +
             "Row #0: \n";
 
-        boolean origNativeCJ =
-            MondrianProperties.instance().EnableNativeCrossJoin.get();
-        MondrianProperties.instance().EnableNativeCrossJoin.set(useNative);
+        propSaver.set(
+            MondrianProperties.instance().EnableNativeCrossJoin, useNative);
 
         // Get a fresh connection; Otherwise the mondrian property setting
         // is not refreshed for this parameter.
         Connection conn = getTestContext().getFoodMartConnection(false);
         TestContext context = getTestContext(conn);
         context.assertQueryReturns(query, fold(expectedResult));
-
-        MondrianProperties.instance().EnableNativeCrossJoin.set(origNativeCJ);
     }
 
     public void testDependentSlicerMemberNonNative() {
@@ -3023,18 +3086,14 @@ public class NonEmptyTest extends BatchTestCase {
             "{[Time].[1998]}\n" +
             "Axis #1:\n";
 
-        boolean origNativeCJ =
-            MondrianProperties.instance().EnableNativeCrossJoin.get();
-        MondrianProperties.instance().EnableNativeCrossJoin.set(false);
+        propSaver.set(MondrianProperties.instance().EnableNativeCrossJoin, false);
 
         // Get a fresh connection; Otherwise the mondrian property setting
         // is not refreshed for this parameter.
         Connection conn = getTestContext().getFoodMartConnection(false);
         TestContext context = getTestContext(conn);
         context.assertQueryReturns(query, fold(resultNonNative));
-
-        MondrianProperties.instance().EnableNativeCrossJoin.set(origNativeCJ);
-}
+    }
 
     public void testDependentSlicerMemberNative() {
         String query =
@@ -3050,17 +3109,13 @@ public class NonEmptyTest extends BatchTestCase {
             "{[Time].[1998]}\n" +
             "Axis #1:\n";
 
-        boolean origNativeCJ =
-            MondrianProperties.instance().EnableNativeCrossJoin.get();
-        MondrianProperties.instance().EnableNativeCrossJoin.set(true);
+        propSaver.set(MondrianProperties.instance().EnableNativeCrossJoin, true);
 
         // Get a fresh connection; Otherwise the mondrian property setting
         // is not refreshed for this parameter.
         Connection conn = getTestContext().getFoodMartConnection(false);
         TestContext context = getTestContext(conn);
         context.assertQueryReturns(query, fold(resultNative));
-
-        MondrianProperties.instance().EnableNativeCrossJoin.set(origNativeCJ);
     }
 
     /**
@@ -3077,19 +3132,19 @@ public class NonEmptyTest extends BatchTestCase {
         // result when NON EMPTY is turned off.
         assertQueryReturns("WITH \n" +
             "MEMBER Measures.Calc AS '[Measures].[Profit] * 2', SOLVE_ORDER=1000\n" +
-            "MEMBER Product.Conditional as 'Iif(Measures.CurrentMember IS Measures.[Calc], " +
+            "MEMBER Product.Conditional as 'Iif (Measures.CurrentMember IS Measures.[Calc], " +
             "Measures.CurrentMember, null)', SOLVE_ORDER=2000\n" +
             "SET [S2] AS '{[Store].MEMBERS}' \n" +
             "SET [S1] AS 'CROSSJOIN({[Customers].[All Customers]},{Product.Conditional})' \n" +
             "SELECT \n" +
-            "NON EMPTY GENERATE( {Measures.[Calc]}, \n" +
-            "          CROSSJOIN( HEAD( {([Measures].CURRENTMEMBER)}, \n" +
+            "NON EMPTY GENERATE({Measures.[Calc]}, \n" +
+            "          CROSSJOIN(HEAD( {([Measures].CURRENTMEMBER)}, \n" +
             "                           1\n" +
-            "                         ), \n" +
+            "                        ), \n" +
             "                     {[S1]}\n" +
-            "                   ), \n" +
+            "                  ), \n" +
             "                   ALL\n" +
-            "                  ) \n" +
+            "                 ) \n" +
             "                                   ON AXIS(0), \n" +
             "NON EMPTY [S2] ON AXIS(1) \n" +
             "FROM [Sales]",
@@ -3170,28 +3225,121 @@ public class NonEmptyTest extends BatchTestCase {
      * 1722959, "NON EMPTY Level.MEMBERS fails if nonempty.enable=false"
      */
     public void testNonEmptyLevelMembers() {
+        boolean currentNativeNonEmpty =
+                MondrianProperties.instance().EnableNativeNonEmpty.get();
+        boolean currentNonEmptyOnAllAxis =
+                MondrianProperties.instance().EnableNonEmptyOnAllAxis.get();
+        try {
+            MondrianProperties.instance().EnableNativeNonEmpty.set(false);
+            MondrianProperties.instance().EnableNonEmptyOnAllAxis.set(true);
+            assertQueryReturns(
+                "WITH MEMBER [Measures].[One] AS '1' " +
+                    "SELECT " +
+                    "NON EMPTY {[Measures].[One], [Measures].[Store Sales]} ON rows, " +
+                    "NON EMPTY [Store].[Store State].MEMBERS on columns " +
+                    "FROM sales",
+                fold(
+                    "Axis #0:\n" +
+                        "{}\n" +
+                        "Axis #1:\n" +
+                        "{[Store].[All Stores].[Canada].[BC]}\n" +
+                        "{[Store].[All Stores].[Mexico].[DF]}\n" +
+                        "{[Store].[All Stores].[Mexico].[Guerrero]}\n" +
+                        "{[Store].[All Stores].[Mexico].[Jalisco]}\n" +
+                        "{[Store].[All Stores].[Mexico].[Veracruz]}\n" +
+                        "{[Store].[All Stores].[Mexico].[Yucatan]}\n" +
+                        "{[Store].[All Stores].[Mexico].[Zacatecas]}\n" +
+                        "{[Store].[All Stores].[USA].[CA]}\n" +
+                        "{[Store].[All Stores].[USA].[OR]}\n" +
+                        "{[Store].[All Stores].[USA].[WA]}\n" +
+                        "Axis #2:\n" +
+                        "{[Measures].[One]}\n" +
+                        "{[Measures].[Store Sales]}\n" +
+                        "Row #0: 1\n" +
+                        "Row #0: 1\n" +
+                        "Row #0: 1\n" +
+                        "Row #0: 1\n" +
+                        "Row #0: 1\n" +
+                        "Row #0: 1\n" +
+                        "Row #0: 1\n" +
+                        "Row #0: 1\n" +
+                        "Row #0: 1\n" +
+                        "Row #0: 1\n" +
+                        "Row #1: \n" +
+                        "Row #1: \n" +
+                        "Row #1: \n" +
+                        "Row #1: \n" +
+                        "Row #1: \n" +
+                        "Row #1: \n" +
+                        "Row #1: \n" +
+                        "Row #1: 159,167.84\n" +
+                        "Row #1: 142,277.07\n" +
+                        "Row #1: 263,793.22\n"));
+
+            if (Bug.Bug2076407Fixed) {
+                MondrianProperties.instance().EnableNativeNonEmpty.set(true);
+                assertQueryReturns(
+                    "WITH MEMBER [Measures].[One] AS '1' " +
+                        "SELECT " +
+                        "NON EMPTY {[Measures].[One], [Measures].[Store Sales]} ON rows, " +
+                        "NON EMPTY [Store].[Store State].MEMBERS on columns " +
+                        "FROM sales",
+                    fold(
+                        "Axis #0:\n" +
+                            "{}\n" +
+                            "Axis #1:\n" +
+                            "{[Store].[All Stores].[Canada].[BC]}\n" +
+                            "{[Store].[All Stores].[Mexico].[DF]}\n" +
+                            "{[Store].[All Stores].[Mexico].[Guerrero]}\n" +
+                            "{[Store].[All Stores].[Mexico].[Jalisco]}\n" +
+                            "{[Store].[All Stores].[Mexico].[Veracruz]}\n" +
+                            "{[Store].[All Stores].[Mexico].[Yucatan]}\n" +
+                            "{[Store].[All Stores].[Mexico].[Zacatecas]}\n" +
+                            "{[Store].[All Stores].[USA].[CA]}\n" +
+                            "{[Store].[All Stores].[USA].[OR]}\n" +
+                            "{[Store].[All Stores].[USA].[WA]}\n" +
+                            "Axis #2:\n" +
+                            "{[Measures].[One]}\n" +
+                            "{[Measures].[Store Sales]}\n" +
+                            "Row #0: 1\n" +
+                            "Row #0: 1\n" +
+                            "Row #0: 1\n" +
+                            "Row #0: 1\n" +
+                            "Row #0: 1\n" +
+                            "Row #0: 1\n" +
+                            "Row #0: 1\n" +
+                            "Row #0: 1\n" +
+                            "Row #0: 1\n" +
+                            "Row #0: 1\n" +
+                            "Row #1: \n" +
+                            "Row #1: \n" +
+                            "Row #1: \n" +
+                            "Row #1: \n" +
+                            "Row #1: \n" +
+                            "Row #1: \n" +
+                            "Row #1: \n" +
+                            "Row #1: 159,167.84\n" +
+                            "Row #1: 142,277.07\n" +
+                            "Row #1: 263,793.22\n"));
+            }
+        } finally {
+            MondrianProperties.instance().EnableNativeNonEmpty.set(currentNativeNonEmpty);
+            MondrianProperties.instance().EnableNonEmptyOnAllAxis.set(currentNonEmptyOnAllAxis);
+        }
+    }
+
+    public void testNonEmptyResults() {
+        // This unit test was failing with a NullPointerException in JPivot
+        // after the highcardinality feature was added, I've included it
+        // here to make sure it continues to work.
         assertQueryReturns(
-            "WITH MEMBER [Measures].[One] AS '1' " +
-                "SELECT " +
-                "NON EMPTY {[Measures].[One], [Measures].[Store Sales]} ON rows, " +
-                "NON EMPTY [Store].[Store State].MEMBERS on columns "+
-                "FROM sales",
-            fold(
-                "Axis #0:\n" +
-                    "{}\n" +
-                    "Axis #1:\n" +
-                    "{[Store].[All Stores].[USA].[CA]}\n" +
-                    "{[Store].[All Stores].[USA].[OR]}\n" +
-                    "{[Store].[All Stores].[USA].[WA]}\n" +
-                    "Axis #2:\n" +
-                    "{[Measures].[One]}\n" +
-                    "{[Measures].[Store Sales]}\n" +
-                    "Row #0: 1\n" +
-                    "Row #0: 1\n" +
-                    "Row #0: 1\n" +
-                    "Row #1: 159,167.84\n" +
-                    "Row #1: 142,277.07\n" +
-                    "Row #1: 263,793.22\n"));
+                "select NON EMPTY {[Measures].[Unit Sales], [Measures].[Store Cost]} ON columns, "
+                + "NON EMPTY Filter([Product].[Brand Name].Members, ([Measures].[Unit Sales] > 100000.0)) ON rows "
+                + "from [Sales] where [Time].[1997]",
+                fold("Axis #0:\n" +
+                "{[Time].[1997]}\n" +
+                "Axis #1:\n" +
+                "Axis #2:\n"));
     }
 
     /**
@@ -3205,13 +3353,19 @@ public class NonEmptyTest extends BatchTestCase {
     }
 
     /**
-     * Make sure the mdx runs correctly and not in native mode.
+     * Makes sure an MDX runs correctly and not in native mode.
      *
      * @param rowCount number of rows returned
-     * @param mdx query
+     * @param mdx MDX query
      * @param expectedResult expected result string
      */
-    private void checkNotNative(int rowCount, String mdx, String expectedResult) {
+    private void checkNotNative(
+        int rowCount,
+        String mdx,
+        String expectedResult)
+    {
+        mdx = TestContext.instance().upgradeQuery(mdx);
+
         getConnection().getCacheControl(null).flushSchemaCache();
         Connection con = getTestContext().getFoodMartConnection(false);
         RolapNativeRegistry reg = getRegistry(con);
@@ -3234,7 +3388,7 @@ public class NonEmptyTest extends BatchTestCase {
             String nonNativeResult = toString(result);
             if (!nonNativeResult.equals(expectedResult)) {
                 TestContext.assertEqualsVerbose(
-                    nonNativeResult, expectedResult, false,
+                    expectedResult, nonNativeResult, false,
                     "Non Native implementation returned different result than " +
                     "expected; MDX=" + mdx);
             }
@@ -3259,14 +3413,17 @@ public class NonEmptyTest extends BatchTestCase {
      * @param mdx query
      */
     private void checkNative(
-        int resultLimit, int rowCount, String mdx) {
+        int resultLimit,
+        int rowCount,
+        String mdx)
+    {
         checkNative(resultLimit, rowCount, mdx, null, false);
     }
 
     /**
      * Runs a query twice, with native crossjoin optimization enabled and
-     * disabled. If both results are equal,and both aggree with the expected
-     * result, its considered correct. Optionally the query could be run with
+     * disabled. If the results are equal, and both aggree with the expected
+     * result, it is considered correct. Optionally the query could be run with
      * fresh connection. This is useful if the test case sets its certain
      * mondrian properties, e.g. native properties like:
      *   mondrian.native.filter.enable
@@ -3281,14 +3438,20 @@ public class NonEmptyTest extends BatchTestCase {
      * @param freshConnection set to true if fresh connection is required
      */
     private void checkNative(
-        int resultLimit, int rowCount, String mdx, String expectedResult,
-        boolean freshConnection) {
+        int resultLimit,
+        int rowCount,
+        String mdx,
+        String expectedResult,
+        boolean freshConnection)
+    {
         // Don't run the test if we're testing expression dependencies.
         // Expression dependencies cause spurious interval calls to
         // 'level.getMembers()' which create false negatives in this test.
         if (MondrianProperties.instance().TestExpDependencies.get() > 0) {
             return;
         }
+
+        mdx = TestContext.instance().upgradeQuery(mdx);
 
         getConnection().getCacheControl(null).flushSchemaCache();
         try {
@@ -3307,15 +3470,15 @@ public class NonEmptyTest extends BatchTestCase {
             if (!listener.isFoundEvaluator()) {
                 fail("expected native execution of " + mdx);
             }
-            if (!listener.isExcecuteSql()) {
+            if (!listener.isExecuteSql()) {
                 fail("cache is empty: expected SQL query to be executed");
             }
             if (MondrianProperties.instance().EnableRolapCubeMemberCache.get()) {
                 // run once more to make sure that the result comes from cache
                 // now
-                listener.setExcecuteSql(false);
+                listener.setExecuteSql(false);
                 c.run();
-                if (listener.isExcecuteSql()) {
+                if (listener.isExecuteSql()) {
                     fail("expected result from cache when query runs twice");
                 }
             }
@@ -3337,19 +3500,18 @@ public class NonEmptyTest extends BatchTestCase {
 
             if (expectedResult != null) {
                 TestContext.assertEqualsVerbose(
-                    nativeResult, expectedResult, false,
+                    expectedResult, nativeResult, false,
                     "Native implementation returned different result than expected; MDX=" + mdx);
                 TestContext.assertEqualsVerbose(
-                    interpretedResult, expectedResult, false,
+                    expectedResult, interpretedResult, false,
                     "Interpreter implementation returned different result than expected; MDX=" + mdx);
             }
 
             if (!nativeResult.equals(interpretedResult)) {
                 TestContext.assertEqualsVerbose(
-                    nativeResult, interpretedResult, false,
+                    interpretedResult, nativeResult, false,
                     "Native implementation returned different result than interpreter; MDX=" + mdx);
             }
-
         } finally {
             Connection con = getConnection();
             RolapNativeRegistry reg = getRegistry(con);
@@ -3360,6 +3522,7 @@ public class NonEmptyTest extends BatchTestCase {
 
     Result executeQuery(String mdx, Connection connection) {
         Query query = connection.parseQuery(mdx);
+        query.setResultStyle(ResultStyle.LIST);
         return connection.execute(query);
     }
 
@@ -3382,22 +3545,20 @@ public class NonEmptyTest extends BatchTestCase {
                     List<RolapMember>>());
         helper.mapKeyToMember.clear();
     }
-    
-    RolapCubeHierarchy.RolapCubeHierarchyMemberReader 
-    getSmartMemberReader(String hierName) {
+
+    SmartMemberReader getSmartMemberReader(String hierName) {
         Connection con = getTestContext().getFoodMartConnection();
         return getSmartMemberReader(con, hierName);
     }
 
-    RolapCubeHierarchy.RolapCubeHierarchyMemberReader 
-    getSmartMemberReader(Connection con, String hierName) {
+    SmartMemberReader getSmartMemberReader(Connection con, String hierName) {
         RolapCube cube = (RolapCube) con.getSchema().lookupCube("Sales", true);
         RolapSchemaReader schemaReader = (RolapSchemaReader) cube.getSchemaReader();
         RolapHierarchy hierarchy = (RolapHierarchy) cube.lookupHierarchy(
                 new Id.Segment(hierName, Id.Quoting.UNQUOTED), false);
         assertNotNull(hierarchy);
-        return (RolapCubeHierarchy.RolapCubeHierarchyMemberReader) 
-                        hierarchy.createMemberReader(schemaReader.getRole());
+        return (SmartMemberReader)
+            hierarchy.createMemberReader(schemaReader.getRole());
     }
 
     SmartMemberReader getSharedSmartMemberReader(String hierName) {
@@ -3414,10 +3575,11 @@ public class NonEmptyTest extends BatchTestCase {
         return (SmartMemberReader) hierarchy.getRolapHierarchy().createMemberReader(schemaReader.getRole());
     }
 
-    
+
     RolapEvaluator getEvaluator(Result res, int[] pos) {
-        while (res instanceof NonEmptyResult)
+        while (res instanceof NonEmptyResult) {
             res = ((NonEmptyResult) res).underlying;
+        }
         return (RolapEvaluator) ((RolapResult) res).getEvaluator(pos);
     }
 
@@ -3434,14 +3596,14 @@ public class NonEmptyTest extends BatchTestCase {
     static class TestListener implements Listener {
         boolean foundEvaluator;
         boolean foundInCache;
-        boolean excecuteSql;
+        boolean executeSql;
 
-        boolean isExcecuteSql() {
-            return excecuteSql;
+        boolean isExecuteSql() {
+            return executeSql;
         }
 
-        void setExcecuteSql(boolean excecuteSql) {
-            this.excecuteSql = excecuteSql;
+        void setExecuteSql(boolean executeSql) {
+            this.executeSql = executeSql;
         }
 
         boolean isFoundEvaluator() {
@@ -3469,9 +3631,8 @@ public class NonEmptyTest extends BatchTestCase {
         }
 
         public void excutingSql(TupleEvent e) {
-            this.excecuteSql = true;
+            this.executeSql = true;
         }
-
     }
 }
 

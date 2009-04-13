@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/calc/ParameterSlot.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/calc/ParameterSlot.java#1 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -15,7 +15,7 @@ import mondrian.olap.Parameter;
  * Implementation of a parameter.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/calc/ParameterSlot.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/calc/ParameterSlot.java#1 $
  * @since Jul 25, 2006
  */
 public interface ParameterSlot {

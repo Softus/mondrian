@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/IgnoreMeasureForNonJoiningDimensionInAggregationTest.java#2 $
+// $Id: //open/mondrian/testsrc/main/mondrian/test/IgnoreMeasureForNonJoiningDimensionInAggregationTest.java#7 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2001-2007 Julian Hyde and others
+// Copyright (C) 2001-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -20,7 +20,7 @@ import mondrian.rolap.RolapCube;
  * set to true.
  * @author ajoglekar
  * @since Dec 12, 2007
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/IgnoreMeasureForNonJoiningDimensionInAggregationTest.java#2 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/test/IgnoreMeasureForNonJoiningDimensionInAggregationTest.java#7 $
  */
 public class IgnoreMeasureForNonJoiningDimensionInAggregationTest extends FoodMartTestCase {
 
@@ -29,7 +29,6 @@ public class IgnoreMeasureForNonJoiningDimensionInAggregationTest extends FoodMa
     private final MondrianProperties prop = MondrianProperties.instance();
 
     protected void setUp() throws Exception {
-
         originalNonEmptyFlag =
             prop.EnableNonEmptyOnAllAxis.get();
         originalEliminateUnrelatedDimensions =
@@ -256,10 +255,7 @@ public class IgnoreMeasureForNonJoiningDimensionInAggregationTest extends FoodMa
                 "Row #2: 196,770.89\n"+
                 "Row #3: 196,770.89\n"+
                 "Row #4: 196,770.89\n"+
-                "Row #5: 196,770.89\n"
-
-            )
-        );
+                "Row #5: 196,770.89\n"));
     }
 
     public void testNoTotalsForCompoundMeasureWithNonJoiningDimAtAllLevel() {
@@ -322,7 +318,7 @@ public class IgnoreMeasureForNonJoiningDimensionInAggregationTest extends FoodMa
     }
 
     // base cube is null for calc measure
-    public void testGetMeasureCubeForCalcMeasureDoesNotThrowCastException(){
+    public void testGetMeasureCubeForCalcMeasureDoesNotThrowCastException() {
         getTestContext().assertQueryReturns(
             "WITH MEMBER [Measures].[My Profit] AS " +
             "'Measures.[Profit]', SOLVE_ORDER = 3000 " +
@@ -341,3 +337,5 @@ public class IgnoreMeasureForNonJoiningDimensionInAggregationTest extends FoodMa
     }
 
 }
+
+// End IgnoreMeasureForNonJoiningDimensionInAggregationTest.java

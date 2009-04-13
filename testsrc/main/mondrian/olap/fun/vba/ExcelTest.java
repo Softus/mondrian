@@ -20,7 +20,7 @@ import junit.framework.TestCase;
  * are non-trivial.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/olap/fun/vba/ExcelTest.java#2 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/olap/fun/vba/ExcelTest.java#2 $
  * @since Jan 16, 2008
  */
 public class ExcelTest extends TestCase {

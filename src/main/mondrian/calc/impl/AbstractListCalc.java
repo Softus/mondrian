@@ -1,22 +1,23 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/calc/impl/AbstractListCalc.java#3 $
+// $Id: //open/mondrian/src/main/mondrian/calc/impl/AbstractListCalc.java#8 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2007 Julian Hyde
+// Copyright (C) 2006-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
 package mondrian.calc.impl;
 
+import java.util.List;
+
+import mondrian.calc.*;
 import mondrian.olap.Evaluator;
 import mondrian.olap.Exp;
+import mondrian.olap.Member;
 import mondrian.olap.type.SetType;
-import mondrian.calc.ListCalc;
-import mondrian.calc.Calc;
-import mondrian.calc.ResultStyle;
-
-import java.util.List;
+import mondrian.olap.type.TupleType;
+import mondrian.olap.type.Type;
 
 /**
  * Abstract implementation of the {@link mondrian.calc.ListCalc} interface.
@@ -26,14 +27,16 @@ import java.util.List;
  * and the {@link #evaluate(mondrian.olap.Evaluator)} method will call it.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/calc/impl/AbstractListCalc.java#3 $
+ * @version $Id: //open/mondrian/src/main/mondrian/calc/impl/AbstractListCalc.java#8 $
  * @since Sep 27, 2005
  */
 public abstract class AbstractListCalc
-        extends AbstractCalc
-        implements ListCalc {
+    extends AbstractCalc
+    implements ListCalc, MemberListCalc, TupleListCalc
+{
     private final Calc[] calcs;
     private final boolean mutable;
+    protected final boolean tuple;
 
     /**
      * Creates an abstract implementation of a compiled expression which returns
@@ -60,7 +63,12 @@ public abstract class AbstractListCalc
         super(exp);
         this.calcs = calcs;
         this.mutable = mutable;
-        assert getType() instanceof SetType : "expecting a set: " + getType();
+        assert type instanceof SetType : "expecting a set: " + getType();
+        this.tuple = getType().getArity() != 1;
+    }
+
+    public SetType getType() {
+        return (SetType) super.getType();
     }
 
     public Object evaluate(Evaluator evaluator) {
@@ -77,6 +85,30 @@ public abstract class AbstractListCalc
         return mutable ?
             ResultStyle.MUTABLE_LIST :
             ResultStyle.LIST;
+    }
+
+    @SuppressWarnings({"unchecked"})
+    public List<Member> evaluateMemberList(Evaluator evaluator) {
+        return (List<Member>) evaluateList(evaluator);
+    }
+
+    @SuppressWarnings({"unchecked"})
+    public List<Member[]> evaluateTupleList(Evaluator evaluator) {
+        return (List<Member[]>) evaluateList(evaluator);
+    }
+
+    /**
+     * Helper method with which to implement {@link #evaluateList}
+     * if you have implemented {@link #evaluateMemberList} and
+     * {@link #evaluateTupleList}.
+     *
+     * @param evaluator Evaluator
+     * @return List
+     */
+    protected List evaluateEitherList(Evaluator evaluator) {
+        return tuple
+            ? evaluateTupleList(evaluator)
+            : evaluateMemberList(evaluator);
     }
 }
 

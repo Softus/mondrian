@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap4j/FactoryJdbc3Impl.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap4j/FactoryJdbc3Impl.java#2 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2007-2007 Julian Hyde
+// Copyright (C) 2007-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -18,7 +18,7 @@ import java.util.*;
  * Implementation of {@link mondrian.olap4j.Factory} for JDBC 3.0.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap4j/FactoryJdbc3Impl.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap4j/FactoryJdbc3Impl.java#2 $
  * @since Jun 14, 2007
  */
 class FactoryJdbc3Impl implements Factory {

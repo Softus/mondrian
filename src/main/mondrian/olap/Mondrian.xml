@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <?xml-stylesheet type="text/xsl" href="../../../../misc/Meta.xsl" ?>
 <!--
-  == $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/Mondrian.xml#3 $
+  == $Id: //open/mondrian/src/main/mondrian/olap/Mondrian.xml#74 $
   == This software is subject to the terms of the Common Public License
   == Agreement, available at the following URL:
   == http://www.opensource.org/licenses/cpl.html.
   == Copyright (C) 2001-2002 Kana Software, Inc.
-  == Copyright (C) 2001-2007 Julian Hyde and others.
+  == Copyright (C) 2001-2008 Julian Hyde and others.
   == All Rights Reserved.
   == You must accept the terms of that agreement to use this software.
   ==
@@ -23,7 +23,7 @@
     <Doc>
 This is the XML model for Mondrian schemas.
 <p/>
-Revision is $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/Mondrian.xml#3 $
+Revision is $Id: //open/mondrian/src/main/mondrian/olap/Mondrian.xml#74 $
     </Doc>
 
     <!-- Schema ========================================================== -->
@@ -121,6 +121,12 @@ Revision is $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/Mondrian.xml
                 to the leaf level of this dimension. Required in a
                 private Dimension or a DimensionUsage, but not in a
                 public Dimension.
+            </Doc>
+        </Attribute>
+        <Attribute name="highCardinality" type="Boolean" default="false">
+            <Doc>
+                Flag to mark this dimension as a high cardinality one
+                and avoid caching.
             </Doc>
         </Attribute>
         <Code><![CDATA[
@@ -722,8 +728,8 @@ Revision is $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/Mondrian.xml
                 return new Column(table, properties[i].column);
             }
 
-            public SqlQuery.Datatype getDatatype() {
-                return SqlQuery.Datatype.valueOf(type);
+            public mondrian.spi.Dialect.Datatype getDatatype() {
+                return mondrian.spi.Dialect.Datatype.valueOf(type);
             }
         </Code>
     </Element>
@@ -1071,24 +1077,28 @@ Revision is $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/Mondrian.xml
     </Element>
 
     <Element type="SQL">
-        <Attribute name="dialect" default="generic">
+        <Attribute name="dialect" required="true" default="generic">
             <Doc>
-                Dialect of SQL the view is intended for.
+                Dialect of SQL the view is intended for. Valid values include,
+                but are not limited to:
+                <ul>
+                <li>generic</li>
+                <li>access</li>
+                <li>db2</li>
+                <li>derby</li>
+                <li>firebird</li>
+                <li>hsqldb</li>
+                <li>mssql</li>
+                <li>mysql</li>
+                <li>oracle</li>
+                <li>postgres</li>
+                <li>sybase</li>
+                <li>teradata</li>
+                <li>ingres</li>
+                <li>infobright</li>
+                <li>luciddb</li>
+                </ul>
             </Doc>
-            <Value>generic</Value>
-            <Value>access</Value>
-            <Value>db2</Value>
-            <Value>derby</Value>
-            <Value>firebird</Value>
-            <Value>hsqldb</Value>
-            <Value>mssql</Value>
-            <Value>mysql</Value>
-            <Value>oracle</Value>
-            <Value>postgres</Value>
-            <Value>sybase</Value>
-            <Value>teradata</Value>
-            <Value>ingres</Value>
-            <Value>luciddb</Value>
         </Attribute>
         <CData/>
         <Code><![CDATA[
@@ -1589,9 +1599,11 @@ Revision is $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/Mondrian.xml
                 this.table = table;
                 this.name = name;
             }
+
             public String getExpression(SqlQuery query) {
                 return query.getDialect().quoteIdentifier(table, name);
             }
+
             public String getGenericExpression() {
                 if (table == null) {
                     return name;
@@ -1599,6 +1611,7 @@ Revision is $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/Mondrian.xml
                     return table + "." + name;
                 }
             }
+
             public String getColumnName() {
                 return name;
             }

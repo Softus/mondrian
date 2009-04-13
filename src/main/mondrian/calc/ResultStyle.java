@@ -2,7 +2,7 @@
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2007-2007 Julian Hyde
+// Copyright (C) 2007-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -15,7 +15,7 @@ import java.util.Arrays;
  * Enumeration of ways that a compiled expression can return its result to
  * its caller.
  *
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/calc/ResultStyle.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/calc/ResultStyle.java#4 $
  * @author jhyde
  */
 public enum ResultStyle {
@@ -59,7 +59,7 @@ public enum ResultStyle {
     // ---------------------------------------------------------------
     // There follow a set of convenience constants for commonly-used
     // collections of result styles.
-    
+
     public static final List<ResultStyle> ANY_LIST =
         Arrays.asList(
             ANY);
@@ -119,6 +119,10 @@ public enum ResultStyle {
             ITERABLE,
             MUTABLE_LIST,
             LIST);
+
+    public static final List<ResultStyle> ANY_ONLY =
+        Arrays.asList(
+            ANY);
 }
 
 // End ResultStyle.java

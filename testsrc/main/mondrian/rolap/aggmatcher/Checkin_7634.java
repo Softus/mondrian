@@ -23,7 +23,7 @@ import mondrian.olap.MondrianProperties;
  * to produce the correct result.
  *
  * @author Richard M. Emberson
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/rolap/aggmatcher/Checkin_7634.java#2 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/rolap/aggmatcher/Checkin_7634.java#6 $
  */
 public class Checkin_7634 extends CsvDBTestCase {
     private static final String DIRECTORY =
@@ -31,20 +31,22 @@ public class Checkin_7634 extends CsvDBTestCase {
     private static final String CHECKIN_7634 = "Checkin_7634.csv";
 
     private int crossJoinSize;
+
     public Checkin_7634() {
         super();
     }
+
     public Checkin_7634(String name) {
         super(name);
     }
+
     protected void setUp() throws Exception {
         super.setUp();
-        crossJoinSize= MondrianProperties.instance().CrossJoinOptimizerSize.get();
-
+        crossJoinSize = MondrianProperties.instance().CrossJoinOptimizerSize.get();
     }
+
     protected void tearDown() throws Exception {
         MondrianProperties.instance().CrossJoinOptimizerSize.set(crossJoinSize);
-
         super.tearDown();
     }
 
@@ -55,7 +57,7 @@ public class Checkin_7634 extends CsvDBTestCase {
         " NON EMPTY Crossjoin("+
         " {[Geography].[All Regions].Children},"+
         " {[Product].[All Products].Children}"+
-        " ) ON ROWS"+
+        ") ON ROWS"+
         " from [Checkin_7634]";
 
 
@@ -116,7 +118,6 @@ public class Checkin_7634 extends CsvDBTestCase {
             "    column='shipped_value' aggregator='sum'\n" +
             "   formatString='#,###'/>\n" +
             "</Cube>";
-
     }
 }
 

@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/rolap/ModulosTest.java#2 $
+// $Id: //open/mondrian/testsrc/main/mondrian/rolap/ModulosTest.java#6 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2007 Julian Hyde and others.
+// Copyright (C) 2005-2009 Julian Hyde and others.
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -21,7 +21,7 @@ import java.util.Arrays;
  * Test that the implementations of the Modulos interface are correct.
  *
  * @author <a>Richard M. Emberson</a>
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/rolap/ModulosTest.java#2 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/rolap/ModulosTest.java#6 $
  */
 public class ModulosTest extends TestCase {
     public ModulosTest() {
@@ -48,7 +48,6 @@ public class ModulosTest extends TestCase {
         assertTrue("Pos[0] length equals 3" , (pos[0] == 3));
         assertTrue("Pos[1] length equals 2" , (pos[1] == 2));
         assertTrue("Pos[2] length equals 1" , (pos[2] == 1));
-
     }
 
     public void testOne() {
@@ -181,24 +180,36 @@ public class ModulosTest extends TestCase {
     }
 
     static class PositionList extends RolapAxis.PositionListBase {
-        int size;
+        final int size;
+
         PositionList(int size) {
             this.size = size;
         }
+
         public int size() {
             return size;
         }
+
+        public boolean isEmpty() {
+            return size > 0;
+        }
+
         public Position get(int index) {
             return null;
         }
+
         public ListIterator<Position> listIterator() {
             return null;
         }
+
         public ListIterator<Position> listIterator(int index) {
             return null;
         }
+
         public Iterator<Position> iterator() {
             return null;
         }
     }
 }
+
+// End ModulosTest.java

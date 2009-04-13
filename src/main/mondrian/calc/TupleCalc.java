@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/calc/TupleCalc.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/calc/TupleCalc.java#5 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -22,7 +22,7 @@ import mondrian.olap.Evaluator;
  * {@link mondrian.calc.impl.AbstractTupleCalc}, but it is not required.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/calc/TupleCalc.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/calc/TupleCalc.java#5 $
  * @since Sep 27, 2005
  */
 public interface TupleCalc extends Calc {

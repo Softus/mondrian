@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/rolap/CacheControlTest.java#2 $
+// $Id: //open/mondrian/testsrc/main/mondrian/rolap/CacheControlTest.java#12 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2007 Julian Hyde
+// Copyright (C) 2006-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -23,7 +23,7 @@ import java.util.ArrayList;
  * Unit-test for cache-flushing functionality.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/rolap/CacheControlTest.java#2 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/rolap/CacheControlTest.java#12 $
  * @since Sep 27, 2006
  */
 public class CacheControlTest extends FoodMartTestCase {
@@ -303,11 +303,11 @@ public class CacheControlTest extends FoodMartTestCase {
         int origMaxConstraints =
             MondrianProperties.instance().MaxConstraints.get();
         int minConstraints = 3;
-        
+
         if (origMaxConstraints < minConstraints) {
             MondrianProperties.instance().MaxConstraints.set(minConstraints);
         }
-        
+
         // Execute a query, to bring data into the cache.
         final TestContext testContext = getTestContext();
         standardQuery(testContext);
@@ -333,8 +333,8 @@ public class CacheControlTest extends FoodMartTestCase {
         cacheControl.printCacheState(pw, region);
         pw.flush();
         assertCacheStateEquals("output2", "${output2}", sw.toString());
-        
-        MondrianProperties.instance().MaxConstraints.set(origMaxConstraints);        
+
+        MondrianProperties.instance().MaxConstraints.set(origMaxConstraints);
     }
 
     /**
@@ -873,7 +873,6 @@ public class CacheControlTest extends FoodMartTestCase {
      * normal form.
      */
     public void testNormalize() {
-
         // Create
         // Union(
         //    Crossjoin(

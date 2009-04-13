@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/Access.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/Access.java#7 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -16,7 +16,7 @@ package mondrian.olap;
  *
  * @author jhyde
  * @since Feb 21, 2003
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/Access.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/Access.java#7 $
  */
 public enum Access {
     /** No access to an object. */

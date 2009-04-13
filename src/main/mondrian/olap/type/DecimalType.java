@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/type/DecimalType.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/type/DecimalType.java#6 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -17,7 +17,7 @@ import mondrian.olap.Util;
  *
  * @author jhyde
  * @since May 3, 2005
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/type/DecimalType.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/type/DecimalType.java#6 $
  */
 public class DecimalType extends NumericType {
     private final int precision;
@@ -62,7 +62,7 @@ public class DecimalType extends NumericType {
 
     /**
      * Returns the number of digits to the right of the decimal point.
-     * 
+     *
      * @return scale of this type
      */
     public int getScale() {

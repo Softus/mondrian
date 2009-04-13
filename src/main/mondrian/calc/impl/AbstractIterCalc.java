@@ -1,20 +1,22 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/calc/impl/AbstractIterCalc.java#3 $
+// $Id: //open/mondrian/src/main/mondrian/calc/impl/AbstractIterCalc.java#6 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2007 Julian Hyde
+// Copyright (C) 2006-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
 package mondrian.calc.impl;
 
+import mondrian.calc.Calc;
+import mondrian.calc.IterCalc;
+import mondrian.calc.ResultStyle;
 import mondrian.olap.Evaluator;
 import mondrian.olap.Exp;
+import mondrian.olap.Member;
 import mondrian.olap.type.SetType;
-import mondrian.calc.IterCalc;
-import mondrian.calc.Calc;
-import mondrian.calc.ResultStyle;
+import mondrian.olap.type.TupleType;
 
 /**
  * Abstract implementation of the {@link mondrian.calc.IterCalc} interface.
@@ -24,14 +26,16 @@ import mondrian.calc.ResultStyle;
  * and the {@link #evaluate(mondrian.olap.Evaluator)} method will call it.
  *
  * @author <a>Richard M. Emberson</a>
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/calc/impl/AbstractIterCalc.java#3 $
+ * @version $Id: //open/mondrian/src/main/mondrian/calc/impl/AbstractIterCalc.java#6 $
  * @since Jan 14, 2007
  */
 
 public abstract class AbstractIterCalc
-        extends AbstractCalc
-        implements IterCalc {
+    extends AbstractCalc
+    implements IterCalc
+{
     private final Calc[] calcs;
+    protected final boolean tuple;
 
     /**
      * Creates an abstract implementation of a compiled expression which returns
@@ -45,11 +49,25 @@ public abstract class AbstractIterCalc
         super(exp);
         this.calcs = calcs;
         assert getType() instanceof SetType : "expecting a set: " + getType();
+        this.tuple = ((SetType) exp.getType()).getArity() != 1;
     }
 
     public Object evaluate(Evaluator evaluator) {
-        final Iterable iter = evaluateIterable(evaluator);
-        return iter;
+        return evaluateIterable(evaluator);
+    }
+
+    /**
+     * Helper method with which to implement {@link #evaluateIterable}
+     * if you have implemented {@link #evaluateMemberIterable} and
+     * {@link #evaluateTupleIterable}.
+     *
+     * @param evaluator Evaluator
+     * @return List
+     */
+    protected Iterable evaluateEitherIterable(Evaluator evaluator) {
+        return tuple
+            ? evaluateTupleIterable(evaluator)
+            : evaluateMemberIterable(evaluator);
     }
 
     public Calc[] getCalcs() {
@@ -58,6 +76,16 @@ public abstract class AbstractIterCalc
 
     public ResultStyle getResultStyle() {
         return ResultStyle.ITERABLE;
+    }
+
+    @SuppressWarnings({"unchecked"})
+    public Iterable<Member> evaluateMemberIterable(Evaluator evaluator) {
+        return (Iterable<Member>) evaluateIterable(evaluator);
+    }
+
+    @SuppressWarnings({"unchecked"})
+    public Iterable<Member[]> evaluateTupleIterable(Evaluator evaluator) {
+        return (Iterable<Member[]>) evaluateIterable(evaluator);
     }
 }
 

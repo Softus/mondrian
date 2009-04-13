@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/clearview/MetricFilterTest.java#2 $
+// $Id: //open/mondrian/testsrc/main/mondrian/test/clearview/MetricFilterTest.java#6 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -26,7 +26,7 @@ import mondrian.util.Bug;
  * this directory.
  *
  * @author Khanh Vu
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/clearview/MetricFilterTest.java#2 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/test/clearview/MetricFilterTest.java#6 $
  */
 public class MetricFilterTest extends ClearViewBase {
 

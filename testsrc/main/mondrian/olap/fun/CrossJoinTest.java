@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/olap/fun/CrossJoinTest.java#3 $
+// $Id: //open/mondrian/testsrc/main/mondrian/olap/fun/CrossJoinTest.java#12 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2007 Julian Hyde
+// Copyright (C) 2006-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -28,7 +28,7 @@ import java.io.PrintWriter;
  * infinity, and {@link Double#NaN}.
  *
  * @author <a>Richard M. Emberson</a>
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/olap/fun/CrossJoinTest.java#3 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/olap/fun/CrossJoinTest.java#12 $
  * @since Jan 14, 2007
  */
 
@@ -46,13 +46,13 @@ public class CrossJoinTest extends FoodMartTestCase {
         new TestMember("D"),
     };
     static Member[][] m3 = new Member[][] {
-        { new TestMember("k"), new TestMember("l") },
-        { new TestMember("m"), new TestMember("n") },
+        new Member[] { new TestMember("k"), new TestMember("l") },
+        new Member[] { new TestMember("m"), new TestMember("n") },
     };
     static Member[][] m4 = new Member[][] {
-        { new TestMember("U"), new TestMember("V") },
-        { new TestMember("W"), new TestMember("X") },
-        { new TestMember("Y"), new TestMember("Z") },
+        new Member[] { new TestMember("U"), new TestMember("V") },
+        new Member[] { new TestMember("W"), new TestMember("X") },
+        new Member[] { new TestMember("Y"), new TestMember("Z") },
     };
 
     static final Comparator<Member[]> memberComparator =
@@ -134,8 +134,8 @@ if (! Util.Retrowoven) {
     }
 
     protected void doMemberMemberIterTest(
-            CrossJoinFunDef.BaseMemberMemberIterCalc calc) {
-
+        CrossJoinFunDef.BaseMemberMemberIterCalc calc)
+    {
         List<Member> l1 = makeListMember(m1);
         String s1 = toString(l1);
         String e1 = "{a,b,c}";
@@ -201,8 +201,8 @@ if (! Util.Retrowoven) {
     }
 
     protected void doMemberMemberArrayIterTest(
-            CrossJoinFunDef.BaseMemberMemberArrayIterCalc calc) {
-
+        CrossJoinFunDef.BaseMemberMemberArrayIterCalc calc)
+    {
         List<Member> l1 = makeListMember(m1);
         String s1 = toString(l1);
         String e1 = "{a,b,c}";
@@ -266,8 +266,8 @@ if (! Util.Retrowoven) {
     }
 
     protected void doMemberArrayMemberIterTest(
-            CrossJoinFunDef.BaseMemberArrayMemberIterCalc calc) {
-
+        CrossJoinFunDef.BaseMemberArrayMemberIterCalc calc)
+    {
         List<Member[]> l3 = makeListMemberArray(m3);
         String s3 = toString(l3);
         String e3 = "{[k,l],[m,n]}";
@@ -331,8 +331,8 @@ if (! Util.Retrowoven) {
     }
 
     protected void doMemberArrayMemberArrayIterTest(
-            CrossJoinFunDef.BaseMemberArrayMemberArrayIterCalc calc) {
-
+        CrossJoinFunDef.BaseMemberArrayMemberArrayIterCalc calc)
+    {
         List<Member[]> l4 = makeListMemberArray(m4);
         String s4 = toString(l4);
         String e4 = "{[U,V],[W,X],[Y,Z]}";
@@ -371,8 +371,8 @@ if (! Util.Retrowoven) {
     }
 
     protected void doMemberMemberListTest(
-            CrossJoinFunDef.BaseListCalc calc) {
-
+        CrossJoinFunDef.BaseListCalc calc)
+    {
         List<Member> l1 = makeListMember(m1);
         String s1 = toString(l1);
         String e1 = "{a,b,c}";
@@ -472,8 +472,8 @@ if (! Util.Retrowoven) {
     }
 
     protected void doMemberMemberArrayListTest(
-            CrossJoinFunDef.BaseListCalc calc) {
-
+        CrossJoinFunDef.BaseListCalc calc)
+    {
         List<Member> l1 = makeListMember(m1);
         String s1 = toString(l1);
         String e1 = "{a,b,c}";
@@ -552,8 +552,8 @@ if (! Util.Retrowoven) {
     }
 
     protected void doMemberArrayMemberListTest(
-            CrossJoinFunDef.BaseListCalc calc) {
-
+        CrossJoinFunDef.BaseListCalc calc)
+    {
         List<Member[]> l3 = makeListMemberArray(m3);
         String s3 = toString(l3);
         String e3 = "{[k,l],[m,n]}";
@@ -666,8 +666,8 @@ if (! Util.Retrowoven) {
     }
 
     protected void doMemberArrayMemberArrayListTest(
-            CrossJoinFunDef.BaseListCalc calc) {
-
+        CrossJoinFunDef.BaseListCalc calc)
+    {
         List<Member[]> l4 = makeListMemberArray(m4);
         String s4 = toString(l4);
         String e4 = "{[U,V],[W,X],[Y,Z]}";
@@ -778,8 +778,8 @@ if (! Util.Retrowoven) {
     }
 
     protected void doMMemberMemberListTest(
-            CrossJoinFunDef.BaseListCalc calc) {
-
+        CrossJoinFunDef.BaseListCalc calc)
+    {
         List<Member> l1 = makeListMember(m1);
         String s1 = toString(l1);
         String e1 = "{a,b,c}";
@@ -845,8 +845,8 @@ if (! Util.Retrowoven) {
     }
 
     protected void doMMemberMemberArrayListTest(
-            CrossJoinFunDef.BaseListCalc calc) {
-
+        CrossJoinFunDef.BaseListCalc calc)
+    {
         List<Member> l1 = makeListMember(m1);
         String s1 = toString(l1);
         String e1 = "{a,b,c}";
@@ -900,8 +900,8 @@ if (! Util.Retrowoven) {
     }
 
     protected void doMMemberArrayMemberListTest(
-            CrossJoinFunDef.BaseListCalc calc) {
-
+        CrossJoinFunDef.BaseListCalc calc)
+    {
         List<Member[]> l1 = makeListMemberArray(m3);
         String s1 = toString(l1);
         String e1 = "{[k,l],[m,n]}";
@@ -957,8 +957,8 @@ if (! Util.Retrowoven) {
     }
 
     protected void doMMemberArrayMemberArrayListTest(
-            CrossJoinFunDef.BaseListCalc calc) {
-
+        CrossJoinFunDef.BaseListCalc calc)
+    {
         List<Member[]> l1 = makeListMemberArray(m3);
         String s1 = toString(l1);
         String e1 = "{[k,l],[m,n]}";
@@ -1005,9 +1005,9 @@ if (! Util.Retrowoven) {
     protected String toString(Iterable l) {
         StringBuffer buf = new StringBuffer(100);
         buf.append('{');
-        boolean firstTime = true;
-        for (Object o: l) {
-            if (! firstTime) {
+        int j = 0;
+        for (Object o : l) {
+            if (j++ > 0) {
                 buf.append(',');
             }
             if (o instanceof Member) {
@@ -1015,17 +1015,15 @@ if (! Util.Retrowoven) {
             } else {
                 Member[] members = (Member[]) o;
                 buf.append('[');
-                boolean firstTimeInner = true;
-                for (Member m: members) {
-                    if (! firstTimeInner) {
+                int k = 0;
+                for (Member m : members) {
+                    if (k++ > 0) {
                         buf.append(',');
                     }
                     buf.append(m);
-                    firstTimeInner = false;
                 }
                 buf.append(']');
             }
-            firstTime = false;
         }
         buf.append('}');
         return buf.toString();
@@ -1034,7 +1032,7 @@ if (! Util.Retrowoven) {
         StringBuffer buf = new StringBuffer(100);
         buf.append('[');
         boolean firstTimeInner = true;
-        for (Member m: members) {
+        for (Member m : members) {
             if (! firstTimeInner) {
                 buf.append(',');
             }
@@ -1044,27 +1042,25 @@ if (! Util.Retrowoven) {
         buf.append(']');
         return buf.toString();
     }
+
     protected List<Member> makeListMember(Member[] ms) {
-        List<Member> l = new ArrayList<Member>();
-        for(Member member: ms) {
-            l.add(member);
-        }
-        return l;
+        return new ArrayList<Member>(Arrays.asList(ms));
     }
+
     protected List<Member[]> makeListMemberArray(Member[][] ms) {
-        List<Member[]> l = new ArrayList<Member[]>();
-        for(Member[] members: ms) {
-            l.add(members);
-        }
-        return l;
+        return new ArrayList<Member[]>(Arrays.asList(ms));
     }
+
     protected ResolvedFunCall getResolvedFunCall() {
         FunDef funDef = new TestFunDef();
         Exp[] args = new Exp[0];
         Type returnType =
-            new SetType(new MemberType(null, null, null, null));
-        ResolvedFunCall call = new ResolvedFunCall(funDef, args, returnType);
-        return call;
+            new SetType(
+                new TupleType(
+                    new Type[] {
+                    new MemberType(null, null, null, null),
+                    new MemberType(null, null, null, null)}));
+        return new ResolvedFunCall(funDef, args, returnType);
     }
 
     ////////////////////////////////////////////////////////////////////////

@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/RolapConnectionProperties.java#4 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/RolapConnectionProperties.java#20 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2003-2007 Julian Hyde
+// Copyright (C) 2003-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -19,8 +19,8 @@ package mondrian.rolap;
  * property, you must also modify the
  * <a target="_top" href="{@docRoot}/../configuration.html#Connect_string_properties">
  * Configuration Specification</a>.
- * 
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/RolapConnectionProperties.java#4 $
+ *
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/RolapConnectionProperties.java#20 $
  * @author jhyde
  */
 public enum RolapConnectionProperties {

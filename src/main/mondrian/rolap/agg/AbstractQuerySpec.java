@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/agg/AbstractQuerySpec.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/agg/AbstractQuerySpec.java#16 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2007 Julian Hyde and others
+// Copyright (C) 2005-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -15,6 +15,7 @@ import mondrian.rolap.StarColumnPredicate;
 import mondrian.rolap.StarPredicate;
 import mondrian.rolap.sql.SqlQuery;
 import mondrian.olap.Util;
+import mondrian.spi.Dialect;
 
 import java.util.*;
 
@@ -23,7 +24,7 @@ import java.util.*;
  *
  * @author jhyde
  * @author Richard M. Emberson
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/agg/AbstractQuerySpec.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/agg/AbstractQuerySpec.java#16 $
  */
 public abstract class AbstractQuerySpec implements QuerySpec {
     private final RolapStar star;
@@ -102,22 +103,29 @@ public abstract class AbstractQuerySpec implements QuerySpec {
             if (!where.equals("true")) {
                 sqlQuery.addWhere(where);
             }
-            
+
             if (countOnly) {
                 continue;
             }
 
             // some DB2 (AS400) versions throw an error, if a column alias is
             // there and *not* used in a subsequent order by/group by
-            final SqlQuery.Dialect dialect = sqlQuery.getDialect();
-            if (dialect.isAS400()) {
-                sqlQuery.addSelect(expr, null);
+            final Dialect dialect = sqlQuery.getDialect();
+            final String c;
+            final Dialect.DatabaseProduct databaseProduct =
+                dialect.getDatabaseProduct();
+            if (databaseProduct == Dialect.DatabaseProduct.DB2_AS400) {
+                c = sqlQuery.addSelect(expr, null);
             } else {
-                sqlQuery.addSelect(expr, getColumnAlias(i));
+                c = sqlQuery.addSelect(expr, getColumnAlias(i));
             }
-            
+
             if (isAggregate()) {
-                sqlQuery.addGroupBy(expr);
+                if (dialect.requiresGroupByAlias()) {
+                    sqlQuery.addGroupBy(c);
+                } else {
+                    sqlQuery.addGroupBy(expr);
+                }
             }
 
             // Add ORDER BY clause to make the results deterministic.
@@ -153,7 +161,7 @@ public abstract class AbstractQuerySpec implements QuerySpec {
         SqlQuery sqlQuery = newSqlQuery();
 
         int k = getDistinctMeasureCount();
-        final SqlQuery.Dialect dialect = sqlQuery.getDialect();
+        final Dialect dialect = sqlQuery.getDialect();
         if (!dialect.allowsCountDistinct() && k > 0 ||
             !dialect.allowsMultipleCountDistinct() && k > 1) {
             distinctGenerateSql(sqlQuery, countOnly);
@@ -206,7 +214,7 @@ public abstract class AbstractQuerySpec implements QuerySpec {
         final SqlQuery outerSqlQuery,
         boolean countOnly)
     {
-        final SqlQuery.Dialect dialect = outerSqlQuery.getDialect();
+        final Dialect dialect = outerSqlQuery.getDialect();
         // Generate something like
         //
         //  select d0, d1, count(m0)
@@ -256,8 +264,7 @@ public abstract class AbstractQuerySpec implements QuerySpec {
             final String alias = "d" + i;
             innerSqlQuery.addSelect(expr, alias);
             final String quotedAlias = dialect.quoteIdentifier(alias);
-            outerSqlQuery.addSelect(quotedAlias);
-            outerSqlQuery.addGroupBy(quotedAlias);
+            outerSqlQuery.addSelectGroupBy(quotedAlias);
         }
 
         // add predicates not associated with columns

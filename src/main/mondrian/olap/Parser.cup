@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/Parser.cup#4 $
+// $Id: //open/mondrian/src/main/mondrian/olap/Parser.cup#43 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 1999-2002 Kana Software, Inc.
-// Copyright (C) 2002-2007 Julian Hyde and others.
+// Copyright (C) 2002-2008 Julian Hyde and others.
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -22,7 +22,7 @@ import mondrian.mdx.*;
 // Preliminaries to set up and use the scanner.
 // action code {: ... :};
 parser code {:
-    // Generated from $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/Parser.cup#4 $
+    // Generated from $Id: //open/mondrian/src/main/mondrian/olap/Parser.cup#43 $
     private Scanner scanner;
     private String queryString;
     private Connection mdxConnection;
@@ -156,7 +156,7 @@ parser code {:
             slicer == null ?
                 null :
                 new QueryAxis(
-                    false, slicer, AxisOrdinal.SLICER,
+                    false, slicer, AxisOrdinal.StandardAxisOrdinal.SLICER,
                     QueryAxis.SubtotalVisibility.Undefined, new Id[0]);
         return new Query(
             mdxConnection, formulae, axes, cube, slicerAxis, cellProps, load, strictValidation);
@@ -291,6 +291,8 @@ terminal
     CASE,
     CAST,
     CELL,
+    CHAPTERS,
+    COLUMNS,
     DIMENSION,
     ELSE,
     EMPTY,
@@ -305,7 +307,10 @@ terminal
     NULL,
     ON,
     OR,
+    PAGES,
     PROPERTIES,
+    ROWS,
+    SECTIONS,
     SELECT,
     SET,
     THEN,
@@ -334,7 +339,7 @@ terminal
     NE,                         // <>
     PLUS,                       // +
     RBRACE,                     // }
-    RPAREN,                     // )
+    RPAREN,                     //)
     SOLIDUS;                    // /
 
 // c. Typed terminals
@@ -375,8 +380,9 @@ non terminal Id
     cube_specification,
     member_name,
     set_name;
+non terminal AxisOrdinal.StandardAxisOrdinal
+    axis_name;
 non terminal String
-    axis_name,
     comp_op,
     keyword;
 non terminal Id.Segment
@@ -1043,12 +1049,24 @@ else_clause_opt ::=
 //             | <greater_than_or_equals_operator>
 // "IS" is not a comp_op because of conflict with "<expr> IS EMPTY"
 comp_op ::=
-        EQ {: RESULT = "="; :}
-    |   NE {: RESULT = "<>"; :}
-    |   LT {: RESULT = "<"; :}
-    |   GT {: RESULT = ">"; :}
-    |   LE {: RESULT = "<="; :}
-    |   GE {: RESULT = ">="; :}
+        EQ {:
+            RESULT = "=";
+        :}
+    |   NE {:
+            RESULT = "<>";
+        :}
+    |   LT {:
+            RESULT = "<";
+        :}
+    |   GT {:
+            RESULT = ">";
+        :}
+    |   LE {:
+            RESULT = "<=";
+        :}
+    |   GE {:
+            RESULT = ">=";
+        :}
     ;
 //
 // <equals_operator> ::= =
@@ -1256,7 +1274,9 @@ exp_list ::=
 //                         [<cell_props>]
 statement ::=
         select_statement
-    |   _VALUE_EXPRESSION expression:e {: RESULT = (QueryPart) e; :}
+    |   _VALUE_EXPRESSION expression:e {:
+            RESULT = (QueryPart) e;
+        :}
     ;
 
 select_statement ::=
@@ -1303,7 +1323,10 @@ axis_specification_list ::=
     ;
 where_clause_opt ::=
         /* empty */
-    |   WHERE slicer_specification:s {: RESULT = s; :};
+    |   WHERE slicer_specification:s {:
+            RESULT = s;
+        :}
+    ;
 cell_props_opt ::=
         /* empty */ {:
             RESULT = new LinkedList();
@@ -1423,9 +1446,8 @@ set_name ::= compound_id ;
 // <axis_specification> ::= [NON EMPTY] <set> [<dim_props>] ON <axis_name>
 axis_specification ::=
         non_empty_opt:b expression:s dim_props_opt:dp ON axis_name:a {:
-            AxisOrdinal axis = AxisOrdinal.valueOf(a.toUpperCase());
             RESULT = new QueryAxis(
-                    b.booleanValue(), s, axis,
+                    b.booleanValue(), s, a,
                     QueryAxis.SubtotalVisibility.Undefined,
                     Parser.toIdArray(dp));
         :}
@@ -1433,15 +1455,16 @@ axis_specification ::=
             double d = n.doubleValue();
             int index = (int)d;
 
-            // AxisOrdinal values go from -2 to 4. The negative values represent
+            // AxisOrdinal values go from -2 to 4 for standard axis, but higher
+            // ordinals are allowed. The negative values represent
             // special cases, so are ignored.
-            if (index < 0 || index != d || index >= AxisOrdinal.MaxLogicalOrdinal) {
+            if (index < 0 || index != d) {
                 throw MondrianResource.instance().InvalidAxis.ex(
-                    AxisOrdinal.MaxLogicalOrdinal,
                     d);
             }
 
-            AxisOrdinal axis = AxisOrdinal.forLogicalOrdinal(index);
+            AxisOrdinal axis =
+                AxisOrdinal.StandardAxisOrdinal.forLogicalOrdinal(index);
             RESULT = new QueryAxis(b.booleanValue(), s, axis,
                     QueryAxis.SubtotalVisibility.Undefined,
                     Parser.toIdArray(dp));
@@ -1449,8 +1472,12 @@ axis_specification ::=
     ;
 
 non_empty_opt ::=
-        /* empty */ {: RESULT = Boolean.FALSE; :}
-    |   NON EMPTY {: RESULT = Boolean.TRUE; :}
+        /* empty */ {:
+            RESULT = Boolean.FALSE;
+        :}
+    |   NON EMPTY {:
+            RESULT = Boolean.TRUE;
+        :}
     ;
 dim_props_opt ::=
         /* empty */
@@ -1464,17 +1491,35 @@ dim_props_opt ::=
 //               | SECTIONS
 //               | AXIS(<index>)
 axis_name ::=
-        identifier:i {: RESULT = i.name; :}
+        COLUMNS {:
+            RESULT = AxisOrdinal.StandardAxisOrdinal.COLUMNS;
+        :}
+    |   ROWS {:
+            RESULT = AxisOrdinal.StandardAxisOrdinal.ROWS;
+        :}
+    |   PAGES {:
+            RESULT = AxisOrdinal.StandardAxisOrdinal.PAGES;
+        :}
+    |   SECTIONS {:
+            RESULT = AxisOrdinal.StandardAxisOrdinal.SECTIONS;
+        :}
+    |   CHAPTERS {:
+            RESULT = AxisOrdinal.StandardAxisOrdinal.CHAPTERS;
+        :}
     ;
 
 axis_number ::=
         NUMBER
-    |   AXIS LPAREN NUMBER:n RPAREN {: RESULT = n; :}
+    |   AXIS LPAREN NUMBER:n RPAREN {:
+            RESULT = n;
+        :}
     ;
 //
 // <dim_props> ::= [DIMENSION] PROPERTIES <property> [, <property>...]
 dim_props ::=
-    dimension_opt PROPERTIES property_list:pl {: RESULT = pl; :}
+    dimension_opt PROPERTIES property_list:pl {:
+        RESULT = pl;
+    :}
     ;
 dimension_opt ::=
     /* empty */
@@ -1506,7 +1551,9 @@ slicer_specification ::=
 //
 // <cell_props> ::= [CELL] PROPERTIES <cell_property> [, <cell_property>...]
 cell_props ::=
-        cell_opt PROPERTIES cell_property_list:p1 {: RESULT = p1; :}
+        cell_opt PROPERTIES cell_property_list:p1 {:
+            RESULT = p1;
+        :}
     ;
 cell_opt ::=
         /* empty */

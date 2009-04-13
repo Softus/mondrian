@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/Walker.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/Walker.java#7 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 1999-2002 Kana Software, Inc.
-// Copyright (C) 2001-2005 Julian Hyde and others
+// Copyright (C) 2001-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -65,9 +65,9 @@ public class Walker implements Enumeration {
 
     private void moveToNext()
     {
-        if (stack.empty())
+        if (stack.empty()) {
             return;
-
+        }
         currentFrame = (Frame) stack.peek();
 
         // Unwind stack until we find a level we have not completed.
@@ -106,19 +106,21 @@ public class Walker implements Enumeration {
      * parent.  Not valid until nextElement() has been called. */
     public void prune()
     {
-        if( currentFrame.children != null ){
+        if (currentFrame.children != null) {
             currentFrame.childIndex = currentFrame.children.length;
         }
         //we need to make that next frame on the stack is not a child
         //of frame we just pruned. if it is, we need to prune it too
-        if( this.hasMoreElements() ){
-            Object nextFrameParentNode = ((Frame )stack.peek()).parent.node;
-            if( nextFrameParentNode != currentFrame.node  )
+        if (this.hasMoreElements()) {
+            Object nextFrameParentNode = ((Frame)stack.peek()).parent.node;
+            if (nextFrameParentNode != currentFrame.node) {
                 return;
+            }
             //delete the child of current member from the stack
             stack.pop();
-            if( currentFrame.parent != null)
+            if (currentFrame.parent != null) {
                 currentFrame = currentFrame.parent;
+            }
             nextElement();
         }
     }
@@ -127,7 +129,7 @@ public class Walker implements Enumeration {
     {
         prune();
         currentFrame = currentFrame.parent;
-        if( currentFrame != null ){
+        if (currentFrame != null) {
             prune();
         }
     }
@@ -145,8 +147,9 @@ public class Walker implements Enumeration {
     public int level()
     {
         int i = 0;
-        for (Frame f = currentFrame; f != null; f = f.parent)
+        for (Frame f = currentFrame; f != null; f = f.parent) {
             i++;
+        }
         return i;
     }
 
@@ -164,9 +167,11 @@ public class Walker implements Enumeration {
     /** returns the <code>iDepth</code>th ancestor of the current element */
     private Frame getAncestorFrame(int iDepth)
     {
-        for (Frame f = currentFrame; f != null; f = f.parent)
-            if (iDepth-- == 0)
+        for (Frame f = currentFrame; f != null; f = f.parent) {
+            if (iDepth-- == 0) {
                 return f;
+            }
+        }
         return null;
     }
 
@@ -194,17 +199,20 @@ public class Walker implements Enumeration {
      * not Walkable to have children. */
     public Object[] getChildren(Object node)
     {
-        if (node instanceof Walkable)
+        if (node instanceof Walkable) {
             return ((Walkable) node).getChildren();
-        else
+        } else {
             return null;
+        }
     }
 
     private static int arrayFind(Object[] array, Object o)
     {
-        for (int i = 0; i < array.length; i++)
-            if (array[i] == o)
+        for (int i = 0; i < array.length; i++) {
+            if (array[i] == o) {
                 return i;
+            }
+        }
         return -1;
     }
 
@@ -219,7 +227,9 @@ public class Walker implements Enumeration {
             this.children = children;
         }
 
-        public Object[] getChildren() { return children; }
+        public Object[] getChildren() {
+            return children;
+        }
 
         public static void walkUntil(Walker walker, String name) {
             while (walker.hasMoreElements()) {
@@ -265,8 +275,9 @@ public class Walker implements Enumeration {
         Region.walkUntil(walker, "USA");
         walker.prune();
         region = (Region) walker.nextElement(); // should be null
-        if( region == null )
+        if (region == null) {
             pw.println("null");
+        }
         pw.flush();
 
         walker = new Walker(usa);
@@ -294,7 +305,7 @@ public class Walker implements Enumeration {
         Region.walkUntil(walker, "CA");
         walker.pruneSiblings();
         region = (Region) walker.nextElement(); // should be Los Angeles
-        if (region == null ){
+        if (region == null) {
             pw.println("null");
             pw.flush();
         }
@@ -303,7 +314,7 @@ public class Walker implements Enumeration {
         Region.walkUntil(walker, "Soma");
         walker.pruneSiblings();
         region = (Region) walker.nextElement(); // should be Los Angeles
-        if (region == null ){
+        if (region == null) {
             pw.println("null");
             pw.flush();
         }

@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/CovarianceFunDef.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/fun/CovarianceFunDef.java#4 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -26,7 +26,7 @@ import java.util.List;
  * Definition of the <code>Covariance</code> and <code>CovarianceN</code> MDX functions.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/CovarianceFunDef.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/CovarianceFunDef.java#4 $
  * @since Mar 23, 2006
  */
 class CovarianceFunDef extends FunDefBase {
@@ -63,7 +63,7 @@ class CovarianceFunDef extends FunDefBase {
             public double evaluateDouble(Evaluator evaluator) {
                 List memberList = listCalc.evaluateList(evaluator);
                 return (Double)covariance(
-                        evaluator.push(), memberList,
+                        evaluator.push(false), memberList,
                         calc1, calc2, biased);
             }
 

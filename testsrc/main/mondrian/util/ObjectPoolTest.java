@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/util/ObjectPoolTest.java#2 $
+// $Id: //open/mondrian/testsrc/main/mondrian/util/ObjectPoolTest.java#10 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2007 Julian Hyde and others
+// Copyright (C) 2006-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -19,7 +19,7 @@ import junit.framework.TestCase;
 /**
  * Test case for {@link ObjectPool}.
  *
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/util/ObjectPoolTest.java#2 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/util/ObjectPoolTest.java#10 $
  * @author Richard Emberson
  */
 public class ObjectPoolTest extends TestCase {
@@ -67,7 +67,7 @@ public class ObjectPoolTest extends TestCase {
         String[] ss2 = genStringsArray(nos);
         for (int i = 0; i < nos; i++) {
             String s = strings.add(ss2[i]);
-            assertEquals("string not equal: " +s, s, ss2[i]);
+            assertEquals("string not equal: " + s, s, ss2[i]);
             // REVIEW jvs 16-Jan-2008:  This failed for me when
             // I ran with a 1GB JVM heap size on JDK 1.5, probably
             // because of interning (I tried changing genStringsList to add a
@@ -114,8 +114,8 @@ public class ObjectPoolTest extends TestCase {
         KeyValue[] kv2 = genKeyValueArray(nos);
         for (int i = 0; i < nos; i++) {
             KeyValue kv = op.add(kv2[i]);
-            assertEquals("KeyValue not equal: " +kv, kv, kv2[i]);
-	    assertFalse("same object", (kv == kv2[i]));
+            assertEquals("KeyValue not equal: " + kv, kv, kv2[i]);
+            assertFalse("same object", (kv == kv2[i]));
         }
 
         op.clear();
@@ -144,12 +144,12 @@ public class ObjectPoolTest extends TestCase {
      */
     public void testLarge() {
         // Some typical results (2.4 GHz Intel dual-core).
-        
+
         // Key type:        Integer               String
         // Implementation:  ObjectPool    HashSet ObjectPool    HashSet
         //                  ========== ========== ========== ==========
         // With density=0.01, 298,477 distinct entries, 7,068 hits
-        // 300,000 adds        221 ms      252 ms     293 ms    1013 ms 
+        // 300,000 adds        221 ms      252 ms     293 ms    1013 ms
         // 700,000 gets        164 ms      148 ms     224 ms     746 ms
         //
         // With density=0.5, 236,022 distinct entries, 275,117 hits

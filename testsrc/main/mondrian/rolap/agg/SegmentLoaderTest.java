@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/rolap/agg/SegmentLoaderTest.java#2 $
+// $Id: //open/mondrian/testsrc/main/mondrian/rolap/agg/SegmentLoaderTest.java#8 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2004-2007 Julian Hyde and others
+// Copyright (C) 2004-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -18,7 +18,7 @@ import java.sql.SQLException;
  * <p>Test for <code>SegmentLoader</code></p>
  *
  * @author Thiyagu
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/rolap/agg/SegmentLoaderTest.java#2 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/rolap/agg/SegmentLoaderTest.java#8 $
  * @since 06-Jun-2007
  */
 public class SegmentLoaderTest extends BatchTestCase {
@@ -36,7 +36,6 @@ public class SegmentLoaderTest extends BatchTestCase {
         groupingSets.add(groupingSetsInfo);
         groupingSets.add(groupableSetsInfo);
         SegmentLoader loader = new SegmentLoader() {
-
             SqlStatement createExecuteSql(
                 GroupingSetsList groupingSetsList,
                 List<StarPredicate> compoundPredicateList)
@@ -77,7 +76,6 @@ public class SegmentLoaderTest extends BatchTestCase {
         groupingSets.add(groupingSetsInfo);
         groupingSets.add(groupableSetsInfo);
         SegmentLoader loader = new SegmentLoader() {
-
             SqlStatement createExecuteSql(
                     GroupingSetsList groupingSetsList,
                     List<StarPredicate> compoundPredicateList)
@@ -107,7 +105,6 @@ public class SegmentLoaderTest extends BatchTestCase {
         groupingSets.add(groupingSetsInfo);
         groupingSets.add(groupableSetsInfo);
         SegmentLoader loader = new SegmentLoader() {
-
             SqlStatement createExecuteSql(
                 GroupingSetsList groupingSetsList,
                 List<StarPredicate> compoundPredicateList)
@@ -150,10 +147,9 @@ public class SegmentLoaderTest extends BatchTestCase {
             new ArrayList<GroupingSet>();
         groupingSets.add(groupingSetsInfo);
         SegmentLoader loader = new SegmentLoader() {
-
             SqlStatement createExecuteSql(
                 GroupingSetsList groupingSetsList,
-                List<StarPredicate> compoundPredicateList)                
+                List<StarPredicate> compoundPredicateList)
             {
                 return null;
             }
@@ -275,11 +271,11 @@ public class SegmentLoaderTest extends BatchTestCase {
         GroupingSet groupingSetsInfo = getDefaultGroupingSet();
 
         SegmentLoader loader = new SegmentLoader() {
-            List<Object[]> loadData(SqlStatement stmt,
-                                    GroupingSetsList groupingSetsList) throws
-                SQLException
+            List<Object[]> loadData(
+                SqlStatement stmt,
+                GroupingSetsList groupingSetsList)
+                throws SQLException
             {
-
                 List<Object[]> data = new ArrayList<Object[]>();
                 data.add(new Object[]{"1997", "Food", "Deli", "F", "5990"});
                 data.add(new Object[]{"1997", "Food", "Deli", "M", "6047"});
@@ -335,9 +331,10 @@ public class SegmentLoaderTest extends BatchTestCase {
         cellKeys.add(CellKey.Generator.newCellKey(new int[]{0, 1, 3, 0}));
         cellKeys.add(CellKey.Generator.newCellKey(new int[]{0, 0, 2, 1}));
         cellKeys.add(CellKey.Generator.newCellKey(new int[]{0, 1, 3, 1}));
-        Double[] unitSalesValues =
-            {368.0, 1987.0, 867.0, 473.0, 945.0, 5990.0, 2199.0,
-                6047.0};
+        Double[] unitSalesValues = {
+            368.0, 1987.0, 867.0, 473.0, 945.0, 5990.0, 2199.0,
+            6047.0
+        };
 
         Iterator<Map.Entry<CellKey, Object>> iterator =
             segment.getData().iterator();
@@ -403,7 +400,6 @@ public class SegmentLoaderTest extends BatchTestCase {
     }
 
     public void testGroupingSetsUtilForMissingGroupingBitKeys() {
-
         List<GroupingSet> groupingSets = new ArrayList<GroupingSet>();
         groupingSets.add(getDefaultGroupingSet());
         groupingSets.add(getGroupingSetRollupOnGender());
@@ -482,7 +478,6 @@ public class SegmentLoaderTest extends BatchTestCase {
 
         assertTrue(new GroupingSetsList(new ArrayList<GroupingSet>())
             .getRollupColumns().isEmpty());
-
     }
 
     private GroupingSet getGroupingSetRollupOnGenderAndProductDepartment() {
@@ -566,7 +561,6 @@ public class SegmentLoaderTest extends BatchTestCase {
 
         assertTrue(new GroupingSetsList(new ArrayList<GroupingSet>())
             .getRollupColumns().isEmpty());
-
     }
 
     public void testGroupingSetsUtilSetsForGroupingFunctionIndex() {
@@ -592,7 +586,6 @@ public class SegmentLoaderTest extends BatchTestCase {
         assertEquals(1, detail.findGroupingFunctionIndex(2));
         assertEquals(2, detail.findGroupingFunctionIndex(1));
         assertEquals(3, detail.findGroupingFunctionIndex(0));
-
     }
 
     public void testGetGroupingColumnsList() {
@@ -620,11 +613,9 @@ public class SegmentLoaderTest extends BatchTestCase {
         groupingColumns = new GroupingSetsList(new ArrayList<GroupingSet>())
             .getGroupingSetsColumns();
         assertEquals(0, groupingColumns.size());
-
     }
 
     public void testSetFailOnStillLoadingSegments() {
-
         List<GroupingSet> groupingSets = new ArrayList<GroupingSet>();
         groupingSets.add(getDefaultGroupingSet());
         new SegmentLoader()
@@ -692,26 +683,30 @@ public class SegmentLoaderTest extends BatchTestCase {
         List<Object[]> data = new ArrayList<Object[]>();
         data.add(new Object[]{"1997", "Food", "Deli", "F", "5990", 0});
         data.add(new Object[]{"1997", "Food", "Deli", "M", "6047", 0});
-        if (incSummaryData)
+        if (incSummaryData) {
             data.add(new Object[]{"1997", "Food", "Deli", null, "12037", 1});
+        }
         data.add(
             new Object[]{"1997", "Food", "Canned_Products", "F", "867", 0});
         data.add(
             new Object[]{"1997", "Food", "Canned_Products", "M", "945", 0});
-        if (incSummaryData)
+        if (incSummaryData) {
             data.add(new Object[]{"1997", "Food", "Canned_Products", null,
                 "1812", 1});
+        }
         data.add(new Object[]{"1997", "Drink", "Dairy", "F", "1987", 0});
         data.add(new Object[]{"1997", "Drink", "Dairy", "M", "2199", 0});
-        if (incSummaryData)
+        if (incSummaryData) {
             data.add(new Object[]{"1997", "Drink", "Dairy", null, "4186", 1});
+        }
         data.add(new Object[]{"1997", "Non-Consumable", "Carousel", "F", "368",
             0});
         data.add(new Object[]{"1997", "Non-Consumable", "Carousel", "M", "473",
             0});
-        if (incSummaryData)
+        if (incSummaryData) {
             data.add(new Object[]{"1997", "Non-Consumable", "Carousel", null,
                 "841", 1});
+        }
         return data;
     }
 
@@ -730,10 +725,13 @@ public class SegmentLoaderTest extends BatchTestCase {
         List<Object[]> data = new ArrayList<Object[]>();
         data.add(new Object[]{"1997", "Food", "Deli", "F", "5990", 0});
         data.add(new Object[]{"1997", "Food", "Deli", "M", "6047", 0});
-        if (incSummaryData)
+        if (incSummaryData) {
             data.add(new Object[]{"1997", "Food", "Deli", null, "12037", 1});
+        }
         data.add(
             new Object[]{"1997", "Food", null, "F", "867", 0});
         return data;
     }
 }
+
+// End SegmentLoaderTest.java

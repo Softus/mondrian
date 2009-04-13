@@ -1,7 +1,7 @@
 @echo off
 setlocal
 
-rem $Id: //open/mondrian-release/3.0/build.bat#2 $
+rem $Id: //open/mondrian/build.bat#19 $
 rem This software is subject to the terms of the Common Public License
 rem Agreement, available at the following URL:
 rem http://www.opensource.org/licenses/cpl.html.

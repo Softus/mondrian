@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/agg/SegmentLoader.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/agg/SegmentLoader.java#10 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2002-2007 Julian Hyde and others
+// Copyright (C) 2002-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -29,7 +29,7 @@ import java.sql.SQLException;
  * in the Western region, for all years.</p>
  *
  * @author Thiyagu
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/agg/SegmentLoader.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/agg/SegmentLoader.java#10 $
  * @since 24 May 2007
  */
 public class SegmentLoader {
@@ -39,7 +39,7 @@ public class SegmentLoader {
      * GROUP BY GROUPING SETS sql. Else if only one grouping set is passed in
      * the list data is loaded without using GROUP BY GROUPING SETS sql. If the
      * database does not support grouping sets
-     * {@link mondrian.rolap.sql.SqlQuery.Dialect#supportsGroupingSets()} then
+     * {@link mondrian.spi.Dialect#supportsGroupingSets()} then
      * grouping sets list should always have only one element in it.
      *
      * <p>For example, if list has 2 grouping sets with columns A, B, C and B, C
@@ -73,7 +73,7 @@ public class SegmentLoader {
         SqlStatement stmt = null;
         try {
             stmt = createExecuteSql(
-                groupingSetsList, 
+                groupingSetsList,
                 compoundPredicateList);
             int arity = defaultColumns.length;
             SortedSet<Comparable<?>>[] axisValueSets =
@@ -114,7 +114,6 @@ public class SegmentLoader {
             setDataToSegments(
                 groupingSetsList, nonGroupingDataSets,
                 groupingDataSetsMap, pinnedSegments);
-
         } catch (SQLException e) {
             throw stmt.handle(e);
         } finally {
@@ -479,9 +478,8 @@ public class SegmentLoader {
         }
         groupingColumns.add(detailedBatchColumns);
         for (GroupingSet aggBatchDetail : aggBatchDetails) {
-            groupingColumns.add(aggBatchDetail.getSegments()[0]
-                .aggregation.getColumns());
-
+            groupingColumns.add(
+                aggBatchDetail.getSegments()[0].aggregation.getColumns());
         }
         return groupingColumns;
     }
@@ -490,7 +488,6 @@ public class SegmentLoader {
         // Workspace to build up lists of distinct values for each axis.
         SortedSet<Comparable<?>>[] axisValueSets = new SortedSet[arity];
         for (int i = 0; i < axisValueSets.length; i++) {
-
             if (Util.PreJdk15) {
                 // Work around the fact that Boolean is not Comparable until JDK
                 // 1.5.
@@ -513,7 +510,7 @@ public class SegmentLoader {
                                 }
                             }
                         }
-                    );
+                   );
                 axisValueSets[i] = set;
             } else {
                 assert Comparable.class.isAssignableFrom(Boolean.class);

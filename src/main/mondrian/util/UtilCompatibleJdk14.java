@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/util/UtilCompatibleJdk14.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/util/UtilCompatibleJdk14.java#6 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2007-2007 Julian Hyde
+// Copyright (C) 2007-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -25,7 +25,7 @@ import java.lang.reflect.Method;
  * trouble with this.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/util/UtilCompatibleJdk14.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/util/UtilCompatibleJdk14.java#6 $
  * @since Feb 5, 2007
  */
 public class UtilCompatibleJdk14 implements UtilCompatible {
@@ -44,10 +44,10 @@ public class UtilCompatibleJdk14 implements UtilCompatible {
         return new HashSet<E>(Arrays.asList(elementType.getEnumConstants()));
     }
 
-    /** 
+    /**
      * This generates a BigDecimal that can have a precision that does
      * not reflect the precision of the input double.
-     * 
+     *
      * @param d input double
      * @return BigDecimal
      */
@@ -57,9 +57,9 @@ public class UtilCompatibleJdk14 implements UtilCompatible {
 
     public String quotePattern(String s) {
         int slashEIndex = s.indexOf("\\E");
-        if (slashEIndex == -1)
+        if (slashEIndex == -1) {
             return "\\Q" + s + "\\E";
-
+        }
         StringBuilder sb = new StringBuilder(s.length() * 2);
         sb.append("\\Q");
         int current = 0;

@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/OlapElement.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/OlapElement.java#18 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -20,14 +20,16 @@ package mondrian.olap;
 public interface OlapElement {
     String getUniqueName();
     String getName();
+
     String getDescription();
 
     /**
      * Looks up a child element, returning null if it does not exist.
      */
-    OlapElement lookupChild(SchemaReader schemaReader, Id.Segment s);
     OlapElement lookupChild(
-        SchemaReader schemaReader, Id.Segment s, MatchType matchType);
+        SchemaReader schemaReader,
+        Id.Segment s,
+        MatchType matchType);
 
     /**
      * Returns the name of this element qualified by its class, for example

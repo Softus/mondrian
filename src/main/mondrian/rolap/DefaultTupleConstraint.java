@@ -17,7 +17,7 @@ import mondrian.rolap.aggmatcher.AggStar;
 /**
  * TupleConstraint which does not restrict the result.
  *
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/DefaultTupleConstraint.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/DefaultTupleConstraint.java#12 $
  */
 public class DefaultTupleConstraint implements TupleConstraint {
 
@@ -29,7 +29,10 @@ public class DefaultTupleConstraint implements TupleConstraint {
     protected DefaultTupleConstraint() {
     }
 
-    public void addConstraint(SqlQuery sqlQuery, RolapCube baseCube) {
+    public void addConstraint(
+            SqlQuery sqlQuery,
+            RolapCube baseCube,
+            AggStar aggStar) {
     }
 
     public void addLevelConstraint(
@@ -61,5 +64,4 @@ public class DefaultTupleConstraint implements TupleConstraint {
 
 }
 
-// End DefaultTupelConstraint.java
-
+// End DefaultTupleConstraint.java

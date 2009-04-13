@@ -2,7 +2,7 @@
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2002-2007 Julian Hyde and others
+// Copyright (C) 2002-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -19,7 +19,7 @@ import mondrian.olap.MondrianProperties;
  * again with a fresh connection.
  *
  * @author Thiyagu,Ajit
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/ConcurrentMdxTest.java#2 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/test/ConcurrentMdxTest.java#5 $
  */
 public class ConcurrentMdxTest extends FoodMartTestCase {
     private MondrianProperties props;
@@ -76,7 +76,7 @@ public class ConcurrentMdxTest extends FoodMartTestCase {
                                     "Row #0: 102,278.409\n" +
                                     "Row #1: \n" +
                                     "Row #1: \n"),
-            
+
             new QueryAndResult(
                     "select {[Measures].[Sales Count], " +
                             "[Measures].[Store Invoice]} on 0, " +
@@ -404,10 +404,10 @@ public class ConcurrentMdxTest extends FoodMartTestCase {
                     "   { [Product].[All Products].[Drink].[Percent of Alcoholic Drinks] }" +
                     " on columns," + nl +
                     "   order([Customers].[All Customers].[USA].[WA].Children," +
-                    " [Product].[All Products].[Drink].[Percent of Alcoholic Drinks],BDESC )" +
+                    " [Product].[All Products].[Drink].[Percent of Alcoholic Drinks],BDESC)" +
                     " on rows" + nl +
                     "from Sales" + nl +
-                    "where ( [Measures].[Unit Sales] )", "Axis #0:\n" +
+                    "where ([Measures].[Unit Sales])", "Axis #0:\n" +
                     "{[Measures].[Unit Sales]}\n" +
                     "Axis #1:\n" +
                     "{[Product].[All Products].[Drink].[Percent of Alcoholic Drinks]}\n" +
@@ -1235,7 +1235,6 @@ public class ConcurrentMdxTest extends FoodMartTestCase {
                     "Axis #0:\n" +
                             "{}\n" +
                             "565,238.13"),
-
     };
 
     public void testConcurrentValidatingQueriesInRandomOrder() {
@@ -1265,4 +1264,4 @@ public class ConcurrentMdxTest extends FoodMartTestCase {
         props = MondrianProperties.instance();
     }
 }
-// End ConcurrentMdxTest.java 
+// End ConcurrentMdxTest.java

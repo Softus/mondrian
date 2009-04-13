@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/rolap/IndexedValuesTest.java#2 $
+// $Id: //open/mondrian/testsrc/main/mondrian/rolap/IndexedValuesTest.java#2 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2007-2007 Julian Hyde and others
+// Copyright (C) 2007-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -14,9 +14,9 @@ import mondrian.olap.*;
 
 /**
  * Test case for '&amp;[..]' capability in MDX identifiers.
- * 
+ *
  * @author pierluiggi@users.sourceforge.net
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/rolap/IndexedValuesTest.java#2 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/rolap/IndexedValuesTest.java#2 $
  */
 public class IndexedValuesTest extends FoodMartTestCase {
     public IndexedValuesTest(final String name) {
@@ -31,7 +31,7 @@ public class IndexedValuesTest extends FoodMartTestCase {
         final Connection conn = getConnection();
 
         // Query using name
-        final String queryStr1 = 
+        final String queryStr1 =
                 "SELECT {[Measures].[Org Salary], [Measures].[Count]} "
                     + "ON COLUMNS, "
                     + "{[Employees].[Sheri Nowmer]} "
@@ -40,7 +40,7 @@ public class IndexedValuesTest extends FoodMartTestCase {
         final Result result1 = conn.execute(query1);
 
         // Query using key
-        final String queryStr2 = 
+        final String queryStr2 =
                 "SELECT {[Measures].[Org Salary], [Measures].[Count]} "
                     + "ON COLUMNS, "
                     + "{[Employees].&[1]} "

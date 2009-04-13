@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/type/TupleType.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/type/TupleType.java#13 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -10,6 +10,7 @@
 package mondrian.olap.type;
 
 import mondrian.olap.*;
+import mondrian.resource.MondrianResource;
 
 import java.util.Arrays;
 import java.util.ArrayList;
@@ -20,7 +21,7 @@ import java.util.List;
  *
  * @author jhyde
  * @since Feb 17, 2005
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/type/TupleType.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/type/TupleType.java#13 $
  */
 public class TupleType implements Type {
     public final Type[] elementTypes;
@@ -117,7 +118,7 @@ public class TupleType implements Type {
     private Type commonTupleType(Type type, int[] conversionCount) {
         TupleType that = (TupleType) type;
 
-        if(this.elementTypes.length < that.elementTypes.length){
+        if (this.elementTypes.length < that.elementTypes.length) {
             return createCommonTupleType(that, conversionCount);
         }
         return that.createCommonTupleType(this, conversionCount);
@@ -133,13 +134,35 @@ public class TupleType implements Type {
                 return null;
             }
         }
-        if(elementTypes.size() < that.elementTypes.length){
-            for(int i=elementTypes.size();i< that.elementTypes.length;i++){
+        if (elementTypes.size() < that.elementTypes.length) {
+            for (int i = elementTypes.size(); i < that.elementTypes.length; i++) {
                 elementTypes.add(new ScalarType());
             }
         }
         return new TupleType(
             elementTypes.toArray(new Type[elementTypes.size()]));
+    }
+
+    /**
+     * Checks that there are no duplicate dimensions in a list of member types.
+     * If so, the member types will form a valid tuple type.
+     * If not, throws {@link mondrian.olap.MondrianException}.
+     *
+     * @param memberTypes Array of member types
+     */
+    public static void checkDimensions(MemberType[] memberTypes) {
+        for (int i = 0; i < memberTypes.length; i++) {
+            MemberType memberType = memberTypes[i];
+            for (int j = 0; j < i; j++) {
+                MemberType member1 = memberTypes[j];
+                final Dimension dimension = memberType.getDimension();
+                final Dimension dimension1 = member1.getDimension();
+                if (dimension != null && dimension == dimension1) {
+                    throw MondrianResource.instance().DupDimensionsInTuple.ex(
+                            dimension.getUniqueName());
+                }
+            }
+        }
     }
 }
 

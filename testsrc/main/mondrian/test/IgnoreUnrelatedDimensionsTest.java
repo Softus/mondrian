@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/IgnoreUnrelatedDimensionsTest.java#2 $
+// $Id: //open/mondrian/testsrc/main/mondrian/test/IgnoreUnrelatedDimensionsTest.java#6 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2001-2007 Julian Hyde and others
+// Copyright (C) 2001-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -19,7 +19,7 @@ import mondrian.olap.MondrianProperties;
  * is set to true on a base cube usage.
  * @author ajoglekar
  * @since Dec 03, 2007
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/IgnoreUnrelatedDimensionsTest.java#2 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/test/IgnoreUnrelatedDimensionsTest.java#6 $
  */
 public class IgnoreUnrelatedDimensionsTest extends FoodMartTestCase {
 
@@ -64,7 +64,7 @@ public class IgnoreUnrelatedDimensionsTest extends FoodMartTestCase {
     protected void tearDown() throws Exception {
         prop.EnableNonEmptyOnAllAxis.set(originalNonEmptyFlag);
     }
-    
+
     public TestContext getTestContext() {
         final TestContext testContext =
             TestContext.create(null, null,
@@ -110,8 +110,8 @@ public class IgnoreUnrelatedDimensionsTest extends FoodMartTestCase {
         assertQueryReturns(
             "WITH MEMBER [Measures].[Unit Sales VM] AS " +
             "'ValidMeasure([Measures].[Unit Sales])', SOLVE_ORDER = 3000 " +
-            "MEMBER Gender.G AS 'AGGREGATE(CROSSJOIN({Gender.Gender.MEMBERS}," +
-            "[WAREHOUSE].[STATE PROVINCE].MEMBERS) )'" +
+            "MEMBER Gender.G AS 'AGGREGATE(CROSSJOIN({[Gender].[Gender].MEMBERS}," +
+            "[WAREHOUSE].[STATE PROVINCE].MEMBERS))'" +
             "SELECT " +
             "{[MEASURES].[Unit Sales VM]} ON 0," +
             "{Gender.G} ON 1 " +
@@ -126,7 +126,7 @@ public class IgnoreUnrelatedDimensionsTest extends FoodMartTestCase {
                 "Row #0: 266,773\n"));
     }
 
-    public void testVMShouldNotPushUpAggregateMemberDefinedOnNonJoiningDimension(){
+    public void testVMShouldNotPushUpAggregateMemberDefinedOnNonJoiningDimension() {
         assertQueryReturns(
             "WITH MEMBER [Measures].[Total Sales] AS " +
             "'ValidMeasure(Measures.[Warehouse Sales]) + [Measures].[Unit Sales]'," +
@@ -147,7 +147,7 @@ public class IgnoreUnrelatedDimensionsTest extends FoodMartTestCase {
                 "Row #0: 30,405.602\n"));
     }
 
-    public void testAggregateMemberDefinedOnNonJoiningDimensionWithNonAllDefaultMember(){
+    public void testAggregateMemberDefinedOnNonJoiningDimensionWithNonAllDefaultMember() {
         // Gender dim to have Gender.F as default member
         TestContext context = TestContext.create(null, cubeSales3,
             cubeWarehouseAndSales3, null, null, null);
@@ -337,7 +337,7 @@ public class IgnoreUnrelatedDimensionsTest extends FoodMartTestCase {
             "'IIF([Measures].CURRENTMEMBER IS [Measures].[Total Sales],\n" +
             "[Warehouse].[All Warehouses],\n" +
             "[Warehouse].[All Warehouses])'\n" +
-            "MEMBER [Product].[AggSP1_2] AS\n" + 
+            "MEMBER [Product].[AggSP1_2] AS\n" +
             "'IIF([Measures].CURRENTMEMBER IS [Measures].[Total Sales],\n" +
             "([Warehouse].[All Warehouses]),\n" +
             "([Warehouse].[All Warehouses]))'\n" +
@@ -361,3 +361,5 @@ public class IgnoreUnrelatedDimensionsTest extends FoodMartTestCase {
     }
 
 }
+
+// End IgnoreUnrelatedDimensionsTest.java

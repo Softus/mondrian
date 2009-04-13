@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/LevelBase.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/LevelBase.java#22 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -20,7 +20,7 @@ import mondrian.resource.MondrianResource;
  *
  * @author jhyde
  * @since 6 August, 2001
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/LevelBase.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/LevelBase.java#22 $
  */
 public abstract class LevelBase
     extends OlapElementBase
@@ -108,10 +108,6 @@ public abstract class LevelBase
 
     public boolean isMeasure() {
         return hierarchy.getName().equals("Measures");
-    }
-
-    public OlapElement lookupChild(SchemaReader schemaReader, Id.Segment s) {
-        return lookupChild(schemaReader, s, MatchType.EXACT);
     }
 
     public OlapElement lookupChild(

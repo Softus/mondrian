@@ -40,7 +40,7 @@ import java.lang.reflect.*;
  * </p>
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/util/DelegatingInvocationHandler.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/util/DelegatingInvocationHandler.java#6 $
  */
 public abstract class DelegatingInvocationHandler
     implements InvocationHandler

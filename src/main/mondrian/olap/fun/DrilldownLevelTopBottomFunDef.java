@@ -2,7 +2,7 @@
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2007-2007 Julian Hyde
+// Copyright (C) 2007-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -29,7 +29,7 @@ import java.util.*;
  * </pre></blockquote>
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/DrilldownLevelTopBottomFunDef.java#3 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/DrilldownLevelTopBottomFunDef.java#4 $
  * @since Oct 18, 2007
  */
 class DrilldownLevelTopBottomFunDef extends FunDefBase {
@@ -116,16 +116,19 @@ class DrilldownLevelTopBottomFunDef extends FunDefBase {
                         }
                         continue;
                     }
-                    Member[] children = schemaReader.getMemberChildren(member);
-                    sortMembers(
-                        evaluator.push(),
-                        Arrays.asList(children),
-                        orderCalc,
-                        top,
-                        true);
-                    int x = Math.min(n, children.length);
+                    List<Member> children =
+                        schemaReader.getMemberChildren(member);
+                    final List<Member> sortedChildren =
+                        sortMembers(
+                            evaluator.push(false),
+                            children,
+                            children,
+                            orderCalc,
+                            top,
+                            true);
+                    int x = Math.min(n, sortedChildren.size());
                     for (int i = 0; i < x; i++) {
-                        result.add(children[i]);
+                        result.add(sortedChildren.get(i));
                     }
                 }
                 return result;

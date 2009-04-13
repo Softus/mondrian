@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/CompatibilityTest.java#2 $
+// $Id: //open/mondrian/testsrc/main/mondrian/test/CompatibilityTest.java#27 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2005-2005 SAS Institute, Inc.
-// Copyright (C) 2006-2007 Julian Hyde and others
+// Copyright (C) 2006-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -14,6 +14,7 @@ import mondrian.olap.MondrianProperties;
 import mondrian.olap.Result;
 import mondrian.olap.Cell;
 import mondrian.olap.Util;
+import mondrian.spi.Dialect;
 import junit.framework.Assert;
 
 /**
@@ -24,7 +25,7 @@ import junit.framework.Assert;
  *
  * @author sasebb
  * @since March 30, 2005
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/CompatibilityTest.java#2 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/test/CompatibilityTest.java#27 $
  */
 public class CompatibilityTest extends FoodMartTestCase {
     private boolean originalNeedDimensionPrefix;
@@ -207,7 +208,8 @@ public class CompatibilityTest extends FoodMartTestCase {
      * still be looked up when case sensitive is off.
      */
     public void testCaseInsensitiveNullMember() {
-        if (getTestContext().getDialect().isLucidDB()) {
+        final Dialect dialect = getTestContext().getDialect();
+        if (dialect.getDatabaseProduct() == Dialect.DatabaseProduct.LUCIDDB) {
             // TODO jvs 29-Nov-2006:  LucidDB is strict about
             // null literals (type can't be inferred in this context);
             // maybe enhance the inline table to use the columndef
@@ -271,7 +273,8 @@ public class CompatibilityTest extends FoodMartTestCase {
      * This will map to the #null memeber.
      */
     public void testNullNameColumn() {
-        if (getTestContext().getDialect().isLucidDB()) {
+        final Dialect dialect = getTestContext().getDialect();
+        if (dialect.getDatabaseProduct() == Dialect.DatabaseProduct.LUCIDDB) {
             // TODO jvs 29-Nov-2006:  See corresponding comment in
             // testCaseInsensitiveNullMember
             return;
@@ -357,6 +360,9 @@ public class CompatibilityTest extends FoodMartTestCase {
                 "           case \"store\".\"store_name\" when 'HQ' then null else \"store\".\"store_name\" end\n" +
                 "       </SQL>\n" +
                 "        <SQL dialect=\"luciddb\">\n" +
+                "           case \"store_name\" when 'HQ' then null else \"store_name\" end\n" +
+                "       </SQL>\n" +
+                "        <SQL dialect=\"netezza\">\n" +
                 "           case \"store_name\" when 'HQ' then null else \"store_name\" end\n" +
                 "       </SQL>\n" +
                 "        <SQL dialect=\"generic\">\n" +

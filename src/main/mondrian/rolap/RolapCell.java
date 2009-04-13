@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/RolapCell.java#4 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/RolapCell.java#28 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2007 Julian Hyde
+// Copyright (C) 2005-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -22,7 +22,7 @@ import java.util.ArrayList;
  * <code>RolapCell</code> implements {@link mondrian.olap.Cell} within a
  * {@link RolapResult}.
  *
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/RolapCell.java#4 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/RolapCell.java#28 $
  */
 class RolapCell implements Cell {
     private final RolapResult result;
@@ -163,10 +163,10 @@ class RolapCell implements Cell {
 
         // replace member if we're dealing with a trivial formula
         if (currentMembers[0] instanceof RolapHierarchy.RolapCalculatedMeasure) {
-            RolapHierarchy.RolapCalculatedMeasure measure = 
+            RolapHierarchy.RolapCalculatedMeasure measure =
                 (RolapHierarchy.RolapCalculatedMeasure)currentMembers[0];
             if (measure.getFormula().getExpression() instanceof MemberExpr) {
-                currentMembers[0] = 
+                currentMembers[0] =
                     ((MemberExpr)measure.getFormula().getExpression()).getMember();
             }
         }

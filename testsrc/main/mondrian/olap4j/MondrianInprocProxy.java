@@ -24,7 +24,7 @@ import mondrian.tui.XmlaSupport;
  * in-process. This is more convenient to debug than an inter-process
  * request using HTTP.
  *
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/olap4j/MondrianInprocProxy.java#3 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/olap4j/MondrianInprocProxy.java#4 $
  * @author jhyde
  */
 public class MondrianInprocProxy
@@ -80,7 +80,7 @@ public class MondrianInprocProxy
                     return get(url, request);
                 }
             }
-        );
+       );
     }
 
     public String getEncodingCharsetName() {

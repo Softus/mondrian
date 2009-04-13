@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/MemberHierarchyFunDef.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/fun/MemberHierarchyFunDef.java#3 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -23,7 +23,7 @@ import mondrian.olap.Member;
  * Definition of the <code>&lt;Member&gt;.Hierarchy</code> MDX builtin function.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/MemberHierarchyFunDef.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/MemberHierarchyFunDef.java#3 $
  * @since Mar 23, 2006
  */
 public class MemberHierarchyFunDef extends FunDefBase {

@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/rolap/RolapSchemaReaderTest.java#2 $
+// $Id: //open/mondrian/testsrc/main/mondrian/rolap/RolapSchemaReaderTest.java#13 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2004-2007 Julian Hyde and others
+// Copyright (C) 2004-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -15,6 +15,7 @@ import java.util.Arrays;
 import junit.framework.TestCase;
 import mondrian.olap.*;
 import mondrian.test.FoodMartTestCase;
+import mondrian.test.TestContext;
 
 
 /**
@@ -26,7 +27,6 @@ public class RolapSchemaReaderTest extends FoodMartTestCase {
     }
 
     public void testGetCubesWithNoHrCubes() {
-
         String[] expectedCubes = new String[] {
                 "Sales", "Warehouse", "Warehouse and Sales", "Store",
                 "Sales Ragged", "Sales 2"
@@ -41,14 +41,12 @@ public class RolapSchemaReaderTest extends FoodMartTestCase {
             assertEquals(expectedCubes.length, cubes.length);
 
             assertCubeExists(expectedCubes, cubes);
-        }
-        finally {
+        } finally {
             connection.close();
         }
     }
 
     public void testGetCubesWithNoRole() {
-
         String[] expectedCubes = new String[] {
                 "Sales", "Warehouse", "Warehouse and Sales", "Store",
                 "Sales Ragged", "Sales 2", "HR"
@@ -63,14 +61,12 @@ public class RolapSchemaReaderTest extends FoodMartTestCase {
             assertEquals(expectedCubes.length, cubes.length);
 
             assertCubeExists(expectedCubes, cubes);
-        }
-        finally {
+        } finally {
             connection.close();
         }
     }
 
     public void testGetCubesForCaliforniaManager() {
-
         String[] expectedCubes = new String[] {
                 "Sales"
         };
@@ -85,9 +81,24 @@ public class RolapSchemaReaderTest extends FoodMartTestCase {
             assertEquals(expectedCubes.length, cubes.length);
 
             assertCubeExists(expectedCubes, cubes);
-        }
-        finally {
+        } finally {
             connection.close();
+        }
+    }
+
+    public void testConnectUseContentChecksum() {
+        Util.PropertyList properties =
+            TestContext.instance().getFoodMartConnectionProperties();
+        properties.put(RolapConnectionProperties.UseContentChecksum.name(),
+                        "true");
+
+        try {
+            DriverManager.getConnection(
+                properties,
+                null);
+        } catch (MondrianException e) {
+            e.printStackTrace();
+            fail("unexpected exception for UseContentChecksum");
         }
     }
 

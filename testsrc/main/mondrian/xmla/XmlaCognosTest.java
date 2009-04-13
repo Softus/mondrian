@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/xmla/XmlaCognosTest.java#2 $
+// $Id: //open/mondrian/testsrc/main/mondrian/xmla/XmlaCognosTest.java#7 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2007 Julian Hyde and others
+// Copyright (C) 2006-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -13,6 +13,7 @@ import mondrian.olap.MondrianProperties;
 import mondrian.test.DiffRepository;
 import mondrian.test.TestContext;
 import mondrian.util.Bug;
+import mondrian.spi.Dialect;
 import org.eigenbase.util.property.BooleanProperty;
 
 /**
@@ -20,7 +21,7 @@ import org.eigenbase.util.property.BooleanProperty;
  * Simba O2X bridge.
  *
  * @author Thiyagu, Shishir
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/xmla/XmlaCognosTest.java#2 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/xmla/XmlaCognosTest.java#7 $
  */
 
 public class XmlaCognosTest extends XmlaBaseTestCase {
@@ -32,6 +33,113 @@ public class XmlaCognosTest extends XmlaBaseTestCase {
         super(name);
     }
 
+    public void testCognosMDXSuiteHR_001() throws Exception {
+        executeMDX();
+    }
+
+    public void testCognosMDXSuiteHR_002() throws Exception {
+        executeMDX();
+    }
+
+    public void testCognosMDXSuiteSales_001() throws Exception {
+        executeMDX();
+    }
+
+    public void testCognosMDXSuiteSales_002() throws Exception {
+        executeMDX();
+    }
+
+    public void testCognosMDXSuiteSales_003() throws Exception {
+        executeMDX();
+    }
+
+    public void testCognosMDXSuiteSales_004() throws Exception {
+        executeMDX();
+    }
+
+    public void testCognosMDXSuiteConvertedAdventureWorksToFoodMart_003()
+            throws Exception {
+        executeMDX();
+    }
+
+    public void testCognosMDXSuiteConvertedAdventureWorksToFoodMart_005()
+            throws Exception {
+        executeMDX();
+    }
+
+    public void testCognosMDXSuiteConvertedAdventureWorksToFoodMart_006()
+            throws Exception {
+        executeMDX();
+    }
+
+    public void testCognosMDXSuiteConvertedAdventureWorksToFoodMart_007()
+            throws Exception {
+        executeMDX();
+    }
+
+    // disabled because runs out of memory/hangs
+    public void _testCognosMDXSuiteConvertedAdventureWorksToFoodMart_009()
+            throws Exception {
+        executeMDX();
+    }
+
+    // disabled because runs out of memory/hangs
+    public void _testCognosMDXSuiteConvertedAdventureWorksToFoodMart_012()
+            throws Exception {
+        executeMDX();
+    }
+
+    public void testCognosMDXSuiteConvertedAdventureWorksToFoodMart_013()
+            throws Exception {
+        executeMDX();
+    }
+
+    // disabled because runs out of memory/hangs
+    public void _testCognosMDXSuiteConvertedAdventureWorksToFoodMart_014()
+            throws Exception {
+        executeMDX();
+    }
+
+    public void testCognosMDXSuiteConvertedAdventureWorksToFoodMart_015()
+            throws Exception {
+        executeMDX();
+    }
+
+    public void testCognosMDXSuiteConvertedAdventureWorksToFoodMart_016()
+            throws Exception {
+        executeMDX();
+    }
+
+    public void testCognosMDXSuiteConvertedAdventureWorksToFoodMart_017()
+            throws Exception {
+        executeMDX();
+    }
+
+    public void testCognosMDXSuiteConvertedAdventureWorksToFoodMart_020()
+            throws Exception {
+        executeMDX();
+    }
+
+    public void testCognosMDXSuiteConvertedAdventureWorksToFoodMart_021()
+            throws Exception {
+        executeMDX();
+    }
+
+    public void testCognosMDXSuiteConvertedAdventureWorksToFoodMart_024()
+            throws Exception {
+        executeMDX();
+    }
+
+    public void testCognosMDXSuiteConvertedAdventureWorksToFoodMart_028()
+            throws Exception {
+        executeMDX();
+    }
+
+    public void testCognosMDXSuiteConvertedAdventureWorksToFoodMart_029()
+            throws Exception {
+        executeMDX();
+    }
+
     public void testDimensionPropertyForPercentageIssue() throws Exception {
         executeMDX();
     }
@@ -41,16 +149,29 @@ public class XmlaCognosTest extends XmlaBaseTestCase {
     }
 
     public void testNonEmptyWithCognosCalcOneLiteral() throws Exception {
-        final BooleanProperty property =
-            MondrianProperties.instance().EnableNonEmptyOnAllAxis;
-        boolean currentState = property.get();
+        final BooleanProperty enableNonEmptyOnAllAxes =
+                MondrianProperties.instance().EnableNonEmptyOnAllAxis;
+        boolean nonEmptyAllAxesCurrentState = enableNonEmptyOnAllAxes.get();
+
+        final BooleanProperty enableNativeNonEmpty =
+                MondrianProperties.instance().EnableNativeNonEmpty;
+        boolean nativeNonemptyCurrentState = enableNativeNonEmpty.get();
+
         try {
-            property.set(true);
+            enableNonEmptyOnAllAxes.set(true);
+            enableNativeNonEmpty.set(false);
             executeMDX();
+            if (Bug.Bug2076407Fixed) {
+                enableNativeNonEmpty.set(true);
+                executeMDX();
+            }
         } finally {
-            property.set(currentState);
+            enableNativeNonEmpty.set(nativeNonemptyCurrentState);
+            enableNonEmptyOnAllAxes.set(nonEmptyAllAxesCurrentState);
         }
     }
+
+
 
     public void testCellProperties() throws Exception {
         executeMDX();
@@ -69,6 +190,15 @@ public class XmlaCognosTest extends XmlaBaseTestCase {
     }
 
     public void testWithFilter() throws Exception {
+        if (getTestContext().getDialect().getDatabaseProduct()
+            == Dialect.DatabaseProduct.ACCESS)
+        {
+            // Disabled because of bug on access: generates query with
+            // distinct-count even though access does not support it. Bug
+            // 2685902, "Mondrian generates invalid count distinct on access"
+            // logged.
+            return;
+        }
         executeMDX();
     }
 
@@ -78,7 +208,8 @@ public class XmlaCognosTest extends XmlaBaseTestCase {
 
     private void executeMDX() throws Exception {
         String requestType = "EXECUTE";
-        doTest(requestType, getDefaultRequestProperties(requestType), TestContext.instance());
+        doTest(requestType, getDefaultRequestProperties(requestType),
+                TestContext.instance());
     }
 
     protected DiffRepository getDiffRepos() {
@@ -94,4 +225,4 @@ public class XmlaCognosTest extends XmlaBaseTestCase {
     }
 }
 
-// XmlaCognosTest.java
+// End XmlaCognosTest.java

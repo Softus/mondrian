@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/agg/RangeColumnPredicate.java#3 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/agg/RangeColumnPredicate.java#5 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2007 Julian Hyde
+// Copyright (C) 2006-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -20,7 +20,7 @@ import java.util.Collection;
  * bound, or between a pair of bounds.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/agg/RangeColumnPredicate.java#3 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/agg/RangeColumnPredicate.java#5 $
  * @since Nov 26, 2006
  */
 public class RangeColumnPredicate extends AbstractColumnPredicate {

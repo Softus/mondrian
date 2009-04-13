@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/extra/NthQuartileFunDef.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/fun/extra/NthQuartileFunDef.java#4 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -31,7 +31,7 @@ import java.util.List;
  * <p>These functions are not standard.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/extra/NthQuartileFunDef.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/extra/NthQuartileFunDef.java#4 $
  * @since Mar 23, 2006
  */
 public class NthQuartileFunDef extends AbstractAggregateFunDef {
@@ -66,7 +66,7 @@ public class NthQuartileFunDef extends AbstractAggregateFunDef {
         return new AbstractDoubleCalc(call, new Calc[] {listCalc, doubleCalc}) {
             public double evaluateDouble(Evaluator evaluator) {
                 List members = evaluateCurrentList(listCalc, evaluator);
-                return quartile(evaluator.push(), members, doubleCalc, range);
+                return quartile(evaluator.push(false), members, doubleCalc, range);
             }
 
             public boolean dependsOn(Dimension dimension) {

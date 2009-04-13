@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/spi/impl/DataSourceChangeListenerImpl4.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/spi/impl/DataSourceChangeListenerImpl4.java#6 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2007 Julian Hyde
+// Copyright (C) 2005-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -40,7 +40,7 @@ import mondrian.rolap.agg.Aggregation;
  * the first timestamp mondrian tries to read the datasource.
  *
  * @author Bart Pappyn
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/spi/impl/DataSourceChangeListenerImpl4.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/spi/impl/DataSourceChangeListenerImpl4.java#6 $
  * @since Dec 12, 2006
  */
 
@@ -48,7 +48,7 @@ public class DataSourceChangeListenerImpl4 implements DataSourceChangeListener {
     private int flushInverseFrequencyHierarchy;
     private int flushInverseFrequencyAggregation;
     final Random random = new Random(123456);
-	
+
     /** Creates a new instance of DataSourceChangeListenerImpl2 */
     public DataSourceChangeListenerImpl4() {
         this(0,0);
@@ -63,8 +63,7 @@ public class DataSourceChangeListenerImpl4 implements DataSourceChangeListener {
         if (flushInverseFrequencyHierarchy != 0) {
             if (random.nextInt(flushInverseFrequencyHierarchy) == 0) {
                 return true;
-            }
-            else {
+            } else {
                 return false;
             }
         } else {
@@ -76,8 +75,7 @@ public class DataSourceChangeListenerImpl4 implements DataSourceChangeListener {
         if (flushInverseFrequencyAggregation != 0) {
             if (random.nextInt(flushInverseFrequencyAggregation) == 0) {
                 return true;
-            }
-            else {
+            } else {
                 return false;
             }
         } else {

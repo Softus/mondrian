@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/StrToSetFunDef.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/fun/StrToSetFunDef.java#10 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2007 Julian Hyde
+// Copyright (C) 2006-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -27,7 +27,7 @@ import java.util.List;
  * Definition of the <code>StrToSet</code> MDX builtin function.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/StrToSetFunDef.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/StrToSetFunDef.java#10 $
  * @since Mar 23, 2006
  */
 class StrToSetFunDef extends FunDefBase {
@@ -338,7 +338,8 @@ class StrToSetFunDef extends FunDefBase {
             // which doesn't give us any hints about type.
             return new SetType(null);
 
-        case 2: {
+        case 2:
+        {
             final Type argType = args[1].getType();
             return new SetType(
                 new MemberType(
@@ -348,26 +349,22 @@ class StrToSetFunDef extends FunDefBase {
                     null));
         }
 
-        default: {
+        default:
+        {
             // This is a call to Mondrian's extended version of
             // StrToSet, of the form
             //   StrToSet(s, <Hier1>, ... , <HierN>)
             //
             // The result is a set of tuples
             //  (<Hier1>, ... ,  <HierN>)
-            final List<Type> list = new ArrayList<Type>();
+            final List<MemberType> list = new ArrayList<MemberType>();
             for (int i = 1; i < args.length; i++) {
                 Exp arg = args[i];
                 final Type argType = arg.getType();
-                list.add(
-                    new MemberType(
-                        argType.getDimension(),
-                        argType.getHierarchy(),
-                        argType.getLevel(),
-                        null)
-                );
+                list.add(TypeUtil.toMemberType(argType));
             }
-            final Type[] types = list.toArray(new Type[list.size()]);
+            final MemberType[] types = list.toArray(new MemberType[list.size()]);
+            TupleType.checkDimensions(types);
             return new SetType(new TupleType(types));
         }
         }
@@ -376,14 +373,17 @@ class StrToSetFunDef extends FunDefBase {
     private static class ResolverImpl extends ResolverBase {
         ResolverImpl() {
             super(
-                    "StrToSet",
-                    "StrToSet(<String Expression>)",
-                    "Constructs a set from a string expression.",
-                    Syntax.Function);
+                "StrToSet",
+                "StrToSet(<String Expression>)",
+                "Constructs a set from a string expression.",
+                Syntax.Function);
         }
 
         public FunDef resolve(
-                Exp[] args, Validator validator, int[] conversionCount) {
+            Exp[] args,
+            Validator validator,
+            List<Conversion> conversions)
+        {
             if (args.length < 1) {
                 return null;
             }

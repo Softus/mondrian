@@ -8,6 +8,7 @@
 */
 package mondrian.rolap;
 
+import java.util.*;
 import mondrian.olap.*;
 import mondrian.olap.fun.*;
 import mondrian.rolap.sql.TupleConstraint;
@@ -78,7 +79,7 @@ public class RolapNativeCrossJoin extends RolapNativeSet {
         RolapCube cube = evaluator.getCube();
 
         CrossJoinArg[] cargs = checkCrossJoin(evaluator, fun, args);
-        
+
         if (cargs == null) {
             // Something in the arguments to the crossjoin prevented
             // native evaluation; may need to alert
@@ -88,10 +89,10 @@ public class RolapNativeCrossJoin extends RolapNativeSet {
                 "arguments not supported");
             return null;
         }
-        
+
         // check if all CrossJoinArgs are "All" members or Calc members
-        // "All" members do not have relational expression, and Calc members 
-        // in the input could incorrect results.
+        // "All" members do not have relational expression, and Calc members
+        // in the input could produce incorrect results.
         //
         // If NECJ only has AllMembers, or if there is at least one CalcMember,
         // then sql evaluation is not possible.
@@ -101,7 +102,7 @@ public class RolapNativeCrossJoin extends RolapNativeSet {
             if (arg instanceof MemberListCrossJoinArg) {
                 MemberListCrossJoinArg cjArg =
                     (MemberListCrossJoinArg)arg;
-                if (cjArg.hasAllMember()) {
+                if (cjArg.hasAllMember() || cjArg.isEmptyCrossJoinArg()) {
                         ++countNonNativeInputArg;
                 }
                 if (cjArg.hasCalcMembers()) {
@@ -112,12 +113,14 @@ public class RolapNativeCrossJoin extends RolapNativeSet {
         }
 
         if (countNonNativeInputArg == cargs.length) {
-            // All inputs contain "All" members.
-            // Native evaluation is not feasible.
+            // If all inputs contain "All" members; or
+            // if all inputs are MemberListCrossJoinArg with empty member list
+            // content, then native evaluation is not feasible.
             alertCrossJoinNonNative(
                 evaluator,
                 fun,
-            "either all arguments contain the ALL member or one has a calculated member");
+            "either all arguments contain the ALL member, " +
+            "or empty member lists, or one has a calculated member");
             return null;
         }
 
@@ -126,9 +129,16 @@ public class RolapNativeCrossJoin extends RolapNativeSet {
             // need to alert
             return null;
         }
-        RolapLevel [] levels = new RolapLevel[cargs.length];
+
+        List<RolapLevel> levels = new ArrayList<RolapLevel>();
+
         for (int i = 0; i < cargs.length; i++) {
-            levels[i] = cargs[i].getLevel();
+            RolapLevel level = cargs[i].getLevel();
+            if (level != null) {
+                // Only add non null levels. These levels have real
+                // constraints.
+                levels.add(level);
+            }
         }
 
         if ((cube.isVirtual() &&
@@ -145,7 +155,8 @@ public class RolapNativeCrossJoin extends RolapNativeSet {
         if (!NonEmptyCrossJoinConstraint.isValidContext(
                 evaluator,
                 false,
-                levels)) {
+                levels.toArray(new RolapLevel[levels.size()]),
+                restrictMemberTypes())) {
             // Missing join conditions due to non-conforming dimensions
             // meant native evaluation would have led to a true cross
             // product, which we want to defer instead of pushing it down;
@@ -166,7 +177,7 @@ public class RolapNativeCrossJoin extends RolapNativeSet {
         // (otherwise, that outer context would be incorrectly intersected
         // with the constraints from the inputs).
         evaluator = evaluator.push();
-        
+
         Member[] evalMembers = evaluator.getMembers().clone();
         for (RolapLevel level : levels) {
             RolapHierarchy hierarchy = level.getHierarchy();

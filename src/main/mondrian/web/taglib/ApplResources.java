@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/web/taglib/ApplResources.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/web/taglib/ApplResources.java#7 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2002-2002 Kana Software, Inc.
-// Copyright (C) 2002-2005 Julian Hyde and others
+// Copyright (C) 2002-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -50,18 +50,19 @@ public class ApplResources implements Listener.ApplicationContext {
     public Transformer getTransformer(String xsltURI, boolean useCache) {
         try {
             Templates templates = null;
-            if (useCache)
+            if (useCache) {
                 templates = (Templates)templatesCache.get(xsltURI);
+            }
             if (templates == null) {
                 TransformerFactory tf = TransformerFactory.newInstance();
                 InputStream input = context.getResourceAsStream(xsltURI);
                 templates = tf.newTemplates(new StreamSource(input));
-                if (useCache)
+                if (useCache) {
                     templatesCache.put(xsltURI, templates);
+                }
             }
             return templates.newTransformer();
-        }
-        catch (TransformerConfigurationException e) {
+        } catch (TransformerConfigurationException e) {
             e.printStackTrace();
             throw new RuntimeException(e.toString());
         }

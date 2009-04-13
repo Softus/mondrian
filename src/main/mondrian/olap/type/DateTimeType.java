@@ -12,7 +12,7 @@ package mondrian.olap.type;
  * The type of an expression representing a date, time or timestamp.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/type/DateTimeType.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/type/DateTimeType.java#2 $
  * @since Jan 2, 2008
  */
 public class DateTimeType extends ScalarType {

@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/type/ScalarType.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/type/ScalarType.java#7 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -22,7 +22,7 @@ import mondrian.olap.Level;
  *
  * @author jhyde
  * @since Feb 17, 2005
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/type/ScalarType.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/type/ScalarType.java#7 $
  */
 public class ScalarType implements Type {
     private final String digest;

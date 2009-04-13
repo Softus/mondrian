@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/clearview/ClearViewBase.java#2 $
+// $Id: //open/mondrian/testsrc/main/mondrian/test/clearview/ClearViewBase.java#8 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2003-2007 Julian Hyde
+// Copyright (C) 2003-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -13,12 +13,11 @@ package mondrian.test.clearview;
 
 import mondrian.olap.*;
 import mondrian.rolap.BatchTestCase;
-import mondrian.rolap.sql.*;
-import java.util.*;
 
 import junit.framework.*;
 
 import mondrian.test.*;
+import mondrian.spi.Dialect;
 
 import java.lang.reflect.*;
 
@@ -36,14 +35,14 @@ import java.lang.reflect.*;
  * @author Khanh Vu
  *
  * @since Jan 25, 2007
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/clearview/ClearViewBase.java#2 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/test/clearview/ClearViewBase.java#8 $
  */
 public abstract class ClearViewBase extends BatchTestCase {
 
     public ClearViewBase() {
         super();
     }
-    
+
     public ClearViewBase(String name) {
         super(name);
     }
@@ -55,17 +54,17 @@ public abstract class ClearViewBase extends BatchTestCase {
         DiffRepository diffRepos = getDiffRepos();
         diffRepos.setCurrentTestCaseName(getName());
     }
-    
+
     // implement TestCase
     protected void tearDown() throws Exception {
         DiffRepository diffRepos = getDiffRepos();
         diffRepos.setCurrentTestCaseName(null);
     }
-    
+
     // implement TestCase
     public static TestSuite constructSuite(
         DiffRepository diffRepos,
-        Class clazz) 
+        Class clazz)
     {
         TestSuite suite = new TestSuite();
         Class[] types = new Class[] { String.class };
@@ -86,22 +85,32 @@ public abstract class ClearViewBase extends BatchTestCase {
     protected void runTest() throws Exception {
         DiffRepository diffRepos = getDiffRepos();
         TestContext testContext = getTestContext();
-        
+
         // add calculated member to a cube if specified in the xml file
         String cubeName = diffRepos.expand(null, "${modifiedCubeName}").trim();
-        if (! (cubeName.equals("") 
+        if (! (cubeName.equals("")
             || cubeName.equals("${modifiedCubeName}")))
         {
+            String customDimensions = diffRepos.expand(
+                null, "${customDimensions}");
+            customDimensions =
+                (! (customDimensions.equals("")
+                    || customDimensions.equals("${customDimensions}"))) ?
+                        customDimensions : null;
             String calculatedMembers = diffRepos.expand(
                 null, "${calculatedMembers}");
-            if (! (calculatedMembers.equals("") 
-                || calculatedMembers.equals("${calculatedMembers}")))
-            {
-                testContext = testContext.createSubstitutingCube(
-                    cubeName, 
-                    null, 
-                    calculatedMembers);    
-            }
+            calculatedMembers =
+                (! (calculatedMembers.equals("")
+                    || calculatedMembers.equals("${calculatedMembers}"))) ?
+                        calculatedMembers : null;
+            String namedSets = diffRepos.expand(
+                null, "${namedSets}");
+            namedSets =
+                (! (namedSets.equals("")
+                    || namedSets.equals("${namedSets}"))) ?
+                        namedSets : null;
+            testContext = testContext.createSubstitutingCube(
+                cubeName, customDimensions, calculatedMembers, namedSets);
         }
 
         // Set some properties to match the way we configure them
@@ -109,7 +118,7 @@ public abstract class ClearViewBase extends BatchTestCase {
         boolean origExpandNonNative =
             MondrianProperties.instance().ExpandNonNative.get();
         MondrianProperties.instance().ExpandNonNative.set(true);
-        
+
         try {
             String mdx = diffRepos.expand(null, "${mdx}");
             String result = Util.nl + testContext.toString(
@@ -119,47 +128,47 @@ public abstract class ClearViewBase extends BatchTestCase {
             MondrianProperties.instance().ExpandNonNative.set(origExpandNonNative);
         }
     }
-    
-    protected void assertQuerySql(boolean flushCache) 
+
+    protected void assertQuerySql(boolean flushCache)
         throws Exception
     {
         DiffRepository diffRepos = getDiffRepos();
-        
+
         if (buildSqlPatternArray() == null) {
             return;
         }
-        
+
         super.assertQuerySqlOrNot(
             getTestContext(),
-            diffRepos.expand(null, "${mdx}"), 
+            diffRepos.expand(null, "${mdx}"),
             buildSqlPatternArray(),
             false,
             false,
             flushCache);
     }
-    
-    protected void assertNoQuerySql(boolean flushCache) 
+
+    protected void assertNoQuerySql(boolean flushCache)
         throws Exception
     {
         DiffRepository diffRepos = getDiffRepos();
-        
+
         if (buildSqlPatternArray() == null) {
             return;
         }
-        
+
         super.assertQuerySqlOrNot(
             getTestContext(),
-            diffRepos.expand(null, "${mdx}"), 
+            diffRepos.expand(null, "${mdx}"),
             buildSqlPatternArray(),
             true,
             false,
             flushCache);
     }
-    
+
     private SqlPattern[] buildSqlPatternArray() {
         DiffRepository diffRepos = getDiffRepos();
-        SqlQuery.Dialect d = getTestContext().getDialect();
-        SqlPattern.Dialect dialect = SqlPattern.Dialect.get(d); 
+        Dialect d = getTestContext().getDialect();
+        Dialect.DatabaseProduct dialect = d.getDatabaseProduct();
         String testCaseName = getName();
         String sql = diffRepos.get(
             testCaseName, "expectedSql", dialect.name());

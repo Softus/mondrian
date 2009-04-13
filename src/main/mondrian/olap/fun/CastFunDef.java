@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/CastFunDef.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/fun/CastFunDef.java#7 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -16,6 +16,8 @@ import mondrian.calc.Calc;
 import mondrian.calc.ExpCompiler;
 import mondrian.calc.impl.GenericCalc;
 import mondrian.mdx.ResolvedFunCall;
+
+import java.util.List;
 
 /**
  * Definition of the <code>CAST</code> MDX operator.
@@ -34,7 +36,7 @@ import mondrian.mdx.ResolvedFunCall;
  * </ul>
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/CastFunDef.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/CastFunDef.java#7 $
  * @since Sep 3, 2006
  */
 public class CastFunDef extends FunDefBase {
@@ -117,7 +119,7 @@ public class CastFunDef extends FunDefBase {
         }
 
         public FunDef resolve(
-            Exp[] args, Validator validator, int[] conversionCount) {
+            Exp[] args, Validator validator, List<Conversion> conversions) {
             if (args.length != 2) {
                 return null;
             }

@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/FunDefBase.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/fun/FunDefBase.java#34 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2002-2002 Kana Software, Inc.
-// Copyright (C) 2002-2007 Julian Hyde and others
+// Copyright (C) 2002-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -75,7 +75,7 @@ import java.io.PrintWriter;
  * a set (x) and a numeric (n).<p/>
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/FunDefBase.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/FunDefBase.java#34 $
  * @since 26 February, 2002
  */
 public abstract class FunDefBase extends FunUtil implements FunDef {
@@ -341,7 +341,7 @@ public abstract class FunDefBase extends FunUtil implements FunDef {
             }
             return null;
         case Category.Empty:
-            return new NullType();
+            return new EmptyType();
         default:
             throw Category.instance.badValue(category);
         }

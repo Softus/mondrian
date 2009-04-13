@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/PropertiesFunDef.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/fun/PropertiesFunDef.java#17 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -14,11 +14,13 @@ import mondrian.calc.*;
 import mondrian.calc.impl.GenericCalc;
 import mondrian.mdx.ResolvedFunCall;
 
+import java.util.List;
+
 /**
  * Definition of the <code>Properties</code> MDX function.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/PropertiesFunDef.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/PropertiesFunDef.java#17 $
  * @since Mar 23, 2006
  */
 class PropertiesFunDef extends FunDefBase {
@@ -75,7 +77,10 @@ class PropertiesFunDef extends FunDefBase {
         }
 
         public FunDef resolve(
-                Exp[] args, Validator validator, int[] conversionCount) {
+            Exp[] args,
+            Validator validator,
+            List<Conversion> conversions)
+        {
             final int[] argTypes = new int[]{Category.Member, Category.String};
             final Exp propertyNameExp = args[1];
             final Exp memberExp = args[0];
@@ -86,7 +91,7 @@ class PropertiesFunDef extends FunDefBase {
             }
             int returnType = deducePropertyCategory(memberExp, propertyNameExp);
             return new PropertiesFunDef(
-                getName(), getSignature(), getDescription(),getSyntax(),
+                getName(), getSignature(), getDescription(), getSyntax(),
                 returnType, argTypes);
         }
 

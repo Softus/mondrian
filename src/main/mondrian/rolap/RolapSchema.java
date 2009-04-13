@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/RolapSchema.java#5 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/RolapSchema.java#124 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2001-2002 Kana Software, Inc.
-// Copyright (C) 2001-2007 Julian Hyde and others
+// Copyright (C) 2001-2009 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -35,7 +35,6 @@ import mondrian.olap.Hierarchy;
 import mondrian.olap.Level;
 import mondrian.olap.Member;
 import mondrian.olap.MondrianDef;
-import mondrian.olap.MondrianProperties;
 import mondrian.olap.NamedSet;
 import mondrian.olap.Parameter;
 import mondrian.olap.Role;
@@ -53,10 +52,7 @@ import mondrian.olap.type.Type;
 import mondrian.resource.MondrianResource;
 import mondrian.rolap.aggmatcher.AggTableManager;
 import mondrian.rolap.aggmatcher.JdbcSchema;
-import mondrian.rolap.sql.SqlQuery;
-import mondrian.spi.UserDefinedFunction;
-import mondrian.spi.DataSourceChangeListener;
-import mondrian.spi.DynamicSchemaProcessor;
+import mondrian.spi.*;
 
 import org.apache.log4j.Logger;
 import org.apache.commons.vfs.*;
@@ -71,7 +67,7 @@ import org.eigenbase.xom.*;
  * @see RolapConnection
  * @author jhyde
  * @since 26 July, 2001
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/RolapSchema.java#5 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/RolapSchema.java#124 $
  */
 public class RolapSchema implements Schema {
     private static final Logger LOGGER = Logger.getLogger(RolapSchema.class);
@@ -158,7 +154,7 @@ public class RolapSchema implements Schema {
 
     /**
      * HashMap containing column cardinality. The combination of
-     * Mondrianef.Relation and MondrianDef.Expression uniquely 
+     * Mondrianef.Relation and MondrianDef.Expression uniquely
      * identifies a relational expression(e.g. a column) specified
      * in the xml schema.
      */
@@ -201,7 +197,7 @@ public class RolapSchema implements Schema {
         this.aggTableManager = new AggTableManager(this);
         this.dataSourceChangeListener =
             createDataSourceChangeListener(connectInfo);
-        this.relationExprCardinalityMap = 
+        this.relationExprCardinalityMap =
             new HashMap<MondrianDef.Relation, Map<MondrianDef.Expression, Integer>>();
     }
 
@@ -277,56 +273,28 @@ public class RolapSchema implements Schema {
 
             final DOMWrapper def;
             if (catalogStr == null) {
-                // Treat catalogUrl as an Apache VFS (Virtual File System) URL.
-                // VFS handles all of the usual protocols (http:, file:)
-                // and then some.
-                FileSystemManager fsManager = VFS.getManager();
-                if (fsManager == null) {
-                    throw Util.newError("Cannot get virtual file system manager");
-                }
-
-                // Workaround VFS bug.
-                if (catalogUrl.startsWith("file://localhost")) {
-                    catalogUrl = catalogUrl.substring("file://localhost".length());
-                }
-                if (catalogUrl.startsWith("file:")) {
-                    catalogUrl = catalogUrl.substring("file:".length());
-                }
-
-                File userDir = new File("").getAbsoluteFile();
-                FileObject file = fsManager.resolveFile(userDir, catalogUrl);
-                if (!file.isReadable()) {
-                    throw Util.newError("Virtual file is not readable: " +
-                        catalogUrl);
-                }
-
-                FileContent fileContent = file.getContent();
-                if (fileContent == null) {
-                    throw Util.newError("Cannot get virtual file content: " +
-                        catalogUrl);
-                }
+                FileContent fileContent = Util.readVirtualFile(catalogUrl);
 
                 if (getLogger().isDebugEnabled()) {
                     try {
                         StringBuilder buf = new StringBuilder(1000);
-                        FileContent fileContent1 = file.getContent();
-                        InputStream in = fileContent1.getInputStream();
+                        InputStream in = fileContent.getInputStream();
                         int n;
                         while ((n = in.read()) != -1) {
                             buf.append((char) n);
                         }
-                        getLogger().debug("RolapSchema.load: content: \n"
-                            +buf.toString());
+                        getLogger().debug(
+                            "RolapSchema.load: content: \n" + buf.toString());
                     } catch (java.io.IOException ex) {
-                        getLogger().debug("RolapSchema.load: ex=" +ex);
+                        getLogger().debug("RolapSchema.load: ex=" + ex);
                     }
                 }
 
                 def = xmlParser.parse(fileContent.getInputStream());
             } else {
                 if (getLogger().isDebugEnabled()) {
-                    getLogger().debug("RolapSchema.load: catalogStr: \n"
-                            +catalogStr);
+                    getLogger().debug(
+                        "RolapSchema.load: catalogStr: \n" + catalogStr);
                 }
 
                 def = xmlParser.parse(catalogStr);
@@ -344,7 +312,6 @@ public class RolapSchema implements Schema {
             }
 
             load(xmlSchema);
-
         } catch (XOMException e) {
             throw Util.newError(e, "while parsing catalog " + catalogUrl);
         } catch (FileSystemException e) {
@@ -352,15 +319,15 @@ public class RolapSchema implements Schema {
         }
 
         aggTableManager.initialize();
-	    setSchemaLoadDate();
+        setSchemaLoadDate();
     }
 
-	private void setSchemaLoadDate() {
-		schemaLoadDate = new Date();
-	}
+    private void setSchemaLoadDate() {
+        schemaLoadDate = new Date();
+    }
 
-	public Date getSchemaLoadDate() {
-		return schemaLoadDate;
+    public Date getSchemaLoadDate() {
+        return schemaLoadDate;
     }
 
     public List<Exception> getWarnings() {
@@ -389,9 +356,9 @@ public class RolapSchema implements Schema {
      *
      * @return dialect
      */
-    public SqlQuery.Dialect getDialect() {
+    public Dialect getDialect() {
         DataSource dataSource = getInternalConnection().getDataSource();
-        return SqlQuery.Dialect.create(dataSource);
+        return DialectManager.createDialect(dataSource, null);
     }
 
     private void load(MondrianDef.Schema xmlSchema) {
@@ -409,7 +376,7 @@ public class RolapSchema implements Schema {
             defineFunction(mapNameToUdf, udf.name, udf.className);
         }
         final RolapSchemaFunctionTable funTable =
-                new RolapSchemaFunctionTable(mapNameToUdf.values());
+            new RolapSchemaFunctionTable(mapNameToUdf.values());
         funTable.init();
         this.funTable = funTable;
 
@@ -685,7 +652,6 @@ public class RolapSchema implements Schema {
     }
 
     public Cube createCube(String xml) {
-
         RolapCube cube;
         try {
             final Parser xmlParser = XOMUtil.createDefaultParser();
@@ -861,7 +827,7 @@ public class RolapSchema implements Schema {
             // implies there is not MD5 based caching, but, as with the previous
             // implementation, if the catalog string is in the connectInfo
             // object as catalog content then it is used.
-            if ( ! Util.isEmpty(dynProcName)) {
+            if (! Util.isEmpty(dynProcName)) {
                 assert catalogStr == null;
 
                 try {
@@ -873,7 +839,6 @@ public class RolapSchema implements Schema {
                         clazz.getConstructor();
                     final DynamicSchemaProcessor dynProc = ctor.newInstance();
                     catalogStr = dynProc.processSchema(catalogUrl, connectInfo);
-
                 } catch (Exception e) {
                     throw Util.newError(e, "loading DynamicSchemaProcessor "
                         + dynProcName);
@@ -906,10 +871,18 @@ public class RolapSchema implements Schema {
                 String md5Bytes = null;
                 try {
                     if (catalogStr == null) {
-                        catalogStr = Util.readURL(catalogUrl);
+                        // Use VFS to get the content
+                        FileContent fileContent = Util.readVirtualFile(catalogUrl);
+                        StringBuilder buf = new StringBuilder(1000);
+                        InputStream in = fileContent.getInputStream();
+                        int n;
+                        while ((n = in.read()) != -1) {
+                            buf.append((char) n);
+                        }
+                        catalogStr = buf.toString();
                     }
-                    md5Bytes = encodeMD5(catalogStr);
 
+                    md5Bytes = encodeMD5(catalogStr);
                 } catch (Exception ex) {
                     // Note, can not throw an Exception from this method
                     // but just to show that all is not well in Mudville
@@ -934,8 +907,8 @@ public class RolapSchema implements Schema {
                 if (schema == null ||
                     md5Bytes == null ||
                     schema.md5Bytes == null ||
-                    ! schema.md5Bytes.equals(md5Bytes)) {
-
+                    ! schema.md5Bytes.equals(md5Bytes))
+                {
                     schema = new RolapSchema(
                         key,
                         md5Bytes,
@@ -1007,7 +980,6 @@ public class RolapSchema implements Schema {
                         "\" exists already ";
                     LOGGER.debug(msg);
                 }
-
             }
 
             return schema;
@@ -1090,7 +1062,6 @@ public class RolapSchema implements Schema {
                         schema.finalCleanUp();
                     }
                 }
-
             }
             mapUrlToSchema.clear();
             JdbcSchema.clearAllDBs();
@@ -1104,7 +1075,7 @@ public class RolapSchema implements Schema {
         synchronized Iterator<RolapSchema> getRolapSchemas() {
             List<RolapSchema> list = new ArrayList<RolapSchema>();
             for (Iterator<SoftReference<RolapSchema>> it =
-                mapUrlToSchema.values().iterator(); it.hasNext(); )
+                mapUrlToSchema.values().iterator(); it.hasNext();)
             {
                 SoftReference<RolapSchema> ref = it.next();
                 RolapSchema schema = ref.get();
@@ -1439,15 +1410,17 @@ System.out.println("RolapSchema.getSharedHierarchy: "+
     synchronized MemberReader createMemberReader(
         final String sharedName,
         final RolapHierarchy hierarchy,
-        final String memberReaderClass) {
-
+        final String memberReaderClass)
+    {
         MemberReader reader;
         if (sharedName != null) {
             reader = mapSharedHierarchyToReader.get(sharedName);
             if (reader == null) {
                 reader = createMemberReader(hierarchy, memberReaderClass);
                 // share, for other uses of the same shared hierarchy
-                if (false) mapSharedHierarchyToReader.put(sharedName, reader);
+                if (false) {
+                    mapSharedHierarchyToReader.put(sharedName, reader);
+                }
 /*
 System.out.println("RolapSchema.createMemberReader: "+
 "add to sharedHierName->Hier map"+
@@ -1486,9 +1459,9 @@ System.out.println("RolapSchema.createMemberReader: CONTAINS NAME");
      * Creates a {@link MemberReader} with which to Read a hierarchy.
      */
     private MemberReader createMemberReader(
-            final RolapHierarchy hierarchy,
-            final String memberReaderClass) {
-
+        final RolapHierarchy hierarchy,
+        final String memberReaderClass)
+    {
         if (memberReaderClass != null) {
             Exception e2;
             try {
@@ -1521,26 +1494,15 @@ System.out.println("RolapSchema.createMemberReader: CONTAINS NAME");
                     "while instantiating member reader '" + memberReaderClass);
         } else {
             SqlMemberSource source = new SqlMemberSource(hierarchy);
-
-            // The following code is disabled bcause
-            // counting members is too slow. The test suite
-            // runs faster without this. So the optimization here
-            // is not to be too clever!
-
-            // Also, the CacheMemberReader is buggy.
-
-            int memberCount;
-            if (false) {
-                memberCount = source.getMemberCount();
+            if (hierarchy.getDimension().isHighCardinality()) {
+                LOGGER.debug("High cardinality for "
+                        + hierarchy.getDimension());
+                return new NoCacheMemberReader(source);
             } else {
-                memberCount = Integer.MAX_VALUE;
+                LOGGER.debug("Normal cardinality for "
+                        + hierarchy.getDimension());
+                return new SmartMemberReader(source);
             }
-            int largeDimensionThreshold =
-                    MondrianProperties.instance().LargeDimensionThreshold.get();
-
-            return (memberCount > largeDimensionThreshold)
-                ? new SmartMemberReader(source)
-                : new CacheMemberReader(source);
         }
     }
 
@@ -1556,8 +1518,8 @@ System.out.println("RolapSchema.createMemberReader: CONTAINS NAME");
      * Creates a {@link DataSourceChangeListener} with which to detect changes to datasources.
      */
     private DataSourceChangeListener createDataSourceChangeListener(
-            Util.PropertyList connectInfo) {
-
+        Util.PropertyList connectInfo)
+    {
         DataSourceChangeListener changeListener = null;
 
         // If CatalogContent is specified in the connect string, ignore
@@ -1566,9 +1528,8 @@ System.out.println("RolapSchema.createMemberReader: CONTAINS NAME");
         String dataSourceChangeListenerStr = connectInfo.get(
             RolapConnectionProperties.DataSourceChangeListener.name());
 
-        if ( ! Util.isEmpty(dataSourceChangeListenerStr)) {
+        if (! Util.isEmpty(dataSourceChangeListenerStr)) {
             try {
-
                 Class<?> clazz = Class.forName(dataSourceChangeListenerStr);
                 Constructor<?> constructor = clazz.getConstructor();
                 changeListener = (DataSourceChangeListener)constructor.newInstance();
@@ -1578,7 +1539,7 @@ System.out.println("RolapSchema.createMemberReader: CONTAINS NAME");
                 final Constructor<DataSourceChangeListener> ctor =
                     clazz.getConstructor();
                 changeListener = ctor.newInstance(); */
-
+                changeListener = (DataSourceChangeListener) constructor.newInstance();
             } catch (Exception e) {
                 throw Util.newError(e, "loading DataSourceChangeListener "
                     + dataSourceChangeListenerStr);
@@ -1614,7 +1575,7 @@ System.out.println("RolapSchema.createMemberReader: CONTAINS NAME");
         MondrianDef.Expression columnExpr) {
         Integer card = null;
         synchronized (relationExprCardinalityMap) {
-            Map<MondrianDef.Expression, Integer> exprCardinalityMap = 
+            Map<MondrianDef.Expression, Integer> exprCardinalityMap =
                 relationExprCardinalityMap.get(relation);
             if (exprCardinalityMap != null) {
                 card = exprCardinalityMap.get(columnExpr);
@@ -1622,21 +1583,21 @@ System.out.println("RolapSchema.createMemberReader: CONTAINS NAME");
         }
         return card;
     }
-    
+
     /**
      * Sets the cardinality for a given column in cache.
-     * 
-     * @param relation the relation associated with the column expression 
+     *
+     * @param relation the relation associated with the column expression
      * @param columnExpr the column expression to cache the cardinality for
      * @param cardinality the cardinality for the column expression
      */
     void putCachedRelationExprCardinality(
         MondrianDef.Relation relation,
-        MondrianDef.Expression columnExpr, 
+        MondrianDef.Expression columnExpr,
         Integer cardinality)
     {
         synchronized (relationExprCardinalityMap) {
-            Map<MondrianDef.Expression, Integer> exprCardinalityMap = 
+            Map<MondrianDef.Expression, Integer> exprCardinalityMap =
                 relationExprCardinalityMap.get(relation);
             if (exprCardinalityMap == null) {
                 exprCardinalityMap =
@@ -1685,9 +1646,11 @@ System.out.println("RolapSchema.createMemberReader: CONTAINS NAME");
             }
             return star;
         }
+
         synchronized RolapStar getStar(final String factTableName) {
             return stars.get(factTableName);
         }
+
         synchronized Collection<RolapStar> getStars() {
             return stars.values();
         }
@@ -1710,22 +1673,17 @@ System.out.println("RolapSchema.createMemberReader: CONTAINS NAME");
             udfList = new ArrayList<UserDefinedFunction>(udfs);
         }
 
-        protected void defineFunctions() {
+        public void defineFunctions(Builder builder) {
             final FunTable globalFunTable = GlobalFunTable.instance();
             for (String reservedWord : globalFunTable.getReservedWords()) {
-                defineReserved(reservedWord);
+                builder.defineReserved(reservedWord);
             }
             for (Resolver resolver : globalFunTable.getResolvers()) {
-                define(resolver);
+                builder.define(resolver);
             }
             for (UserDefinedFunction udf : udfList) {
-                define(new UdfResolver(udf));
+                builder.define(new UdfResolver(udf));
             }
-        }
-
-
-        public List<FunInfo> getFunInfoList() {
-            return Collections.unmodifiableList(this.funInfoList);
         }
     }
 
@@ -1782,7 +1740,6 @@ System.out.println("RolapSchema.createMemberReader: CONTAINS NAME");
      * Location of a node in an XML document.
      */
     private interface XmlLocation {
-
     }
 }
 

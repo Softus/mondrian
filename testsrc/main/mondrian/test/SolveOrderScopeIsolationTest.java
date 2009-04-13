@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/SolveOrderScopeIsolationTest.java#4 $
+// $Id: //open/mondrian/testsrc/main/mondrian/test/SolveOrderScopeIsolationTest.java#3 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2008 Julian Hyde
+// Copyright (C) 2008-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -30,7 +30,7 @@ import mondrian.olap.Util;
  * so as to not to execute even if the test class is added to Main
  *
  * @author ajogleka
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/SolveOrderScopeIsolationTest.java#4 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/test/SolveOrderScopeIsolationTest.java#3 $
  * @since Apr 04, 2008
  */
 public class SolveOrderScopeIsolationTest extends FoodMartTestCase {

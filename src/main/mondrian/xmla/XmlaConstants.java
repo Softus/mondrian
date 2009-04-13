@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/xmla/XmlaConstants.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/xmla/XmlaConstants.java#10 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2007 Julian Hyde
+// Copyright (C) 2005-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -14,7 +14,7 @@ package mondrian.xmla;
  * Constants for XML/A.
  *
  * @author Gang Chen
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/xmla/XmlaConstants.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/xmla/XmlaConstants.java#10 $
  */
 public interface XmlaConstants {
 
@@ -23,8 +23,8 @@ public interface XmlaConstants {
     public static final String NS_SOAP_ENC_1_1 = "http://schemas.xmlsoap.org/soap/encoding/";
 
     /* SOAP 1.2 - currently not supported */
-    public static final String NS_SOAP_ENV_1_2="http://www.w3.org/2003/05/soap-envelope";
-    public static final String NS_SOAP_ENC_1_2="http://www.w3.org/2003/05/soap-encoding";
+    public static final String NS_SOAP_ENV_1_2 = "http://www.w3.org/2003/05/soap-envelope";
+    public static final String NS_SOAP_ENC_1_2 = "http://www.w3.org/2003/05/soap-encoding";
 
     /* Namespaces for XML */
     public static final String NS_XSD = "http://www.w3.org/2001/XMLSchema";

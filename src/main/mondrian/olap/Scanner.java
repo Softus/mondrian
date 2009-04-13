@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/Scanner.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/Scanner.java#26 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 1998-2002 Kana Software, Inc.
-// Copyright (C) 2001-2007 Julian Hyde and others
+// Copyright (C) 2001-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -56,9 +56,9 @@ public class Scanner {
      * Comment delimiters. Modify this list to support other comment styles.
      */
     private static final String[][] commentDelim = {
-        {"//", null},
-        {"--", null},
-        {"/*", "*/"}
+        new String[] {"//", null},
+        new String[] {"--", null},
+        new String[] {"/*", "*/"}
     };
 
     /**
@@ -98,9 +98,7 @@ public class Scanner {
     /**
      * Advance input by one character, setting {@link #nextChar}.
      */
-    private void advance()
-        throws java.io.IOException {
-
+    private void advance() throws IOException {
         if (firstLookaheadChar == lastLookaheadChar) {
             // We have nothing in the lookahead buffer.
             nextChar = getChar();
@@ -119,9 +117,7 @@ public class Scanner {
     }
 
     /** Peek at the character after {@link #nextChar} without advancing. */
-    private int lookahead()
-        throws java.io.IOException {
-
+    private int lookahead() throws IOException {
         return lookahead(1);
     }
 
@@ -130,16 +126,13 @@ public class Scanner {
      * lookahead(0) returns the current char (nextChar).
      * lookahead(1) returns the next char (was lookaheadChar, same as lookahead());
      */
-    private int lookahead(int n)
-        throws java.io.IOException {
-
+    private int lookahead(int n) throws IOException {
         if (n == 0) {
             return nextChar;
-        }
-        else {
+        } else {
             // if the desired character not in lookahead buffer, read it in
             if (n > lastLookaheadChar - firstLookaheadChar) {
-                int len=lastLookaheadChar - firstLookaheadChar;
+                int len = lastLookaheadChar - firstLookaheadChar;
                 int t[];
 
                 // make sure we do not go off the end of the buffer
@@ -147,9 +140,8 @@ public class Scanner {
                     if (n > lookaheadChars.length) {
                         // the array is too small; make it bigger and shift
                         // everything to the beginning.
-                        t=new int[n * 2];
-                    }
-                    else {
+                        t = new int[n * 2];
+                    } else {
                         // the array is big enough, so just shift everything
                         // to the beginning of it.
                         t = lookaheadChars;
@@ -173,16 +165,12 @@ public class Scanner {
     }
 
     /** Read a character from input, returning -1 if end of input. */
-    protected int getChar()
-        throws java.io.IOException {
-
+    protected int getChar() throws IOException {
         return System.in.read();
     }
 
     /** Initialize the scanner */
-    public void init()
-        throws java.io.IOException {
-
+    public void init() throws IOException {
         initReswords();
         lines = new ArrayList<Integer>();
         iChar = iPrevChar = 0;
@@ -255,9 +243,9 @@ public class Scanner {
         initResword(ParserSym.CASE                ,"CASE");
         initResword(ParserSym.CELL                ,"CELL");
 //      initResword(ParserSym.CELL_ORDINAL        ,"CELL_ORDINAL");
-//      initResword(ParserSym.CHAPTERS            ,"CHAPTERS");
+        initResword(ParserSym.CHAPTERS            ,"CHAPTERS");
 //      initResword(ParserSym.CHILDREN            ,"CHILDREN");
-//      initResword(ParserSym.COLUMNS             ,"COLUMNS");
+        initResword(ParserSym.COLUMNS             ,"COLUMNS");
 //      initResword(ParserSym.DESC                ,"DESC");
         initResword(ParserSym.DIMENSION           ,"DIMENSION");
         initResword(ParserSym.ELSE                ,"ELSE");
@@ -287,13 +275,13 @@ public class Scanner {
         initResword(ParserSym.NULL                ,"NULL");
         initResword(ParserSym.ON                  ,"ON");
         initResword(ParserSym.OR                  ,"OR");
-//      initResword(ParserSym.PAGES               ,"PAGES");
+        initResword(ParserSym.PAGES               ,"PAGES");
 //      initResword(ParserSym.PARENT              ,"PARENT");
 //      initResword(ParserSym.PREVMEMBER          ,"PREVMEMBER");
         initResword(ParserSym.PROPERTIES          ,"PROPERTIES");
 //      initResword(ParserSym.RECURSIVE           ,"RECURSIVE");
-//      initResword(ParserSym.ROWS                ,"ROWS");
-//      initResword(ParserSym.SECTIONS            ,"SECTIONS");
+        initResword(ParserSym.ROWS                ,"ROWS");
+        initResword(ParserSym.SECTIONS            ,"SECTIONS");
         initResword(ParserSym.SELECT              ,"SELECT");
         initResword(ParserSym.SET                 ,"SET");
 //      initResword(ParserSym.SOLVE_ORDER         ,"SOLVE_ORDER");
@@ -398,9 +386,9 @@ public class Scanner {
      * end of file terminates a comment without error.
      */
     private void skipComment(
-            final String startDelim,
-            final String endDelim) throws IOException {
-
+        final String startDelim,
+        final String endDelim) throws IOException
+    {
         int depth = 1;
 
         // skip the starting delimiter
@@ -411,8 +399,7 @@ public class Scanner {
         for (;;) {
             if (nextChar == -1) {
                 return;
-            }
-            else if (checkForSymbol(endDelim)) {
+            } else if (checkForSymbol(endDelim)) {
                 // eat the end delimiter
                 for (int x = 0; x < endDelim.length(); x++) {
                     advance();
@@ -420,15 +407,13 @@ public class Scanner {
                 if (--depth == 0) {
                     return;
                 }
-            }
-            else if (allowNestedComments && checkForSymbol(startDelim)) {
+            } else if (allowNestedComments && checkForSymbol(startDelim)) {
                // eat the nested start delimiter
                 for (int x = 0; x < startDelim.length(); x++) {
                     advance();
                 }
                 depth++;
-            }
-            else {
+            } else {
                 advance();
             }
         }
@@ -438,7 +423,6 @@ public class Scanner {
      * If the next tokens are comments, skip over them.
      */
     private void searchForComments() throws IOException {
-
         // eat all following comments
         boolean foundComment;
         do {
@@ -473,7 +457,6 @@ public class Scanner {
      * Recognizes and returns the next complete token.
      */
     public Symbol next_token() throws IOException {
-
         StringBuilder id;
         boolean ampersandId = false;
         for (;;) {
@@ -499,7 +482,7 @@ public class Scanner {
                 // 1e2, 1E2, 1e-2, 1e+2.  Invalid examples include e2, 1.2.3,
                 // 1e2e3, 1e2.3.
                 //
-                // Signs preceding numbers (e.g. -1, +1E-5) are valid, but are
+                // Signs preceding numbers (e.g. -1,  + 1E-5) are valid, but are
                 // handled by the parser.
                 //
                 BigDecimal n = BigDecimalZero;
@@ -694,36 +677,71 @@ public class Scanner {
                     }
                 }
 
-            case ':': advance(); return makeToken(ParserSym.COLON, ":");
-            case ',': advance(); return makeToken(ParserSym.COMMA, ",");
-            case '=': advance(); return makeToken(ParserSym.EQ, "=");
+            case ':':
+                advance();
+                return makeToken(ParserSym.COLON, ":");
+            case ',':
+                advance();
+                return makeToken(ParserSym.COMMA, ",");
+            case '=':
+                advance();
+                return makeToken(ParserSym.EQ, "=");
             case '<':
                 advance();
                 switch (nextChar) {
-                case '>': advance(); return makeToken(ParserSym.NE, "<>");
-                case '=': advance(); return makeToken(ParserSym.LE, "<=");
-                default: return makeToken(ParserSym.LT, "<");
+                case '>':
+                    advance();
+                    return makeToken(ParserSym.NE, "<>");
+                case '=':
+                    advance();
+                    return makeToken(ParserSym.LE, "<=");
+                default:
+                    return makeToken(ParserSym.LT, "<");
                 }
             case '>':
                 advance();
                 switch (nextChar) {
-                case '=': advance(); return makeToken(ParserSym.GE, ">=");
-                default: return makeToken(ParserSym.GT, ">");
+                case '=':
+                    advance();
+                    return makeToken(ParserSym.GE, ">=");
+                default:
+                    return makeToken(ParserSym.GT, ">");
                 }
-            case '{': advance(); return makeToken(ParserSym.LBRACE, "{");
-            case '(': advance(); return makeToken(ParserSym.LPAREN, "(");
-            case '}': advance(); return makeToken(ParserSym.RBRACE, "}");
-            case ')': advance(); return makeToken(ParserSym.RPAREN, ")");
-            case '+': advance(); return makeToken(ParserSym.PLUS, "+");
-            case '-': advance(); return makeToken(ParserSym.MINUS, "-");
-            case '*': advance(); return makeToken(ParserSym.ASTERISK, "*");
-            case '/': advance(); return makeToken(ParserSym.SOLIDUS, "/");
-            case '!': advance(); return makeToken(ParserSym.BANG, "!");
+            case '{':
+                advance();
+                return makeToken(ParserSym.LBRACE, "{");
+            case '(':
+                advance();
+                return makeToken(ParserSym.LPAREN, "(");
+            case '}':
+                advance();
+                return makeToken(ParserSym.RBRACE, "}");
+            case ')':
+                advance();
+                return makeToken(ParserSym.RPAREN, ")");
+            case '+':
+                advance();
+                return makeToken(ParserSym.PLUS, "+");
+            case '-':
+                advance();
+                return makeToken(ParserSym.MINUS, "-");
+            case '*':
+                advance();
+                return makeToken(ParserSym.ASTERISK, "*");
+            case '/':
+                advance();
+                return makeToken(ParserSym.SOLIDUS, "/");
+            case '!':
+                advance();
+                return makeToken(ParserSym.BANG, "!");
             case '|':
                 advance();
                 switch (nextChar) {
-                case '|': advance(); return makeToken(ParserSym.CONCAT, "||");
-                default: return makeToken(ParserSym.UNKNOWN, "|");
+                case '|':
+                    advance();
+                    return makeToken(ParserSym.CONCAT, "||");
+                default:
+                    return makeToken(ParserSym.UNKNOWN, "|");
                 }
 
             case '"':

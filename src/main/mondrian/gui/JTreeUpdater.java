@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/gui/JTreeUpdater.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/gui/JTreeUpdater.java#10 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2007 Julian Hyde, Cincom Systems, Inc.
+// Copyright (C) 2006-2008 Julian Hyde, Cincom Systems, Inc.
 // Copyright (C) 2006-2007 Cincom Systems, Inc.
 // Copyright (C) 2006-2007 JasperSoft
 // All Rights Reserved.
@@ -27,7 +27,7 @@ import java.util.Set;
  * reloading the tree.
  *
  * @author erik
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/gui/JTreeUpdater.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/gui/JTreeUpdater.java#10 $
  */
 public class JTreeUpdater implements TreeExpansionListener, TreeSelectionListener {
 
@@ -50,7 +50,7 @@ public class JTreeUpdater implements TreeExpansionListener, TreeSelectionListene
      * Call this method whenever you update the tree and needs it reloaded
      */
     public synchronized void update() {
-        synchronized(this.tree) {
+        synchronized (this.tree) {
             this.tree.removeTreeExpansionListener(this);
             this.tree.removeTreeSelectionListener(this);
 
@@ -73,7 +73,7 @@ public class JTreeUpdater implements TreeExpansionListener, TreeSelectionListene
 
         // remove all ancestors of eventpath from expandedpaths set.
         Object[] paths = expandedTreePaths.toArray();
-        for (int i=0; i<paths.length; i++) {
+        for (int i = 0; i < paths.length; i++) {
             TreePath path = (TreePath) paths[i];
 
             // path is a descendant of event path if path contains all componennts that make eventpath
@@ -95,7 +95,7 @@ public class JTreeUpdater implements TreeExpansionListener, TreeSelectionListene
 
         // remove all descendants from expandedpaths set.
         Object[] paths = expandedTreePaths.toArray();
-        for (int i=0; i<paths.length; i++) {
+        for (int i = 0; i < paths.length; i++) {
             TreePath path = (TreePath) paths[i];
 
             // path is a descendant of event path if path contains all componennts that make eventpath
@@ -105,7 +105,6 @@ public class JTreeUpdater implements TreeExpansionListener, TreeSelectionListene
             }
         }
         //System.out.println("subtree collapsed ="+expandedTreePaths.size());
-
     }
 
     public void valueChanged(TreeSelectionEvent treeSelectionEvent) {

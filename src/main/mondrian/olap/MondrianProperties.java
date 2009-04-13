@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/MondrianProperties.java#4 $
+// $Id: //open/mondrian/src/main/mondrian/olap/MondrianProperties.java#103 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2001-2002 Kana Software, Inc.
-// Copyright (C) 2001-2007 Julian Hyde and others
+// Copyright (C) 2001-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -49,7 +49,7 @@ import java.util.Properties;
  * <p>Similarly if you update or delete a property.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/MondrianProperties.java#4 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/MondrianProperties.java#103 $
  * @since 22 December, 2002
  */
 public class MondrianProperties extends TriggerableProperties {
@@ -83,7 +83,7 @@ public class MondrianProperties extends TriggerableProperties {
     public MondrianProperties() {
         this.propertySource = new FilePropertySource(new File(mondrianDotProperties));
     }
-    
+
     public boolean triggersAreEnabled() {
         return EnableTriggers.get();
     }
@@ -328,6 +328,15 @@ public class MondrianProperties extends TriggerableProperties {
         new IntegerProperty(
             this, "mondrian.result.limit", 0);
 
+    /**
+     * Property that establishes the amount of chunks for querying cells
+     * involving high-cardinality dimensions.
+     * Should prime with {@link #ResultLimit mondrian.result.limit}.
+     */
+    public transient final IntegerProperty HighCardChunkSize =
+        new IntegerProperty(this, "mondrian.result.highCardChunkSize", 1);
+
+
     // mondrian.test properties
 
     /**
@@ -368,6 +377,15 @@ public class MondrianProperties extends TriggerableProperties {
     public transient final StringProperty TestConnectString =
             new StringProperty(
                     this, "mondrian.test.connectString", null);
+    /**
+     * Property containing a list of dimensions in the Sales cube that should
+     * be treated as high-cardinality dimensions by the testing infrastructure.
+     * This allows us to run the full suite of tests with high-cardinality
+     * functionality enabled.
+     */
+    public transient final StringProperty TestHighCardinalityDimensionList =
+        new StringProperty(
+            this, "mondrian.test.highCardDimensions", null);
 
     // miscellaneous
 
@@ -399,15 +417,6 @@ public class MondrianProperties extends TriggerableProperties {
      */
     public transient final StringProperty TestJdbcPassword = new StringProperty(
             this, "mondrian.test.jdbcPassword", null);
-
-    /**
-     * Property that determines when a dimension is considered "large".
-     * If a dimension has more than this number of members, Mondrian uses a
-     * {@link mondrian.rolap.SmartMemberReader smart member reader}.
-     */
-    public transient final IntegerProperty LargeDimensionThreshold =
-            new IntegerProperty(
-                    this, "mondrian.rolap.LargeDimensionThreshold", 100);
 
     /**
      * Property that, with {@link #SparseSegmentDensityThreshold}, determines
@@ -505,7 +514,7 @@ public class MondrianProperties extends TriggerableProperties {
 
     /**
      * Property that controls
-     * whether aggregation cache hit / miss counters will be enabled 
+     * whether aggregation cache hit / miss counters will be enabled
      */
     public transient final BooleanProperty EnableCacheHitCounters =
         new BooleanProperty(
@@ -516,7 +525,7 @@ public class MondrianProperties extends TriggerableProperties {
      * comparison tests do not contain expected sqls for the specified
      * dialect. The tests are skipped if no expected sqls are
      * found for the current dialect.
-     * 
+     *
      * Possible values are the following:
      * "NONE": no warning (default)
      * "ANY": any dialect
@@ -525,10 +534,10 @@ public class MondrianProperties extends TriggerableProperties {
      * "LUCIDDB"
      * "MYSQL"
      *  ...and any Dialect enum in SqlPattern.Dialect
-     * 
+     *
      * Specific tests can overwrite the default setting. The priority is
      * Settings besides "ANY" in mondrian.properties file < Any setting in the test < "ANY"
-     * 
+     *
      */
     public transient final StringProperty WarnIfNoPatternForDialect =
         new StringProperty(
@@ -704,8 +713,7 @@ public class MondrianProperties extends TriggerableProperties {
     /**
      * Seed for random number generator used by some of the tests.
      *
-     *
-     * Any value besides 0 or -1 gives deterministic behavior.
+     * <p>Any value besides 0 or -1 gives deterministic behavior.
      * The default value is 1234: most users should use this.
      * Setting the seed to a different value can increase coverage, and
      * therefore may uncover new bugs.
@@ -722,7 +730,13 @@ public class MondrianProperties extends TriggerableProperties {
                     this, "mondrian.test.random.seed", 1234);
 
     /**
-     * Name of locale property file.
+     * String property that holds the
+     * name of the class whose resource bundle is to be used to for this
+     * schema. For example, if the class is {@code com.acme.MyResource},
+     * mondrian will look for a resource bundle called
+     * {@code com/acme/MyResource_<i>locale</i>.properties} on the class path.
+     * (This property has a confusing name because in a previous release it
+     * actually held a file name.)
      *
      * <p>Used for the {@link mondrian.i18n.LocalizingDynamicSchemaProcessor};
      * see <a href="{@docRoot}/../schema.html#I18n">Internationalization</a>
@@ -977,7 +991,7 @@ public class MondrianProperties extends TriggerableProperties {
      *
      * <p>Ignored on databases which do not support the
      * <code>GROUPING SETS</code> construct (see
-     * {@link mondrian.rolap.sql.SqlQuery.Dialect#supportsGroupingSets}).
+     * {@link mondrian.spi.Dialect#supportsGroupingSets}).
      */
     public transient final BooleanProperty EnableGroupingSets =
             new BooleanProperty(
@@ -991,21 +1005,21 @@ public class MondrianProperties extends TriggerableProperties {
      * aggregation, the measure is ignored in the evaluation context. This
      * behaviour kicks in only if the cubeusage for this measure has
      * IgnoreUnrelatedDimensions attribute set to false.
-     * 
+     *
      * <p>For example, Gender doesn't join with [Warehouse Sales] measure.
      *
      * <p>With mondrian.olap.agg.IgnoreMeasureForNonJoiningDimension=true
      * Warehouse Sales gets eliminated and is ignored in the aggregate value.
      * <blockquote>
      * <p>                                        [Store Sales] + [Warehouse Sales]
-     * SUM({Product.members * Gender.members})	        7,913,333.82
+     * SUM({Product.members * Gender.members})    7,913,333.82
      * </blockquote>
      * <p>With mondrian.olap.agg.IgnoreMeasureForNonJoiningDimension=false
      * Warehouse Sales with Gender All level member contributes to the aggregate
      * value.
      * <blockquote>
      * <p>                                        [Store Sales] + [Warehouse Sales]
-     * SUM({Product.members * Gender.members})	        9,290,730.03
+     * SUM({Product.members * Gender.members})    9,290,730.03
      * </blockquote>
      * <p>On a report where Gender M, F and All members exist a user will see a
      * large aggregated value compared to the aggregated value that can be
@@ -1121,8 +1135,19 @@ public class MondrianProperties extends TriggerableProperties {
          * <p>Compatible with Analysis Services 2005, and default behavior
          * from mondrian-3.0.4 and later.
          */
-        SCOPED;
+        SCOPED
     }
+
+    /**
+     * Property that defines
+     * whether to enable new naming behavior.
+     *
+     * <p>If true, hierarchies are named [Dimension].[Hierarchy]; if false,
+     * [Dimension.Hierarchy].
+     */
+    public transient final BooleanProperty SsasCompatibleNaming =
+            new BooleanProperty(
+                    this, "mondrian.olap.SsasCompatibleNaming", false);
 }
 
 // End MondrianProperties.java

@@ -13,7 +13,7 @@ package mondrian.olap;
  *
  * @author Thiyagu
  * @since April 5, 2007
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/InvalidArgumentException.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/InvalidArgumentException.java#1 $
  */
 public class InvalidArgumentException extends MondrianException {
     /**

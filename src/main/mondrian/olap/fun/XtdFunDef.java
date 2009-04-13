@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/XtdFunDef.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/fun/XtdFunDef.java#14 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2006 Julian Hyde
+// Copyright (C) 2005-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -25,7 +25,7 @@ import java.util.List;
  * and <code>Wtd</code> MDX builtin functions.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/XtdFunDef.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/XtdFunDef.java#14 $
  * @since Mar 23, 2006
  */
 class XtdFunDef extends FunDefBase {
@@ -68,7 +68,7 @@ class XtdFunDef extends FunDefBase {
         if (args.length == 0) {
             // With no args, the default implementation cannot
             // guess the hierarchy.
-            Dimension defaultTimeDimension = 
+            Dimension defaultTimeDimension =
                 validator.getQuery().getCube().getTimeDimension();
             if (defaultTimeDimension == null) {
                 throw MondrianResource.instance().
@@ -78,8 +78,7 @@ class XtdFunDef extends FunDefBase {
             return new SetType(MemberType.forHierarchy(hierarchy));
         }
         final Type type = args[0].getType();
-        if (type.getHierarchy().getDimension()
-                .getDimensionType() !=
+        if (type.getDimension().getDimensionType() !=
                 DimensionType.TimeDimension) {
             throw MondrianResource.instance().TimeArgNeeded.ex(getName());
         }
@@ -145,7 +144,7 @@ class XtdFunDef extends FunDefBase {
         protected FunDef createFunDef(Exp[] args, FunDef dummyFunDef) {
             return new XtdFunDef(dummyFunDef, levelType);
         }
-    };
+    }
 }
 
 // End XtdFunDef.java

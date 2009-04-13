@@ -1,6 +1,6 @@
 <?xml version='1.0'?>
 <!--
-  == $Id: //open/mondrian-release/3.0/misc/Meta.xsl#2 $
+  == $Id: //open/mondrian/misc/Meta.xsl#4 $
   == This software is subject to the terms of the Common Public License
   == Agreement, available at the following URL:
   == http://www.opensource.org/licenses/cpl.html.

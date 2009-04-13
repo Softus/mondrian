@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/RolapUtil.java#3 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/RolapUtil.java#60 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2001-2002 Kana Software, Inc.
-// Copyright (C) 2001-2007 Julian Hyde and others
+// Copyright (C) 2001-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -24,7 +24,7 @@ import java.sql.SQLException;
 import java.util.*;
 
 import mondrian.calc.ExpCompiler;
-import mondrian.rolap.sql.SqlQuery;
+import mondrian.spi.Dialect;
 
 import javax.sql.DataSource;
 
@@ -33,13 +33,12 @@ import javax.sql.DataSource;
  *
  * @author jhyde
  * @since 22 December, 2001
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/RolapUtil.java#3 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/RolapUtil.java#60 $
  */
 public class RolapUtil {
     public static final Logger MDX_LOGGER = Logger.getLogger("mondrian.mdx");
     public static final Logger SQL_LOGGER = Logger.getLogger("mondrian.sql");
     static final Logger LOGGER = Logger.getLogger(RolapUtil.class);
-    static final RolapMember[] emptyMemberArray = new RolapMember[0];
     private static Semaphore querySemaphore;
 
     /**
@@ -90,7 +89,7 @@ public class RolapUtil {
 
     static RolapMember[] toArray(List<RolapMember> v) {
         return v.isEmpty()
-            ? emptyMemberArray
+            ? new RolapMember[0]
             : v.toArray(new RolapMember[v.size()]);
     }
 
@@ -260,9 +259,10 @@ public class RolapUtil {
      * @param reason reason why native evaluation was skipped
      */
     public static void alertNonNative(
-        String functionName, String reason)
-        throws NativeEvaluationUnsupportedException {
-
+        String functionName,
+        String reason)
+        throws NativeEvaluationUnsupportedException
+    {
         // No i18n for log message, but yes for excn
         String alertMsg =
             "Unable to use native SQL evaluation for '" + functionName
@@ -350,14 +350,14 @@ public class RolapUtil {
         Member bestMatch = null;
         for (Member member : members) {
             int rc;
-            if (searchName.quoting==Id.Quoting.KEY
+            if (searchName.quoting == Id.Quoting.KEY
                     && member instanceof RolapMember) {
                 if (((RolapMember) member).getKey().toString()
                         .equals(searchName.name)) {
                     return member;
                 }
             }
-            if (matchType == MatchType.EXACT) {
+            if (matchType.isExact()) {
                 if (caseInsensitive) {
                     rc = Util.compareName(member.getName(), searchName.name);
                 } else {
@@ -386,7 +386,7 @@ public class RolapUtil {
                 }
             }
         }
-        if (matchType == MatchType.EXACT) {
+        if (matchType.isExact()) {
             return null;
         }
         return bestMatch;
@@ -394,7 +394,7 @@ public class RolapUtil {
 
     public static MondrianDef.Relation convertInlineTableToRelation(
         MondrianDef.InlineTable inlineTable,
-        final SqlQuery.Dialect dialect)
+        final Dialect dialect)
     {
         MondrianDef.View view = new MondrianDef.View();
         view.alias = inlineTable.alias;

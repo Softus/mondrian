@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/RolapLevel.java#3 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/RolapLevel.java#65 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2001-2002 Kana Software, Inc.
-// Copyright (C) 2001-2007 Julian Hyde and others
+// Copyright (C) 2001-2009 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -14,7 +14,7 @@
 package mondrian.rolap;
 import mondrian.olap.*;
 import mondrian.resource.MondrianResource;
-import mondrian.rolap.sql.SqlQuery;
+import mondrian.spi.Dialect;
 
 import org.apache.log4j.Logger;
 import java.lang.reflect.Constructor;
@@ -25,7 +25,7 @@ import java.util.*;
  *
  * @author jhyde
  * @since 10 August, 2001
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/RolapLevel.java#3 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/RolapLevel.java#65 $
  */
 public class RolapLevel extends LevelBase {
 
@@ -46,7 +46,7 @@ public class RolapLevel extends LevelBase {
      */
     protected MondrianDef.Expression captionExp;
 
-    private final SqlQuery.Datatype datatype;
+    private final Dialect.Datatype datatype;
 
     private final int flags;
 
@@ -60,7 +60,7 @@ public class RolapLevel extends LevelBase {
     static final int FLAG_UNIQUE = 0x04;
 
     private RolapLevel closedPeer;
-    
+
     private final RolapProperty[] properties;
     private final RolapProperty[] inheritedProperties;
 
@@ -100,9 +100,9 @@ public class RolapLevel extends LevelBase {
         MondrianDef.Closure xmlClosure,
         RolapProperty[] properties,
         int flags,
-        SqlQuery.Datatype datatype,
+        Dialect.Datatype datatype,
         HideMemberCondition hideMemberCondition,
-        LevelType levelType, 
+        LevelType levelType,
         String approxRowCount)
     {
         super(hierarchy, name, depth, levelType);
@@ -240,7 +240,7 @@ public class RolapLevel extends LevelBase {
         return captionExp;
     }
 
-    public boolean hasCaptionColumn(){
+    public boolean hasCaptionColumn() {
         return captionExp != null;
     }
 
@@ -256,7 +256,7 @@ public class RolapLevel extends LevelBase {
         return (flags & FLAG_UNIQUE) != 0;
     }
 
-    final SqlQuery.Datatype getDatatype() {
+    final Dialect.Datatype getDatatype() {
         return datatype;
     }
 
@@ -367,7 +367,10 @@ public class RolapLevel extends LevelBase {
             }
             nameColumn.table = table.getAlias();
         } else {
-            Util.assertTrue(rolapHierarchy.tableExists(nameColumn.table));
+            if (!rolapHierarchy.tableExists(nameColumn.table)) {
+                throw Util.newError(
+                    "Table '" + nameColumn.table + "' not found");
+            }
         }
     }
 
@@ -426,12 +429,12 @@ public class RolapLevel extends LevelBase {
     public OlapElement lookupChild(
         SchemaReader schemaReader, Id.Segment name, MatchType matchType)
     {
-        Member[] levelMembers = schemaReader.getLevelMembers(this, true);
-        if (levelMembers.length > 0) {
-            Member parent = levelMembers[0].getParentMember();
+        List<Member> levelMembers = schemaReader.getLevelMembers(this, true);
+        if (levelMembers.size() > 0) {
+            Member parent = levelMembers.get(0).getParentMember();
             return
                 RolapUtil.findBestMemberMatch(
-                    Arrays.asList(levelMembers),
+                    levelMembers,
                     (RolapMember) parent,
                     this,
                     name,
@@ -448,7 +451,7 @@ public class RolapLevel extends LevelBase {
     boolean hasClosedPeer() {
         return closedPeer != null;
     }
-    
+
     public RolapLevel getClosedPeer() {
         return closedPeer;
     }

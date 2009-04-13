@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/ExistsFunDef.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/fun/ExistsFunDef.java#3 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2004-2002 Kana Software, Inc.
-// Copyright (C) 2004-2007 Julian Hyde and others
+// Copyright (C) 2004-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -22,7 +22,7 @@ import java.util.*;
  * Definition of the <code>EXISTS</code> MDX function.
  *
  * @author kvu
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/ExistsFunDef.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/ExistsFunDef.java#3 $
  * @since Mar 23, 2008
  */
 class ExistsFunDef extends FunDefBase
@@ -69,10 +69,10 @@ class ExistsFunDef extends FunDefBase
                     if (leftDims.contains(d)) {
                         idxmap[i] = leftDims.indexOf(d);
                     } else {
-                    	return Collections.EMPTY_LIST;
+                        return Collections.EMPTY_LIST;
                     }
                 }
-                
+
                 for (Object  leftObject : left) {
                     if (leftObject instanceof Object[]) { // leftObject is a tuple
                         boolean exist = true;
@@ -81,7 +81,7 @@ class ExistsFunDef extends FunDefBase
                                 Object [] leftObjs = (Object []) leftObject;
                                 Member leftMem = (Member) leftObjs[idxmap[i]];
                                 Member rightMem;
-                                if (! (rightObject instanceof Object [])){
+                                if (! (rightObject instanceof Object [])) {
                                     rightMem = (Member) rightObject;
                                 } else {
                                     Object [] rightObjs =

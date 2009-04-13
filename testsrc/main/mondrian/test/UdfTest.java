@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/UdfTest.java#2 $
+// $Id: //open/mondrian/testsrc/main/mondrian/test/UdfTest.java#38 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2007 Julian Hyde
+// Copyright (C) 2005-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
  *
  * @author jhyde
  * @since Apr 29, 2005
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/UdfTest.java#2 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/test/UdfTest.java#38 $
  */
 public class UdfTest extends FoodMartTestCase {
 
@@ -99,9 +99,9 @@ public class UdfTest extends FoodMartTestCase {
                 "SELECT {[Measures].[Last Unit Sales]} ON COLUMNS," + nl +
                 " CrossJoin(" + nl +
                 "  {[Time].[1997], [Time].[1997].[Q1], [Time].[1997].[Q1].Children}," + nl +
-                "  {[Product].[All Products].[Drink].[Alcoholic Beverages].[Beer and Wine].[Beer].children} ) ON ROWS" + nl +
+                "  {[Product].[All Products].[Drink].[Alcoholic Beverages].[Beer and Wine].[Beer].children}) ON ROWS" + nl +
                 "FROM [Sales]" + nl +
-                "WHERE ( [Store].[All Stores].[USA].[OR].[Portland].[Store 11] )",
+                "WHERE ([Store].[All Stores].[USA].[OR].[Portland].[Store 11])",
                 fold(
                     "Axis #0:\n" +
                     "{[Store].[All Stores].[USA].[OR].[Portland].[Store 11]}\n" +
@@ -202,7 +202,6 @@ public class UdfTest extends FoodMartTestCase {
                     "user-defined function 'BadPlusOne': return type is null",
                     s);
         }
-
     }
 
     public void testComplexFun() {
@@ -331,15 +330,20 @@ public class UdfTest extends FoodMartTestCase {
 
     public void testCurrentDateMemberHierarchy()
     {
+        final String query =
+            MondrianProperties.instance().SsasCompatibleNaming.get()
+                ? "SELECT { CurrentDateMember([Time.Weekly], " +
+                "\"[Ti\\me\\.Weekl\\y]\\.[All Weekl\\y\\s]\\.[yyyy]\\.[ww]\", BEFORE)} " +
+                "ON COLUMNS FROM [Sales]"
+                : "SELECT { CurrentDateMember([Time.Weekly], " +
+                "\"[Ti\\me\\.Weekl\\y]\\.[All Ti\\me\\.Weekl\\y\\s]\\.[yyyy]\\.[ww]\", BEFORE)} " +
+                "ON COLUMNS FROM [Sales]";
         assertQueryReturns(
-            "SELECT { CurrentDateMember([Time.Weekly], " +
-            "\"[Ti\\me\\.Weekl\\y]\\.[All Ti\\me\\.Weekl\\y\\s]\\.[yyyy]\\.[ww]\", BEFORE)} " +
-            "ON COLUMNS FROM [Sales]",
-            fold(
-                "Axis #0:\n" +
+            query,
+            fold("Axis #0:\n" +
                 "{}\n" +
                 "Axis #1:\n" +
-                "{[Time.Weekly].[All Time.Weeklys].[1998].[52]}\n" +
+                "{[Time].[Weekly].[All Weeklys].[1998].[52]}\n" +
                 "Row #0: \n"));
     }
 
@@ -449,30 +453,30 @@ public class UdfTest extends FoodMartTestCase {
                     "Row #2: \n" +
                     "Row #3: \n"));
     }
+
     public void testMatches()
     {
         assertQueryReturns(
             "SELECT {[Measures].[Org Salary]} ON COLUMNS, " +
-            "Filter({[Employees].MEMBERS}, " +
-            "[Employees].CurrentMember.Name MATCHES '(?i)sam.*') ON ROWS " +
-            "FROM [HR]",
-            fold(
-                "Axis #0:\n" +
+                "Filter({[Employees].MEMBERS}, " +
+                "[Employees].CurrentMember.Name MATCHES '(?i)sam.*') ON ROWS " +
+                "FROM [HR]",
+            fold("Axis #0:\n" +
                 "{}\n" +
                 "Axis #1:\n" +
                 "{[Measures].[Org Salary]}\n" +
                 "Axis #2:\n" +
-                "{[Employees].[All Employees].[Sam Warren]}\n" +
-                "{[Employees].[All Employees].[Sam Zeller]}\n" +
-                "{[Employees].[All Employees].[Sam Adair]}\n" +
-                "{[Employees].[All Employees].[Samuel Johnson]}\n" +
-                "{[Employees].[All Employees].[Sam Wheeler]}\n" +
-                "{[Employees].[All Employees].[Samuel Agcaoili]}\n" +
-                "{[Employees].[All Employees].[Samantha Weller]}\n" +
-                "Row #0: $40.31\n" +
-                "Row #1: $40.35\n" +
+                "{[Employees].[All Employees].[Sheri Nowmer].[Derrick Whelply].[Beverly Baker].[Jacqueline Wyllie].[Ralph Mccoy].[Anne Tuck].[Samuel Johnson]}\n" +
+                "{[Employees].[All Employees].[Sheri Nowmer].[Derrick Whelply].[Pedro Castillo].[Jose Bernard].[Mary Hunt].[Bonnie Bruno].[Sam Warren]}\n" +
+                "{[Employees].[All Employees].[Sheri Nowmer].[Derrick Whelply].[Pedro Castillo].[Charles Macaluso].[Barbara Wallin].[Michael Suggs].[Sam Adair]}\n" +
+                "{[Employees].[All Employees].[Sheri Nowmer].[Derrick Whelply].[Pedro Castillo].[Lois Wood].[Dell Gras].[Kristine Aldred].[Sam Zeller]}\n" +
+                "{[Employees].[All Employees].[Sheri Nowmer].[Derrick Whelply].[Laurie Borges].[Cody Goldey].[Shanay Steelman].[Neal Hasty].[Sam Wheeler]}\n" +
+                "{[Employees].[All Employees].[Sheri Nowmer].[Maya Gutierrez].[Brenda Blumberg].[Wayne Banack].[Samuel Agcaoili]}\n" +
+                "{[Employees].[All Employees].[Sheri Nowmer].[Maya Gutierrez].[Jonathan Murraiin].[James Thompson].[Samantha Weller]}\n" +
+                "Row #0: $40.62\n" +
+                "Row #1: $40.31\n" +
                 "Row #2: $75.60\n" +
-                "Row #3: $40.62\n" +
+                "Row #3: $40.35\n" +
                 "Row #4: $47.52\n" +
                 "Row #5: \n" +
                 "Row #6: \n"));
@@ -636,7 +640,7 @@ public class UdfTest extends FoodMartTestCase {
             "<UserDefinedFunction name=\"StringMult\" className=\"" +
                 StringMultUdf.class.getName() + "\"/>" + nl,
             null);
-        // The default implementation of getResultType would assume that 
+        // The default implementation of getResultType would assume that
         // StringMult(int, string) returns an int, whereas it returns a string.
         tc.assertExprReturns(
             "StringMult(5, 'foo') || 'bar'", "foofoofoofoofoobar");
@@ -648,7 +652,7 @@ public class UdfTest extends FoodMartTestCase {
      * in this case, HierarchyType(dimension=Time, hierarchy=unknown).
      *
      * <p>Also tests applying a UDF to arguments of coercible type. In this
-     * case, applies f(member,dimension) to args(member,hierarchy). 
+     * case, applies f(member,dimension) to args(member,hierarchy).
      */
     public void testAnotherMemberFun() {
         final TestContext tc = TestContext.create(
@@ -675,22 +679,22 @@ public class UdfTest extends FoodMartTestCase {
                 "Row #0: 409,035.59" + nl);
     }
 
-    
+
     public void testCachingCurrentDate() {
         assertQueryReturns(
             "SELECT {filter([Time].[Month].Members, " +
-            "[Time].CurrentMember in {CurrentDateMember([Time], '[\"Time\"]\\.[yyyy]\\.[\"Q\"q]\\.[m]', BEFORE)})} ON ROWS " +
+            "[Time].CurrentMember in {CurrentDateMember([Time], '[\"Time\"]\\.[yyyy]\\.[\"Q\"q]\\.[m]', BEFORE)})} ON COLUMNS " +
             "from [Sales]",
             "Axis #0:" + nl +
             "{}" + nl +
             "Axis #1:" + nl +
             "{[Time].[1998].[Q4].[12]}" + nl +
-            "Row #0: " + nl);        
+            "Row #0: " + nl);
     }
-    
+
     // ~ Inner classes --------------------------------------------------------
 
-    
+
     /**
      * A simple user-defined function which adds one to its argument.
      */
@@ -860,4 +864,4 @@ public class UdfTest extends FoodMartTestCase {
     }
 }
 
-// UdfTest.java
+// End UdfTest.java

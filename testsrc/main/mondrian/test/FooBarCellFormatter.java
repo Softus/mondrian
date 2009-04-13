@@ -16,7 +16,7 @@ import mondrian.olap.CellFormatter;
  *
  * @author jhyde
  * @since 5 October, 2002
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/FooBarCellFormatter.java#2 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/test/FooBarCellFormatter.java#1 $
  */
 public class FooBarCellFormatter implements CellFormatter {
 

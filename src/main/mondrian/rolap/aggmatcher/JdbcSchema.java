@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/aggmatcher/JdbcSchema.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/aggmatcher/JdbcSchema.java#25 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2007 Julian Hyde and others
+// Copyright (C) 2005-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -15,8 +15,8 @@ import mondrian.olap.MondrianDef;
 import mondrian.olap.Util;
 import mondrian.rolap.RolapAggregator;
 import mondrian.rolap.RolapStar;
-import mondrian.rolap.sql.SqlQuery;
 import mondrian.resource.MondrianResource;
+import mondrian.spi.Dialect;
 
 import javax.sql.DataSource;
 
@@ -51,7 +51,7 @@ import java.util.*;
  * {@link SQLException}, rats.
  *
  * @author Richard M. Emberson
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/aggmatcher/JdbcSchema.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/aggmatcher/JdbcSchema.java#25 $
  */
 public class JdbcSchema {
     private static final Logger LOGGER =
@@ -203,7 +203,6 @@ public class JdbcSchema {
                         LOGGER.warn(ex);
                     }
                 }
-
             }
             // reset
             sweepDBCount = 0;
@@ -273,36 +272,36 @@ public class JdbcSchema {
 
     /**
      * Converts a {@link java.sql.Types} value to a
-     * {@link mondrian.rolap.sql.SqlQuery.Datatype}.
+     * {@link mondrian.spi.Dialect.Datatype}.
      *
      * @param javaType JDBC type code, as per {@link java.sql.Types}
      * @return Datatype
      */
-    public static SqlQuery.Datatype getDatatype(int javaType) {
+    public static Dialect.Datatype getDatatype(int javaType) {
         switch (javaType) {
         case Types.TINYINT:
         case Types.SMALLINT:
         case Types.INTEGER:
         case Types.BIGINT:
-            return SqlQuery.Datatype.Integer;
+            return Dialect.Datatype.Integer;
         case Types.FLOAT:
         case Types.REAL:
         case Types.DOUBLE:
         case Types.NUMERIC:
         case Types.DECIMAL:
-            return SqlQuery.Datatype.Numeric;
+            return Dialect.Datatype.Numeric;
         case Types.BOOLEAN:
-            return SqlQuery.Datatype.Boolean;
+            return Dialect.Datatype.Boolean;
         case Types.DATE:
-            return SqlQuery.Datatype.Date;
+            return Dialect.Datatype.Date;
         case Types.TIME:
-            return SqlQuery.Datatype.Time;
+            return Dialect.Datatype.Time;
         case Types.TIMESTAMP:
-            return SqlQuery.Datatype.Timestamp;
+            return Dialect.Datatype.Timestamp;
         case Types.CHAR:
         case Types.VARCHAR:
         default:
-            return SqlQuery.Datatype.String;
+            return Dialect.Datatype.String;
         }
     }
 
@@ -431,13 +430,13 @@ public class JdbcSchema {
                 public RolapAggregator getAggregator() {
                     return aggregator;
                 }
-                
+
                 public void setMinLevelColumn(final boolean minLevelColumn) {
-                	this.minLevelColumn = minLevelColumn;
+                    this.minLevelColumn = minLevelColumn;
                 }
-                
+
                 public boolean isMinLevelColumn() {
-                	return this.minLevelColumn;
+                    return this.minLevelColumn;
                 }
 
                 public String toString() {
@@ -580,7 +579,7 @@ public class JdbcSchema {
             /**
              * Return true if this column is numeric.
              */
-            public SqlQuery.Datatype getDatatype() {
+            public Dialect.Datatype getDatatype() {
                 return JdbcSchema.getDatatype(getType());
             }
 
@@ -704,7 +703,6 @@ public class JdbcSchema {
              * Get an iterator over all usages of the given column type.
              */
             public Iterator<Usage> getUsages(UsageType usageType) {
-
                 // Yes, this is legal.
                 class ColumnTypeIterator implements Iterator<Usage> {
                     private final Iterator<Usage> usageIter;
@@ -726,7 +724,6 @@ public class JdbcSchema {
                                 nextUsage = usage;
                                 return true;
                             }
-
                         }
                         nextUsage = null;
                         return false;
@@ -861,7 +858,7 @@ public class JdbcSchema {
             table.tableType = tableType;
 
             Map m = table.getColumnMap();
-            for (Iterator usageIter = getColumns(); usageIter.hasNext(); ) {
+            for (Iterator usageIter = getColumns(); usageIter.hasNext();) {
                 Column column = (Column) usageIter.next();
                 m.put(column.getName(), column.copy());
             }
@@ -873,7 +870,7 @@ public class JdbcSchema {
          * For testing ONLY
         void clearUsages() {
             this.tableUsage = UNKNOWN_TABLE_USAGE;
-            for (Iterator usageIter = getColumns(); usageIter.hasNext(); ) {
+            for (Iterator usageIter = getColumns(); usageIter.hasNext();) {
                 Column column = (Column) usageIter.next();
                 column.clearUsages();
             }
@@ -914,7 +911,6 @@ public class JdbcSchema {
         public Iterator<JdbcSchema.Table.Column.Usage> getColumnUsages(
             final UsageType usageType)
         {
-
             class CTIterator implements Iterator<JdbcSchema.Table.Column.Usage> {
                 private final Iterator<Column> columnIter;
                 private final UsageType columnType;
@@ -975,8 +971,8 @@ public class JdbcSchema {
         public void setTableUsageType(final TableUsageType tableUsageType) {
             // if usageIter has already been set, then usageIter can NOT be reset
             if ((this.tableUsageType != TableUsageType.UNKNOWN) &&
-                    (this.tableUsageType != tableUsageType)) {
-
+                    (this.tableUsageType != tableUsageType))
+            {
                 throw mres.AttemptToChangeTableUsage.ex(
                     getName(),
                     this.tableUsageType.name(),
@@ -1137,7 +1133,7 @@ public class JdbcSchema {
         jdbcSchema.setCatalogName(getCatalogName());
 
         Map m = jdbcSchema.getTablesMap();
-        for (Iterator usageIter = getTables(); usageIter.hasNext(); ) {
+        for (Iterator usageIter = getTables(); usageIter.hasNext();) {
             Table table = (Table) usageIter.next();
             m.put(table.getName(), table.copy());
         }
@@ -1149,7 +1145,7 @@ public class JdbcSchema {
     /**
      * For testing ONLY
     void clearUsages() {
-        for (Iterator usageIter = getTables(); usageIter.hasNext(); ) {
+        for (Iterator usageIter = getTables(); usageIter.hasNext();) {
             Table table = (Table) usageIter.next();
             table.clearUsages();
         }

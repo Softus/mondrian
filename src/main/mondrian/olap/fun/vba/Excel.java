@@ -18,7 +18,7 @@ import mondrian.olap.fun.JavaFunDef;
  * <p>Functions are loaded into the function table by reflection.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/vba/Excel.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/vba/Excel.java#3 $
  * @since Dec 31, 2007
  */
 public abstract class Excel {
@@ -37,7 +37,7 @@ public abstract class Excel {
     public static double acos(double number) {
         return Math.acos(number);
     }
-    
+
     @FunctionName("Acosh")
     @JavaFunDef.Signature("Acosh(number)")
     @Description("Returns the inverse hyperbolic cosine of a number. Number must be greater than or equal to 1. The inverse hyperbolic cosine is the value whose hyperbolic cosine is Arg1, so Acosh(Cosh(number)) equals Arg1.")

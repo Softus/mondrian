@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/util/FormatTest.java#2 $
+// $Id: //open/mondrian/testsrc/main/mondrian/util/FormatTest.java#11 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2007 Julian Hyde
+// Copyright (C) 2006-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -23,7 +23,7 @@ import mondrian.test.I18nTest;
  * Unit test for {@link Format}.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/util/FormatTest.java#2 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/util/FormatTest.java#11 $
  * @since May 26, 2006
  */
 public class FormatTest extends TestCase {
@@ -188,6 +188,15 @@ public class FormatTest extends TestCase {
         checkFormat(null, new Double(-0.001), "0.##;(0.##);Nil", "Nil");
         checkFormat(null, new Double(-0.01), "0.##;(0.##);Nil", "(0.01)");
         checkFormat(null, new Double(-0.01), "0.##;(0.#);Nil", "Nil");
+
+        // Bug 2028127
+        //checkFormat(null, new Double(-0.001), "0.##;(0.##)");
+    }
+
+    public void testNegativeZero() {
+        checkFormat(null, new Double(-0.0), "#0.000", "0.000");
+        checkFormat(null, new Double(-0.0), "#0", "0");
+        checkFormat(null, new Double(-0.0), "#0.0" ,"0.0");
     }
 
     public void testNumberRoundingBug() {
@@ -278,8 +287,17 @@ public class FormatTest extends TestCase {
         // must not decrement month by one (cuz java.util.Calendar is 0-based)
         checkFormat(null, date2, "mm/dd/yy", "09/07/10");
 
-        // must recognize "mmm"
+        // must recognize "MMM"
+        checkFormat(null, date2, "MMM/dd/yyyy", "Sep/07/2010");
+
+        // "mmm" is a synonym for "MMMM"
         checkFormat(null, date2, "mmm/dd/yyyy", "Sep/07/2010");
+
+        // must recognize "MMMM"
+        checkFormat(null, date2, "MMMM/dd/yyyy", "September/07/2010");
+
+        // "mmmm" is a synonym for "MMMM"
+        checkFormat(null, date2, "mmmm/dd/yyyy", "September/07/2010");
 
         // "mm" means minute, not month, when following "hh"
         checkFormat(null, date2, "hh/mm/ss", "06/05/04");

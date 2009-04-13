@@ -19,7 +19,7 @@ import java.util.Map;
  *
  * @author av
  * @since Nov 21, 2005
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/cache/SmartCache.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/cache/SmartCache.java#6 $
  */
 public interface SmartCache <K, V> extends Iterable<Map.Entry<K, V>> {
     /**

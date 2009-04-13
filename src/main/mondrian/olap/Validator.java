@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/Validator.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/Validator.java#8 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -9,9 +9,11 @@
 */
 package mondrian.olap;
 
-import mondrian.olap.fun.ParameterFunDef;
+import mondrian.olap.fun.Resolver;
 import mondrian.olap.type.Type;
 import mondrian.mdx.ParameterExpr;
+
+import java.util.List;
 
 /**
  * Provides context necessary to resolve identifiers to objects, function
@@ -21,7 +23,7 @@ import mondrian.mdx.ParameterExpr;
  * which in turn calls {@link Exp#accept}.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/Validator.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/Validator.java#8 $
  */
 public interface Validator {
     /**
@@ -76,11 +78,15 @@ public interface Validator {
      *
      * @param fromExp argument type
      * @param to   parameter type
-     * @param conversionCount in/out count of number of conversions performed;
-     *             is incremented if the conversion is non-trivial (for
+     * @param conversions List of conversions performed;
+     *             method adds an element for each non-trivial conversion (for
      *             example, converting a member to a level).
+     * @return Whether we can convert an argument to a parameter type
      */
-    boolean canConvert(Exp fromExp, int to, int[] conversionCount);
+    boolean canConvert(
+        Exp fromExp,
+        int to,
+        List<Resolver.Conversion> conversions);
 
     /**
      * Returns the table of function and operator definitions.
@@ -97,6 +103,16 @@ public interface Validator {
         Type type,
         Exp defaultExp,
         String description);
+
+    /**
+     * Resolves a function call to a particular function. If the function is
+     * overloaded, returns as precise a match to the argument types as
+     * possible.
+     */
+    FunDef getDef(
+        Exp[] args,
+        String name,
+        Syntax syntax);
 }
 
 // End Validator.java

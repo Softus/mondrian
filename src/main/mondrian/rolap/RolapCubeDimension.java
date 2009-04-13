@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/RolapCubeDimension.java#3 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/RolapCubeDimension.java#7 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2001-2002 Kana Software, Inc.
-// Copyright (C) 2001-2007 Julian Hyde and others
+// Copyright (C) 2001-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -21,23 +21,24 @@ import mondrian.olap.Schema;
 
 /**
  * RolapCubeDimension wraps a RolapDimension for a specific Cube.
- * 
+ *
  * @author Will Gorman (wgorman@pentaho.org)
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/RolapCubeDimension.java#3 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/RolapCubeDimension.java#7 $
  */
 public class RolapCubeDimension extends RolapDimension {
-    
+
     RolapCube parent;
-    
+
     RolapDimension rolapDimension;
     int cubeOrdinal;
     MondrianDef.CubeDimension xmlDimension;
-    
+
     private BitKey levelsBK;
-    
-    public RolapCubeDimension(RolapCube parent, RolapDimension rolapDim, 
-            MondrianDef.CubeDimension cubeDim, String name, int cubeOrdinal) {
-        super(null, name, null);
+
+    public RolapCubeDimension(RolapCube parent, RolapDimension rolapDim,
+            MondrianDef.CubeDimension cubeDim, String name, int cubeOrdinal,
+            final boolean highCardinality) {
+        super(null, name, null, highCardinality);
         this.xmlDimension = cubeDim;
         this.rolapDimension = rolapDim;
         this.cubeOrdinal = cubeOrdinal;
@@ -46,10 +47,10 @@ public class RolapCubeDimension extends RolapDimension {
 
         // create new hierarchies
         hierarchies = new RolapCubeHierarchy[rolapDim.getHierarchies().length];
-        
+
         for (int i = 0; i < rolapDim.getHierarchies().length; i++) {
-            hierarchies[i] = new RolapCubeHierarchy(this, cubeDim, 
-                    (RolapHierarchy)rolapDim.getHierarchies()[i], 
+            hierarchies[i] = new RolapCubeHierarchy(this, cubeDim,
+                    (RolapHierarchy)rolapDim.getHierarchies()[i],
                     ((HierarchyBase)rolapDim.getHierarchies()[i]).getSubName());
         }
     }
@@ -57,23 +58,23 @@ public class RolapCubeDimension extends RolapDimension {
     public RolapCube getCube() {
         return parent;
     }
-    
+
     public Schema getSchema() {
         return rolapDimension.getSchema();
     }
-    
+
     // this method should eventually replace the call below
     public int getOrdinal() {
         return cubeOrdinal;
     }
-    
+
     // note that the cube is not necessary here
     public int getOrdinal(Cube cube) {
         // this is temporary to validate that internals are consistant
-        assert(cube == parent);
+        assert cube == parent;
         return cubeOrdinal;
     }
-    
+
     public boolean equals(Object o) {
         if (this == o) {
             return true;
@@ -92,7 +93,7 @@ public class RolapCubeDimension extends RolapDimension {
     RolapCubeHierarchy newHierarchy(String subName, boolean hasAll) {
         throw new UnsupportedOperationException();
     }
-    
+
     public String getCaption() {
         if (caption != null) {
             return caption;
@@ -110,71 +111,71 @@ public class RolapCubeDimension extends RolapDimension {
     public DimensionType getDimensionType() {
         return rolapDimension.getDimensionType();
     }
-    
+
     public BitKey getDimensionLevelsBitKey()
     {
-    	if (levelsBK == null) {
-    		RolapCube cube = getCube();
-    		RolapStar star = cube.getStar();
+        if (levelsBK == null) {
+            RolapCube cube = getCube();
+            RolapStar star = cube.getStar();
 
-    		levelsBK = BitKey.Factory.makeBitKey(star.getColumnCount());
+            levelsBK = BitKey.Factory.makeBitKey(star.getColumnCount());
 
             for (Hierarchy hierarchy : getHierarchies()) {
                 for (HierarchyUsage hierarchyUsage : cube.getUsages(hierarchy)) {
                     RolapLevel[] levels = (RolapLevel[])hierarchy.getLevels();
                     for (RolapLevel level : levels) {
-                    	if (level.isAll()) {
-                    		continue;
-                    	}
-                    	
-                    	MondrianDef.Expression expr = level.getKeyExp();
-                    	String levelColumnName =
-                    		(expr instanceof MondrianDef.Column)
-                        		? ((MondrianDef.Column)expr).getColumnName()
-                        		: (expr instanceof MondrianDef.KeyExpression)
-                        			? ((MondrianDef.KeyExpression)expr).toString()
-                        			: null;
-                        			
-                        if (levelColumnName != null) {
-                        	MondrianDef.Relation relation = hierarchyUsage.getJoinTable();
-                        	MondrianDef.Expression joinExp = hierarchyUsage.getJoinExp();
-                        	
-                        	String tableAlias =
-                        		(joinExp instanceof MondrianDef.Column)
-                        			? ((MondrianDef.Column)joinExp).table
-                        			: relation.getAlias();
-                        	RolapStar.Table table = star.getFactTable().findDescendant(tableAlias);
-                        			
-                            if (table != null) {
-                            	RolapStar.Column levelColumn = lookupColumn(table, levelColumnName);
+                        if (level.isAll()) {
+                            continue;
+                        }
 
-                            	if (levelColumn != null) {
-                            		levelsBK.set(levelColumn.getBitPosition());
-                            	}
+                        MondrianDef.Expression expr = level.getKeyExp();
+                        String levelColumnName =
+                            (expr instanceof MondrianDef.Column)
+                                ? ((MondrianDef.Column)expr).getColumnName()
+                                : (expr instanceof MondrianDef.KeyExpression)
+                                    ? ((MondrianDef.KeyExpression)expr).toString()
+                                    : null;
+
+                        if (levelColumnName != null) {
+                            MondrianDef.Relation relation = hierarchyUsage.getJoinTable();
+                            MondrianDef.Expression joinExp = hierarchyUsage.getJoinExp();
+
+                            String tableAlias =
+                                (joinExp instanceof MondrianDef.Column)
+                                    ? ((MondrianDef.Column)joinExp).table
+                                    : relation.getAlias();
+                            RolapStar.Table table = star.getFactTable().findDescendant(tableAlias);
+
+                            if (table != null) {
+                                RolapStar.Column levelColumn = lookupColumn(table, levelColumnName);
+
+                                if (levelColumn != null) {
+                                    levelsBK.set(levelColumn.getBitPosition());
+                                }
                             }
                         }
                     }
                 }
             }
-    	}
-    	
-    	return levelsBK;
+        }
+
+        return levelsBK;
     }
-    
+
     private static RolapStar.Column lookupColumn(
             final RolapStar.Table table,
             final String columnName)
     {
-    	RolapStar.Column column = table.lookupColumn(columnName);
-    	
-    	if (column == null) {
+        RolapStar.Column column = table.lookupColumn(columnName);
+
+        if (column == null) {
             for (RolapStar.Table child : table.getChildren()) {
                 column = lookupColumn(child, columnName);
                 if (column != null) {
                     break;
                 }
             }
-    	}
+        }
         return column;
     }
 }

@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap4j/MondrianOlap4jCellSet.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap4j/MondrianOlap4jCellSet.java#5 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2007-2007 Julian Hyde
+// Copyright (C) 2007-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -31,7 +31,7 @@ import java.net.URL;
  * it is instantiated using {@link Factory#newCellSet}.</p>
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap4j/MondrianOlap4jCellSet.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap4j/MondrianOlap4jCellSet.java#5 $
  * @since May 24, 2007
  */
 abstract class MondrianOlap4jCellSet implements CellSet {
@@ -92,7 +92,7 @@ abstract class MondrianOlap4jCellSet implements CellSet {
             // Dummy slicer axis.
             queryAxis =
                 new QueryAxis(
-                    false, null, AxisOrdinal.SLICER,
+                    false, null, AxisOrdinal.StandardAxisOrdinal.SLICER,
                     QueryAxis.SubtotalVisibility.Undefined);
         }
         filterAxis = new MondrianOlap4jCellSetAxis(this, queryAxis, axis);

@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/Evaluator.java#3 $
+// $Id: //open/mondrian/src/main/mondrian/olap/Evaluator.java#31 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2001-2002 Kana Software, Inc.
-// Copyright (C) 2001-2007 Julian Hyde and others
+// Copyright (C) 2001-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -24,7 +24,7 @@ import java.util.Date;
  *
  * @author jhyde
  * @since 27 July, 2001
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/Evaluator.java#3 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/Evaluator.java#31 $
  */
 public interface Evaluator {
 
@@ -85,6 +85,11 @@ public interface Evaluator {
      *   current Evaluator for its dimension
      */
     Evaluator push(Member member);
+
+    /**
+     * Creates a new evaluator with the same state except nonEmpty property.
+     */
+    Evaluator push(boolean nonEmpty);
 
     /**
      * Restores previous evaluator.
@@ -200,9 +205,13 @@ public interface Evaluator {
     RuntimeException newEvalException(Object context, String s);
 
     /**
-     * Evaluates a named set.
+     * Returns an evaluator for a named set.
+     *
+     * @param name Name of set
+     * @param exp Expression to compute named set
+     * @return Evaluator of named set
      */
-    Object evaluateNamedSet(String name, Exp exp);
+    NamedSetEvaluator getNamedSetEvaluator(String name, Exp exp);
 
     /**
      * Returns an array of the members which make up the current context.
@@ -247,14 +256,14 @@ public interface Evaluator {
 
     /**
      * Returns a new Aggregator whose aggregation context adds a given list of
-     * members or tuples, and whose dimensional context is the same as this
+     * tuples, and whose dimensional context is the same as this
      * Aggregator.
      *
-     * @param list List of members
+     * @param list List of tuples
      * @return Aggregator with <code>list</code> added to its aggregation
      *   context
      */
-    Evaluator pushAggregation(List<Member> list);
+    Evaluator pushAggregation(List<Member[]> list);
 
     /**
      * Checks if unrelated dimensions to the measure in the current context
@@ -280,6 +289,60 @@ public interface Evaluator {
      * @return boolean
      */
     boolean needToReturnNullForUnrelatedDimension(Member[] members);
+
+    /**
+     * Interface for evaluating a particular named set.
+     */
+    interface NamedSetEvaluator {
+        /**
+         * Returns an iterable over the members of the named set. Applicable if
+         * the named set is a set of members.
+         *
+         * <p>The iterator from this iterable maintains the current ordinal
+         * property required for the methods {@link #currentOrdinal()} and
+         * {@link #currentMember()}.
+         *
+         * @return Iterable over the members of the set
+         */
+        Iterable<Member> evaluateMemberIterable();
+
+        /**
+         * Returns an iterator over the tuples of the named set. Applicable if
+         * the named set is a set of tuples.
+         *
+         * <p>The iterator from this iterable maintains the current ordinal
+         * property required for the methods {@link #currentOrdinal()} and
+         * {@link #currentTuple()}.
+         *
+         * @return Iterable over the tuples of the set
+         */
+        Iterable<Member[]> evaluateTupleIterable();
+
+        /**
+         * Returns the ordinal of the current member or tuple in the named set.
+         *
+         * @return Ordinal of the current member or tuple in the named set
+         */
+        int currentOrdinal();
+
+        /**
+         * Returns the current member in the named set.
+         *
+         * <p>Applicable if the named set is a set of members.
+         *
+         * @return Current member
+         */
+        Member currentMember();
+
+        /**
+         * Returns the current tuple in the named set.
+         *
+         * <p>Applicable if the named set is a set of tuples.
+         *
+         * @return Current tuple.
+         */
+        Member[] currentTuple();
+    }
 }
 
 // End Evaluator.java

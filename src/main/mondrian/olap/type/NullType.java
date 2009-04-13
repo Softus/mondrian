@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/type/NullType.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/type/NullType.java#3 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -13,7 +13,7 @@ package mondrian.olap.type;
  * The type of a null expression.
  *
  * @author medstat
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/type/NullType.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/type/NullType.java#3 $
  * @since Aug 21, 2006
  */
 public class NullType extends ScalarType

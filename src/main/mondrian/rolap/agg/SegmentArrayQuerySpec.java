@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/agg/SegmentArrayQuerySpec.java#3 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/agg/SegmentArrayQuerySpec.java#19 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2007 Julian Hyde and others
+// Copyright (C) 2005-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -24,23 +24,23 @@ import java.util.List;
  *
  * @author jhyde
  * @author Richard M. Emberson
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/agg/SegmentArrayQuerySpec.java#3 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/agg/SegmentArrayQuerySpec.java#19 $
  */
 class SegmentArrayQuerySpec extends AbstractQuerySpec {
     private final Segment[] segments;
     private final GroupingSetsList groupingSetsList;
 
     /*
-     * Compunnd member predicates.
+     * Compound member predicates.
      * Each list constrains one dimension.
      */
-    private List<StarPredicate> compoundPredicateList;
+    private final List<StarPredicate> compoundPredicateList;
 
     /**
      * Creates a SegmentArrayQuerySpec.
      *
      * @param groupingSetsList Collection of grouping sets
-     * @param compoundPredicateList list of predicates representing the 
+     * @param compoundPredicateList list of predicates representing the
      * compound member constraints
      */
     SegmentArrayQuerySpec(
@@ -53,7 +53,7 @@ class SegmentArrayQuerySpec extends AbstractQuerySpec {
         this.compoundPredicateList = compoundPredicateList;
         assert isValid(true);
     }
-    
+
     /**
      * Returns whether this query specification is valid, or throws if invalid
      * and <code>fail</code> is true.
@@ -123,7 +123,7 @@ class SegmentArrayQuerySpec extends AbstractQuerySpec {
             return compoundPredicateList;
         }
     }
-    
+
     protected void addGroupingFunction(SqlQuery sqlQuery) {
         List<RolapStar.Column> list = groupingSetsList.getRollupColumns();
         for (RolapStar.Column column : list) {

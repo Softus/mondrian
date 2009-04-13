@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/rolap/RolapResultTest.java#2 $
+// $Id: //open/mondrian/testsrc/main/mondrian/rolap/RolapResultTest.java#11 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2007 Julian Hyde and others
+// Copyright (C) 2005-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -14,13 +14,13 @@ import mondrian.rolap.aggmatcher.*;
 import mondrian.olap.MondrianProperties;
 import mondrian.olap.Result;
 
-/** 
+/**
  * Testcase for
  *
- * 
+ *
  * @author <a>Richard M. Emberson</a>
  * @since Feb 21 2007
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/rolap/RolapResultTest.java#2 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/rolap/RolapResultTest.java#11 $
  */
 public class RolapResultTest extends AggTableTestCase {
 
@@ -73,17 +73,19 @@ public class RolapResultTest extends AggTableTestCase {
     public RolapResultTest() {
         super();
     }
+
     public RolapResultTest(String name) {
         super(name);
     }
+
     protected void setUp() throws Exception {
         super.setUp();
-
     }
-    protected void tearDown() throws Exception {
 
+    protected void tearDown() throws Exception {
         super.tearDown();
     }
+
     public void testAll() throws Exception {
         if (!isApplicable()) {
             return;
@@ -157,14 +159,14 @@ Axis #2:
 */
     }
 
-    /** 
+    /**
      * This ought to give the same result as the above testD2() method.
      * In this case, the FT2Extra cube has a default measure with no
      * data (null) for all members. This default measure is used
      * in the evaluation even though there is an implicit use of the
      * measure [Measures].[Value].
-     * 
-     * @throws Exception 
+     *
+     * @throws Exception
      */
     public void _testNullDefaultMeasure() throws Exception {
         if (!isApplicable()) {
@@ -196,7 +198,7 @@ Axis #2:
     }
 
     protected String getCubeDescription() {
-        return 
+        return
             "<Cube name='FTAll'>\n" +
             "<Table name='FT1' />\n" +
             "<Dimension name='D1' foreignKey='d1_id' >\n" +
@@ -285,8 +287,8 @@ Axis #2:
             "</Cube>"
             ;
     }
-	
-	public void testNonAllPromotionMembers() {
+
+    public void testNonAllPromotionMembers() {
         final TestContext testContext = TestContext.createSubstitutingCube(
                 "Sales",
                 "<Dimension name=\"Promotions2\" foreignKey=\"promotion_id\">\n" +
@@ -297,9 +299,9 @@ Axis #2:
                 "</Dimension>");
 
         testContext.assertQueryReturns(
-			"select {[Promotion2 Name].[Price Winners], [Promotion2 Name].[Sale Winners]} * {Tail([Time].[Year].Members,3)} ON COLUMNS, " +
-			"NON EMPTY Crossjoin({[Store].CurrentMember.Children},  {[Store Type].[All Store Types].Children}) ON ROWS " +
-			"from [Sales]",
+            "select {[Promotion2 Name].[Price Winners], [Promotion2 Name].[Sale Winners]} * {Tail([Time].[Year].Members,3)} ON COLUMNS, " +
+            "NON EMPTY Crossjoin({[Store].CurrentMember.Children},  {[Store Type].[All Store Types].Children}) ON ROWS " +
+            "from [Sales]",
             fold(
                 "Axis #0:\n" +
                 "{}\n" +
@@ -325,8 +327,6 @@ Axis #2:
                 "Row #2: \n" +
                 "Row #2: \n"));
     }
-	
-
 }
 
 // End RolapResultTest.java

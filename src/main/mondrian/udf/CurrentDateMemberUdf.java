@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/udf/CurrentDateMemberUdf.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/udf/CurrentDateMemberUdf.java#13 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2007 Julian Hyde and others
+// Copyright (C) 2006-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -34,17 +34,16 @@ import java.util.*;
  * {@link Format}.
  *
  * @author Zelaine Fong
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/udf/CurrentDateMemberUdf.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/udf/CurrentDateMemberUdf.java#13 $
  */
 public class CurrentDateMemberUdf implements UserDefinedFunction {
     private Object resultDateMember = null;
-    
-    public Object execute(Evaluator evaluator, Argument[] arguments) {
 
+    public Object execute(Evaluator evaluator, Argument[] arguments) {
         if (resultDateMember != null) {
             return resultDateMember;
         }
-        
+
         // determine the current date
         Object formatArg = arguments[1].evaluateScalar(evaluator);
 

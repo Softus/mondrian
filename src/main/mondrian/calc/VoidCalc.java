@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/calc/VoidCalc.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/calc/VoidCalc.java#4 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -18,7 +18,7 @@ import mondrian.olap.Evaluator;
  * class will do its work by causing side-effects.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/calc/VoidCalc.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/calc/VoidCalc.java#4 $
  * @since Sep 29, 2005
  */
 public interface VoidCalc extends Calc {

@@ -18,7 +18,7 @@ import java.util.*;
  * @see mondrian.olap.Util#union(Iterable[])
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/util/UnionIterator.java#3 $
+ * @version $Id: //open/mondrian/src/main/mondrian/util/UnionIterator.java#3 $
  * @since Apr 28, 2008
  */
 public class UnionIterator<T> implements Iterator<T> {
@@ -32,7 +32,7 @@ public class UnionIterator<T> implements Iterator<T> {
      */
     public UnionIterator(Iterable<? extends T>... iterables) {
         List<Iterable<? extends T>> list;
-        if (Util.PreJdk15) {
+        if (Util.Retrowoven) {
             // Retroweaver has its own version of Iterable, but
             // Collection doesn't implement it. Solve the problem by
             // creating an explicit Iterable wrapper.

@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/clearview/GrandTotalTest.java#2 $
+// $Id: //open/mondrian/testsrc/main/mondrian/test/clearview/GrandTotalTest.java#5 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2007-2007 Julian Hyde and others
+// Copyright (C) 2007-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -15,7 +15,7 @@ import junit.framework.*;
 import mondrian.test.*;
 
 /**
- * <code>GrandTotalTest</code> is a test suite which tests scenarios of 
+ * <code>GrandTotalTest</code> is a test suite which tests scenarios of
  * using grand total against the FoodMart database. MDX queries and their
  * expected results are maintained separately in GrandTotalTest.ref.xml file.
  * If you would prefer to see them as inlined Java string literals, run
@@ -23,7 +23,7 @@ import mondrian.test.*;
  * file GrandTotalTestJUnit.java which will be generated in this directory.
  *
  * @author Khanh Vu
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/clearview/GrandTotalTest.java#2 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/test/clearview/GrandTotalTest.java#5 $
  */
 public class GrandTotalTest extends ClearViewBase {
 
@@ -49,4 +49,4 @@ public class GrandTotalTest extends ClearViewBase {
 
 }
 
-// End GranTotalTest.java
+// End GrandTotalTest.java

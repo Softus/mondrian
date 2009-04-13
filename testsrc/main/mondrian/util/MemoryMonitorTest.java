@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/util/MemoryMonitorTest.java#2 $
+// $Id: //open/mondrian/testsrc/main/mondrian/util/MemoryMonitorTest.java#10 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2007 Julian Hyde and others
+// Copyright (C) 2006-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -25,7 +25,7 @@ import java.util.List;
 /**
  * Test case for {@link ObjectPool}.
  *
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/util/MemoryMonitorTest.java#2 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/util/MemoryMonitorTest.java#10 $
  * @author Richard Emberson
  */
 public class MemoryMonitorTest extends FoodMartTestCase {
@@ -46,7 +46,7 @@ public class MemoryMonitorTest extends FoodMartTestCase {
         final int nosOfChunks = 1000;
         long maxMemory = mm.getMaxMemory();
         long usedMemory = mm.getUsedMemory();
-        long delta = (maxMemory-usedMemory)/nosOfChunks;
+        long delta = (maxMemory - usedMemory) / nosOfChunks;
         if (delta == 0) {
             // delta has to be greater than zero so pick 1k
             delta = 1024;
@@ -115,7 +115,7 @@ Does not work without the notify on add feature.
             // less than or equal to the lowest JVM memory usage.
             mm.addListener(listener, 0);
             if (! listener.wasNotified) {
-	        fail("Listener callback not called");
+                fail("Listener callback not called");
             }
         } finally {
             mm.removeListener(listener);
@@ -142,7 +142,7 @@ Does not work without the notify on add feature.
         long maxMemory = mm.getMaxMemory();
         long usedMemory = mm.getUsedMemory();
         int currentPercentage = convertThresholdToPercentage(usedMemory, maxMemory);
-        int delta = (int) (maxMemory - usedMemory)/10;
+        int delta = (int) (maxMemory - usedMemory) / 10;
         int percentage = convertThresholdToPercentage(delta, maxMemory);
         try {
             byte[][] bytes = new byte[10][];
@@ -155,7 +155,7 @@ Does not work without the notify on add feature.
                 }
             }
             if (! listener.wasNotified) {
-	        fail("Listener callback not called");
+                fail("Listener callback not called");
             }
         } finally {
             mm.removeListener(listener);
@@ -188,14 +188,13 @@ Does not work without the notify on add feature.
             mm.addListener(listener, 2 * percentage + currentPercentage);
             byte[] bytes = new byte[(int) (1.5 * delta)];
             if (listener.wasNotified) {
-	        fail("Listener callback was called");
+                fail("Listener callback was called");
             }
             mm.updateListenerThreshold(listener,
                         percentage + currentPercentage);
             if (! listener.wasNotified) {
-	        fail("Listener callback was not called");
+                fail("Listener callback was not called");
             }
-
         } finally {
             mm.removeListener(listener);
         }
@@ -251,7 +250,7 @@ Does not work without the notify on add feature.
             "[Measures].[Customer Count] \n" +
             "} \n" +
             "ON COLUMNS, \n" +
-            "Crossjoin( \n" +
+            "Crossjoin(\n" +
             "  Descendants([Store].[All Stores]), \n" +
             "  Descendants([Product].[All Products]) \n" +
             ") \n" +
@@ -289,14 +288,13 @@ Does not work without the notify on add feature.
                 buf = 0;
                 double dp = (100.0 * (maxMemory - usedMemory)) / maxMemory;
                 THRESHOLD_PERCENTAGE = 100 - (int) Math.ceil(dp);
-
             }
 //System.out.println("buf       ="+buf);
 //System.out.println("THRESHOLD_PERCENTAGE="+THRESHOLD_PERCENTAGE);
 
 
 
-            byte[] bytes = new byte[(int) ((buf>0) ? buf : 0)];
+            byte[] bytes = new byte[(int) ((buf > 0) ? buf : 0)];
 
             mm.addListener(listener);
             // Check to see if we have been notified.
@@ -325,7 +323,6 @@ Does not work without the notify on add feature.
             }
 
             fail("Memory Notification Exception did not occur");
-
         } catch (MemoryLimitExceededException ex) {
             if (! listener.wasNotified) {
                 fail("Listener callback not called");
@@ -336,7 +333,7 @@ Does not work without the notify on add feature.
             if (mm != null) {
                 mm.removeListener(listener);
             }
-            for (Result result: list) {
+            for (Result result : list) {
                 result.close();
             }
             MemoryMonitorFactory.clearThreadLocalClassName();

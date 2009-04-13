@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap4j/MondrianOlap4jConnection.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap4j/MondrianOlap4jConnection.java#11 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2007-2007 Julian Hyde
+// Copyright (C) 2007-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -37,7 +37,7 @@ import java.util.*;
  * it is instantiated using {@link Factory#newConnection}.</p>
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap4j/MondrianOlap4jConnection.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap4j/MondrianOlap4jConnection.java#11 $
  * @since May 23, 2007
  */
 abstract class MondrianOlap4jConnection implements OlapConnection {
@@ -597,31 +597,32 @@ abstract class MondrianOlap4jConnection implements OlapConnection {
     }
 
     private static class MondrianOlap4jMdxValidator implements MdxValidator {
-        private final OlapConnection connection;
+        private final MondrianOlap4jConnection connection;
 
         public MondrianOlap4jMdxValidator(OlapConnection connection) {
-            this.connection = connection;
+            this.connection = (MondrianOlap4jConnection) connection;
         }
 
-        public SelectNode validateSelect(SelectNode selectNode) throws OlapException {
-            StringWriter sw = new StringWriter();
-            selectNode.unparse(new ParseTreeWriter(new PrintWriter(sw)));
-            String mdx = sw.toString();
-            final MondrianOlap4jConnection olap4jConnection =
-                (MondrianOlap4jConnection) connection;
-            Query query =
-                olap4jConnection.connection
-                    .parseQuery(mdx);
-            query.resolve();
-            return olap4jConnection.toOlap4j(query);
+        public SelectNode validateSelect(SelectNode selectNode)
+            throws OlapException
+        {
+            try {
+                // A lot of mondrian's validation happens during parsing.
+                // Therefore to do effective validation, we need to go back to
+                // the MDX string. Someday we will reshape mondrian's
+                // parse/validation process to fit the olap4j model better.
+                StringWriter sw = new StringWriter();
+                selectNode.unparse(new ParseTreeWriter(new PrintWriter(sw)));
+                String mdx = sw.toString();
+                Query query =
+                    connection.connection
+                        .parseQuery(mdx);
+                query.resolve();
+                return connection.toOlap4j(query);
+            } catch (MondrianException e) {
+                throw connection.helper.createException("Validation error", e);
+            }
         }
-    }
-
-    static Axis toOlap4j(String axisName) {
-        if (axisName.equals("SLICER")) {
-            axisName = "FILTER";
-        }
-        return Axis.valueOf(axisName);
     }
 
     private static class MondrianToOlap4jNodeConverter {
@@ -652,7 +653,8 @@ abstract class MondrianOlap4jConnection implements OlapConnection {
             return new AxisNode(
                 null,
                 axis.isNonEmpty(),
-                MondrianOlap4jConnection.toOlap4j(axis.getAxisName()),
+                Axis.Factory.forOrdinal(
+                    axis.getAxisOrdinal().logicalOrdinal()),
                 toOlap4j(axis.getDimensionProperties()),
                 toOlap4j(axis.getSet()));
         }

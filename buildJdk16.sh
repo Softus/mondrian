@@ -1,10 +1,3 @@
-# $Id: //open/mondrian-release/3.0/buildJdk16.sh#2 $
-# Called recursively from 'ant release' to build the files which can only be
-# built under JDK 1.6.
-
-# Change the following line to point to your JDK 1.6 home.
-export JAVA_HOME=/opt/jdk1.6.0_07
+export JAVA_HOME=/opt/jdk1.6.0_10
 export PATH=$JAVA_HOME/bin:$PATH
-ant compile.java
-
-# End buildJdk16.sh
+/opt/ant1.7/bin/ant compile.java

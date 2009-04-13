@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/tui/MockServletConfig.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/tui/MockServletConfig.java#6 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2006 Julian Hyde and others
+// Copyright (C) 2005-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -26,7 +26,7 @@ import javax.servlet.ServletContext;
  * If you need to add to this implementation, please do so.
  *
  * @author <a>Richard M. Emberson</a>
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/tui/MockServletConfig.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/tui/MockServletConfig.java#6 $
  */
 public class MockServletConfig implements ServletConfig {
     private String servletName;
@@ -94,3 +94,5 @@ public class MockServletConfig implements ServletConfig {
         this.servletContext = servletContext;
     }
 }
+
+// End MockServletConfig.java

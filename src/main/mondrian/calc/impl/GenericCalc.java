@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/calc/impl/GenericCalc.java#3 $
+// $Id: //open/mondrian/src/main/mondrian/calc/impl/GenericCalc.java#13 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2007 Julian Hyde
+// Copyright (C) 2006-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -16,51 +16,23 @@ import mondrian.calc.*;
 import java.util.*;
 
 /**
- * Adapter which computes an expression and converts it to any required type.
+ * Adapter which computes a scalar or tuple expression and converts it to any
+ * required type.
+ *
+ * @see mondrian.calc.impl.GenericIterCalc
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/calc/impl/GenericCalc.java#3 $
+ * @version $Id: //open/mondrian/src/main/mondrian/calc/impl/GenericCalc.java#13 $
  * @since Sep 26, 2005
  */
 public abstract class GenericCalc
     extends AbstractCalc
-    implements ListCalc, IterCalc, TupleCalc,
+    implements TupleCalc,
     StringCalc, IntegerCalc, DoubleCalc, BooleanCalc, DateTimeCalc,
     VoidCalc, MemberCalc, LevelCalc, HierarchyCalc, DimensionCalc
 {
     protected GenericCalc(Exp exp) {
         super(exp);
-    }
-
-    public List evaluateList(Evaluator evaluator) {
-        Object o = evaluate(evaluator);
-        if (o instanceof List) {
-            return (List) o;
-        } else {
-            // Iterable
-            final Iterable iter = (Iterable) o;
-            Iterator it = iter.iterator();
-            List<Object> list = new ArrayList<Object>();
-            while (it.hasNext()) {
-                list.add(it.next());
-            }
-            return list;
-        }
-    }
-
-    public Iterable evaluateIterable(Evaluator evaluator) {
-        Object o = evaluate(evaluator);
-        if (o instanceof Iterable) {
-            return (Iterable) o;
-        } else {
-            final List list = (List) o;
-            // for java4 must convert List into an Iterable
-            return new Iterable() {
-                public Iterator iterator() {
-                    return list.iterator();
-                }
-            };
-        }
     }
 
     public Member[] evaluateTuple(Evaluator evaluator) {

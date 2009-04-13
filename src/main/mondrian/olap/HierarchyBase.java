@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/HierarchyBase.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/HierarchyBase.java#29 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2001-2002 Kana Software, Inc.
-// Copyright (C) 2001-2007 Julian Hyde and others
+// Copyright (C) 2001-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -20,7 +20,7 @@ import mondrian.resource.MondrianResource;
  *
  * @author jhyde
  * @since 6 August, 2001
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/HierarchyBase.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/HierarchyBase.java#29 $
  */
 public abstract class HierarchyBase
     extends OlapElementBase
@@ -36,6 +36,9 @@ public abstract class HierarchyBase
      * <tr> <td>[Time.Weekly]</td> <td>Time.Weekly</td> <td>Weekly</td></tr>
      * <tr> <td>[Customers]</td>   <td>Customers</td>   <td>null</td></tr>
      * </table>
+     *
+     * <p>If {@link mondrian.olap.MondrianProperties#SsasCompatibleNaming} is
+     * true, name and subName have the same value.
      */
     protected final String subName;
     protected final String name;
@@ -46,28 +49,48 @@ public abstract class HierarchyBase
     protected String allMemberName;
     protected String allLevelName;
 
-    protected HierarchyBase(Dimension dimension,
-                            String subName,
-                            boolean hasAll) {
+    protected HierarchyBase(
+        Dimension dimension,
+        String subName,
+        boolean hasAll)
+    {
         this.dimension = dimension;
         this.hasAll = hasAll;
         this.caption = dimension.getCaption();
 
-        this.subName = subName;
         String name = dimension.getName();
-        if (this.subName != null) {
-            // e.g. "Time.Weekly"
-            this.name = name + "." + subName;
-            // e.g. "[Time.Weekly]"
-            this.uniqueName = Util.makeFqName(this.name);
+        if (MondrianProperties.instance().SsasCompatibleNaming.get()) {
+            if (subName == null) {
+                // e.g. "Time"
+                subName = name;
+            }
+            this.subName = subName;
+            this.name = subName;
+            // e.g. "[Time].[Weekly]" for dimension "Time", hierarchy "Weekly";
+            // "[Time]" for dimension "Time", hierarchy "Time".
+            this.uniqueName =
+                subName.equals(name)
+                    ? dimension.getUniqueName()
+                    : Util.makeFqName(dimension, this.name);
         } else {
-            // e.g. "Time"
-            this.name = name;
-            // e.g. "[Time]"
-            this.uniqueName = dimension.getUniqueName();
+            this.subName = subName;
+            if (this.subName != null) {
+                // e.g. "Time.Weekly"
+                this.name = name + "." + subName;
+                if (this.subName.equals(name)) {
+                    this.uniqueName = dimension.getUniqueName();
+                } else {
+                    // e.g. "[Time.Weekly]"
+                    this.uniqueName = Util.makeFqName(this.name);
+                }
+            } else {
+                // e.g. "Time"
+                this.name = name;
+                // e.g. "[Time]"
+                this.uniqueName = dimension.getUniqueName();
+            }
         }
     }
-
 
     /**
      * Returns the name of the hierarchy sans dimension name.
@@ -77,7 +100,7 @@ public abstract class HierarchyBase
     public String getSubName() {
         return subName;
     }
-    
+
     // implement MdxElement
     public String getUniqueName() {
         return uniqueName;
@@ -119,12 +142,10 @@ public abstract class HierarchyBase
         return (this == mdxElement);
     }
 
-    public OlapElement lookupChild(SchemaReader schemaReader, Id.Segment s) {
-        return lookupChild(schemaReader, s, MatchType.EXACT);
-    }
-
     public OlapElement lookupChild(
-        SchemaReader schemaReader, Id.Segment s, MatchType matchType)
+        SchemaReader schemaReader,
+        Id.Segment s,
+        MatchType matchType)
     {
         OlapElement oe = Util.lookupHierarchyLevel(this, s.name);
         if (oe == null) {
@@ -141,7 +162,7 @@ public abstract class HierarchyBase
             if (oe == null) {
                 buf.append(" returning null");
             } else {
-                buf.append(" returning elementname="+oe.getName());
+                buf.append(" returning elementname=").append(oe.getName());
             }
             getLogger().debug(buf.toString());
         }

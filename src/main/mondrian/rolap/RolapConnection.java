@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/RolapConnection.java#4 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/RolapConnection.java#81 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2001-2002 Kana Software, Inc.
-// Copyright (C) 2001-2007 Julian Hyde and others
+// Copyright (C) 2001-2009 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -16,7 +16,6 @@ import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.ResultSet;
 import java.util.*;
 import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
@@ -46,24 +45,14 @@ import mondrian.olap.Schema;
 import mondrian.olap.SchemaReader;
 import mondrian.olap.Util;
 import mondrian.rolap.agg.AggregationManager;
-import mondrian.rolap.sql.SqlQuery;
+import mondrian.util.FilteredIterableList;
 import mondrian.util.MemoryMonitor;
 import mondrian.util.MemoryMonitorFactory;
 import mondrian.util.Pair;
-import mondrian.rolap.agg.AggregationManager;
-import org.apache.commons.dbcp.ConnectionFactory;
-import org.apache.commons.dbcp.DataSourceConnectionFactory;
-import org.apache.commons.dbcp.DriverManagerConnectionFactory;
+import mondrian.spi.Dialect;
+import mondrian.spi.DialectManager;
 
 import org.apache.log4j.Logger;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-import javax.sql.DataSource;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.*;
 
 /**
  * A <code>RolapConnection</code> is a connection to a Mondrian OLAP Server.
@@ -76,16 +65,16 @@ import java.util.*;
  * @see DriverManager
  * @author jhyde
  * @since 2 October, 2002
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/RolapConnection.java#4 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/RolapConnection.java#81 $
  */
 public class RolapConnection extends ConnectionBase {
     private static final Logger LOGGER = Logger.getLogger(RolapConnection.class);
-    
+
     private final Util.PropertyList connectInfo;
 
-    // used for MDX logging, allows for a MDX Statement UID 
+    // used for MDX logging, allows for a MDX Statement UID
     private static long executeCount = 0;
-    
+
     /**
      * Factory for JDBC connections to talk to the RDBMS. This factory will
      * usually use a connection pool.
@@ -120,7 +109,8 @@ public class RolapConnection extends ConnectionBase {
     /**
      * Creates a RolapConnection.
      *
-     * <p>Only {@link mondrian.rolap.RolapSchema.Pool#get} calls this with schema != null (to
+     * <p>Only {@link mondrian.rolap.RolapSchema.Pool#get} calls this with
+     * schema != null (to
      * create a schema's internal connection). Other uses retrieve a schema
      * from the cache based upon the <code>Catalog</code> property.
      *
@@ -230,9 +220,10 @@ public class RolapConnection extends ConnectionBase {
             Statement statement = null;
             try {
                 conn = this.dataSource.getConnection();
-                SqlQuery.Dialect dialect =
-                    SqlQuery.Dialect.create(conn.getMetaData());
-                if (dialect.isDerby()) {
+                Dialect dialect =
+                    DialectManager.createDialect(this.dataSource, conn);
+                if (dialect.getDatabaseProduct()
+                    == Dialect.DatabaseProduct.DERBY) {
                     // Derby requires a little extra prodding to do the
                     // validation to detect an error.
                     statement = conn.createStatement();
@@ -357,7 +348,7 @@ public class RolapConnection extends ConnectionBase {
                 // FIXME ordering is non-deterministic
                 appendKeyValue(buf, (String) entry.getKey(), entry.getValue());
             }
-            String propertyString = jdbcProperties.toString();
+
             if (jdbcUser != null) {
                 jdbcProperties.put("user", jdbcUser);
             }
@@ -383,21 +374,9 @@ public class RolapConnection extends ConnectionBase {
                 // mysql driver needs this autoReconnect parameter
                 jdbcProperties.setProperty("autoReconnect", "true");
             }
-            // use the DriverManagerConnectionFactory to create connections
-            ConnectionFactory connectionFactory =
-                new DriverManagerConnectionFactory(
-                    jdbcConnectString,
-                    jdbcProperties);
-            try {
-                return RolapConnectionPool.instance().getPoolingDataSource(
-                    jdbcConnectString + propertyString,
-                    connectionFactory);
-            } catch (Throwable e) {
-                throw Util.newInternal(
-                    e,
-                    "Error while creating connection pool (with URI " +
-                        jdbcConnectString + ")");
-            }
+            return RolapConnectionPool.instance()
+                .getDriverManagerPoolingDataSource(
+                    jdbcConnectString, jdbcProperties);
 
         } else if (dataSourceName != null) {
             appendKeyValue(
@@ -425,26 +404,10 @@ public class RolapConnection extends ConnectionBase {
                         dataSourceName + ")");
             }
             if (poolNeeded) {
-                ConnectionFactory connectionFactory;
-                if (jdbcUser != null || jdbcPassword != null) {
-                    connectionFactory =
-                        new DataSourceConnectionFactory(
-                            dataSource, jdbcUser, jdbcPassword);
-                } else {
-                    connectionFactory =
-                        new DataSourceConnectionFactory(dataSource);
-                }
-                try {
-                    dataSource =
-                        RolapConnectionPool.instance().getPoolingDataSource(
-                            dataSourceName,
-                            connectionFactory);
-                } catch (Exception e) {
-                    throw Util.newInternal(
-                        e,
-                        "Error while creating connection pool (with URI " +
-                            dataSourceName + ")");
-                }
+                dataSource =
+                    RolapConnectionPool.instance()
+                        .getDataSourcePoolingDataSource(
+                            dataSource, dataSourceName, jdbcUser, jdbcPassword);
             } else {
                 if (jdbcUser != null || jdbcPassword != null) {
                     dataSource =
@@ -590,9 +553,9 @@ public class RolapConnection extends ConnectionBase {
 
             if (RolapUtil.MDX_LOGGER.isDebugEnabled()) {
                 currId = executeCount++;
-                RolapUtil.MDX_LOGGER.debug( currId + ": " + Util.unparse(query));
+                RolapUtil.MDX_LOGGER.debug(currId + ": " + Util.unparse(query));
             }
-            
+
             query.setQueryStartTime();
             Result result = new RolapResult(query, true);
             for (int i = 0; i < query.axes.length; i++) {
@@ -601,6 +564,7 @@ public class RolapConnection extends ConnectionBase {
                     result = new NonEmptyResult(result, query, i);
                 }
             }
+            /* It will not work with HighCardinality.
             if (LOGGER.isDebugEnabled()) {
                 StringWriter sw = new StringWriter();
                 PrintWriter pw = new PrintWriter(sw);
@@ -608,9 +572,9 @@ public class RolapConnection extends ConnectionBase {
                 pw.flush();
                 LOGGER.debug(sw.toString());
             }
+            */
             query.setQueryEndExecution();
             return result;
-
         } catch (ResultLimitExceededException e) {
             // query has been punted
             throw e;
@@ -627,7 +591,7 @@ public class RolapConnection extends ConnectionBase {
         } finally {
             mm.removeListener(listener);
             if (RolapUtil.MDX_LOGGER.isDebugEnabled()) {
-                RolapUtil.MDX_LOGGER.debug( currId + ": exec: " + 
+                RolapUtil.MDX_LOGGER.debug(currId + ": exec: " +
                     (System.currentTimeMillis() - query.getQueryStartTime()) +
                     " ms");
             }
@@ -654,6 +618,9 @@ public class RolapConnection extends ConnectionBase {
     /**
      * Implementation of {@link DataSource} which calls the good ol'
      * {@link java.sql.DriverManager}.
+     *
+     * <p>Overrides {@link #hashCode()} and {@link #equals(Object)} so that
+     * {@link Dialect} objects can be cached more effectively.
      */
     private static class DriverManagerDataSource implements DataSource {
         private final String jdbcConnectString;
@@ -669,6 +636,26 @@ public class RolapConnection extends ConnectionBase {
             this.jdbcProperties = properties;
         }
 
+        @Override
+        public int hashCode() {
+            int h = loginTimeout;
+            h = Util.hash(h, jdbcConnectString);
+            h = Util.hash(h, jdbcProperties);
+            return h;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof DriverManagerDataSource) {
+                DriverManagerDataSource
+                    that = (DriverManagerDataSource) obj;
+                return this.loginTimeout == that.loginTimeout
+                    && this.jdbcConnectString.equals(that.jdbcConnectString)
+                    && this.jdbcProperties.equals(that.jdbcProperties);
+            }
+            return false;
+        }
+
         public Connection getConnection() throws SQLException {
             return new org.apache.commons.dbcp.DelegatingConnection(
                 java.sql.DriverManager.getConnection(
@@ -678,13 +665,14 @@ public class RolapConnection extends ConnectionBase {
         public Connection getConnection(String username, String password)
                 throws SQLException {
             if (jdbcProperties == null) {
-                return java.sql.DriverManager.getConnection(jdbcConnectString,
-                        username, password);
+                return java.sql.DriverManager.getConnection(
+                    jdbcConnectString, username, password);
             } else {
                 Properties temp = (Properties)jdbcProperties.clone();
                 temp.put("user", username);
                 temp.put("password", password);
-                return java.sql.DriverManager.getConnection(jdbcConnectString, temp);
+                return java.sql.DriverManager.getConnection(
+                    jdbcConnectString, temp);
             }
         }
 
@@ -740,16 +728,35 @@ public class RolapConnection extends ConnectionBase {
             this.slicerAxis = underlying.getSlicerAxis();
             List<Position> positions = underlying.getAxes()[axis].getPositions();
 
-            List<Position> positionsList = new ArrayList<Position>();
-            int i = 0;
-            for (Position position: positions) {
-                if (! isEmpty(i, axis)) {
-                    map.put(positionsList.size(), i);
-                    positionsList.add(position);
+            final List<Position> positionsList;
+            try {
+                if (positions.get(0).get(0).getDimension().isHighCardinality()) {
+                    positionsList = new FilteredIterableList<Position>(
+                            positions,
+                            new FilteredIterableList.Filter<Position>() {
+                                public boolean accept(final Position p) {
+                                    return p.get(0) != null;
+                                }
+                            }
+                    );
+                } else {
+                    positionsList = new ArrayList<Position>();
+                    int i = -1;
+                    for (Position position : positions) {
+                        ++i;
+                        if (! isEmpty(i, axis)) {
+                            map.put(positionsList.size(), i);
+                            positionsList.add(position);
+                        }
+                    }
                 }
-                i++;
+                this.axes[axis] = new RolapAxis.PositionList(positionsList);
+            } catch (IndexOutOfBoundsException ioobe) {
+                // No elements.
+                this.axes[axis] =
+                    new RolapAxis.PositionList(
+                            new ArrayList<Position>());
             }
-            this.axes[axis] = new RolapAxis.PositionList(positionsList);
         }
 
         protected Logger getLogger() {
@@ -779,7 +786,7 @@ public class RolapConnection extends ConnectionBase {
             } else {
                 List<Position> positions = getAxes()[axis].getPositions();
                 int i = 0;
-                for (Position position: positions) {
+                for (Position position : positions) {
                     pos[axis] = i;
                     if (!isEmptyRecurse(fixedAxis, axis - 1)) {
                         return false;
@@ -792,11 +799,15 @@ public class RolapConnection extends ConnectionBase {
 
         // synchronized because we use 'pos'
         public synchronized Cell getCell(int[] externalPos) {
-            System.arraycopy(externalPos, 0, this.pos, 0, externalPos.length);
-            int offset = externalPos[axis];
-            int mappedOffset = mapOffsetToUnderlying(offset);
-            this.pos[axis] = mappedOffset;
-            return underlying.getCell(this.pos);
+            try {
+                System.arraycopy(externalPos, 0, this.pos, 0, externalPos.length);
+                int offset = externalPos[axis];
+                int mappedOffset = mapOffsetToUnderlying(offset);
+                this.pos[axis] = mappedOffset;
+                return underlying.getCell(this.pos);
+            } catch (NullPointerException npe) {
+                return underlying.getCell(externalPos);
+            }
         }
 
         private int mapOffsetToUnderlying(int offset) {

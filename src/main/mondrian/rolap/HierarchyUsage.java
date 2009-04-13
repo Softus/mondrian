@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/HierarchyUsage.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/HierarchyUsage.java#29 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2002-2002 Kana Software, Inc.
-// Copyright (C) 2002-2007 Julian Hyde and others
+// Copyright (C) 2002-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -34,7 +34,7 @@ import org.apache.log4j.Logger;
  *
  * @author jhyde
  * @since 21 March, 2002
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/HierarchyUsage.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/HierarchyUsage.java#29 $
  */
 public class HierarchyUsage {
     private static final Logger LOGGER = Logger.getLogger(HierarchyUsage.class);
@@ -71,6 +71,9 @@ public class HierarchyUsage {
      * CubeDimension name; there is no need to use the default dimension name.
      * But, when the dimension has more than one hierachy, then the fullName
      * is the CubeDimension dotted with the dimension hierachy name.
+     *
+     * <p>NOTE: jhyde, 2009/2/2: The only use of this field today is for
+     * {@link RolapCube#getUsageByName}, which is used only for tracing.
      */
     private final String fullName;
 
@@ -118,10 +121,11 @@ public class HierarchyUsage {
      * @param hierarchy Hierarchy
      * @param cubeDim XML definition of a dimension which belongs to a cube
      */
-    HierarchyUsage(RolapCube cube,
-                   RolapHierarchy hierarchy,
-                   MondrianDef.CubeDimension cubeDim) {
-
+    HierarchyUsage(
+        RolapCube cube,
+        RolapHierarchy hierarchy,
+        MondrianDef.CubeDimension cubeDim)
+    {
         assert cubeDim != null : "precondition: cubeDim != null";
 
         this.fact = cube.fact;
@@ -142,14 +146,14 @@ public class HierarchyUsage {
             MondrianDef.DimensionUsage du =
                 (MondrianDef.DimensionUsage) cubeDim;
 
-            this.hierarchyName = hierarchy.getName();
+            this.hierarchyName = deriveHierarchyName(hierarchy);
             int index = this.hierarchyName.indexOf('.');
             if (index == -1) {
                 this.fullName = this.name;
                 this.source = du.source;
             } else {
-                String hname= this.hierarchyName.substring(
-                        index+1, this.hierarchyName.length());
+                String hname = this.hierarchyName.substring(
+                        index + 1, this.hierarchyName.length());
 
                 StringBuilder buf = new StringBuilder(32);
                 buf.append(this.name);
@@ -177,7 +181,7 @@ public class HierarchyUsage {
             // caption
             MondrianDef.Dimension d = (MondrianDef.Dimension) cubeDim;
 
-            this.hierarchyName = hierarchy.getName();
+            this.hierarchyName = deriveHierarchyName(hierarchy);
             this.fullName = this.name;
 
             this.source = null;
@@ -203,8 +207,9 @@ public class HierarchyUsage {
             init(cube, hierarchy, null);
 
         } else {
-            getLogger().warn("HierarchyUsage<init>: Unknown cubeDim="
-                +cubeDim.getClass().getName());
+            getLogger().warn(
+                "HierarchyUsage<init>: Unknown cubeDim="
+                    + cubeDim.getClass().getName());
 
             this.kind = Kind.UNKNOWN;
 
@@ -222,7 +227,23 @@ public class HierarchyUsage {
                 + ", cubeDim="
                 + cubeDim.getClass().getName());
         }
+    }
 
+    private String deriveHierarchyName(RolapHierarchy hierarchy) {
+        final String name = hierarchy.getName();
+        if (!MondrianProperties.instance().SsasCompatibleNaming.get()) {
+            return name;
+        } else {
+            final String dimensionName = hierarchy.getDimension().getName();
+            if (name == null
+                || name.equals("")
+                || name.equals(dimensionName))
+            {
+                return name;
+            } else {
+                return dimensionName + '.' + name;
+            }
+        }
     }
 
     protected Logger getLogger() {
@@ -277,7 +298,7 @@ public class HierarchyUsage {
             HierarchyUsage other = (HierarchyUsage) o;
             return (this.kind == other.kind) &&
                 Util.equals(this.fact, other.fact) &&
-                Util.equalName(this.hierarchyName, other.hierarchyName) &&
+                this.hierarchyName.equals(other.hierarchyName) &&
                 Util.equalName(this.name, other.name) &&
                 Util.equalName(this.source, other.source) &&
                 Util.equalName(this.foreignKey, other.foreignKey);
@@ -316,13 +337,13 @@ public class HierarchyUsage {
         return buf.toString();
     }
 
-    void init(RolapCube cube,
-              RolapHierarchy hierarchy,
-              MondrianDef.DimensionUsage cubeDim) {
-
+    void init(
+        RolapCube cube,
+        RolapHierarchy hierarchy,
+        MondrianDef.DimensionUsage cubeDim)
+    {
         // Three ways that a hierarchy can be joined to the fact table.
         if (cubeDim != null && cubeDim.level != null) {
-
             // 1. Specify an explicit 'level' attribute in a <DimensionUsage>.
             RolapLevel joinLevel = (RolapLevel)
                     Util.lookupHierarchyLevel(hierarchy, cubeDim.level);

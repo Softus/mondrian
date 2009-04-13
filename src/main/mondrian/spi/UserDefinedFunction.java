@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/spi/UserDefinedFunction.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/spi/UserDefinedFunction.java#8 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2006 Julian Hyde
+// Copyright (C) 2005-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -28,7 +28,7 @@ import org.apache.log4j.Category;
  * &lt;/Schema&gt;</code></blockquote>
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/spi/UserDefinedFunction.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/spi/UserDefinedFunction.java#8 $
  */
 public interface UserDefinedFunction {
     /**
@@ -89,4 +89,4 @@ public interface UserDefinedFunction {
     }
 }
 
-// UserDefinedFunction.java
+// End UserDefinedFunction.java

@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/aggmatcher/AggGen.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/aggmatcher/AggGen.java#20 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2007 Julian Hyde and others
+// Copyright (C) 2005-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -34,7 +34,7 @@ import java.sql.Types;
  * fact table).
  *
  * @author Richard M. Emberson
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/aggmatcher/AggGen.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/aggmatcher/AggGen.java#20 $
  */
 public class AggGen {
     private static final Logger LOGGER = Logger.getLogger(AggGen.class);
@@ -122,9 +122,10 @@ public class AggGen {
         }
         return null;
     }
-    protected void addForeignKeyToNotLostColumnUsages(
-            JdbcSchema.Table.Column column) {
 
+    protected void addForeignKeyToNotLostColumnUsages(
+        JdbcSchema.Table.Column column)
+    {
         // first make sure its not already in
         String cname = column.getName();
         for (JdbcSchema.Table.Column.Usage usage : notLostColumnUsages) {
@@ -243,7 +244,6 @@ public class AggGen {
                 }
 
             } else {
-
                 if (!addCollapsedColumn(db, column)) {
                     return;
                 }
@@ -437,7 +437,7 @@ public class AggGen {
             }
             c = getColumn(jt, rname);
             if (c == null) {
-                getLogger().warn("Can not find column: " +rname);
+                getLogger().warn("Can not find column: "  + rname);
                 break;
             }
             // NOTE: this creates a new usage for the fact table
@@ -931,8 +931,7 @@ public class AggGen {
             pw.print(" NOT NULL");
         }
         pw.println(',');
-
     }
 }
 
-// AggGen.java
+// End AggGen.java

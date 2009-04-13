@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/RolapEvaluator.java#4 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/RolapEvaluator.java#86 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2001-2002 Kana Software, Inc.
-// Copyright (C) 2001-2007 Julian Hyde and others
+// Copyright (C) 2001-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -17,9 +17,9 @@ import mondrian.mdx.ResolvedFunCall;
 import mondrian.olap.*;
 import mondrian.olap.fun.FunUtil;
 import mondrian.olap.fun.AggregateFunDef;
-import mondrian.rolap.sql.SqlQuery;
 import mondrian.resource.MondrianResource;
 import mondrian.util.Format;
+import mondrian.spi.Dialect;
 
 import org.apache.log4j.Logger;
 
@@ -45,7 +45,7 @@ import java.util.*;
  *
  * @author jhyde
  * @since 10 August, 2001
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/RolapEvaluator.java#4 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/RolapEvaluator.java#86 $
  */
 public class RolapEvaluator implements Evaluator {
     private static final Logger LOGGER = Logger.getLogger(RolapEvaluator.class);
@@ -74,7 +74,7 @@ public class RolapEvaluator implements Evaluator {
      * ordinary dimensional context if set when a cell value comes to be
      * evaluated.
      */
-    protected List<List<RolapMember>> aggregationLists;
+    protected List<List<Member[]>> aggregationLists;
 
     private final List<Member> slicerMembers;
 
@@ -130,10 +130,11 @@ public class RolapEvaluator implements Evaluator {
             slicerMembers = new ArrayList<Member> (parent.slicerMembers);
             if (parent.aggregationLists != null) {
                 aggregationLists =
-                        new ArrayList<List<RolapMember>>(parent.aggregationLists);
+                        new ArrayList<List<Member[]>>(parent.aggregationLists);
             } else {
                 aggregationLists = null;
             }
+            expandingMember = parent.expandingMember;
         }
     }
 
@@ -171,7 +172,7 @@ public class RolapEvaluator implements Evaluator {
             }
 
             currentMembers[ordinal] = member;
-            if (member.isCalculated()) {
+            if (member.isEvaluated()) {
                 addCalcMember(member);
             }
         }
@@ -228,151 +229,6 @@ public class RolapEvaluator implements Evaluator {
         return false;
     }
 
-    protected static class RolapEvaluatorRoot {
-        final Map<Object, Object> expResultCache =
-            new HashMap<Object, Object>();
-        final Map<Object, Object> tmpExpResultCache =
-            new HashMap<Object, Object>();
-        final RolapCube cube;
-        final RolapConnection connection;
-        final SchemaReader schemaReader;
-        final Map<List<Object>, Calc> compiledExps =
-            new HashMap<List<Object>, Calc>();
-        private final Query query;
-        private final Date queryStartTime;
-        final SqlQuery.Dialect currentDialect;
-        
-        /**
-         * Default members of each hierarchy, from the schema reader's
-         * perspective. Finding the default member is moderately expensive, but
-         * happens very often.
-         */
-        private final RolapMember[] defaultMembers;
-
-        public RolapEvaluatorRoot(Query query) {
-            this.query = query;
-            this.cube = (RolapCube) query.getCube();
-            this.connection = (RolapConnection) query.getConnection();
-            this.schemaReader = query.getSchemaReader(true);
-            this.queryStartTime = new Date();
-            List<RolapMember> list = new ArrayList<RolapMember>();
-            for (Dimension dimension : cube.getDimensions()) {
-                list.add(
-                    (RolapMember) schemaReader.getHierarchyDefaultMember(
-                        dimension.getHierarchy()));
-            }
-            this.defaultMembers = list.toArray(new RolapMember[list.size()]);
-            this.currentDialect = SqlQuery.Dialect.create(schemaReader.getDataSource());
-        }
-
-        /**
-         * Implements a cheap-and-cheerful mapping from expressions to compiled
-         * expressions.
-         *
-         * <p>TODO: Save compiled expressions somewhere better.
-         *
-         * @param exp Expression
-         * @param scalar Whether expression is scalar
-         * @param resultStyle Preferred result style; if null, use query's default
-         *     result style; ignored if expression is scalar
-         * @return compiled expression
-         */
-        final Calc getCompiled(
-            Exp exp,
-            boolean scalar,
-            ResultStyle resultStyle)
-        {
-            List<Object> key = Arrays.asList(exp, scalar, resultStyle);
-            Calc calc = compiledExps.get(key);
-            if (calc == null) {
-                calc = query.compileExpression(exp, scalar, resultStyle);
-                compiledExps.put(key, calc);
-            }
-            return calc;
-        }
-
-        /**
-         * Evaluates a named set.
-         *
-         * <p>The default implementation throws
-         * {@link UnsupportedOperationException}.
-         */
-        protected Object evaluateNamedSet(String name, Exp exp) {
-            throw new UnsupportedOperationException();
-        }
-
-        /**
-         * First evaluator calls this method on construction.
-         */
-        protected void init(Evaluator evaluator) {
-        }
-
-        /**
-         * Returns the value of a parameter, evaluating its default expression
-         * if necessary.
-         *
-         * <p>The default implementation throws
-         * {@link UnsupportedOperationException}.
-         */
-        public Object getParameterValue(ParameterSlot slot) {
-            throw new UnsupportedOperationException();
-        }
-
-        /**
-         * Puts result in cache.
-         *
-         * @param key key
-         * @param result value to be cached
-         * @param isValidResult indicate if this result is valid
-         */
-        public final void putCacheResult(
-            Object key,
-            Object result,
-            boolean isValidResult)
-        {
-            if (isValidResult) {
-                expResultCache.put(key, result);
-            } else {
-                tmpExpResultCache.put(key, result);
-            }
-        }
-
-        /**
-         * Gets result from cache.
-         *
-         * @param key cache key
-         * @return cached expression
-         */
-        public final Object getCacheResult(Object key) {
-            Object result = expResultCache.get(key);
-            if (result == null) {
-                result = tmpExpResultCache.get(key);
-            }
-            return result;
-        }
-
-        /**
-         * Clears the expression result cache.
-         *
-         * @param clearValidResult whether to clear valid expression results
-         */
-        public final void clearResultCache(boolean clearValidResult) {
-            if (clearValidResult) {
-                expResultCache.clear();
-            }
-            tmpExpResultCache.clear();
-        }
-        
-        /**
-         * Get query start time.
-         * 
-         * @return the query start time
-         */ 
-        public Date getQueryStartTime() {
-            return queryStartTime;
-        }
-    }
-
     protected final Logger getLogger() {
         return LOGGER;
     }
@@ -381,10 +237,10 @@ public class RolapEvaluator implements Evaluator {
         return currentMembers;
     }
 
-    public final List<List<RolapMember>> getAggregationLists() {
+    public final List<List<Member[]>> getAggregationLists() {
         return aggregationLists;
     }
-    
+
     final void setCellReader(CellReader cellReader) {
         this.cellReader = cellReader;
     }
@@ -412,11 +268,11 @@ public class RolapEvaluator implements Evaluator {
     public Date getQueryStartTime() {
         return root.getQueryStartTime();
     }
-    
-    public SqlQuery.Dialect getDialect() {
+
+    public Dialect getDialect() {
         return root.currentDialect;
     }
-    
+
     public final RolapEvaluator push(Member[] members) {
         final RolapEvaluator evaluator = _push();
         evaluator.setContext(members);
@@ -426,6 +282,12 @@ public class RolapEvaluator implements Evaluator {
     public final RolapEvaluator push(Member member) {
         final RolapEvaluator evaluator = _push();
         evaluator.setContext(member);
+        return evaluator;
+    }
+
+    public Evaluator push(boolean nonEmpty) {
+        final RolapEvaluator evaluator = _push();
+        evaluator.setNonEmpty(nonEmpty);
         return evaluator;
     }
 
@@ -445,37 +307,28 @@ public class RolapEvaluator implements Evaluator {
         return parent;
     }
 
-    public final Evaluator pushAggregation(List list) {
+    public final Evaluator pushAggregation(List<Member[]> list) {
         RolapEvaluator newEvaluator = _push();
         newEvaluator.addToAggregationList(list);
         clearHierarchyFromRegularContext(list, newEvaluator);
         return newEvaluator;
     }
-        
-    private void addToAggregationList(List list){
+
+    private void addToAggregationList(List<Member[]> list) {
         if (aggregationLists == null) {
-            aggregationLists = new ArrayList<List<RolapMember>>();
+            aggregationLists = new ArrayList<List<Member[]>>();
         }
         aggregationLists.add(list);
     }
-        
+
     private void clearHierarchyFromRegularContext(
-        List list,
+        List<Member[]> list,
         RolapEvaluator newEvaluator)
     {
-        if (containsTuple(list)) {
-            Member[] tuple = (Member[]) list.get(0);
-            for (Member member : tuple) {
-                newEvaluator.setContext(member.getHierarchy().getAllMember());
-            }
-        } else {
-            newEvaluator.setContext(((RolapMember) list.get(0)).getHierarchy()
-                .getAllMember());
+        Member[] tuple = list.get(0);
+        for (Member member : tuple) {
+            newEvaluator.setContext(member.getHierarchy().getAllMember());
         }
-    }
-
-    private boolean containsTuple(List rolapList) {
-        return rolapList.get(0) instanceof Member[];
     }
 
     /**
@@ -522,11 +375,11 @@ public class RolapEvaluator implements Evaluator {
         if (m.equals(previous)) {
             return m;
         }
-        if (previous.isCalculated()) {
+        if (previous.isEvaluated()) {
             removeCalcMember(previous);
         }
         currentMembers[ordinal] = m;
-        if (m.isCalculated()) {
+        if (m.isEvaluated()) {
             addCalcMember(m);
         }
         return previous;
@@ -543,23 +396,21 @@ public class RolapEvaluator implements Evaluator {
                          + " , count=" + i);
                 }
                 assert false;
-            } else {
-                setContext(member);
+                continue;
             }
-            i++;
+            setContext(member);
         }
     }
 
     public final void setContext(Member[] members) {
-        for (int i = 0; i < members.length; i++) {
-            final Member member = members[i];
-
-            // more than one usage
+        for (final Member member : members) {
+        // more than one usage
             if (member == null) {
                 if (getLogger().isDebugEnabled()) {
                     getLogger().debug(
-                        "RolapEvaluator.setContext: member == null "
-                         + " , count=" + i);
+                        "RolapEvaluator.setContext: "
+                            + "member == null, memberList: "
+                            + Arrays.asList(members));
                 }
                 assert false;
                 continue;
@@ -809,6 +660,17 @@ public class RolapEvaluator implements Evaluator {
     private Object getExpResultCacheKey(ExpCacheDescriptor descriptor) {
         final List<Object> key = new ArrayList<Object>();
         key.add(descriptor.getExp());
+
+        // in NON EMPTY mode the result depends on everything, e.g.
+        // "NON EMPTY [Customer].[Name].members" may return different results
+        // for 1997-01 and 1997-02
+        if (nonEmpty) {
+            for (int i = 0; i < currentMembers.length; i++) {
+                key.add(currentMembers[i]);
+            }
+            return key;
+        }
+
         final int[] dimensionOrdinals =
             descriptor.getDependentDimensionOrdinals();
         for (int i = 0; i < dimensionOrdinals.length; i++) {
@@ -845,7 +707,7 @@ public class RolapEvaluator implements Evaluator {
                 (aggregateCacheMissCountBefore == aggregateCacheMissCountAfter)) {
                 // Cache the evaluation result as valid result if the
                 // evaluation did not use any missing aggregates. Missing aggregates
-                // could be used when aggregate cache is not fully loaded, or if 
+                // could be used when aggregate cache is not fully loaded, or if
                 // new missing aggregates are seen.
                 isValidResult = true;
             } else {
@@ -880,7 +742,7 @@ public class RolapEvaluator implements Evaluator {
         return FunUtil.newEvalException((FunDef) context, s);
     }
 
-    public final Object evaluateNamedSet(String name, Exp exp) {
+    public final NamedSetEvaluator getNamedSetEvaluator(String name, Exp exp) {
         return root.evaluateNamedSet(name, exp);
     }
 
@@ -894,7 +756,7 @@ public class RolapEvaluator implements Evaluator {
 
     final void addCalcMember(Member member) {
         assert member != null;
-        assert member.isCalculated();
+        assert member.isEvaluated();
         calcMembers[calcMemberCount++] = member;
     }
 
@@ -967,7 +829,6 @@ public class RolapEvaluator implements Evaluator {
      * SSAS2000 sense.
      */
     private Member getScopedMaxSolveOrder(Member [] calcMembers) {
-
         // Finite state machine that determines the member with the highest
         // solve order.
         Member maxSolveMember = null;
@@ -1015,8 +876,8 @@ public class RolapEvaluator implements Evaluator {
                 } else if (member.getSolveOrder() > maxSolveMember.getSolveOrder() ||
                         (member.getSolveOrder() == maxSolveMember.getSolveOrder() &&
                          member.getDimension().getOrdinal(root.cube) <
-                         maxSolveMember.getDimension().getOrdinal(root.cube))){
-
+                         maxSolveMember.getDimension().getOrdinal(root.cube)))
+                {
                     maxSolveMember = member;
                 }
                 break;
@@ -1030,7 +891,7 @@ public class RolapEvaluator implements Evaluator {
                     if (member.getSolveOrder() > maxSolveMember.getSolveOrder() ||
                        (member.getSolveOrder() == maxSolveMember.getSolveOrder() &&
                         member.getDimension().getOrdinal(root.cube) <
-                        maxSolveMember.getDimension().getOrdinal(root.cube))){
+                        maxSolveMember.getDimension().getOrdinal(root.cube))) {
                         maxSolveMember = member;
                     }
                 }

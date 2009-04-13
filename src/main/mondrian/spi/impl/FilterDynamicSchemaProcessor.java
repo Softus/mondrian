@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/spi/impl/FilterDynamicSchemaProcessor.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/spi/impl/FilterDynamicSchemaProcessor.java#3 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -11,8 +11,6 @@ package mondrian.spi.impl;
 
 import mondrian.spi.DynamicSchemaProcessor;
 import mondrian.olap.Util;
-import org.apache.commons.vfs.FileSystemManager;
-import org.apache.commons.vfs.VFS;
 import org.apache.commons.vfs.FileObject;
 import org.apache.commons.vfs.FileContent;
 
@@ -44,7 +42,7 @@ import java.io.InputStreamReader;
  * </ul>
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/spi/impl/FilterDynamicSchemaProcessor.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/spi/impl/FilterDynamicSchemaProcessor.java#3 $
  * @since Mar 30, 2007
  */
 public class FilterDynamicSchemaProcessor implements DynamicSchemaProcessor {
@@ -60,10 +58,7 @@ public class FilterDynamicSchemaProcessor implements DynamicSchemaProcessor {
         String schemaUrl,
         Util.PropertyList connectInfo) throws Exception
     {
-        FileSystemManager fsManager = VFS.getManager();
-        File userDir = new File("").getAbsoluteFile();
-        FileObject file = fsManager.resolveFile(userDir, schemaUrl);
-        FileContent fileContent = file.getContent();
+        FileContent fileContent = Util.readVirtualFile(schemaUrl);
         return filter(schemaUrl, connectInfo, fileContent.getInputStream());
     }
 

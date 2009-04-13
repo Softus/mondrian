@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/calc/impl/ValueCalc.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/calc/impl/ValueCalc.java#2 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -19,7 +19,7 @@ import mondrian.calc.Calc;
  * @see mondrian.calc.impl.MemberValueCalc
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/calc/impl/ValueCalc.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/calc/impl/ValueCalc.java#2 $
  * @since Sep 27, 2005
  */
 public class ValueCalc extends GenericCalc {

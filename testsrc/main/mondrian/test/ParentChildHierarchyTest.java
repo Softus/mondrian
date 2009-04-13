@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/ParentChildHierarchyTest.java#2 $
+// $Id: //open/mondrian/testsrc/main/mondrian/test/ParentChildHierarchyTest.java#46 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2003-2007 Julian Hyde
+// Copyright (C) 2003-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -21,7 +21,7 @@ import mondrian.olap.Cell;
  *
  * @author jhyde
  * @since Mar 6, 2003
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/ParentChildHierarchyTest.java#2 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/test/ParentChildHierarchyTest.java#46 $
  */
 public class ParentChildHierarchyTest extends FoodMartTestCase {
     public ParentChildHierarchyTest(String name) {
@@ -72,12 +72,12 @@ public class ParentChildHierarchyTest extends FoodMartTestCase {
             "<Dimension name=\"EmployeeSnowFlake\" foreignKey=\"employee_id\">" +
             "<Hierarchy hasAll=\"true\" allMemberName=\"All Employees\"" +
             "    primaryKey=\"employee_id\" primaryKeyTable=\"employee\">" +
-            "  <Join leftKey=\"store_id\"" +  
+            "  <Join leftKey=\"store_id\"" +
             "    rightAlias=\"store\" rightKey=\"store_id\">" +
             "    <Table name=\"employee\"/>" +
             "    <Table name=\"store\"/>" +
             "  </Join>" +
-            "  <Level name=\"Employee Stores\" table=\"store\"" + 
+            "  <Level name=\"Employee Stores\" table=\"store\"" +
             "      column=\"store_id\" uniqueMembers=\"true\"/>" +
             "  <Level name=\"Employee Id\" type=\"Numeric\" table=\"employee\" uniqueMembers=\"true\"" +
             "      column=\"employee_id\" parentColumn=\"supervisor_id\"" +
@@ -107,7 +107,7 @@ public class ParentChildHierarchyTest extends FoodMartTestCase {
             "<Dimension name=\"SharedEmployee\">" +
             "<Hierarchy hasAll=\"true\"" +
             "    primaryKey=\"employee_id\" primaryKeyTable=\"employee\">" +
-            "  <Join leftKey=\"store_id\"" +  
+            "  <Join leftKey=\"store_id\"" +
             "    rightAlias=\"store\" rightKey=\"store_id\">" +
             "    <Table name=\"employee\"/>" +
             "    <Table name=\"store\"/>" +
@@ -127,7 +127,7 @@ public class ParentChildHierarchyTest extends FoodMartTestCase {
             "  </Level>" +
             "</Hierarchy>" +
             "</Dimension>";
-        
+
         String cube =
             "<Cube name=\"EmployeeSharedClosureCube\">\n" +
             "  <Table name=\"salary\" alias=\"salary_closure\" />\n" +
@@ -143,13 +143,13 @@ public class ParentChildHierarchyTest extends FoodMartTestCase {
             "  <Measure name=\"Org Salary\" column=\"salary_paid\" aggregator=\"sum\""+
             "      formatString=\"Currency\"/>"+
             "   <Measure name=\"Count\" column=\"employee_id\" aggregator=\"count\""+
-            "    formatString=\"#,#\"/>" + 
+            "    formatString=\"#,#\"/>" +
             "</Cube>";
-        
-        
+
+
         return TestContext.create(sharedClosureDimension, cube, null, null, null, null);
     }
-    
+
     /**
      * Returns a TestContext in which the "HR" cube contains an extra dimension,
      * "EmployeesNonClosure", which is a joined parent child hierarchy with no
@@ -159,25 +159,25 @@ public class ParentChildHierarchyTest extends FoodMartTestCase {
     private TestContext getEmpNonClosureTestContext() {
         return TestContext.createSubstitutingCube(
             "HR",
-            "<Dimension name=\"EmployeesNonClosure\" foreignKey=\"employee_id\">" + 
-            "<Hierarchy hasAll=\"true\" allMemberName=\"All Employees\"" + 
-            "    primaryKey=\"employee_id\">" + 
-            "  <Table name=\"employee\"/>" + 
-            "  <Level name=\"Employee Id\" type=\"Numeric\" uniqueMembers=\"true\"" + 
-            "      column=\"employee_id\" parentColumn=\"supervisor_id\"" + 
-            "      nameColumn=\"full_name\" nullParentValue=\"0\">" + 
-            "    <Property name=\"Marital Status\" column=\"marital_status\"/>" + 
-            "    <Property name=\"Position Title\" column=\"position_title\"/>" + 
-            "    <Property name=\"Gender\" column=\"gender\"/>" + 
-            "    <Property name=\"Salary\" column=\"salary\"/>" + 
-            "    <Property name=\"Education Level\" column=\"education_level\"/>" + 
-            "    <Property name=\"Management Role\" column=\"management_role\"/>" + 
-            "  </Level>" + 
-            "</Hierarchy>" + 
+            "<Dimension name=\"EmployeesNonClosure\" foreignKey=\"employee_id\">" +
+            "<Hierarchy hasAll=\"true\" allMemberName=\"All Employees\"" +
+            "    primaryKey=\"employee_id\">" +
+            "  <Table name=\"employee\"/>" +
+            "  <Level name=\"Employee Id\" type=\"Numeric\" uniqueMembers=\"true\"" +
+            "      column=\"employee_id\" parentColumn=\"supervisor_id\"" +
+            "      nameColumn=\"full_name\" nullParentValue=\"0\">" +
+            "    <Property name=\"Marital Status\" column=\"marital_status\"/>" +
+            "    <Property name=\"Position Title\" column=\"position_title\"/>" +
+            "    <Property name=\"Gender\" column=\"gender\"/>" +
+            "    <Property name=\"Salary\" column=\"salary\"/>" +
+            "    <Property name=\"Education Level\" column=\"education_level\"/>" +
+            "    <Property name=\"Management Role\" column=\"management_role\"/>" +
+            "  </Level>" +
+            "</Hierarchy>" +
             "</Dimension>",
             null);
     }
-    
+
     /**
      * Tests snow flake closure combination.
      * bug #1675125 - now fixed.
@@ -204,7 +204,7 @@ public class ParentChildHierarchyTest extends FoodMartTestCase {
     }
 
     public void testSharedClosureParentChildHierarchy() {
-        TestContext context = getEmpSharedClosureTestContext(); 
+        TestContext context = getEmpSharedClosureTestContext();
         context.assertQueryReturns(
                 "Select " +
                 "{[SharedEmployee].[All SharedEmployees].[Sheri Nowmer].[Derrick Whelply].children} on columns " + // [SharedEmployee].[Sheri Nowmer].children
@@ -220,12 +220,11 @@ public class ParentChildHierarchyTest extends FoodMartTestCase {
                         "Row #0: $29,121.55\n" +
                         "Row #0: $35,487.69\n"));
     }
-    
+
     /**
      * Test case for bug #1708327
      */
     public void _testNonClosureParentChildHierarchy() {
-        
         getEmpNonClosureTestContext().assertQueryReturns(
                 "Select " +
                 "{[EmployeesNonClosure].[Sheri Nowmer].children} on columns," +
@@ -252,7 +251,7 @@ public class ParentChildHierarchyTest extends FoodMartTestCase {
                 "Row #0: $577.80\n");
     }
 
-    
+
     public void testAll() {
         assertQueryReturns(
             "select {[Measures].[Org Salary], [Measures].[Count]} on columns,\n" +
@@ -463,10 +462,10 @@ public class ParentChildHierarchyTest extends FoodMartTestCase {
      * Script That Uses the LEAVES Flag to Return the Bottom 10 Dimension
      * Members, from <a href="http://www.winscriptingsolutions.com/Files/09/27139/Listing_01.txt">here</a>.
      */
-    public void testFoo() {
+    public void testParentChildDescendantsLeavesBottom() {
         assertQueryReturns(
                 "WITH SET [NonEmptyEmployees] AS 'FILTER(DESCENDANTS([Employees].[All Employees], 10, LEAVES),\n" +
-                "  NOT ISEMPTY( [Measures].[Employee Salary]) )'\n" +
+                "  NOT ISEMPTY([Measures].[Employee Salary]))'\n" +
                 "SELECT { [Measures].[Employee Salary], [Measures].[Number of Employees] } ON COLUMNS,\n" +
                 "  BOTTOMCOUNT([NonEmptyEmployees], 10, [Measures].[Employee Salary]) ON ROWS\n" +
                 "FROM HR\n" +
@@ -512,14 +511,14 @@ public class ParentChildHierarchyTest extends FoodMartTestCase {
     /**
      * Script from <a href="http://www.winscriptingsolutions.com/Files/09/27139/Listing_02.txt">here</a>.
      */
-    public void testBar() {
+    public void testParentChildDescendantsLeavesTop() {
         assertQueryReturns(
-                "with set [Leaves] as 'Descendants([Employees].[All Employees], 15, LEAVES )'\n" +
-                " set [Parents] as 'Generate( [Leaves], {[Employees].CurrentMember.Parent} )'\n" +
-                " set [FirstParents] as 'Filter( [Parents], \n" +
-                "Count( Descendants( [Employees].CurrentMember, 2 )) = 0 )'\n" +
+                "with set [Leaves] as 'Descendants([Employees].[All Employees], 15, LEAVES)'\n" +
+                " set [Parents] as 'Generate([Leaves], {[Employees].CurrentMember.Parent})'\n" +
+                " set [FirstParents] as 'Filter([Parents], \n" +
+                "Count(Descendants( [Employees].CurrentMember, 2)) = 0 )'\n" +
                 "select {[Measures].[Number of Employees]} on Columns,\n" +
-                "  TopCount( [FirstParents], 10, [Measures].[Number of Employees]) on Rows\n" +
+                "  TopCount([FirstParents], 10, [Measures].[Number of Employees]) on Rows\n" +
                 "from HR",
             fold("Axis #0:\n" +
                 "{}\n" +
@@ -546,6 +545,73 @@ public class ParentChildHierarchyTest extends FoodMartTestCase {
                 "Row #7: 19\n" +
                 "Row #8: 19\n" +
                 "Row #9: 19\n"));
+    }
+
+    public void testAllMembersParent() {
+        final String expected = fold("Axis #0:\n" +
+            "{}\n" +
+            "Axis #1:\n" +
+            "{[Measures].[Parent]}\n" +
+            "Axis #2:\n" +
+            "{[Employees].[All Employees]}\n" +
+            "{[Employees].[All Employees].[Sheri Nowmer]}\n" +
+            "{[Employees].[All Employees].[Sheri Nowmer].[Derrick Whelply]}\n" +
+            "{[Employees].[All Employees].[Sheri Nowmer].[Derrick Whelply].[Beverly Baker]}\n" +
+            "{[Employees].[All Employees].[Sheri Nowmer].[Derrick Whelply].[Beverly Baker].[Shauna Wyro]}\n" +
+            "{[Employees].[All Employees].[Sheri Nowmer].[Derrick Whelply].[Beverly Baker].[Shauna Wyro].[Bunny McCown]}\n" +
+            "{[Employees].[All Employees].[Sheri Nowmer].[Derrick Whelply].[Beverly Baker].[Shauna Wyro].[Bunny McCown].[Nancy Miller]}\n" +
+            "{[Employees].[All Employees].[Sheri Nowmer].[Derrick Whelply].[Beverly Baker].[Shauna Wyro].[Bunny McCown].[Wanda Hollar]}\n" +
+            "{[Employees].[All Employees].[Sheri Nowmer].[Derrick Whelply].[Beverly Baker].[Jacqueline Wyllie]}\n" +
+            "{[Employees].[All Employees].[Sheri Nowmer].[Derrick Whelply].[Beverly Baker].[Jacqueline Wyllie].[Ralph Mccoy]}\n" +
+            "{[Employees].[All Employees].[Sheri Nowmer].[Derrick Whelply].[Beverly Baker].[Jacqueline Wyllie].[Ralph Mccoy].[Anne Tuck]}\n" +
+            "{[Employees].[All Employees].[Sheri Nowmer].[Derrick Whelply].[Beverly Baker].[Jacqueline Wyllie].[Ralph Mccoy].[Anne Tuck].[Corinne Zugschwert]}\n" +
+            "{[Employees].[All Employees].[Sheri Nowmer].[Derrick Whelply].[Beverly Baker].[Jacqueline Wyllie].[Ralph Mccoy].[Anne Tuck].[Michelle Adams]}\n" +
+            "{[Employees].[All Employees].[Sheri Nowmer].[Derrick Whelply].[Beverly Baker].[Jacqueline Wyllie].[Ralph Mccoy].[Anne Tuck].[Donahue Steen]}\n" +
+            "{[Employees].[All Employees].[Sheri Nowmer].[Derrick Whelply].[Beverly Baker].[Jacqueline Wyllie].[Ralph Mccoy].[Anne Tuck].[John Baker]}\n" +
+            "Row #0: #null\n" +
+            "Row #1: All Employees\n" +
+            "Row #2: Sheri Nowmer\n" +
+            "Row #3: Derrick Whelply\n" +
+            "Row #4: Beverly Baker\n" +
+            "Row #5: Shauna Wyro\n" +
+            "Row #6: Bunny McCown\n" +
+            "Row #7: Bunny McCown\n" +
+            "Row #8: Beverly Baker\n" +
+            "Row #9: Jacqueline Wyllie\n" +
+            "Row #10: Ralph Mccoy\n" +
+            "Row #11: Anne Tuck\n" +
+            "Row #12: Anne Tuck\n" +
+            "Row #13: Anne Tuck\n" +
+            "Row #14: Anne Tuck\n");
+
+        // Query contains 'Head' just to keep the number of rows reasonable. We
+        // assume that it does not affect the behavior of <Hierarchy>.Members.
+        assertQueryReturns(
+            "with member [Measures].[Parent] as '[Employees].CurrentMember.Parent.Name'\n"
+                + "select {[Measures].[Parent]}\n"
+                + "ON COLUMNS,\n"
+                + "Head([Employees].Members, 15)\n"
+                + "ON ROWS from [HR]",
+            expected);
+
+        // Similar query, using <Hierarchy>.AllMembers rather than
+        // <Hierarchy>.Members, returns the same result.
+        assertQueryReturns(
+            "with member [Measures].[Parent] as '[Employees].CurrentMember.Parent.Name'\n"
+                + "select {[Measures].[Parent]}\n"
+                + "ON COLUMNS,\n"
+                + "Head([Employees].AllMembers, 15)\n"
+                + "ON ROWS from [HR]",
+            expected);
+
+        // Similar query use <Level>.Members, same result expected.
+        assertQueryReturns(
+            "with member [Measures].[Parent] as '[Employees].CurrentMember.Parent.Name'\n"
+                + "select {[Measures].[Parent]}\n"
+                + "ON COLUMNS,\n"
+                + "{[Employees], Head([Employees].[Employee Id].Members, 14)}\n"
+                + "ON ROWS from [HR]",
+            expected);
     }
 
     // todo: test DimensionUsage which joins to a level which is not in the
@@ -708,7 +774,7 @@ public class ParentChildHierarchyTest extends FoodMartTestCase {
             result,
             2,
             extendedContext,
-            "[Employees].[All Employees].[Derrick Whelply]",
+            "[Employees].[All Employees].[Sheri Nowmer].[Derrick Whelply]",
             "$36,494.07",
             "select `time_by_day`.`the_year` as `Year`," +
             " `employee`.`employee_id` as `Employee Id (Key)`," +
@@ -735,7 +801,7 @@ public class ParentChildHierarchyTest extends FoodMartTestCase {
             result,
             2,
             extendedContext,
-            "[Employees].[All Employees].[Derrick Whelply]",
+            "[Employees].[All Employees].[Sheri Nowmer].[Derrick Whelply]",
             "$36,494.07",
             "select" +
             " `time_by_day`.`the_year` as `Year`," +
@@ -879,29 +945,29 @@ public class ParentChildHierarchyTest extends FoodMartTestCase {
         // in arbitrary order -- so to keep things deterministic, this example
         // deliberately uses a set of  employees with unique last names.
         testContext.assertQueryReturns(
-                "with member [Measures].[First Name] as " +
-                        " 'Iif([Employees].Level.Name = \"Employee Id\", [Employees].CurrentMember.Properties(\"First Name\"), Cast(NULL AS STRING)) '\n" +
-                        "select {[Measures].[Org Salary], [Measures].[First Name]} on columns,\n" +
-                        " {Tail(Head([Employees].Members, 15), 4)} on rows\n" +
-                        "from [HR-ordered]",
-                fold("Axis #0:\n" +
-                        "{}\n" +
-                        "Axis #1:\n" +
-                        "{[Measures].[Org Salary]}\n" +
-                        "{[Measures].[First Name]}\n" +
-                        "Axis #2:\n" +
-                        "{[Employees].[All Employees].[Ronald Adina]}\n" +
-                        "{[Employees].[All Employees].[Samuel Agcaoili]}\n" +
-                        "{[Employees].[All Employees].[James Aguilar]}\n" +
-                        "{[Employees].[All Employees].[Robert Ahlering]}\n" +
-                        "Row #0: $107.16\n" +
-                        "Row #0: Ronald\n" +
-                        "Row #1: $981.82\n" +
-                        "Row #1: Samuel\n" +
-                        "Row #2: $403.64\n" +
-                        "Row #2: James\n" +
-                        "Row #3: $40.47\n" +
-                        "Row #3: Robert\n"));
+            "with member [Measures].[First Name] as " +
+                " 'Iif([Employees].Level.Name = \"Employee Id\", [Employees].CurrentMember.Properties(\"First Name\"), Cast(NULL AS STRING)) '\n" +
+                "select {[Measures].[Org Salary], [Measures].[First Name]} on columns,\n" +
+                " {Tail(Head([Employees].Members, 15), 4)} on rows\n" +
+                "from [HR-ordered]",
+            fold("Axis #0:\n" +
+                "{}\n" +
+                "Axis #1:\n" +
+                "{[Measures].[Org Salary]}\n" +
+                "{[Measures].[First Name]}\n" +
+                "Axis #2:\n" +
+                "{[Employees].[All Employees].[Sheri Nowmer].[Maya Gutierrez].[Brenda Blumberg]}\n" +
+                "{[Employees].[All Employees].[Sheri Nowmer].[Maya Gutierrez].[Brenda Blumberg].[Wayne Banack]}\n" +
+                "{[Employees].[All Employees].[Sheri Nowmer].[Maya Gutierrez].[Brenda Blumberg].[Wayne Banack].[Samuel Agcaoili]}\n" +
+                "{[Employees].[All Employees].[Sheri Nowmer].[Maya Gutierrez].[Brenda Blumberg].[Wayne Banack].[Megan Davis]}\n" +
+                "Row #0: $29,762.88\n" +
+                "Row #0: Brenda\n" +
+                "Row #1: $27,908.33\n" +
+                "Row #1: Wayne\n" +
+                "Row #2: $981.82\n" +
+                "Row #2: Samuel\n" +
+                "Row #3: $927.27\n" +
+                "Row #3: Megan\n"));
 
         // Make sure <Member>.CHILDREN is sorted.
         testContext.assertQueryReturns(
@@ -964,6 +1030,62 @@ public class ParentChildHierarchyTest extends FoodMartTestCase {
                         "{[Measures].[Count2]}\n" +
                         "Row #0: 1,156\n" +
                         "Row #0: 1,157\n"));
+    }
+
+    /**
+     * test case for bug #2477623, Closure Tables not working with Virtual Cubes
+     */
+    public void testClosureTableInVirtualCube() {
+        TestContext testContext = TestContext.create(
+            "<Dimension name=\"Employees\" >" +
+            "   <Hierarchy hasAll=\"true\" allMemberName=\"All Employees\"" +
+            "      primaryKey=\"employee_id\" primaryKeyTable=\"employee\">" +
+            "      <Table name=\"employee\"/>" +
+            "      <Level name=\"Employee Name\" type=\"Numeric\" uniqueMembers=\"true\"" +
+            "         column=\"employee_id\" parentColumn=\"supervisor_id\"" +
+            "         nameColumn=\"full_name\" nullParentValue=\"0\">" +
+            "         <Closure parentColumn=\"supervisor_id\" childColumn=\"employee_id\">" +
+            "            <Table name=\"employee_closure\"/>" +
+            "         </Closure>" +
+            "      </Level>" +
+            "   </Hierarchy>" +
+            "</Dimension>"
+            , null,
+            "<Cube name=\"CustomSales\">" +
+            "   <Table name=\"sales_fact_1997\"/>" +
+            "   <DimensionUsage name=\"Employees\" source=\"Employees\" foreignKey=\"time_id\"/>" +
+            "   <Measure name=\"Store Sales\" column=\"store_sales\" aggregator=\"sum\"/>" +
+            "</Cube>" +
+            "<Cube name=\"CustomHR\">" +
+            "   <Table name=\"salary\"/>" +
+            "   <DimensionUsage name=\"Employees\" source=\"Employees\" foreignKey=\"employee_id\"/>" +
+            "   <Measure name=\"Org Salary\" column=\"salary_paid\" aggregator=\"sum\"/>" +
+            "</Cube>" +
+            "<VirtualCube name=\"CustomSalesAndHR\" >" +
+            "<VirtualCubeDimension name=\"Employees\"/>" +
+            "<VirtualCubeMeasure cubeName=\"CustomSales\" name=\"[Measures].[Store Sales]\"/>" +
+            "<VirtualCubeMeasure cubeName=\"CustomHR\" name=\"[Measures].[Org Salary]\"/>" +
+            "<CalculatedMember name=\"HR Cost per Sale\" dimension=\"Measures\">" +
+            "<Formula>[Measures].[Store Sales] / [Measures].[Org Salary]</Formula>" +
+            "</CalculatedMember>" +
+            "</VirtualCube>",
+            null, null, null);
+
+        testContext.assertQueryReturns(
+            "select " +
+            "[Employees].[All Employees].[Sheri Nowmer].[Rebecca Kanagaki].Children" +
+            " ON COLUMNS, " +
+            "{[Measures].[Org Salary]} ON ROWS from [CustomSalesAndHR]",
+            fold(
+                "Axis #0:\n" +
+                "{}\n" +
+                "Axis #1:\n" +
+                "{[Employees].[All Employees].[Sheri Nowmer].[Rebecca Kanagaki].[Juanita Sharp]}\n" +
+                "{[Employees].[All Employees].[Sheri Nowmer].[Rebecca Kanagaki].[Sandra Brunner]}\n" +
+                "Axis #2:\n" +
+                "{[Measures].[Org Salary]}\n" +
+                "Row #0: 152.76\n" +
+                "Row #0: 60\n"));
     }
 }
 

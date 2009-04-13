@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/udf/MatchesUdf.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/udf/MatchesUdf.java#3 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2006 Julian Hyde and others
+// Copyright (C) 2006-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -21,12 +21,11 @@ import java.util.regex.*;
  * User-defined function <code>MATCHES</code>.
  *
  * @author schoi
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/udf/MatchesUdf.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/udf/MatchesUdf.java#3 $
  */
 public class MatchesUdf implements UserDefinedFunction {
 
     public Object execute(Evaluator evaluator, Argument[] arguments) {
-
         Object arg0 = arguments[0].evaluateScalar(evaluator);
         Object arg1 = arguments[1].evaluateScalar(evaluator);
 

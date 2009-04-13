@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/NonEmptyCrossJoinFunDef.java#4 $
+// $Id: //open/mondrian/src/main/mondrian/olap/fun/NonEmptyCrossJoinFunDef.java#18 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -25,7 +25,7 @@ import mondrian.mdx.ResolvedFunCall;
  * Definition of the <code>NonEmptyCrossJoin</code> MDX function.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/NonEmptyCrossJoinFunDef.java#4 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/NonEmptyCrossJoinFunDef.java#18 $
  * @since Mar 23, 2006
  */
 public class NonEmptyCrossJoinFunDef extends CrossJoinFunDef {
@@ -46,7 +46,8 @@ public class NonEmptyCrossJoinFunDef extends CrossJoinFunDef {
         return new AbstractListCalc(call, new Calc[] {listCalc1, listCalc2}, false) {
             public List evaluateList(Evaluator evaluator) {
                 SchemaReader schemaReader = evaluator.getSchemaReader();
-                evaluator.setNonEmpty(true);
+                // evaluate the arguments in non empty mode
+                evaluator = evaluator.push(true);
                 NativeEvaluator nativeEvaluator =
                     schemaReader.getNativeSetEvaluator(
                         call.getFunDef(), call.getArgs(), evaluator, this);
@@ -59,10 +60,7 @@ public class NonEmptyCrossJoinFunDef extends CrossJoinFunDef {
                     return Collections.EMPTY_LIST;
                 }
                 final List list2 = listCalc2.evaluateList(evaluator);
-                // evaluate the arguments in non empty mode
-                evaluator = evaluator.push();
-                evaluator.setNonEmpty(true);
-                List result = crossJoin(list1, list2);
+                List<Member[]> result = crossJoin(list1, list2);
 
                 // remove any remaining empty crossings from the result
                 result = nonEmptyList(evaluator, result, call);

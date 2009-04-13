@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/TestContext.java#5 $
+// $Id: //open/mondrian/testsrc/main/mondrian/test/TestContext.java#67 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2002-2002 Kana Software, Inc.
-// Copyright (C) 2002-2007 Julian Hyde and others
+// Copyright (C) 2002-2009 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -14,8 +14,7 @@ package mondrian.test;
 
 import junit.framework.Assert;
 import junit.framework.ComparisonFailure;
-import mondrian.calc.Calc;
-import mondrian.calc.CalcWriter;
+import mondrian.calc.*;
 import mondrian.olap.*;
 import mondrian.olap.Connection;
 import mondrian.olap.DriverManager;
@@ -23,10 +22,10 @@ import mondrian.olap.Member;
 import mondrian.resource.MondrianResource;
 import mondrian.rolap.RolapConnectionProperties;
 import mondrian.rolap.RolapUtil;
-import mondrian.rolap.sql.SqlQuery;
 import mondrian.spi.impl.FilterDynamicSchemaProcessor;
+import mondrian.spi.Dialect;
+import mondrian.spi.DialectManager;
 import mondrian.util.DelegatingInvocationHandler;
-import mondrian.olap4j.MondrianOlap4jDriver;
 
 import javax.sql.DataSource;
 import java.io.*;
@@ -54,7 +53,7 @@ import org.olap4j.OlapConnection;
  *
  * @author jhyde
  * @since 29 March, 2002
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/TestContext.java#5 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/test/TestContext.java#67 $
  */
 public class TestContext {
     private static TestContext instance; // the singleton
@@ -65,11 +64,13 @@ public class TestContext {
      * {@link #getFoodMartConnection}.
      */
     private Connection foodMartConnection;
+    private Dialect dialect;
 
     protected static final String nl = Util.nl;
+    private static final String indent = "                ";
     private static final String lineBreak = "\"," + nl + "\"";
-    private static final String lineBreak2 = "\\\\n\" +" + nl + "\"";
-    private static final String lineBreak3 = "\\n\" +" + nl + "\"";
+    private static final String lineBreak2 = "\\\\n\"" + nl + indent + "+ \"";
+    private static final String lineBreak3 = "\\n\"" + nl + indent + "+ \"";
     private static final Pattern LineBreakPattern =
         Pattern.compile("\r\n|\r|\n");
     private static final Pattern TabPattern = Pattern.compile("\t");
@@ -139,7 +140,8 @@ public class TestContext {
      * </ul>
      */
     public static String getDefaultConnectString() {
-        String connectString = MondrianProperties.instance().TestConnectString.get();
+        String connectString =
+            MondrianProperties.instance().TestConnectString.get();
         final Util.PropertyList connectProperties;
         if (connectString == null || connectString.equals("")) {
             connectProperties = new Util.PropertyList();
@@ -155,7 +157,8 @@ public class TestContext {
         if (jdbcUser != null) {
             connectProperties.put("JdbcUser", jdbcUser);
         }
-        String jdbcPassword = MondrianProperties.instance().TestJdbcPassword.get();
+        String jdbcPassword =
+            MondrianProperties.instance().TestJdbcPassword.get();
         if (jdbcPassword != null) {
             connectProperties.put("JdbcPassword", jdbcPassword);
         }
@@ -240,7 +243,17 @@ public class TestContext {
     }
 
     public Util.PropertyList getFoodMartConnectionProperties() {
-        return Util.parseConnectString(getDefaultConnectString());
+        final Util.PropertyList propertyList =
+            Util.parseConnectString(getDefaultConnectString());
+        if (MondrianProperties.instance().TestHighCardinalityDimensionList
+            .get() != null
+            && propertyList.get(
+            RolapConnectionProperties.DynamicSchemaProcessor.name()) == null) {
+            propertyList.put(
+                RolapConnectionProperties.DynamicSchemaProcessor.name(),
+                HighCardDynamicSchemaProcessor.class.getName());
+        }
+        return propertyList;
     }
 
     /**
@@ -393,7 +406,7 @@ public class TestContext {
         String memberDefs) {
         return getFoodMartSchemaSubstitutingCube(cubeName, dimensionDefs, memberDefs, null);
     }
-    
+
     /**
      * Returns a the XML of the foodmart schema, adding dimension definitions
      * to the definition of a given cube.
@@ -439,8 +452,8 @@ public class TestContext {
                 memberDefs +
                 s.substring(i);
         }
-        
-        if(namedSetDefs !=null) {
+
+        if (namedSetDefs != null) {
             int i = s.indexOf("<NamedSet", h);
             if (i < 0 || i > end) {
                 i = end;
@@ -460,6 +473,7 @@ public class TestContext {
      */
     public Result executeQuery(String queryString) {
         Connection connection = getConnection();
+        queryString = upgradeQuery(queryString);
         Query query = connection.parseQuery(queryString);
         return connection.execute(query);
     }
@@ -491,11 +505,15 @@ public class TestContext {
     public void assertExprThrows(String expression, String pattern) {
         Throwable throwable = null;
         try {
+            String cubeName = getDefaultCubeName();
+            if (cubeName.indexOf(' ') >= 0) {
+                cubeName = Util.quoteMdxIdentifier(cubeName);
+            }
             Result result = executeQuery(
-                    "with member [Measures].[Foo] as '" +
+                "with member [Measures].[Foo] as '" +
                     expression +
                     "' select {[Measures].[Foo]} on columns from " +
-                    getDefaultCubeName());
+                    cubeName);
             Cell cell = result.getCell(new int[]{0});
             if (cell.isError()) {
                 throwable = (Throwable) cell.getValue();
@@ -569,7 +587,107 @@ public class TestContext {
         String expected)
     {
         Axis axis = executeAxis(expression);
-        assertEqualsVerbose(expected, toString(axis.getPositions()));
+        assertEqualsVerbose(
+            expected,
+            upgradeActual(toString(axis.getPositions())));
+    }
+
+    /**
+     * Massages the actual result of executing a query to handle differences in
+     * unique names betweeen old and new behavior.
+     *
+     * <p>Even though the new naming is not enabled by default, reference logs
+     * should be in terms of the new naming.
+     *
+     * @see mondrian.olap.MondrianProperties#SsasCompatibleNaming
+     *
+     * @param actual Actual result
+     * @return Expected result massaged for backwards compatibility
+     */
+    public String upgradeActual(String actual) {
+        if (!MondrianProperties.instance().SsasCompatibleNaming.get()) {
+            actual = Util.replace(
+                actual,
+                "[Time.Weekly]",
+                "[Time].[Weekly]");
+            actual = Util.replace(
+                actual,
+                "[All Time.Weeklys]",
+                "[All Weeklys]");
+            actual = Util.replace(
+                actual,
+                "<HIERARCHY_NAME>Time.Weekly</HIERARCHY_NAME>",
+                "<HIERARCHY_NAME>Weekly</HIERARCHY_NAME>");
+
+            // for a few tests in SchemaTest
+            actual = Util.replace(
+                actual,
+                "[Store.MyHierarchy]",
+                "[Store].[MyHierarchy]");
+            actual = Util.replace(
+                actual,
+                "[All Store.MyHierarchys]",
+                "[All MyHierarchys]");
+            actual = Util.replace(
+                actual,
+                "[Store2].[All Store2s]",
+                "[Store2].[Store].[All Stores]");
+            actual = Util.replace(
+                actual,
+                "[Store Type 2.Store Type 2].[All Store Type 2.Store Type 2s]",
+                "[Store Type 2].[All Store Type 2s]");
+            actual = Util.replace(
+                actual,
+                "[TIME.CALENDAR]",
+                "[TIME].[CALENDAR]");
+        }
+        return actual;
+    }
+
+    /**
+     * Massages an MDX query to handle differences in
+     * unique names betweeen old and new behavior.
+     *
+     * <p>The main difference addressed is with level naming. The problem
+     * arises when dimension, hierarchy and level have the same name:<ul>
+     *
+     * <li>In old behavior, the [Gender].[Gender] represents the Gender level,
+     * and [Gender].[Gender].[Gender] is invalid.
+     *
+     * <li>In new behavior, [Gender].[Gender] represents the Gender hierarchy,
+     * and [Gender].[Gender].[Gender].members represents the Gender level.
+     * </ul></p>
+     *
+     * <p>So, {@code upgradeQuery("[Gender]")} returns
+     * "[Gender].[Gender]" for old behavior,
+     * "[Gender].[Gender].[Gender]" for new behavior.</p>
+     *
+     * @see mondrian.olap.MondrianProperties#SsasCompatibleNaming
+     *
+     * @param queryString Original query
+     * @return Massaged query for backwards compatibility
+     */
+    public String upgradeQuery(String queryString) {
+        if (MondrianProperties.instance().SsasCompatibleNaming.get()) {
+            String[] names = {
+                "[Gender]",
+                "[Education Level]",
+                "[Marital Status]",
+                "[Store Type]",
+                "[Yearly Income]",
+            };
+            for (String name : names) {
+                queryString = Util.replace(
+                    queryString,
+                    name + "." + name,
+                    name + "." + name + "." + name);
+            }
+            queryString = Util.replace(
+                queryString,
+                "[Time.Weekly].[All Time.Weeklys]",
+                "[Time].[Weekly].[All Weeklys]");
+        }
+        return queryString;
     }
 
     /**
@@ -702,7 +820,9 @@ public class TestContext {
         Result result = executeQuery(query);
         String resultString = toString(result);
         if (desiredResult != null) {
-            assertEqualsVerbose(desiredResult, resultString);
+            assertEqualsVerbose(
+                desiredResult,
+                upgradeActual(resultString));
         }
     }
 
@@ -767,22 +887,21 @@ public class TestContext {
     }
 
     private static String toJavaString(String s) {
-
         // Convert [string with "quotes" split
         // across lines]
-        // into ["string with \"quotes\" split\n" +
-        // "across lines
+        // into ["string with \"quotes\" split\n"
+        //                 + "across lines
         //
         s = Util.replace(s, "\"", "\\\"");
         s = LineBreakPattern.matcher(s).replaceAll(lineBreak2);
         s = TabPattern.matcher(s).replaceAll("\\\\t");
         s = "\"" + s + "\"";
-        String spurious = " +" + nl + "\"\"";
+        String spurious = nl + indent + "+ \"\"";
         if (s.endsWith(spurious)) {
             s = s.substring(0, s.length() - spurious.length());
         }
         if (s.indexOf(lineBreak3) >= 0) {
-            s = "fold(" + nl + s + ")";
+            s = "fold(" + nl + indent + s + ")";
         }
         return s;
     }
@@ -852,7 +971,7 @@ public class TestContext {
     public static String toString(List<Position> positions) {
         StringBuilder buf = new StringBuilder();
         int i = 0;
-        for (Position position: positions) {
+        for (Position position : positions) {
             if (i > 0) {
                 buf.append(nl);
             }
@@ -905,23 +1024,16 @@ public class TestContext {
         return string;
     }
 
-    public SqlQuery.Dialect getDialect() {
-        java.sql.Connection connection = null;
-        try {
-            DataSource dataSource = getConnection().getDataSource();
-            connection = dataSource.getConnection();
-            return SqlQuery.Dialect.create(connection.getMetaData());
-        } catch (SQLException e) {
-            throw Util.newInternal(e, "While opening connection");
-        } finally {
-            if (connection != null) {
-                try {
-                    connection.close();
-                } catch (SQLException e) {
-                    // ignore
-                }
-            }
+    public synchronized Dialect getDialect() {
+        if (dialect == null) {
+            dialect = getDialectInternal();
         }
+        return dialect;
+    }
+
+    private Dialect getDialectInternal() {
+        DataSource dataSource = getConnection().getDataSource();
+        return DialectManager.createDialect(dataSource, null);
     }
 
     /**
@@ -929,9 +1041,9 @@ public class TestContext {
      *
      * @return dialect of an Access persuasion
      */
-    public static SqlQuery.Dialect getFakeDialect()
+    public static Dialect getFakeDialect()
     {
-        final DatabaseMetaData data =
+        final DatabaseMetaData metaData =
             (DatabaseMetaData) Proxy.newProxyInstance(
                 null,
                 new Class<?>[] {DatabaseMetaData.class},
@@ -955,7 +1067,17 @@ public class TestContext {
                     }
                 }
             );
-        return SqlQuery.Dialect.create(data);
+        final java.sql.Connection connection =
+            (java.sql.Connection) Proxy.newProxyInstance(
+                null,
+                new Class<?>[] {java.sql.Connection.class},
+                new DelegatingInvocationHandler() {
+                    public DatabaseMetaData getMetaData() {
+                        return metaData;
+                    }
+                }
+            );
+        return DialectManager.createDialect(null, connection);
     }
 
     /**
@@ -998,35 +1120,44 @@ public class TestContext {
      */
     private String dialectize(String sql) {
         final String search = "fname \\+ ' ' \\+ lname";
-        final SqlQuery.Dialect dialect = getDialect();
-        if (dialect.isMySQL()) {
-            // Mysql would generate "CONCAT( ... )"
+        final Dialect dialect = getDialect();
+        final Dialect.DatabaseProduct databaseProduct =
+            dialect.getDatabaseProduct();
+        switch (databaseProduct) {
+        case MYSQL:
+            // Mysql would generate "CONCAT(...)"
             sql = sql.replaceAll(
-                    search,
-                    "CONCAT(`customer`.`fname`, ' ', `customer`.`lname`)");
-        } else if (dialect.isPostgres()
-            || dialect.isOracle()
-            || dialect.isLucidDB()
-            || dialect.isTeradata())
-        {
+                search,
+                "CONCAT(`customer`.`fname`, ' ', `customer`.`lname`)");
+            break;
+        case POSTGRESQL:
+        case ORACLE:
+        case LUCIDDB:
+        case TERADATA:
             sql = sql.replaceAll(
-                    search,
-                    "`fname` || ' ' || `lname`");
-        } else if (dialect.isDerby() || dialect.isCloudscape()) {
+                search,
+                "`fname` || ' ' || `lname`");
+            break;
+        case DERBY:
             sql = sql.replaceAll(
-                    search,
-                    "`customer`.`fullname`");
-        } else if (dialect.isIngres()) {
+                search,
+                "`customer`.`fullname`");
+            break;
+        case INGRES:
             sql = sql.replaceAll(
-                    search,
-                    "fullname");
-        } else if (dialect.isDB2()) {
+                search,
+                "fullname");
+            break;
+        case DB2:
+        case DB2_AS400:
+        case DB2_OLD_AS400:
             sql = sql.replaceAll(
-                    search,
-                    "CONCAT(CONCAT(`customer`.`fname`, ' '), `customer`.`lname`)");
+                search,
+                "CONCAT(CONCAT(`customer`.`fname`, ' '), `customer`.`lname`)");
+            break;
         }
 
-        if (dialect.isOracle()) {
+        if (dialect.getDatabaseProduct() == Dialect.DatabaseProduct.ORACLE) {
             // " + tableQualifier + "
             sql = sql.replaceAll(" =as= ", " ");
         } else {
@@ -1061,7 +1192,7 @@ public class TestContext {
                 connectProperties.get(RolapConnectionProperties.JdbcUser.name()),
                 connectProperties.get(RolapConnectionProperties.JdbcPassword.name()));
             stmt = jdbcConn.createStatement();
-            
+
             if (RolapUtil.SQL_LOGGER.isDebugEnabled()) {
                 StringBuffer sqllog = new StringBuffer();
                 sqllog.append("mondrian.test.TestContext: executing sql [");
@@ -1081,7 +1212,7 @@ public class TestContext {
             final long execMs = time - startTime;
             Util.addDatabaseTime(execMs);
             String status = ", exec " + execMs + " ms";
-            
+
             RolapUtil.SQL_LOGGER.debug(status);
 
             int rows = 0;
@@ -1174,7 +1305,11 @@ public class TestContext {
         String expectedDimList,
         final boolean scalar)
     {
-        final Calc calc = query.compileExpression(expression, scalar, null);
+        final Calc calc =
+            query.compileExpression(
+                expression,
+                scalar,
+                scalar ? null : ResultStyle.ITERABLE);
         final Dimension[] dimensions = query.getCube().getDimensions();
         StringBuilder buf = new StringBuilder("{");
         int dependCount = 0;
@@ -1227,7 +1362,7 @@ public class TestContext {
                 final String schema = getFoodMartSchema(
                     parameterDefs, cubeDefs, virtualCubeDefs, namedSetDefs,
                     udfDefs, roleDefs);
-                Util.PropertyList properties = 
+                Util.PropertyList properties =
                     super.getFoodMartConnectionProperties();
                 properties.put(
                     RolapConnectionProperties.CatalogContent.name(),
@@ -1285,8 +1420,8 @@ public class TestContext {
     {
         return createSubstitutingCube(cubeName, dimensionDefs, memberDefs, null);
     }
-        
-    
+
+
     /**
      * Creates a TestContext, adding hierarchy and calculated member definitions
      * to a cube definition.
@@ -1333,6 +1468,21 @@ public class TestContext {
                     RolapConnectionProperties.Role.name(),
                     roleName);
                 return properties;
+            }
+        };
+    }
+
+    /**
+     * Returns a TestContext similar to this one, but using the given cube as
+     * default for tests such as {@link #assertExprReturns(String, String)}.
+     *
+     * @param cubeName Cube name
+     * @return Test context with the given default cube
+     */
+    public TestContext withCube(final String cubeName) {
+        return new DelegatingTestContext(this) {
+            public String getDefaultCubeName() {
+                return cubeName;
             }
         };
     }
@@ -1391,7 +1541,8 @@ public class TestContext {
                         "true");
                     return propertyList;
                 }
-            }.getFoodMartConnection();
+            }
+            .getFoodMartConnection();
         return connection.getSchema().getWarnings();
     }
 
@@ -1411,6 +1562,30 @@ public class TestContext {
         return ((OlapWrapper) connection).unwrap(OlapConnection.class);
     }
 
+    /**
+     * Tests whether the database is valid. Allows tests that depend on optional
+     * databases to figure out whether to proceed.
+     *
+     * @return whether a database is present and correct
+     */
+    public boolean databaseIsValid() {
+        try {
+            Connection connection = getConnection();
+            String cubeName = getDefaultCubeName();
+            if (cubeName.indexOf(' ') >= 0) {
+                cubeName = Util.quoteMdxIdentifier(cubeName);
+            }
+            Query query = connection.parseQuery("select from " + cubeName);
+            Result result = connection.execute(query);
+            Util.discard(result);
+            connection.close();
+            return true;
+        } catch (RuntimeException e) {
+            Util.discard(e);
+            return false;
+        }
+    }
+
     public static class SnoopingSchemaProcessor
         extends FilterDynamicSchemaProcessor
     {
@@ -1423,6 +1598,38 @@ public class TestContext {
         {
             catalogContent = super.filter(schemaUrl, connectInfo, stream);
             return catalogContent;
+        }
+    }
+
+    /**
+     * Schema processor that flags dimensions as high-cardinality if they
+     * appear in the list of values in the
+     * {@link MondrianProperties#TestHighCardinalityDimensionList} property.
+     * It's a convenient way to run the whole suite against high-cardinality
+     * dimensions without modifying FoodMart.xml.
+     */
+    public static class HighCardDynamicSchemaProcessor
+        extends FilterDynamicSchemaProcessor
+    {
+        protected String filter(
+            String schemaUrl, Util.PropertyList connectInfo, InputStream stream)
+            throws Exception
+        {
+            String s = super.filter(schemaUrl, connectInfo, stream);
+            final String highCardDimensionList =
+                MondrianProperties.instance()
+                    .TestHighCardinalityDimensionList.get();
+            if (highCardDimensionList != null
+                && !highCardDimensionList.equals(""))
+            {
+                for (String dimension : highCardDimensionList.split(",")) {
+                    final String match =
+                        "<Dimension name=\"" + dimension + "\"";
+                    s = s.replaceAll(
+                        match, match + " highCardinality=\"true\"");
+                }
+            }
+            return s;
         }
     }
 }

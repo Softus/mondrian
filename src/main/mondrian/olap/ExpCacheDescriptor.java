@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/ExpCacheDescriptor.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/ExpCacheDescriptor.java#7 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2006 Julian Hyde
+// Copyright (C) 2005-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -21,7 +21,7 @@ import java.util.List;
  *
  * @author jhyde
  * @since Aug 16, 2005
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/ExpCacheDescriptor.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/ExpCacheDescriptor.java#7 $
  */
 public class ExpCacheDescriptor {
     private final Exp exp;
@@ -48,7 +48,12 @@ public class ExpCacheDescriptor {
         this.exp = exp;
 
         // Compile expression.
-        this.calc = compiler.compile(exp);
+        Calc calc = compiler.compile(exp);
+        if (calc == null) {
+            // now allow conversions
+            calc = compiler.compileAs(exp, null, ResultStyle.ANY_ONLY);
+        }
+        this.calc = calc;
 
         // Compute list of dependent dimensions.
         computeDepends(calc, compiler.getEvaluator());

@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/util/ObjectFactory.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/util/ObjectFactory.java#12 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2007-2007 Julian Hyde and others
+// Copyright (C) 2007-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -276,7 +276,7 @@ import java.util.Properties;
  *
  * @author Richard M. Emberson
  * @since Feb 01 2007
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/util/ObjectFactory.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/util/ObjectFactory.java#12 $
  */
 public abstract class ObjectFactory<V> {
 
@@ -434,7 +434,6 @@ public abstract class ObjectFactory<V> {
 
                 return constructor.newInstance(parameterValues);
             }
-
         } catch (Exception exc) {
             throw new CreationException("Error creating object of type \"" +
                         this.interfaceClass.getName() + "\"" , exc);
@@ -638,7 +637,6 @@ public abstract class ObjectFactory<V> {
                     ? getObject(propClassName, parameterTypes, parameterValues)
                         // Get application default
                     : getDefault(parameterTypes, parameterValues);
-
             }
             return this.singleInstance;
         }

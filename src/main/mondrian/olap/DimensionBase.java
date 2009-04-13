@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/DimensionBase.java#3 $
+// $Id: //open/mondrian/src/main/mondrian/olap/DimensionBase.java#24 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2001-2002 Kana Software, Inc.
-// Copyright (C) 2001-2007 Julian Hyde and others
+// Copyright (C) 2001-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -20,7 +20,7 @@ import mondrian.resource.MondrianResource;
  *
  * @author jhyde
  * @since 6 August, 2001
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/DimensionBase.java#3 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/DimensionBase.java#24 $
  */
 public abstract class DimensionBase
     extends OlapElementBase
@@ -29,17 +29,20 @@ public abstract class DimensionBase
     protected final String name;
     protected final String uniqueName;
     protected final String description;
+    protected final boolean highCardinality;
     protected Hierarchy[] hierarchies;
     protected DimensionType dimensionType;
 
     protected DimensionBase(
             String name,
-            DimensionType dimensionType)
+            DimensionType dimensionType,
+            final boolean highCardinality)
     {
         this.name = name;
         this.uniqueName = Util.makeFqName(name);
         this.description = null;
         this.dimensionType = dimensionType;
+        this.highCardinality = highCardinality;
     }
 
     public String getUniqueName() {
@@ -82,24 +85,37 @@ public abstract class DimensionBase
         return dimension == this;
     }
 
-    public OlapElement lookupChild(SchemaReader schemaReader, Id.Segment s)
-    {
-        return lookupChild(schemaReader, s, MatchType.EXACT);
-    }
-
     public OlapElement lookupChild(
         SchemaReader schemaReader, Id.Segment s, MatchType matchType)
     {
         OlapElement oe = lookupHierarchy(s);
+
+        // Original mondrian behavior:
         // If the user is looking for [Marital Status].[Marital Status] we
         // should not return oe "Marital Status", because he is
         // looking for level - we can check that by checking of hierarchy and
         // dimension name is the same.
-        if ((oe == null) || oe.getName().equalsIgnoreCase(getName()) ) {
-            OlapElement oeLevel =
-                getHierarchy().lookupChild(schemaReader, s, matchType);
-            if (oeLevel != null) {
-                oe = oeLevel; // level match overrides hierarchy match
+        //
+        if (!MondrianProperties.instance().SsasCompatibleNaming.get()) {
+            if (oe == null || oe.getName().equalsIgnoreCase(getName())) {
+                OlapElement oeLevel =
+                    getHierarchy().lookupChild(schemaReader, s, matchType);
+                if (oeLevel != null) {
+                    oe = oeLevel; // level match overrides hierarchy match
+                }
+            }
+        } else {
+            // New (SSAS-compatible) behavior. If there is no matching
+            // hierarchy, find the first level with the given name.
+            if (oe == null) {
+                for (Hierarchy hierarchy :
+                    schemaReader.getDimensionHierarchies(this))
+                {
+                    oe = hierarchy.lookupChild(schemaReader, s, matchType);
+                    if (oe != null) {
+                        break;
+                    }
+                }
             }
         }
 
@@ -113,12 +129,16 @@ public abstract class DimensionBase
             if (oe == null) {
                 buf.append(" returning null");
             } else {
-                buf.append(" returning elementname="+oe.getName());
+                buf.append(" returning elementname=" + oe.getName());
             }
             getLogger().debug(buf.toString());
         }
 
         return oe;
+    }
+
+    public boolean isHighCardinality() {
+        return this.highCardinality;
     }
 
     private Hierarchy lookupHierarchy(Id.Segment s) {

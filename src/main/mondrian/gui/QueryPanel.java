@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/gui/QueryPanel.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/gui/QueryPanel.java#18 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2002-2007 Julian Hyde and others
+// Copyright (C) 2002-2008 Julian Hyde and others
 // Copyright (C) 2006-2007 Cincom Systems, Inc.
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
@@ -40,13 +40,15 @@ import mondrian.olap.Connection;
 import mondrian.olap.DriverManager;
 import mondrian.olap.Query;
 import mondrian.olap.Result;
+import mondrian.olap.Util.PropertyList;
+import mondrian.rolap.agg.AggregationManager;
 
 import org.apache.log4j.Logger;
 
 /**
  *
  * @author  sean
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/gui/QueryPanel.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/gui/QueryPanel.java#18 $
  */
 public class QueryPanel extends javax.swing.JPanel {
 
@@ -56,7 +58,7 @@ public class QueryPanel extends javax.swing.JPanel {
     JMenuItem queryMenuItem;
     int windowMenuIndex;
     Map schemaWindowMap;    // map of schema frames and schema menu items
-    
+
     Workbench workbench;
 
     /** Creates new form QueryPanel */
@@ -132,8 +134,8 @@ public class QueryPanel extends javax.swing.JPanel {
 
         schemaScrollPane1 = new javax.swing.JScrollPane();
         schemaLabel = new javax.swing.JLabel();
-        schemaList = new JComboBox( new String[] {getResourceConverter().getString("common.join.title","Join"),
-                                                    getResourceConverter().getString("common.table.title","Table")} );
+        schemaList = new JComboBox(new String[] {getResourceConverter().getString("common.join.title","Join"),
+                                                    getResourceConverter().getString("common.table.title","Table")});
         //schemaScrollPane1.setViewportView(schemaList);
         schemaPanel = new JPanel();
         //schemaPanel.setLayout(new BorderLayout(25,0));
@@ -149,18 +151,18 @@ public class QueryPanel extends javax.swing.JPanel {
 
         schemaList.setBackground(Color.white);
         final JPanel qpanel = this;
-        schemaList.addItemListener(new ItemListener() {
-            public void itemStateChanged(ItemEvent e) {
-
-
-            }
-        });
+        schemaList.addItemListener(
+            new ItemListener() {
+                public void itemStateChanged(ItemEvent e) {
+                }
+            });
         connectButton.setText(getResourceConverter().getString("queryPanel.connect.title","Connect"));
-        connectButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                connectButtonActionPerformed(evt);
-            }
-        });
+        connectButton.addActionListener(
+            new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent evt) {
+                    connectButtonActionPerformed(evt);
+                }
+            });
 
         schemaPanel.add(schemaLabel); //java.awt.BorderLayout.WEST
         schemaPanel.add(schemaList);
@@ -182,13 +184,28 @@ public class QueryPanel extends javax.swing.JPanel {
         queryTextPane.setFont(new java.awt.Font("Courier New", 0, 12));
         queryTextPane.setText("");
         queryTextPane.addMouseListener(new MouseAdapter() {
+            // From MouseAdapter javadoc:
+            //
+            // Popup menus are triggered differently
+            // on different systems. Therefore, isPopupTrigger
+            // should be checked in both mousePressed
+            // and mouseReleased
+            // for proper cross-platform functionality.
+
+            public void mousePressed(MouseEvent e) {
+                checkPopupTrigger(e);
+            }
+
             public void mouseReleased(MouseEvent e) {
+                checkPopupTrigger(e);
+            }
+
+            public void checkPopupTrigger(MouseEvent e) {
                 if (e.isPopupTrigger()) {
                     int x = e.getX();
                     int y = e.getY();
 
                     jPopupMenu.show(queryTextPane, x, y);
-
                 }
             }
         });
@@ -204,17 +221,16 @@ public class QueryPanel extends javax.swing.JPanel {
         jSplitPane1.setBottomComponent(jScrollPane2);
 
         add(jSplitPane1, java.awt.BorderLayout.CENTER);
-
     }
 
     private void executeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:T://event_executeButtonActionPerformed
         //run the query, and show the results.
         try {
             if (connection == null) {
-                JOptionPane.showMessageDialog(this, getResourceConverter().getString("queryPanel.noConnection.alert","No Mondrian connection. Select a Schema to connect."), 
+                JOptionPane.showMessageDialog(this, getResourceConverter().getString("queryPanel.noConnection.alert","No Mondrian connection. Select a Schema to connect."),
                         getResourceConverter().getString("common.alertDialog.title","Alert"), JOptionPane.WARNING_MESSAGE);
                 return;
-            }//common.alertDialog.title
+            } //common.alertDialog.title
             Query q = connection.parseQuery(queryTextPane.getText());
             Result r = connection.execute(q);
 
@@ -236,15 +252,16 @@ public class QueryPanel extends javax.swing.JPanel {
                 LOGGER.error("", e);
                 Throwable prev = e;
                 e = e.getCause();
-                if (e == prev)
-                  break;
+                if (e == prev) {
+                    break;
+                }
                 p.println();
               }
 
             resultTextPane.setText(os.toString());
         }
 
-    }//GEN-LAST:T://event_executeButtonActionPerformed
+    } //GEN-LAST:T://event_executeButtonActionPerformed
 
 
     private void connectButtonActionPerformed(java.awt.event.ActionEvent evt) {
@@ -264,7 +281,7 @@ public class QueryPanel extends javax.swing.JPanel {
 
             if (sf == null) {
                 // this case may arise when a schema file is opened, mdx query is opened and the schema frame is closed
-                JOptionPane.showMessageDialog(this, getResourceConverter().getString("queryPanel.schemaNotOpen.alert","Schema file is not open"), 
+                JOptionPane.showMessageDialog(this, getResourceConverter().getString("queryPanel.schemaNotOpen.alert","Schema file is not open"),
                                 getResourceConverter().getString("common.errorDialog.title","Error"), JOptionPane.ERROR_MESSAGE);
                 return;
             }
@@ -272,51 +289,56 @@ public class QueryPanel extends javax.swing.JPanel {
             //JInternalFrame sf = (JInternalFrame) schemaWindowMap.get(sfile);
             SchemaExplorer se = (SchemaExplorer) sf.getContentPane().getComponent(0);
             if (se.isNewFile()) {
-                JOptionPane.showMessageDialog(this, getResourceConverter().getString("queryPanel.saveSchemaFirst.alert","You must first save the Schema to open a Mondrian connection"), 
+                JOptionPane.showMessageDialog(this, getResourceConverter().getString("queryPanel.saveSchemaFirst.alert","You must first save the Schema to open a Mondrian connection"),
                                 getResourceConverter().getString("common.alertDialog.title","Alert"), JOptionPane.WARNING_MESSAGE);
                 sf.setSelected(true);
                 return;
             }
             sfile = se.getSchemaFile();
-
-            String connectString = "Provider=mondrian;" + "Jdbc=" + se.getJdbcConnectionUrl() + ";" + "Catalog=" + se.getSchemaFile().toURL().toString() + ";";
+            PropertyList list = new PropertyList();
+            list.put("Provider", "mondrian");
+            list.put("Jdbc", se.getJdbcConnectionUrl());
+            list.put("Catalog", se.getSchemaFile().toURL().toString());
             if (se.getJdbcUsername() != null && se.getJdbcUsername().length() > 0) {
-                connectString = connectString + "JdbcUser=" + se.getJdbcUsername() + ";";
+                list.put("JdbcUser", se.getJdbcUsername());
             }
             if (se.getJdbcPassword() != null && se.getJdbcPassword().length() > 0) {
-                connectString = connectString + "JdbcPassword=" + se.getJdbcPassword() + ";";
+                list.put("JdbcPassword", se.getJdbcPassword());
             }
+            Connection con = DriverManager.getConnection(list, null);
 
-            Connection con = DriverManager.getConnection(connectString, null);
+            // clear cache before connecting
+            AggregationManager.instance().getCacheControl(null).flushSchemaCache();
+
             if (con != null) {
                 connection = con;
-                queryMenuItem.setText(getResourceConverter().getFormattedString("queryPanel.successfulConnection.menuItem", 
-                        "{0} MDX - {1}", 
+                queryMenuItem.setText(getResourceConverter().getFormattedString("queryPanel.successfulConnection.menuItem",
+                        "{0} MDX - {1}",
                         new String[] { Integer.toString(windowMenuIndex), se.getSchemaFile().getName() }));
                 Component o =  this;
                 while (o != null) {
                     //System.out.println(""+o.getClass());
                     if (o.getClass() == JInternalFrame.class) {
-                        ((JInternalFrame) o).setTitle(getResourceConverter().getFormattedString("queryPanel.successfulConnection.internalFrame.title", 
-                                "MDX Query - connected to {0}", 
+                        ((JInternalFrame) o).setTitle(getResourceConverter().getFormattedString("queryPanel.successfulConnection.internalFrame.title",
+                                "MDX Query - connected to {0}",
                                 new String[] { se.getSchemaFile().getName() }));
                         break;
                     }
                     o =  o.getParent();
                 }
-                JOptionPane.showMessageDialog(this, "Mondrian connection Successful.", 
+                JOptionPane.showMessageDialog(this, "Mondrian connection Successful.",
                         getResourceConverter().getString("common.informationDialog.title","Information") , JOptionPane.INFORMATION_MESSAGE);
             } else {
-                JOptionPane.showMessageDialog(this, getResourceConverter().getFormattedString("queryPanel.unsuccessfulConnection.alert", 
-                        "Mondrian connection could not be done for - {0}", 
-                        new String[] { se.getSchemaFile().getName() }), 
+                JOptionPane.showMessageDialog(this, getResourceConverter().getFormattedString("queryPanel.unsuccessfulConnection.alert",
+                        "Mondrian connection could not be done for - {0}",
+                        new String[] { se.getSchemaFile().getName() }),
                         getResourceConverter().getString("common.errorDialog.title","Error"), JOptionPane.ERROR_MESSAGE);
             }
         } catch (Exception ex) {
-            LOGGER.error("Exception: "+ex.getMessage(), ex);
-            JOptionPane.showMessageDialog(this, getResourceConverter().getFormattedString("queryPanel.unsuccessfulConnection.exception", 
-                    "Mondrian connection could not be done for - {0}", 
-                    new String[] { sfile == null ? getResourceConverter().getString("queryPanel.selectedSchema.alert","selected Schema") : sfile.getName() }), 
+            LOGGER.error("Exception: " + ex.getMessage(), ex);
+            JOptionPane.showMessageDialog(this, getResourceConverter().getFormattedString("queryPanel.unsuccessfulConnection.exception",
+                    "Mondrian connection could not be done for - {0}",
+                    new String[] { sfile == null ? getResourceConverter().getString("queryPanel.selectedSchema.alert","selected Schema") : sfile.getName() }),
                         getResourceConverter().getString("common.errorDialog.title","Error"), JOptionPane.ERROR_MESSAGE);
         }
     }

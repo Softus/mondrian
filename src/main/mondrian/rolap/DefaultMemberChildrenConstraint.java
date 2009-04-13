@@ -19,7 +19,7 @@ import mondrian.rolap.aggmatcher.AggStar;
  * MemberChildren query.  If called with a calculated member an
  * exception will be thrown.
  *
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/DefaultMemberChildrenConstraint.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/DefaultMemberChildrenConstraint.java#11 $
  */
 public class DefaultMemberChildrenConstraint
     implements MemberChildrenConstraint {

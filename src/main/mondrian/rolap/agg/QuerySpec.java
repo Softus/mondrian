@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/agg/QuerySpec.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/agg/QuerySpec.java#6 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -22,7 +22,7 @@ import mondrian.rolap.StarColumnPredicate;
  *
  * @author jhyde
  * @author Richard M. Emberson
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/rolap/agg/QuerySpec.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/agg/QuerySpec.java#6 $
  */
 public interface QuerySpec {
     RolapStar getStar();

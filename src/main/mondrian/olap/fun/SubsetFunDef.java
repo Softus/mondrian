@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/SubsetFunDef.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/olap/fun/SubsetFunDef.java#2 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -25,7 +25,7 @@ import java.util.Collections;
  * Definition of the <code>Subset</code> MDX function.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/SubsetFunDef.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/SubsetFunDef.java#2 $
  * @since Mar 23, 2006
  */
 class SubsetFunDef extends FunDefBase {
@@ -51,6 +51,7 @@ class SubsetFunDef extends FunDefBase {
                 null;
         return new AbstractListCalc(call, new Calc[] {listCalc, startCalc, countCalc}) {
             public List evaluateList(Evaluator evaluator) {
+                evaluator = evaluator.push(false);
                 final List list =
                         listCalc.evaluateList(evaluator);
                 final int start =

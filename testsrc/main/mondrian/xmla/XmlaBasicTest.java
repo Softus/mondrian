@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/xmla/XmlaBasicTest.java#5 $
+// $Id: //open/mondrian/testsrc/main/mondrian/xmla/XmlaBasicTest.java#48 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2002-2007 Julian Hyde and others
+// Copyright (C) 2002-2009 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -12,7 +12,7 @@ package mondrian.xmla;
 import mondrian.olap.*;
 import mondrian.test.*;
 import mondrian.tui.XmlUtil;
-import mondrian.rolap.sql.SqlQuery;
+import mondrian.spi.Dialect;
 
 import org.w3c.dom.Document;
 
@@ -22,7 +22,7 @@ import java.util.Properties;
  * Test XML/A functionality.
  *
  * @author Richard M. Emberson
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/xmla/XmlaBasicTest.java#5 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/xmla/XmlaBasicTest.java#48 $
  */
 public class XmlaBasicTest extends XmlaBaseTestCase {
 
@@ -106,8 +106,9 @@ System.out.println("XmlaBasicTest.getServletCallbackClass");
     }
 
     protected String extractSoapResponse(
-            Document responseDoc,
-            Enumeration.Content content) {
+        Document responseDoc,
+        Enumeration.Content content)
+    {
         Document partialDoc = null;
         switch (content) {
         case None:
@@ -276,6 +277,11 @@ System.out.println("XmlaBasicTest.getServletCallbackClass");
     public void testMDFunctions() throws Exception {
         if (Util.PreJdk15 || Util.Retrowoven) {
             // MDSCHEMA_FUNCTIONS produces different output in JDK 1.4.
+            return;
+        }
+        if (!MondrianProperties.instance().SsasCompatibleNaming.get()) {
+            // <Dimension>.CurrentMember function exists if
+            // SsasCompatibleNaming=false.
             return;
         }
         String requestType = "MDSCHEMA_FUNCTIONS";
@@ -520,8 +526,8 @@ System.out.println("XmlaBasicTest.getServletCallbackClass");
             // Different databases have slightly different column types, which
             // results in slightly different inferred xml schema for the drill-
             // through result.
-            SqlQuery.Dialect dialect = TestContext.instance().getDialect();
-            switch (SqlPattern.Dialect.get(dialect)) {
+            Dialect dialect = TestContext.instance().getDialect();
+            switch (dialect.getDatabaseProduct()) {
             case ORACLE:
                 content = Util.replace(
                     content,
@@ -532,7 +538,7 @@ System.out.println("XmlaBasicTest.getServletCallbackClass");
                     " type=\"xsd:integer\"",
                     " type=\"xsd:decimal\"");
                 break;
-            case POSTGRES:
+            case POSTGRESQL:
                 content = Util.replace(
                     content,
                     " sql:field=\"Store Sqft\" type=\"xsd:double\"",
@@ -543,8 +549,10 @@ System.out.println("XmlaBasicTest.getServletCallbackClass");
                     " sql:field=\"Unit Sales\" type=\"xsd:decimal\"");
                 break;
             case MYSQL:
+            case INFOBRIGHT:
             case DERBY:
             case TERADATA:
+            case NETEZZA:
                 content = Util.replace(
                     content,
                     " sql:field=\"Store Sqft\" type=\"xsd:double\"",
@@ -654,9 +662,9 @@ System.out.println("XmlaBasicTest.getServletCallbackClass");
             requestType, request, "${response}", props, TestContext.instance());
     }
 
-    /** 
+    /**
      * This test returns the same result as testExecuteCrossjoin above
-     * except that the Role used disables accessing 
+     * except that the Role used disables accessing
      * [Customers].[All Customers].[Mexico].
      */
     public void testExecuteCrossjoinRole() throws Exception {
@@ -771,7 +779,7 @@ System.out.println("XmlaBasicTest.getServletCallbackClass");
         Role role = new RR();
 
         Properties props = getDefaultRequestProperties(requestType);
-        doTestInline(requestType, request, "${response}", 
+        doTestInline(requestType, request, "${response}",
             props, TestContext.instance(), role);
     }
 
@@ -780,7 +788,6 @@ System.out.println("XmlaBasicTest.getServletCallbackClass");
      */
 
     public void doTestRT(String requestType, TestContext testContext) throws Exception {
-
         Properties props = new Properties();
         props.setProperty(REQUEST_TYPE_PROP, requestType);
         props.setProperty(DATA_SOURCE_INFO_PROP, DATA_SOURCE_INFO);

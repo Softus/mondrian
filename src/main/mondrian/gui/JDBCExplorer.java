@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/gui/JDBCExplorer.java#2 $
+// $Id: //open/mondrian/src/main/mondrian/gui/JDBCExplorer.java#7 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2002-2007 Julian Hyde and others
+// Copyright (C) 2002-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -16,7 +16,7 @@ import org.apache.log4j.Logger;
 /**
  *
  * @author  sean
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/gui/JDBCExplorer.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/gui/JDBCExplorer.java#7 $
  */
 public class JDBCExplorer extends javax.swing.JPanel {
 
@@ -43,7 +43,6 @@ public class JDBCExplorer extends javax.swing.JPanel {
 
             tree.setModel(model);
             //tree.addTreeSelectionListener(this);
-
         } catch (Exception ex) {
             LOGGER.error(ex);
         }
@@ -70,8 +69,7 @@ public class JDBCExplorer extends javax.swing.JPanel {
         jSplitPane1.setRightComponent(jScrollPane2);
 
         add(jSplitPane1, java.awt.BorderLayout.CENTER);
-
-    }//GEN-END:initComponents
+    } //GEN-END:initComponents
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

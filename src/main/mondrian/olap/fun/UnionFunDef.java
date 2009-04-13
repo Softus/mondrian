@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/UnionFunDef.java#3 $
+// $Id: //open/mondrian/src/main/mondrian/olap/fun/UnionFunDef.java#5 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2007 Julian Hyde
+// Copyright (C) 2006-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -28,7 +28,7 @@ import java.util.ArrayList;
  * Definition of the <code>Union</code> MDX function.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/fun/UnionFunDef.java#3 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/UnionFunDef.java#5 $
  * @since Mar 23, 2006
  */
 class UnionFunDef extends FunDefBase {
@@ -41,7 +41,7 @@ class UnionFunDef extends FunDefBase {
             new String[] {"fxxx", "fxxxy"},
             UnionFunDef.class,
             ReservedWords);
-    
+
     static final MultiResolver PlusResolver = new PlusUnionResolver();
 
     public UnionFunDef(FunDef dummyFunDef) {
@@ -80,14 +80,14 @@ class UnionFunDef extends FunDefBase {
             result.addAll(list1);
             return result;
         } else {
-            Set added = new HashSet();
+            Set<Object> added = new HashSet<Object>();
             List<T> result = new ArrayList<T>();
             FunUtil.addUnique(result, list0, added);
             FunUtil.addUnique(result, list1, added);
             return result;
         }
     }
-    
+
     private static class PlusUnionResolver extends MultiResolver {
         public PlusUnionResolver() {
             super(
@@ -98,7 +98,7 @@ class UnionFunDef extends FunDefBase {
         }
 
         public FunDef resolve(
-                Exp[] args, Validator validator, int[] conversionCount) {
+                Exp[] args, Validator validator, List<Conversion> conversions) {
             // This function only applies in contexts which require a set.
             // Elsewhere, "+" is the addition operator.
             // This means that [Gender].[F] + [Gender].[M] is
@@ -106,7 +106,7 @@ class UnionFunDef extends FunDefBase {
             if (validator.requiresExpression()) {
                 return null;
             }
-            return super.resolve(args, validator, conversionCount);
+            return super.resolve(args, validator, conversions);
         }
 
         protected FunDef createFunDef(Exp[] args, FunDef dummyFunDef) {

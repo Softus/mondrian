@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/loader/DBLoader.java#2 $
+// $Id: //open/mondrian/testsrc/main/mondrian/test/loader/DBLoader.java#20 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2004-2007 Julian Hyde
+// Copyright (C) 2004-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -12,26 +12,24 @@ package mondrian.test.loader;
 
 import mondrian.resource.MondrianResource;
 import mondrian.rolap.RolapUtil;
-import mondrian.rolap.sql.SqlQuery;
+import mondrian.spi.Dialect;
+import mondrian.spi.DialectManager;
+
+import org.apache.log4j.Logger;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
+import java.math.BigDecimal;
+import java.sql.*;
+import java.sql.Date;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.math.BigDecimal;
-import java.io.IOException;
-import java.io.Writer;
-import java.io.File;
-import java.io.FileWriter;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Connection;
-import java.sql.Statement;
-import java.sql.Date;
-import java.sql.Timestamp;
-import java.sql.DatabaseMetaData;
-import org.apache.log4j.*;
 
 /**
  * This is an abstract base class for the creation and load of one or more
@@ -165,7 +163,7 @@ import org.apache.log4j.*;
  * MondrianFoodMartLoader class.
  *
  * @author <a>Richard M. Emberson</a>
- * @version $Id: //open/mondrian-release/3.0/testsrc/main/mondrian/test/loader/DBLoader.java#2 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/test/loader/DBLoader.java#20 $
  */
 public abstract class DBLoader {
     protected static final Logger LOGGER = Logger.getLogger(DBLoader.class);
@@ -190,13 +188,13 @@ public abstract class DBLoader {
     // suffixes of output files
     public static final String DROP_TABLE_INDEX_PROP =
             "mondrian.test.loader.drop.table.index.suffix";
-    public static final String DROP_TABLE_INDEX_SUFFIX_DEFAULT = 
+    public static final String DROP_TABLE_INDEX_SUFFIX_DEFAULT =
             "dropindex.sql";
     public static final String CREATE_TABLE_INDEX_PROP =
             "mondrian.test.loader.create.table.index.suffix";
-    public static final String CREATE_TABLE_INDEX_SUFFIX_DEFAULT = 
+    public static final String CREATE_TABLE_INDEX_SUFFIX_DEFAULT =
             "createindex.sql";
-    
+
     public static final String DROP_TABLE_PROP =
             "mondrian.test.loader.drop.table.suffix";
     public static final String DROP_TABLE_SUFFIX_DEFAULT = "drop.sql";
@@ -232,7 +230,6 @@ public abstract class DBLoader {
      * @return number format, ie. length = 6, places = 2 => "####.##"
      */
     public static String decimalFormat(String lengthStr, String placesStr) {
-
         int length = Integer.parseInt(lengthStr);
         int places = Integer.parseInt(placesStr);
         return decimalFormat(length, places);
@@ -426,7 +423,7 @@ public abstract class DBLoader {
             this.canBeNull = canBeNull;
         }
 
-        public void init(SqlQuery.Dialect dialect) {
+        public void init(Dialect dialect) {
             this.typeName = type.toPhysical(dialect);
         }
         public String getName() {
@@ -451,7 +448,7 @@ public abstract class DBLoader {
      *
      * Specific databases will represent this their own particular physical
      * type, for example "TINYINT(1)", "BOOLEAN" or "BIT";
-     * see {@link #toPhysical(mondrian.rolap.sql.SqlQuery.Dialect)}.
+     * see {@link #toPhysical(mondrian.spi.Dialect)}.
      */
     public static class Type {
         public static final Type Integer = new Type("INTEGER");
@@ -508,7 +505,6 @@ public abstract class DBLoader {
             String upperCaseTypeName = typeName.toUpperCase();
             Matcher matcher = decimalDataTypeRegex.matcher(upperCaseTypeName);
             if (matcher.matches()) {
-
                 type = new Type(upperCaseTypeName);
                 extraTypes.put(upperCaseTypeName, type);
                 return type;
@@ -542,7 +538,7 @@ public abstract class DBLoader {
          * @param dialect Dialect
          * @return Physical type the dialect uses to represent this type
          */
-        public String toPhysical(SqlQuery.Dialect dialect) {
+        public String toPhysical(Dialect dialect) {
             if (this == Integer ||
                     this == Decimal ||
                     this == Smallint ||
@@ -553,42 +549,49 @@ public abstract class DBLoader {
                 return name;
             }
             if (this == Boolean) {
-                if (dialect.isPostgres()) {
+                switch (dialect.getDatabaseProduct()) {
+                case POSTGRESQL:
                     return name;
-                } else if (dialect.isMySQL()) {
+                case MYSQL:
                     return "TINYINT(1)";
-                } else if (dialect.isMSSQL()) {
+                case MSSQL:
                     return "BIT";
-                } else {
+                default:
                     return Smallint.name;
                 }
             }
             if (this == Bigint) {
-                if (dialect.isOracle() || dialect.isFirebird()) {
+                switch (dialect.getDatabaseProduct()) {
+                case ORACLE:
+                case FIREBIRD:
                     return "DECIMAL(15,0)";
-                } else {
+                default:
                     return name;
                 }
             }
             if (this == Date) {
-                if (dialect.isMSSQL()) {
+                switch (dialect.getDatabaseProduct()) {
+                case MSSQL:
                     return "DATETIME";
-                } else {
+                default:
                     return name;
                 }
             }
             if (this == Timestamp) {
-                if (dialect.isMSSQL() || dialect.isMySQL()) {
+                switch (dialect.getDatabaseProduct()) {
+                case MSSQL:
+                case MYSQL:
                     return "DATETIME";
-                } else if (dialect.isIngres()) {
+                case INGRES:
                     return "DATE";
-                } else {
+                default:
                     return name;
                 }
             }
             // for extra types
             if (name.startsWith("DECIMAL(")) {
-                if (dialect.isAccess()) {
+                switch (dialect.getDatabaseProduct()) {
+                case ACCESS:
                     return "CURRENCY";
                 }
                 return name;
@@ -607,7 +610,7 @@ public abstract class DBLoader {
     private File outputDirectory;
     private boolean force;
     private Writer fileWriter;
-    private SqlQuery.Dialect dialect;
+    private Dialect dialect;
     private int batchSize;
     private boolean initialize;
 
@@ -700,8 +703,8 @@ public abstract class DBLoader {
             if (this.userName == null) {
                 this.connection = DriverManager.getConnection(this.jdbcURL);
             } else {
-                this.connection = DriverManager.getConnection(this.jdbcURL,
-                                        this.userName, this.password);
+                this.connection = DriverManager.getConnection(
+                    this.jdbcURL, this.userName, this.password);
             }
         }
 
@@ -712,9 +715,10 @@ public abstract class DBLoader {
 
         LOGGER.info("Output connection is " + productName + ", " + version);
 
-        this.dialect = SqlQuery.Dialect.create(metaData);
+        this.dialect = DialectManager.createDialect(null, this.connection);
         this.initialize = true;
     }
+
     public void setConnection(Connection connection) {
         this.connection = connection;
     }
@@ -804,7 +808,7 @@ public abstract class DBLoader {
             String indexAndColumnName = createIndexList.get(i);
             int index = indexAndColumnName.indexOf(' ');
             String indexName = indexAndColumnName.substring(0, index);
-            String columnName = indexAndColumnName.substring(index+1);
+            String columnName = indexAndColumnName.substring(index + 1);
             String quotedIndexName = quoteId(indexName.trim());
             String quotedColumnName = quoteId(columnName.trim());
             String createIndexStmt = "CREATE INDEX " +
@@ -836,17 +840,17 @@ public abstract class DBLoader {
     protected boolean makeFileWriter(Table table, String suffix)
             throws Exception {
         if (this.outputDirectory != null) {
-            String fileName = table.getName()+suffix;
+            String fileName = table.getName() + suffix;
             File file = new File(outputDirectory, fileName);
             if (file.exists()) {
                 if (this.force) {
                     if (! file.delete()) {
                         throw new Exception("Table file \"" +
-                            fileName+"\" could not be deleted");
+                            fileName + "\" could not be deleted");
                     }
                 } else {
                     throw new Exception("Table file \"" +
-                        fileName+"\" already exists"+
+                        fileName + "\" already exists" +
                         " - delete or use force flag");
                 }
             }
@@ -907,10 +911,12 @@ public abstract class DBLoader {
         if (beforeActionList.isEmpty()) {
             return;
         }
-        String suffix = System.getProperty(DROP_TABLE_INDEX_PROP,
-                            DROP_TABLE_INDEX_SUFFIX_DEFAULT);
+        String suffix =
+            System.getProperty(
+                DROP_TABLE_INDEX_PROP,
+                DROP_TABLE_INDEX_SUFFIX_DEFAULT);
         try {
-            if (makeFileWriter(table, "." + suffix )) {
+            if (makeFileWriter(table, "." + suffix)) {
                 for (String stmt : beforeActionList) {
                     writeDDL(stmt);
                 }
@@ -926,15 +932,18 @@ public abstract class DBLoader {
             closeFileWriter();
         }
     }
+
     protected void executeAfterActions(Table table) throws Exception {
         List<String> afterActionList = table.getAfterActions();
         if (afterActionList.isEmpty()) {
             return;
         }
-        String suffix = System.getProperty(CREATE_TABLE_INDEX_PROP,
-                            CREATE_TABLE_INDEX_SUFFIX_DEFAULT);
+        String suffix =
+            System.getProperty(
+                CREATE_TABLE_INDEX_PROP,
+                CREATE_TABLE_INDEX_SUFFIX_DEFAULT);
         try {
-            if (makeFileWriter(table, "." + suffix )) {
+            if (makeFileWriter(table, "." + suffix)) {
                 for (String stmt : afterActionList) {
                     writeDDL(stmt);
                 }
@@ -950,14 +959,17 @@ public abstract class DBLoader {
             closeFileWriter();
         }
     }
+
     protected boolean executeDropTableRows(Table table) throws Exception {
         try {
             Table.Controller controller = table.getController();
             if (controller.shouldDropTableRows()) {
-                String suffix = System.getProperty(DROP_TABLE_ROWS_PROP,
-                            DROP_TABLE_ROWS_SUFFIX_DEFAULT);
+                String suffix =
+                    System.getProperty(
+                        DROP_TABLE_ROWS_PROP,
+                        DROP_TABLE_ROWS_SUFFIX_DEFAULT);
                 String dropTableRowsStmt = table.getDropTableRowsStmt();
-                if (makeFileWriter(table, "." + suffix )) {
+                if (makeFileWriter(table, "." + suffix)) {
                     writeDDL(dropTableRowsStmt);
                 } else {
                     executeDDL(dropTableRowsStmt);
@@ -972,15 +984,18 @@ public abstract class DBLoader {
         }
         return false;
     }
+
     protected boolean executeDropTable(Table table) {
         // If table does not exist, that is OK
         try {
             Table.Controller controller = table.getController();
             if (controller.shouldDropTable()) {
-                String suffix = System.getProperty(DROP_TABLE_PROP,
-                                DROP_TABLE_SUFFIX_DEFAULT);
+                String suffix =
+                    System.getProperty(
+                        DROP_TABLE_PROP,
+                        DROP_TABLE_SUFFIX_DEFAULT);
                 String dropTableStmt = table.getDropTableStmt();
-                if (makeFileWriter(table, "." + suffix )) {
+                if (makeFileWriter(table, "." + suffix)) {
                     writeDDL(dropTableStmt);
                 } else {
                     executeDDL(dropTableStmt);
@@ -994,14 +1009,17 @@ public abstract class DBLoader {
         }
         return false;
     }
+
     protected boolean executeCreateTable(Table  table) {
         try {
             Table.Controller controller = table.getController();
             if (controller.createTable()) {
-                String suffix = System.getProperty(CREATE_TABLE_PROP,
-                                CREATE_TABLE_SUFFIX_DEFAULT);
+                String suffix =
+                    System.getProperty(
+                        CREATE_TABLE_PROP,
+                        CREATE_TABLE_SUFFIX_DEFAULT);
                 String ddl = table.getCreateTableStmt();
-                if (makeFileWriter(table, "." + suffix )) {
+                if (makeFileWriter(table, "." + suffix)) {
                     writeDDL(ddl);
                 } else {
                     executeDDL(ddl);
@@ -1015,12 +1033,15 @@ public abstract class DBLoader {
             closeFileWriter();
         }
     }
+
     protected int executeLoadTableRows(Table table) {
         int rowsAdded = 0;
         try {
-            String suffix = System.getProperty(LOAD_TABLE_ROWS_PROP,
-                            LOAD_TABLE_ROWS_SUFFIX_DEFAULT);
-            makeFileWriter(table, "." + suffix );
+            String suffix =
+                System.getProperty(
+                    LOAD_TABLE_ROWS_PROP,
+                    LOAD_TABLE_ROWS_SUFFIX_DEFAULT);
+            makeFileWriter(table, "." + suffix);
 
             Table.Controller controller = table.getController();
             if (controller.loadRows()) {
@@ -1049,7 +1070,6 @@ public abstract class DBLoader {
                     rowsAdded += writeBatch(batch, nosInBatch);
                 }
             }
-
         } catch (Exception e) {
 // RME
 e.printStackTrace();
@@ -1059,9 +1079,10 @@ e.printStackTrace();
         }
         return rowsAdded;
     }
-    protected String createInsertStatement(Table table, Object[] values)
-            throws Exception {
 
+    protected String createInsertStatement(Table table, Object[] values)
+        throws Exception
+    {
         Column[] columns = table.getColumns();
         if (columns.length != values.length) {
             int numberOfNullColumns = 0;
@@ -1100,7 +1121,7 @@ e.printStackTrace();
             values = vs;
         }
 
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         buf.append("INSERT INTO ");
         buf.append(quoteId(table.getName()));
         buf.append(" ( ");
@@ -1215,16 +1236,20 @@ e.printStackTrace();
         } else if (type == Type.Timestamp) {
             if (value instanceof String) {
                 Timestamp ts = Timestamp.valueOf((String) value);
-                if (dialect.isOracle() || dialect.isLucidDB()) {
+                switch (dialect.getDatabaseProduct()) {
+                case ORACLE:
+                case LUCIDDB:
                     return "TIMESTAMP '" + ts + "'";
-                } else {
+                default:
                     return "'" + ts + "'";
                 }
             } else if (value instanceof Timestamp) {
                 Timestamp ts = (Timestamp) value;
-                if (dialect.isOracle() || dialect.isLucidDB()) {
+                switch (dialect.getDatabaseProduct()) {
+                case ORACLE:
+                case LUCIDDB:
                     return "TIMESTAMP '" + ts + "'";
-                } else {
+                default:
                     return "'" + ts + "'";
                 }
             }
@@ -1235,16 +1260,20 @@ e.printStackTrace();
         } else if (type == Type.Date) {
             if (value instanceof String) {
                 Date dt = Date.valueOf((String) value);
-                if (dialect.isOracle() || dialect.isLucidDB()) {
+                switch (dialect.getDatabaseProduct()) {
+                case ORACLE:
+                case LUCIDDB:
                     return "DATE '" + dateFormatter.format(dt) + "'";
-                } else {
+                default:
                     return "'" + dateFormatter.format(dt) + "'";
                 }
             } else if (value instanceof Date) {
                 Date dt = (Date) value;
-                if (dialect.isOracle() || dialect.isLucidDB()) {
+                switch (dialect.getDatabaseProduct()) {
+                case ORACLE:
+                case LUCIDDB:
                     return "DATE '" + dateFormatter.format(dt) + "'";
-                } else {
+                default:
                     return "'" + dateFormatter.format(dt) + "'";
                 }
             }
@@ -1289,19 +1318,16 @@ e.printStackTrace();
         } else if (type == Type.Boolean) {
             if (value instanceof String) {
                 String trimmedValue = ((String) value).trim();
-                if (!dialect.isMySQL() &&
-                        !dialect.isOracle() &&
-                        !dialect.isDB2() &&
-                        !dialect.isFirebird() &&
-                        !dialect.isMSSQL() &&
-                        !dialect.isDerby() &&
-                        !dialect.isIngres()) {
-                    if (trimmedValue.equals("1")) {
-                        return "true";
-                    } else if (trimmedValue.equals("0")) {
-                        return "false";
-                    }
-                } else {
+                switch (dialect.getDatabaseProduct()) {
+                case MYSQL:
+                case ORACLE:
+                case DB2:
+                case DB2_AS400:
+                case DB2_OLD_AS400:
+                case FIREBIRD:
+                case MSSQL:
+                case DERBY:
+                case INGRES:
                     if (trimmedValue.equals("true")) {
                         return "1";
                     } else if (trimmedValue.equals("false")) {
@@ -1310,6 +1336,12 @@ e.printStackTrace();
                         return "1";
                     } else if (trimmedValue.equals("0")) {
                         return "0";
+                    }
+                default:
+                    if (trimmedValue.equals("1")) {
+                        return "true";
+                    } else if (trimmedValue.equals("0")) {
+                        return "false";
                     }
                 }
             } else if (value instanceof Boolean) {
@@ -1347,7 +1379,7 @@ e.printStackTrace();
             return "NULL";
         }
 
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         buf.append("'");
         for (int i = 0; i < original.length(); i++) {
             char ch = original.charAt(i);
@@ -1417,6 +1449,7 @@ e.printStackTrace();
         }
         return batchSize;
     }
+
     protected void writeDDL(String ddl) throws Exception {
         LOGGER.debug(ddl);
 
@@ -1424,11 +1457,13 @@ e.printStackTrace();
         this.fileWriter.write(';');
         this.fileWriter.write(nl);
     }
+
     protected void executeDDL(String ddl) throws Exception {
         LOGGER.debug(ddl);
 
         Statement statement = getConnection().createStatement();
         statement.execute(ddl);
-
     }
 }
+
+// End DBLoader.java

@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/MemberBase.java#3 $
+// $Id: //open/mondrian/src/main/mondrian/olap/MemberBase.java#44 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2001-2002 Kana Software, Inc.
-// Copyright (C) 2001-2007 Julian Hyde and others
+// Copyright (C) 2001-2008 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -22,7 +22,7 @@ import java.util.ArrayList;
  *
  * @author jhyde
  * @since 6 August, 2001
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/MemberBase.java#3 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/MemberBase.java#44 $
  */
 public abstract class MemberBase
     extends OlapElementBase
@@ -90,11 +90,11 @@ public abstract class MemberBase
     }
 
     protected MemberBase() {
-    	this.level = null;
+        this.level = null;
         this.flags = 0;
-    	this.parentUniqueName = null;
+        this.parentUniqueName = null;
     }
-    
+
     public String getQualifiedName() {
         return MondrianResource.instance().MdxMemberName.str(getUniqueName());
     }
@@ -158,11 +158,8 @@ public abstract class MemberBase
        return (flags & FLAG_CALCULATED) != 0;
     }
 
-    public OlapElement lookupChild(
-        SchemaReader schemaReader,
-        Id.Segment childName)
-    {
-        return lookupChild(schemaReader, childName, MatchType.EXACT);
+    public boolean isEvaluated() {
+        return isCalculated();
     }
 
     public OlapElement lookupChild(
@@ -254,14 +251,14 @@ public abstract class MemberBase
     }
 
     // implement Member
-    public Member[] getAncestorMembers() {
+    public List<Member> getAncestorMembers() {
         List<Member> list = new ArrayList<Member>();
         Member parentMember = getParentMember();
         while (parentMember != null) {
             list.add(parentMember);
             parentMember = parentMember.getParentMember();
         }
-        return list.toArray(new Member[list.size()]);
+        return list;
     }
 
     /**
@@ -279,7 +276,7 @@ public abstract class MemberBase
     public Comparable getOrderKey() {
         return null;
     }
-    
+
     public boolean isHidden() {
         return false;
     }
@@ -288,7 +285,7 @@ public abstract class MemberBase
         return null;
     }
 
-    public String getPropertyFormattedValue(String propertyName){
+    public String getPropertyFormattedValue(String propertyName) {
         return getPropertyValue(propertyName).toString();
     }
 }

@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/Schema.java#4 $
+// $Id: //open/mondrian/src/main/mondrian/olap/Schema.java#18 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2007 Julian Hyde
+// Copyright (C) 2006-2008 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -16,7 +16,7 @@ import java.util.List;
  * A <code>Schema</code> is a collection of cubes, shared dimensions, and roles.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.0/src/main/mondrian/olap/Schema.java#4 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/Schema.java#18 $
  */
 public interface Schema {
 
@@ -85,7 +85,7 @@ public interface Schema {
 
     /**
      * Returns when this schema was last loaded.
-     * 
+     *
      * @return Date and time when this schema was last loaded
      */
     Date getSchemaLoadDate();
