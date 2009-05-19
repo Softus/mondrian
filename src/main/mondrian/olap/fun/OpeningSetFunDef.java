@@ -12,18 +12,18 @@ import mondrian.calc.TupleCalc;
 
 import mondrian.calc.impl.AbstractListCalc;
 
-import mondrian.mdx.HierarchyExpr;
+import mondrian.mdx.DimensionExpr;
 import mondrian.mdx.ResolvedFunCall;
 
 import mondrian.olap.Evaluator;
 import mondrian.olap.Exp;
 import mondrian.olap.FunDef;
-import mondrian.olap.Literal;
 import mondrian.olap.Member;
 import mondrian.olap.Syntax;
 
 import mondrian.olap.Validator;
 
+import mondrian.olap.type.EmptyType;
 import mondrian.olap.type.MemberType;
 import mondrian.olap.type.SetType;
 import mondrian.olap.type.TupleType;
@@ -33,9 +33,9 @@ public class OpeningSetFunDef extends FunDefBase {
 	static final ReflectiveMultiResolver resolver =
 		new ReflectiveMultiResolver
 			( "OpeningSet"
-			, "OpeningSet(<Set>[, <Tuple>][, BYSET | BYHIER])"
+			, "OpeningSet(<Set>[, <Tuple>[, BYSET | BYHIER]])"
 			, "Ordered opening set of axis set"
-			, new String[] {"fxx", "fxxt", "fxxm", "fxxy", "fxxty", "fxxmy"}
+			, new String[] {"fxx", "fxxt", "fxxm", "fxxty", "fxxmy"}
 			, OpeningSetFunDef.class
 			);
 	
@@ -51,19 +51,13 @@ public class OpeningSetFunDef extends FunDefBase {
 		final Type setElementType = setType.getElementType();
 		final ListCalc listCalc = compiler.compileList(set);
 
-		Exp tuple = call.getArgCount() > 1 ? call.getArg(1) : null;
-		final Flag flag;
-		
-		if (null != tuple) {
-			if (tuple instanceof Literal) {
-				tuple = null;
-				flag = getLiteralArg(call, 1, Flag.BYSET, Flag.class);
-			} else {
-				flag = getLiteralArg(call, 2, Flag.BYSET, Flag.class);
-			}
-		} else {
-			flag = Flag.BYSET;
-		}
+		final Exp tuple =
+			call.getArgCount() > 1
+				&& !(call.getArg(1).getType() instanceof EmptyType)
+					? call.getArg(1) : null;
+		final Flag flag =
+			call.getArgCount() > 2
+				? getLiteralArg(call, 2, Flag.BYSET, Flag.class) : Flag.BYSET;
 
 		if (setType.getArity() == 1) {
 			final MemberType setMemberType = 
@@ -76,19 +70,19 @@ public class OpeningSetFunDef extends FunDefBase {
 				
 			if (null != tuple) {
 				final Type tupleType = tuple.getType(); 
-				final String hierarchyUniqueName = setMemberType.getHierarchy().getUniqueName();
+				final String dimensionUniqueName = setMemberType.getDimension().getUniqueName();
 					
 				if (tupleType instanceof TupleType) {
 					final Type[] tupleElementTypes = ((TupleType)tupleType).elementTypes;
 					
 					for (int i = 0; i < tupleElementTypes.length; i++) {
-						if (((MemberType)tupleElementTypes[i]).getHierarchy().getUniqueName().equals(hierarchyUniqueName)) {
+						if (((MemberType)tupleElementTypes[i]).getDimension().getUniqueName().equals(dimensionUniqueName)) {
 							memberExp = ((ResolvedFunCall)tuple).getArgs()[i];
 							break;
 						}
 					}
 				} else {
-					if (((MemberType)tupleType).getHierarchy().getUniqueName().equals(hierarchyUniqueName)) {
+					if (((MemberType)tupleType).getDimension().getUniqueName().equals(dimensionUniqueName)) {
 						memberExp = tuple;
 					}
 				}
@@ -97,8 +91,8 @@ public class OpeningSetFunDef extends FunDefBase {
 			if (null == memberExp) { 
 				memberExp =
 					new ResolvedFunCall
-						( HierarchyCurrentMemberFunDef.instance
-						, new Exp[] {new HierarchyExpr(setMemberType.getHierarchy())}
+						( DimensionCurrentMemberFunDef.instance
+						, new Exp[] {new DimensionExpr(setMemberType.getDimension())}
 						, setMemberType
 						);
 			}
@@ -154,24 +148,24 @@ public class OpeningSetFunDef extends FunDefBase {
 					final Type[] tupleElementTypes = ((TupleType)tupleType).elementTypes;
 					
 					for (int i = 0; i < tupleElementTypes.length; i++) {
-						final String hierarchyUniqueName = ((MemberType)tupleElementTypes[i]).getHierarchy().getUniqueName();
+						final String dimensionUniqueName = ((MemberType)tupleElementTypes[i]).getDimension().getUniqueName();
 						
 						for (int j = 0; j < setMemberTypes.length; j++) {
 							final MemberType memberType = (MemberType)setMemberTypes[j];
 							
-							if (hierarchyUniqueName.equals(memberType.getHierarchy().getUniqueName())) {
+							if (dimensionUniqueName.equals(memberType.getDimension().getUniqueName())) {
 								args[j] = ((ResolvedFunCall)tuple).getArgs()[i];
 								break;
 							}
 						}
 					}
 				} else {
-					final String hierarchyUniqueName = ((MemberType)tupleType).getHierarchy().getUniqueName(); 
+					final String hierarchyUniqueName = ((MemberType)tupleType).getDimension().getUniqueName(); 
 					
 					for (int i = 0; i < setMemberTypes.length; i++) {
 						final MemberType memberType = (MemberType)setMemberTypes[i];
 						
-						if (hierarchyUniqueName.equals(memberType.getHierarchy().getUniqueName())) {
+						if (hierarchyUniqueName.equals(memberType.getDimension().getUniqueName())) {
 							args[i] = tuple;
 							break;
 						}
@@ -185,8 +179,8 @@ public class OpeningSetFunDef extends FunDefBase {
 					
 					args[i] =
 						new ResolvedFunCall
-							( HierarchyCurrentMemberFunDef.instance
-							, new Exp[] {new HierarchyExpr(memberType.getHierarchy())}
+							( DimensionCurrentMemberFunDef.instance
+							, new Exp[] {new DimensionExpr(memberType.getDimension())}
 							, memberType
 							);
 				}
