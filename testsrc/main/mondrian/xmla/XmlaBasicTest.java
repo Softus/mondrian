@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian/testsrc/main/mondrian/xmla/XmlaBasicTest.java#48 $
+// $Id: //open/mondrian/testsrc/main/mondrian/xmla/XmlaBasicTest.java#49 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -22,7 +22,7 @@ import java.util.Properties;
  * Test XML/A functionality.
  *
  * @author Richard M. Emberson
- * @version $Id: //open/mondrian/testsrc/main/mondrian/xmla/XmlaBasicTest.java#48 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/xmla/XmlaBasicTest.java#49 $
  */
 public class XmlaBasicTest extends XmlaBaseTestCase {
 
@@ -634,29 +634,30 @@ System.out.println("XmlaBasicTest.getServletCallbackClass");
     public void testExecuteCrossjoin() throws Exception {
        String requestType = "EXECUTE";
         String query = "SELECT CrossJoin({[Product].[All Products].children}, {[Customers].[All Customers].children}) ON columns FROM Sales";
-        String request = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-           "<soapenv:Envelope\n" +
-           "    xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\"\n" +
-           "    xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"\n" +
-           "    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n" +
-           "    <soapenv:Body>\n" +
-           "        <Execute xmlns=\"urn:schemas-microsoft-com:xml-analysis\">\n" +
-           "        <Command>\n" +
-           "        <Statement>\n" +
-           query + "\n" +
-           "         </Statement>\n" +
-           "        </Command>\n" +
-           "        <Properties>\n" +
-           "          <PropertyList>\n" +
-           "            <Catalog>${catalog}</Catalog>\n" +
-           "            <DataSourceInfo>${data.source.info}</DataSourceInfo>\n" +
-           "            <Format>${format}</Format>\n" +
-           "            <AxisFormat>TupleFormat</AxisFormat>\n" +
-           "          </PropertyList>\n" +
-           "        </Properties>\n" +
-           "</Execute>\n" +
-           "</soapenv:Body>\n" +
-           "</soapenv:Envelope>";
+        String request =
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+            + "<soapenv:Envelope\n"
+            + "    xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\"\n"
+            + "    xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"\n"
+            + "    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
+            + "    <soapenv:Body>\n"
+            + "        <Execute xmlns=\"urn:schemas-microsoft-com:xml-analysis\">\n"
+            + "        <Command>\n"
+            + "        <Statement>\n"
+            + query + "\n"
+            + "         </Statement>\n"
+            + "        </Command>\n"
+            + "        <Properties>\n"
+            + "          <PropertyList>\n"
+            + "            <Catalog>${catalog}</Catalog>\n"
+            + "            <DataSourceInfo>${data.source.info}</DataSourceInfo>\n"
+            + "            <Format>${format}</Format>\n"
+            + "            <AxisFormat>TupleFormat</AxisFormat>\n"
+            + "          </PropertyList>\n"
+            + "        </Properties>\n"
+            + "</Execute>\n"
+            + "</soapenv:Body>\n"
+            + "</soapenv:Envelope>";
         Properties props = getDefaultRequestProperties(requestType);
         doTestInline(
             requestType, request, "${response}", props, TestContext.instance());
@@ -670,29 +671,30 @@ System.out.println("XmlaBasicTest.getServletCallbackClass");
     public void testExecuteCrossjoinRole() throws Exception {
         String requestType = "EXECUTE";
         String query = "SELECT CrossJoin({[Product].[All Products].children}, {[Customers].[All Customers].children}) ON columns FROM Sales";
-        String request = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-           "<soapenv:Envelope\n" +
-           "    xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\"\n" +
-           "    xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"\n" +
-           "    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n" +
-           "    <soapenv:Body>\n" +
-           "        <Execute xmlns=\"urn:schemas-microsoft-com:xml-analysis\">\n" +
-           "        <Command>\n" +
-           "        <Statement>\n" +
-           query + "\n" +
-           "         </Statement>\n" +
-           "        </Command>\n" +
-           "        <Properties>\n" +
-           "          <PropertyList>\n" +
-           "            <Catalog>${catalog}</Catalog>\n" +
-           "            <DataSourceInfo>${data.source.info}</DataSourceInfo>\n" +
-           "            <Format>${format}</Format>\n" +
-           "            <AxisFormat>TupleFormat</AxisFormat>\n" +
-           "          </PropertyList>\n" +
-           "        </Properties>\n" +
-           "</Execute>\n" +
-           "</soapenv:Body>\n" +
-           "</soapenv:Envelope>";
+        String request =
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+            + "<soapenv:Envelope\n"
+            + "    xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\"\n"
+            + "    xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"\n"
+            + "    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
+            + "    <soapenv:Body>\n"
+            + "        <Execute xmlns=\"urn:schemas-microsoft-com:xml-analysis\">\n"
+            + "        <Command>\n"
+            + "        <Statement>\n"
+            + query + "\n"
+            + "         </Statement>\n"
+            + "        </Command>\n"
+            + "        <Properties>\n"
+            + "          <PropertyList>\n"
+            + "            <Catalog>${catalog}</Catalog>\n"
+            + "            <DataSourceInfo>${data.source.info}</DataSourceInfo>\n"
+            + "            <Format>${format}</Format>\n"
+            + "            <AxisFormat>TupleFormat</AxisFormat>\n"
+            + "          </PropertyList>\n"
+            + "        </Properties>\n"
+            + "</Execute>\n"
+            + "</soapenv:Body>\n"
+            + "</soapenv:Envelope>";
 
         class RR implements Role {
             public RR() {

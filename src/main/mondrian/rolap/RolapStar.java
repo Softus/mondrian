@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/rolap/RolapStar.java#101 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/RolapStar.java#102 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2001-2002 Kana Software, Inc.
-// Copyright (C) 2001-2008 Julian Hyde and others
+// Copyright (C) 2001-2009 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -41,7 +41,7 @@ import java.util.*;
  *
  * @author jhyde
  * @since 12 August, 2001
- * @version $Id: //open/mondrian/src/main/mondrian/rolap/RolapStar.java#101 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/RolapStar.java#102 $
  */
 public class RolapStar {
     private static final Logger LOGGER = Logger.getLogger(RolapStar.class);
@@ -1261,8 +1261,8 @@ public class RolapStar {
             // is unfortunate, and we will fix it some day. For now, create
             // a fake column with all of the information needed by the toSql
             // method, and a copy of the predicate wrapping that fake column.
-            if (!Bug.Bug1767775Fixed ||
-                !Bug.Bug1767779Fixed && predicate.getConstrainedColumn() == null)
+            if (!Bug.BugMondrian313Fixed ||
+                !Bug.BugMondrian314Fixed && predicate.getConstrainedColumn() == null)
             {
                 Column column = new Column(datatype) {
                     public String generateExprString(SqlQuery query) {

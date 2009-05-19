@@ -82,7 +82,7 @@ import java.util.List;
  * @see mondrian.spi.DialectManager
  *
  * @author jhyde
- * @version $Id: //open/mondrian/src/main/mondrian/spi/Dialect.java#7 $
+ * @version $Id: //open/mondrian/src/main/mondrian/spi/Dialect.java#8 $
  * @since Oct 10, 2008
  */
 public interface Dialect {
@@ -637,6 +637,7 @@ public interface Dialect {
         ORACLE,
         POSTGRESQL,
         MYSQL,
+        SQLSTREAM,
         SYBASE,
         TERADATA;
 

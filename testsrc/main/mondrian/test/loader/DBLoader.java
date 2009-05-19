@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian/testsrc/main/mondrian/test/loader/DBLoader.java#20 $
+// $Id: //open/mondrian/testsrc/main/mondrian/test/loader/DBLoader.java#21 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -163,7 +163,7 @@ import java.util.regex.Pattern;
  * MondrianFoodMartLoader class.
  *
  * @author <a>Richard M. Emberson</a>
- * @version $Id: //open/mondrian/testsrc/main/mondrian/test/loader/DBLoader.java#20 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/test/loader/DBLoader.java#21 $
  */
 public abstract class DBLoader {
     protected static final Logger LOGGER = Logger.getLogger(DBLoader.class);
@@ -751,8 +751,8 @@ public abstract class DBLoader {
         for (int i = 0; i < dropIndexList.size(); i++) {
             String indexName = dropIndexList.get(i);
             String quotedIndexName = quoteId(indexName);
-            String dropIndexStmt = "DROP INDEX " +
-                quotedIndexName + " ON " + quotedTableName;
+            String dropIndexStmt =
+                "DROP INDEX " + quotedIndexName + " ON " + quotedTableName;
             dropIndexList.set(i, dropIndexStmt);
         }
     }
@@ -811,9 +811,9 @@ public abstract class DBLoader {
             String columnName = indexAndColumnName.substring(index + 1);
             String quotedIndexName = quoteId(indexName.trim());
             String quotedColumnName = quoteId(columnName.trim());
-            String createIndexStmt = "CREATE INDEX " +
-                quotedIndexName + " ON " + quotedTableName +
-                " ( " + quotedColumnName + " )";
+            String createIndexStmt =
+                "CREATE INDEX " + quotedIndexName + " ON "
+                + quotedTableName + " ( " + quotedColumnName + " )";
             createIndexList.set(i, createIndexStmt);
         }
     }
@@ -845,13 +845,17 @@ public abstract class DBLoader {
             if (file.exists()) {
                 if (this.force) {
                     if (! file.delete()) {
-                        throw new Exception("Table file \"" +
-                            fileName + "\" could not be deleted");
+                        throw new Exception(
+                            "Table file \""
+                            + fileName
+                            + "\" could not be deleted");
                     }
                 } else {
-                    throw new Exception("Table file \"" +
-                        fileName + "\" already exists" +
-                        " - delete or use force flag");
+                    throw new Exception(
+                        "Table file \""
+                        + fileName
+                        + "\" already exists"
+                        + " - delete or use force flag");
                 }
             }
             this.fileWriter = new FileWriter(file);
@@ -1056,8 +1060,8 @@ public abstract class DBLoader {
                     String insertStatement =
                         createInsertStatement(table, values);
                     if (!displayedInsert && LOGGER.isDebugEnabled()) {
-                        LOGGER.debug("Example Insert statement: " +
-                            insertStatement);
+                        LOGGER.debug(
+                            "Example Insert statement: " + insertStatement);
                         displayedInsert = true;
                     }
                     batch[nosInBatch++] = insertStatement;

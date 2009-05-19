@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/rolap/SqlMemberSource.java#97 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/SqlMemberSource.java#98 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -33,7 +33,7 @@ import java.util.*;
  *
  * @author jhyde
  * @since 21 December, 2001
- * @version $Id: //open/mondrian/src/main/mondrian/rolap/SqlMemberSource.java#97 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/SqlMemberSource.java#98 $
  */
 class SqlMemberSource
     implements MemberReader, SqlTupleReader.MemberBuilder
@@ -1173,6 +1173,9 @@ RME is this right
                 List<RolapMember> list = new ArrayList<RolapMember>();
                 list.add(dataMember);
                 RolapHierarchy hierarchy = getHierarchy();
+                if (hierarchy instanceof RolapCubeHierarchy) {
+                    hierarchy = ((RolapCubeHierarchy)hierarchy).getRolapHierarchy();
+                }
                 hierarchy.getMemberReader().getMemberChildren(dataMember, list);
                 return list;
             } else {

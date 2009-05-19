@@ -29,7 +29,7 @@ import java.sql.Date;
  * metadata, so can deduce some of the dialect's behavior.</p>
  *
  * @author jhyde
- * @version $Id: //open/mondrian/src/main/mondrian/spi/impl/JdbcDialectImpl.java#7 $
+ * @version $Id: //open/mondrian/src/main/mondrian/spi/impl/JdbcDialectImpl.java#10 $
  * @since Oct 10, 2008
  */
 public class JdbcDialectImpl implements Dialect {
@@ -793,6 +793,8 @@ public class JdbcDialectImpl implements Dialect {
             return DatabaseProduct.ORACLE;
         } else if (productName.toUpperCase().indexOf("POSTGRE") >= 0) {
             return DatabaseProduct.POSTGRESQL;
+        } else if (productName.toUpperCase().indexOf("NETEZZA") >= 0) {
+            return DatabaseProduct.NETEZZA;
         } else if (productName.toUpperCase().equals("MYSQL (INFOBRIGHT)")) {
             return DatabaseProduct.INFOBRIGHT;
         } else if (productName.toUpperCase().equals("MYSQL")) {

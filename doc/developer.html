@@ -1,6 +1,6 @@
 <html>
 <!--
-  == $Id: //open/mondrian/doc/developer.html#17 $
+  == $Id: //open/mondrian/doc/developer.html#18 $
   == This software is subject to the terms of the Common Public License
   == Agreement, available at the following URL:
   == http://www.opensource.org/licenses/cpl.html.
@@ -235,7 +235,9 @@ the test. The important properties are:</p>
 </table>
 
 <p>There is a target in the build script, load-foodmart, that will load the Foodmart data into an empty
-database configured through your mondrian.properties settings.</p>
+database configured through your mondrian.properties settings. For this target, you can set an additional property
+in mondrian.properties, mondrian.foodmart.jdbcSchema=&lt;your schema&gt; if you are using a database that
+supports schemas and you want to load Foodmart into a particular schema.</p>
 
 
 <h2>Running the test suite<a name="6_Run_the_test_suite">&nbsp;</a></h2>
@@ -544,7 +546,7 @@ messages in a format which Emacs can parse.</td></tr></tbody></table><p>&nbsp;</
 <hr noshade size="1"/>
 <p>
     Author: Julian Hyde; last updated September, 2008.<br/>
-    Version: $Id: //open/mondrian/doc/developer.html#17 $
+    Version: $Id: //open/mondrian/doc/developer.html#18 $
     (<a href="http://p4web.eigenbase.org/open/mondrian/doc/developer.html?ac=22">log&nbsp;</a>)<br/>
     Copyright (C) 2005-2008 Julian Hyde
 </p>

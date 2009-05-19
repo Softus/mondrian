@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian/testsrc/main/mondrian/test/TestContext.java#67 $
+// $Id: //open/mondrian/testsrc/main/mondrian/test/TestContext.java#73 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -19,6 +19,7 @@ import mondrian.olap.*;
 import mondrian.olap.Connection;
 import mondrian.olap.DriverManager;
 import mondrian.olap.Member;
+import mondrian.olap.fun.FunUtil;
 import mondrian.resource.MondrianResource;
 import mondrian.rolap.RolapConnectionProperties;
 import mondrian.rolap.RolapUtil;
@@ -26,6 +27,7 @@ import mondrian.spi.impl.FilterDynamicSchemaProcessor;
 import mondrian.spi.Dialect;
 import mondrian.spi.DialectManager;
 import mondrian.util.DelegatingInvocationHandler;
+import mondrian.util.CoordinateIterator;
 
 import javax.sql.DataSource;
 import java.io.*;
@@ -53,7 +55,7 @@ import org.olap4j.OlapConnection;
  *
  * @author jhyde
  * @since 29 March, 2002
- * @version $Id: //open/mondrian/testsrc/main/mondrian/test/TestContext.java#67 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/test/TestContext.java#73 $
  */
 public class TestContext {
     private static TestContext instance; // the singleton
@@ -338,8 +340,9 @@ public class TestContext {
 
         // Add virtual cube definitions, if specified.
         if (virtualCubeDefs != null) {
-            int i = s.indexOf("<VirtualCube name=\"Warehouse and Sales\" " +
-                    "defaultMeasure=\"Store Sales\">");
+            int i = s.indexOf(
+                "<VirtualCube name=\"Warehouse and Sales\" "
+                + "defaultMeasure=\"Store Sales\">");
             s = s.substring(0, i) +
                 virtualCubeDefs +
                 s.substring(i);
@@ -475,8 +478,88 @@ public class TestContext {
         Connection connection = getConnection();
         queryString = upgradeQuery(queryString);
         Query query = connection.parseQuery(queryString);
-        return connection.execute(query);
+        final Result result = connection.execute(query);
+
+        // If we're deep testing, check that we never return the dummy null
+        // value when cells are null. TestExpDependencies isn't the perfect
+        // switch to enable this, but it will do for now.
+        if (MondrianProperties.instance().TestExpDependencies.booleanValue()) {
+            assertResultValid(result);
+        }
+        return result;
     }
+
+    /**
+     * Checks that a {@link Result} is valid.
+     *
+     * @param result Query result
+     */
+    private void assertResultValid(Result result) {
+        for (Cell cell : cellIter(result)) {
+            final Object value = cell.getValue();
+
+            // Check that the dummy value used to represent null cells never
+            // leaks into the outside world.
+            Assert.assertNotSame(value, Util.nullValue);
+            Assert.assertFalse(
+                value instanceof Number
+                && ((Number) value).doubleValue() == FunUtil.DoubleNull);
+
+            // Similarly empty values.
+            Assert.assertNotSame(value, Util.EmptyValue);
+            Assert.assertFalse(
+                value instanceof Number
+                && ((Number) value).doubleValue() == FunUtil.DoubleEmpty);
+
+            // Cells should be null if and only if they are null or empty.
+            if (cell.getValue() == null) {
+                Assert.assertTrue(cell.isNull());
+            } else {
+                Assert.assertFalse(cell.isNull());
+            }
+        }
+
+        // There should be no null members.
+        for (Axis axis : result.getAxes()) {
+            for (Position position : axis.getPositions()) {
+                for (Member member : position) {
+                    Assert.assertNotNull(member);
+                }
+            }
+        }
+    }
+
+    /**
+     * Returns an iterator over cells in a result.
+     */
+    static Iterable<Cell> cellIter(final Result result) {
+        return new Iterable<Cell>() {
+            public Iterator<Cell> iterator() {
+                int[] axisDimensions = new int[result.getAxes().length];
+                int k = 0;
+                for (Axis axis : result.getAxes()) {
+                    axisDimensions[k++] = axis.getPositions().size();
+                }
+                final CoordinateIterator
+                    coordIter = new CoordinateIterator(axisDimensions);
+                return new Iterator<Cell>() {
+                    public boolean hasNext() {
+                        return coordIter.hasNext();
+                    }
+
+                    public Cell next() {
+                        final int[] ints = coordIter.next();
+                        return result.getCell(ints);
+                    }
+
+                    public void remove() {
+                        throw new UnsupportedOperationException();
+                    }
+                };
+            }
+        };
+    }
+
 
     /**
      * Executes a query, and asserts that it throws an exception which contains
@@ -509,11 +592,12 @@ public class TestContext {
             if (cubeName.indexOf(' ') >= 0) {
                 cubeName = Util.quoteMdxIdentifier(cubeName);
             }
+            expression = Util.replace(expression, "'", "''");
             Result result = executeQuery(
-                "with member [Measures].[Foo] as '" +
-                    expression +
-                    "' select {[Measures].[Foo]} on columns from " +
-                    cubeName);
+                "with member [Measures].[Foo] as '"
+                + expression
+                + "' select {[Measures].[Foo]} on columns from "
+                + cubeName);
             Cell cell = result.getCell(new int[]{0});
             if (cell.isError()) {
                 throwable = (Throwable) cell.getValue();
@@ -560,9 +644,10 @@ public class TestContext {
         if (cubeName.indexOf(' ') >= 0) {
             cubeName = Util.quoteMdxIdentifier(cubeName);
         }
-        final String queryString = "with member [Measures].[Foo] as " +
-            Util.singleQuoteString(expression) +
-            " select {[Measures].[Foo]} on columns from " + cubeName;
+        final String queryString =
+            "with member [Measures].[Foo] as "
+            + Util.singleQuoteString(expression)
+            + " select {[Measures].[Foo]} on columns from " + cubeName;
         Result result = executeQuery(queryString);
         return result.getCell(new int[]{0});
     }
@@ -704,9 +789,10 @@ public class TestContext {
         }
         final String queryString;
         if (scalar) {
-            queryString = "with member [Measures].[Foo] as " +
-                    Util.singleQuoteString(expression) +
-                    " select {[Measures].[Foo]} on columns from " + cubeName;
+            queryString =
+                "with member [Measures].[Foo] as "
+                + Util.singleQuoteString(expression)
+                + " select {[Measures].[Foo]} on columns from " + cubeName;
         } else {
             queryString = "SELECT {" + expression + "} ON COLUMNS FROM " + cubeName;
         }
@@ -756,8 +842,8 @@ public class TestContext {
             return member;
         default:
             throw Util.newInternal(
-                    "expression " + expression + " yielded " +
-                    axis.getPositions().size() + " positions");
+                "expression " + expression
+                + " yielded " + axis.getPositions().size() + " positions");
         }
     }
 
@@ -767,8 +853,8 @@ public class TestContext {
      */
     public Axis executeAxis(String expression) {
         Result result = executeQuery(
-                "select {" + expression + "} on columns from " +
-                getDefaultCubeName());
+            "select {" + expression
+            + "} on columns from " + getDefaultCubeName());
         return result.getAxes()[0];
     }
 
@@ -836,16 +922,17 @@ public class TestContext {
     public void assertSimpleQuery() {
         assertQueryReturns(
             "select from [Sales]",
-            fold("Axis #0:\n" +
-                "{}\n" +
-                "266,773"));
+            "Axis #0:\n"
+            + "{}\n"
+            + "266,773");
     }
 
     /**
      * Checks that an actual string matches an expected string.
-     * If they do not, throws a {@link junit.framework.ComparisonFailure} and prints the
-     * difference, including the actual string as an easily pasted Java string
-     * literal.
+     *
+     * <p>If they do not, throws a {@link junit.framework.ComparisonFailure} and
+     * prints the difference, including the actual string as an easily pasted
+     * Java string literal.
      */
     public static void assertEqualsVerbose(
         String expected,
@@ -856,9 +943,16 @@ public class TestContext {
 
     /**
      * Checks that an actual string matches an expected string.
-     * If they do not, throws a {@link ComparisonFailure} and prints the
+     *
+     * <p>If they do not, throws a {@link ComparisonFailure} and prints the
      * difference, including the actual string as an easily pasted Java string
      * literal.
+     *
+     * @param expected Expected string
+     * @param actual Actual string
+     * @param java Whether to generate actual string as a Java string literal
+     * if the values are not equal
+     * @param message Message to display, optional
      */
     public static void assertEqualsVerbose(
         String expected,
@@ -866,6 +960,31 @@ public class TestContext {
         boolean java,
         String message)
     {
+        assertEqualsVerbose(
+            fold(expected), actual, java, message);
+    }
+
+    /**
+     * Checks that an actual string matches an expected string.
+     *
+     * <p>If they do not, throws a {@link ComparisonFailure} and prints the
+     * difference, including the actual string as an easily pasted Java string
+     * literal.
+     *
+     * @param safeExpected Expected string, where all line endings have been
+     * converted into platform-specific line endings
+     * @param actual Actual string
+     * @param java Whether to generate actual string as a Java string literal
+     * if the values are not equal
+     * @param message Message to display, optional
+     */
+    public static void assertEqualsVerbose(
+        SafeString safeExpected,
+        String actual,
+        boolean java,
+        String message)
+    {
+        String expected = safeExpected == null ? null : safeExpected.s;
         if ((expected == null) && (actual == null)) {
             return;
         }
@@ -954,15 +1073,57 @@ public class TestContext {
     }
 
     /**
-     * Formats {@link mondrian.olap.Result}.
+     * Converts a {@link mondrian.olap.Result} to text in traditional format.
+     *
+     * @param result Query result
+     * @return Result as text
      */
     public static String toString(Result result) {
+        return toString(result, Format.TRADITIONAL);
+    }
+
+    /**
+     * Converts a {@link mondrian.olap.Result} to text.
+     *
+     * @param result Query result
+     * @param format Format
+     * @return Result as text
+     */
+    public static String toString(Result result, Format format) {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
-        result.print(pw);
+        switch (format) {
+        case TRADITIONAL:
+            result.print(pw);
+            break;
+        case COMPACT_RECTANGULAR:
+        case RECTANGULAR:
+            new RectangularResultFormatter(
+                result,
+                format == Format.COMPACT_RECTANGULAR).format(pw);
+            break;
+        }
         pw.flush();
         return sw.toString();
     }
+
+    public enum Format {
+        /**
+         * Traditional format, one row per cell.
+         */
+        TRADITIONAL,
+
+        /**
+         * Rectangular format that is similar to {@link #RECTANGULAR} but omits
+         * vertical bars and is therefore more compact.
+         */
+        COMPACT_RECTANGULAR,
+
+        /**
+         * Rectangular format that uses vertical bars and hyphens to draw a grid.
+         */
+        RECTANGULAR
+    };
 
     /**
      * Converts a set of positions into a string. Useful if you want to check
@@ -994,34 +1155,54 @@ public class TestContext {
     }
 
     /**
-     * Converts an array of strings, each representing a line, into a single
-     * string with line separators. There is no line separator after the
-     * last string.
+     * Wrapper around a string that indicates that all line endings have been
+     * converted to platform-specific line endings.
      *
-     * <p>This function exists because line separators are platform dependent,
-     * and IDEs such as Intellij handle large string arrays much better than
-     * they handle concatenations of large numbers of string fragments.
+     * @see TestContext#fold
      */
-    public static String fold(String[] strings) {
-        StringBuilder buf = new StringBuilder();
-        for (int i = 0; i < strings.length; i++) {
-            if (i > 0) {
-                buf.append(nl);
-            }
-            String string = strings[i];
-            buf.append(string);
+    public static class SafeString {
+        public final String s;
+
+        private SafeString(String s) {
+            this.s = s;
         }
-        return buf.toString();
     }
 
     /**
-     * Converts a string constant into locale-specific line endings.
+     * Converts a string constant into platform-specific line endings.
+     *
+     * @param string String where line endings are represented as linefeed "\n"
+     * @return String where all linefeeds have been converted to
+     * platform-specific (CR+LF on Windows, LF on Unix/Linux)
      */
-    public static String fold(String string) {
+    public static SafeString fold(String string) {
         if (!nl.equals("\n")) {
             string = Util.replace(string, "\n", nl);
         }
-        return string;
+        if (string == null) {
+            return null;
+        } else {
+            return new SafeString(string);
+        }
+    }
+
+    /**
+     * Reverses the effect of {@link #fold}; converts platform-specific line
+     * endings in a string info linefeeds.
+     *
+     * @param string String where all linefeeds have been converted to
+     * platform-specific (CR+LF on Windows, LF on Unix/Linux)
+     * @return String where line endings are represented as linefeed "\n"
+     */
+    public static String unfold(String string) {
+        if (!nl.equals("\n")) {
+            string = Util.replace(string, nl, "\n");
+        }
+        if (string == null) {
+            return null;
+        } else {
+            return string;
+        }
     }
 
     public synchronized Dialect getDialect() {
@@ -1286,9 +1467,9 @@ public class TestContext {
         // Use a fresh connection, because some tests define their own dims.
         final Connection connection = getFoodMartConnection();
         final String queryString =
-                "WITH MEMBER [Measures].[Foo] AS " +
-                Util.singleQuoteString(expr) +
-                " SELECT FROM [Sales]";
+            "WITH MEMBER [Measures].[Foo] AS "
+            + Util.singleQuoteString(expr)
+            + " SELECT FROM [Sales]";
         final Query query = connection.parseQuery(queryString);
         query.resolve();
         final Formula formula = query.getFormulas()[0];
@@ -1630,6 +1811,250 @@ public class TestContext {
                 }
             }
             return s;
+        }
+    }
+
+    public static class RectangularResultFormatter
+    {
+        private final Result result;
+        private final boolean compact;
+        private final Matrix matrix;
+        private final AxisInfo[] axisInfos;
+
+//                          | 1997                                                |
+//                          | Q1                       | Q2                       |
+//                          |                          | 4                        |
+//                          | Unit Sales | Store Sales | Unit Sales | Store Sales |
+// ----+----+---------------+------------+-------------+------------+-------------+
+// USA | CA | Los Angeles   |            |             |            |             |
+//     | WA | Seattle       |            |             |            |             |
+//     | CA | San Francisco |            |             |            |             |
+//
+//                      1997
+//                      Q1                     Q2
+//                                             4
+//                      Unit Sales Store Sales Unit Sales Store Sales
+// === == ============= ========== =========== ========== ===========
+// USA CA Los Angeles           12        34.5         13       35.60
+//     WA Seattle               12        34.5         13       35.60
+//     CA San Francisco         12        34.5         13       35.60
+
+        public RectangularResultFormatter(Result result, boolean compact) {
+            this.result = result;
+            this.compact = compact;
+
+            if (result.getAxes().length != 2) {
+                throw new InvalidArgumentException(
+                    "Only 2 dimensional results are currently supported");
+            }
+
+            // Compute how many columns are required to display the rows axis.
+            // In the example, this is 3 (the width of USA, CA, Los Angeles)
+            final Axis rowsAxis = result.getAxes()[1];
+            AxisInfo rowsAxisInfo = computeAxisInfo(rowsAxis);
+
+            // Compute how many rows are required to display the columns axis.
+            // In the example, this is 4 (1997, Q1, space, Unit Sales)
+            final Axis columnsAxis = result.getAxes()[0];
+            AxisInfo columnsAxisInfo  = computeAxisInfo(columnsAxis);
+
+            // Figure out the dimensions of the blank rectangle in the top left
+            // corner.
+
+            // Populate a string matrix
+            final int yOffset = rowsAxisInfo.getWidth();
+            final int xOffset = columnsAxisInfo.getWidth();
+            matrix =
+                new Matrix(
+                    yOffset
+                    + columnsAxis.getPositions().size(),
+                    xOffset
+                    + rowsAxis.getPositions().size());
+
+            // Populate matrix with cells representing axes
+            populateAxis(
+                columnsAxis, columnsAxisInfo, true, yOffset);
+            populateAxis(
+                rowsAxis, rowsAxisInfo, false, xOffset);
+
+            // Populate cell values
+            for (Cell cell : cellIter(result)) {
+                final List<Integer> coordList = cell.getCoordinateList();
+                matrix.set(
+                    yOffset + coordList.get(0),
+                    xOffset + coordList.get(1),
+                    cell.getFormattedValue());
+            }
+            this.axisInfos = new AxisInfo[] {
+                columnsAxisInfo,
+                rowsAxisInfo
+            };
+        }
+
+        private void populateAxis(
+            Axis axis, AxisInfo axisInfo, boolean reverse, int xOffset)
+        {
+            for (int i = 0; i < axis.getPositions().size(); i++) {
+                final int x = xOffset + i;
+                Position position = axis.getPositions().get(i);
+                int yOffset = 0;
+                for (int j = 0; j < position.size(); j++) {
+                    Member member = position.get(j);
+                    final AxisOrdinalInfo ordinalInfo =
+                        axisInfo.ordinalInfos.get(j);
+                    while (member != null) {
+                        if (member.getDepth() < ordinalInfo.minDepth) {
+                            break;
+                        }
+                        final int y =
+                            yOffset
+                            + member.getDepth()
+                            - ordinalInfo.minDepth;
+                        if (reverse) {
+                            matrix.set(x, y, member.getCaption());
+                        } else {
+                            //noinspection SuspiciousNameCombination
+                            matrix.set(y, x, member.getCaption());
+                        }
+                        member = member.getParentMember();
+                    }
+                    yOffset += ordinalInfo.getWidth();
+                }
+            }
+        }
+
+        private AxisInfo computeAxisInfo(Axis axis)
+        {
+            if (axis.getPositions().isEmpty()) {
+                throw new InvalidArgumentException(
+                    "Empty axis not currently supported");
+            }
+            final AxisInfo axisInfo =
+                new AxisInfo(axis.getPositions().get(0).size());
+            for (Position position : axis.getPositions()) {
+                int k = -1;
+                for (Member member : position) {
+                    ++k;
+                    final AxisOrdinalInfo axisOrdinalInfo =
+                        axisInfo.ordinalInfos.get(k);
+                    axisOrdinalInfo.minDepth =
+                        Math.min(
+                            axisOrdinalInfo.minDepth,
+                            member.isAll()
+                            ? member.getDepth()
+                                : member.getHierarchy().hasAll()
+                                    ? 1
+                                    : 0);
+                    axisOrdinalInfo.maxDepth =
+                        Math.max(
+                            axisOrdinalInfo.maxDepth,
+                            member.getDepth());
+                }
+            }
+            return axisInfo;
+        }
+
+        void format(PrintWriter pw) {
+            int[] columnWidths = new int[matrix.width];
+            int widestWidth = 0;
+            for (int x = 0; x < matrix.width; x++) {
+                int columnWidth = 0;
+                for (int y = 0; y < matrix.height; y++) {
+                    String val = matrix.get(x, y);
+                    if (val != null) {
+                        columnWidth = Math.max(columnWidth, val.length());
+                    }
+                }
+                columnWidths[x] = columnWidth;
+                widestWidth = Math.max(columnWidth, widestWidth);
+            }
+
+            // Create a large array of spaces, for efficient printing.
+            char[] spaces = new char[widestWidth + 1];
+            Arrays.fill(spaces, ' ');
+            char[] equals = new char[widestWidth + 1];
+            Arrays.fill(equals, '=');
+
+            final int yOffset = this.axisInfos[0].getWidth();
+            for (int y = 0; y < matrix.height; y++) {
+                if (compact && y == yOffset) {
+                    for (int x = 0; x < matrix.width; x++) {
+                        if (x > 0) {
+                            pw.write(' ');
+                        }
+                        pw.write(equals, 0, columnWidths[x]);
+                    }
+                    pw.println();
+                }
+                for (int x = 0; x < matrix.width; x++) {
+                    final String val = matrix.get(x, y);
+                    final int len;
+                    if (val != null) {
+                        pw.print(val);
+                        len = val.length();
+                    } else {
+                        len = 0;
+                    }
+                    if (x == matrix.width - 1) {
+                        // at last column; don't bother to print padding
+                        break;
+                    }
+                    int padding = columnWidths[x] - len;
+                    ++padding; // space between the columns
+                    pw.write(spaces, 0, padding);
+                }
+                pw.println();
+            }
+        }
+
+        private static class AxisOrdinalInfo {
+            int minDepth = Integer.MAX_VALUE;
+            int maxDepth = 0;
+
+            public int getWidth() {
+                return maxDepth - minDepth + 1;
+            }
+        }
+
+        private static class AxisInfo {
+            final List<AxisOrdinalInfo> ordinalInfos;
+
+            public AxisInfo(int ordinalCount) {
+                ordinalInfos = new ArrayList<AxisOrdinalInfo>(ordinalCount);
+                for (int i = 0; i < ordinalCount; i++) {
+                    ordinalInfos.add(new AxisOrdinalInfo());
+                }
+            }
+
+            public int getWidth() {
+                int width = 0;
+                for (AxisOrdinalInfo info : ordinalInfos) {
+                    width += info.getWidth();
+                }
+                return width;
+            }
+        }
+
+        private class Matrix {
+            private final Map<List<Integer>, String> map =
+                new HashMap<List<Integer>, String>();
+            private final int width;
+            private final int height;
+
+            public Matrix(int width, int height) {
+                this.width = width;
+                this.height = height;
+            }
+
+            void set(int x, int y, String value) {
+                map.put(Arrays.asList(x, y), value);
+                assert x >= 0 && x < width : x;
+                assert y >= 0 && y < height : y;
+            }
+
+            public String get(int x, int y) {
+                return map.get(Arrays.asList(x, y));
+            }
         }
     }
 }

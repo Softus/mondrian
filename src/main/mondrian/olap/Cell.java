@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/olap/Cell.java#14 $
+// $Id: //open/mondrian/src/main/mondrian/olap/Cell.java#15 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2001-2002 Kana Software, Inc.
-// Copyright (C) 2001-2006 Julian Hyde and others
+// Copyright (C) 2001-2009 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -13,15 +13,24 @@
 
 package mondrian.olap;
 
+import java.util.List;
+
 /**
  * A <code>Cell</code> is an item in the grid of a {@link Result}.  It is
  * returned by {@link Result#getCell}.
  *
  * @author jhyde
  * @since 6 August, 2001
- * @version $Id: //open/mondrian/src/main/mondrian/olap/Cell.java#14 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/Cell.java#15 $
  */
 public interface Cell {
+    /**
+     * Returns the coordinates of this Cell in its {@link Result}.
+     *
+     * @return Coordinates of this Cell
+     */
+    List<Integer> getCoordinateList();
+
     /**
      * Returns the cell's raw value. This is useful for sending to further data
      * processing, such as plotting a chart.
@@ -40,7 +49,6 @@ public interface Cell {
      * @post (return instanceof Util.NullCellValue) == isNull()
      */
     Object getValue();
-
 
     /**
      * Return the cached formatted string, that survives an aggregate cache clear

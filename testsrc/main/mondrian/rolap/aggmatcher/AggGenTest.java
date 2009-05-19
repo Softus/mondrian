@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian/testsrc/main/mondrian/rolap/aggmatcher/AggGenTest.java#6 $
+// $Id: //open/mondrian/testsrc/main/mondrian/rolap/aggmatcher/AggGenTest.java#7 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2007 Julian Hyde and others
+// Copyright (C) 2005-2009 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -37,7 +37,7 @@ import javax.sql.DataSource;
  * AggGen#addCollapsedColumn(...).
  *
  * @author Sherman Wood
- * @version $Id: //open/mondrian/testsrc/main/mondrian/rolap/aggmatcher/AggGenTest.java#6 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/rolap/aggmatcher/AggGenTest.java#7 $
  */
 public class AggGenTest extends FoodMartTestCase {
 
@@ -80,9 +80,9 @@ public class AggGenTest extends FoodMartTestCase {
 
             String log = writer.toString();
             Pattern p = Pattern.compile(
-                "DEBUG - Init: Column: [^:]+: `(\\w+)`.`(\\w+)`" +
-                Util.nl +
-                "WARN - Can not find column: \\2");
+                "DEBUG - Init: Column: [^:]+: `(\\w+)`.`(\\w+)`"
+                + Util.nl
+                + "WARN - Can not find column: \\2");
             Matcher m = p.matcher(log);
 
             while (m.find()) {

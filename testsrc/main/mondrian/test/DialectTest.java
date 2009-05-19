@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian/testsrc/main/mondrian/test/DialectTest.java#18 $
+// $Id: //open/mondrian/testsrc/main/mondrian/test/DialectTest.java#21 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -12,17 +12,18 @@ package mondrian.test;
 import junit.framework.TestCase;
 import junit.framework.AssertionFailedError;
 
-import java.sql.Connection;
-import java.sql.Statement;
-import java.sql.SQLException;
-import java.sql.ResultSet;
+import java.sql.*;
 import java.util.*;
 
 import mondrian.olap.Util;
 import mondrian.spi.Dialect;
 import mondrian.spi.DialectManager;
+import mondrian.spi.impl.MySqlDialect;
+import mondrian.spi.impl.InfobrightDialect;
 
 import javax.sql.DataSource;
+import mondrian.spi.impl.NetezzaDialect;
+import mondrian.spi.impl.PostgreSqlDialect;
 
 /**
  * Unit test which checks that {@link mondrian.spi.Dialect}
@@ -42,7 +43,7 @@ import javax.sql.DataSource;
  * about them, we can change mondrian to use those features.</p>
  *
  * @author jhyde
- * @version $Id: //open/mondrian/testsrc/main/mondrian/test/DialectTest.java#18 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/test/DialectTest.java#21 $
  * @since May 18, 2007
  */
 public class DialectTest extends TestCase {
@@ -99,11 +100,55 @@ public class DialectTest extends TestCase {
         return connection;
     }
 
+    public void testDialectVsDatabaseProduct() throws SQLException {
+        final Dialect dialect = getDialect();
+        final Dialect.DatabaseProduct databaseProduct =
+            dialect.getDatabaseProduct();
+        final DatabaseMetaData databaseMetaData = getConnection().getMetaData();
+        switch (databaseProduct) {
+        case MYSQL:
+            // Dialect has identified that it is MySQL.
+            assertTrue(dialect instanceof MySqlDialect);
+            assertFalse(dialect instanceof InfobrightDialect);
+            assertFalse(MySqlDialect.isInfobright(databaseMetaData));
+            assertEquals("MySQL", databaseMetaData.getDatabaseProductName());
+            break;
+        case INFOBRIGHT:
+            // Dialect has identified that it is MySQL.
+            assertTrue(dialect instanceof MySqlDialect);
+            assertTrue(dialect instanceof InfobrightDialect);
+            assertTrue(MySqlDialect.isInfobright(databaseMetaData));
+            assertEquals("MySQL", databaseMetaData.getDatabaseProductName());
+            break;
+        case POSTGRESQL:
+            // Dialect has identified that it is PostgreSQL.
+            assertTrue(dialect instanceof PostgreSqlDialect);
+            assertFalse(dialect instanceof NetezzaDialect);
+            assertTrue(databaseMetaData.getDatabaseProductName()
+                    .indexOf("PostgreSQL") >= 0);
+            break;
+        case NETEZZA:
+            // Dialect has identified that it is Netezza and a sub class of
+            // PostgreSql.
+            assertTrue(dialect instanceof PostgreSqlDialect);
+            assertTrue(dialect instanceof NetezzaDialect);
+            assertTrue(databaseMetaData.getDatabaseProductName()
+                    .indexOf("Netezza") >= 0);
+            break;
+        default:
+            // Neither MySQL nor Infobright.
+            assertFalse(dialect instanceof MySqlDialect);
+            assertFalse(dialect instanceof InfobrightDialect);
+            assertNotSame("MySQL", databaseMetaData.getDatabaseProductName());
+            break;
+        }
+    }
+
     public void testAllowsCompoundCountDistinct() {
         String sql =
             dialectize(
-                "select count(distinct [customer_id], [product_id])\n" +
-                    "from [sales_fact_1997]");
+                "select count(distinct [customer_id], [product_id])\n"
+                + "from [sales_fact_1997]");
         if (getDialect().allowsCompoundCountDistinct()) {
             assertQuerySucceeds(sql);
         } else {
@@ -130,13 +175,15 @@ public class DialectTest extends TestCase {
     }
 
     public void testAllowsCountDistinct() {
-        String sql1 = dialectize(
-            "select count(distinct [customer_id]) from [sales_fact_1997]");
+        String sql1 =
+            dialectize(
+                "select count(distinct [customer_id]) from [sales_fact_1997]");
         // one distinct-count and one nondistinct-agg
-        String sql2 = dialectize(
-            "select count(distinct [customer_id]),\n" +
-                " sum([time_id])\n" +
-                "from [sales_fact_1997]");
+        String sql2 =
+            dialectize(
+                "select count(distinct [customer_id]),\n"
+                + " sum([time_id])\n"
+                + "from [sales_fact_1997]");
         if (getDialect().allowsCountDistinct()) {
             assertQuerySucceeds(sql1);
             assertQuerySucceeds(sql2);
@@ -152,18 +199,20 @@ public class DialectTest extends TestCase {
 
     public void testAllowsMultipleCountDistinct() {
         // multiple distinct-counts
-        String sql1 = dialectize(
-            "select count(distinct [customer_id]),\n" +
-                " count(distinct [time_id])\n" +
-                "from [sales_fact_1997]");
+        String sql1 =
+            dialectize(
+                "select count(distinct [customer_id]),\n"
+                + " count(distinct [time_id])\n"
+                + "from [sales_fact_1997]");
         // multiple distinct-counts with group by and other aggs
-        String sql3 = dialectize(
-            "select [unit_sales],\n" +
-                " count(distinct [customer_id]),\n" +
-                " count(distinct [product_id])\n" +
-                "from [sales_fact_1997]\n" +
-                "where [time_id] in (371, 372)\n" +
-                "group by [unit_sales]");
+        String sql3 =
+            dialectize(
+                "select [unit_sales],\n"
+                + " count(distinct [customer_id]),\n"
+                + " count(distinct [product_id])\n"
+                + "from [sales_fact_1997]\n"
+                + "where [time_id] in (371, 372)\n"
+                + "group by [unit_sales]");
         if (getDialect().allowsMultipleCountDistinct()) {
             assertQuerySucceeds(sql1);
             assertQuerySucceeds(sql3);
@@ -223,7 +272,8 @@ public class DialectTest extends TestCase {
 
     public void testAllowsFromQuery() {
         String sql =
-            dialectize("select * from (select * from [sales_fact_1997]) as [x]");
+            dialectize(
+                "select * from (select * from [sales_fact_1997]) as [x]");
         if (getDialect().allowsFromQuery()) {
             assertQuerySucceeds(sql);
         } else {
@@ -262,9 +312,10 @@ public class DialectTest extends TestCase {
 
     public void testRequiresOrderByAlias() {
         String sql =
-            dialectize("SELECT [unit_sales]\n" +
-                "FROM [sales_fact_1997]\n" +
-                "ORDER BY [unit_sales] + [store_id]");
+            dialectize(
+                "SELECT [unit_sales]\n"
+                + "FROM [sales_fact_1997]\n"
+                + "ORDER BY [unit_sales] + [store_id]");
         if (getDialect().requiresOrderByAlias()) {
             final String[] errs = {
                 // infobright
@@ -278,10 +329,11 @@ public class DialectTest extends TestCase {
 
     public void testAllowsOrderByAlias() {
         String sql =
-            dialectize("SELECT [unit_sales] as [x],\n" +
-                " [unit_sales] + [store_id] as [y]\n" +
-                "FROM [sales_fact_1997]\n" +
-                "ORDER BY [y]");
+            dialectize(
+                "SELECT [unit_sales] as [x],\n"
+                + " [unit_sales] + [store_id] as [y]\n"
+                + "FROM [sales_fact_1997]\n"
+                + "ORDER BY [y]");
         if (getDialect().allowsOrderByAlias()) {
             assertQuerySucceeds(sql);
         } else {
@@ -299,9 +351,10 @@ public class DialectTest extends TestCase {
 
     public void testSupportsGroupByExpressions() {
         String sql =
-            dialectize("SELECT sum([unit_sales] + 3) + 8\n" +
-                "FROM [sales_fact_1997]\n" +
-                "GROUP BY [unit_sales] + [store_id]");
+            dialectize(
+                "SELECT sum([unit_sales] + 3) + 8\n"
+                + "FROM [sales_fact_1997]\n"
+                + "GROUP BY [unit_sales] + [store_id]");
         if (getDialect().supportsGroupByExpressions()) {
             assertQuerySucceeds(sql);
         } else {
@@ -320,7 +373,8 @@ public class DialectTest extends TestCase {
      */
     public void testAllowsGroupingSets() {
         String sql =
-            dialectize("SELECT [customer_id],\n"
+            dialectize(
+                "SELECT [customer_id],\n"
                 + " SUM([store_sales]),\n"
                 + " GROUPING([unit_sales]),\n"
                 + " GROUPING([customer_id])\n"
@@ -350,9 +404,10 @@ public class DialectTest extends TestCase {
 
     public void testSupportsMultiValueInExpr() {
         String sql =
-            dialectize("SELECT [unit_sales]\n" +
-                "FROM [sales_fact_1997]\n" +
-                "WHERE ([unit_sales], [time_id]) IN ((1, 371), (2, 394))");
+            dialectize(
+                "SELECT [unit_sales]\n"
+                + "FROM [sales_fact_1997]\n"
+                + "WHERE ([unit_sales], [time_id]) IN ((1, 371), (2, 394))");
 
         if (getDialect().supportsMultiValueInExpr()) {
             assertQuerySucceeds(sql);

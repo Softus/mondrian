@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/util/Bug.java#26 $
+// $Id: //open/mondrian/src/main/mondrian/util/Bug.java#28 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2008 Julian Hyde
+// Copyright (C) 2006-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -19,16 +19,34 @@ import mondrian.spi.Dialect;
  * when its bug is fixed.
  *
  * @author jhyde
- * @version $Id: //open/mondrian/src/main/mondrian/util/Bug.java#26 $
+ * @version $Id: //open/mondrian/src/main/mondrian/util/Bug.java#28 $
  * @since Oct 11, 2006
  */
 public class Bug {
     /**
+     * Whether Mondrian is 100% compatible with Microsoft Analysis Services
+     * 2005. We know that it is not, so this constant is {@code false}.
+     *
+     * <p>Use this
+     * field to flag test cases whose behavior is intentionally different from
+     * SSAS. If the behavior is <em>un</em>intentionally different and something
+     * we want to fix, log a bug, add a new {@code BugMondrianXxxFixed} constant
+     * to this class, and make the test case conditional on that constant
+     * instead.
+     *
+     * <p>See also the property
+     * {@link mondrian.olap.MondrianProperties#SsasCompatibleNaming},
+     * which allows the user to choose certain behaviors which are compatible
+     * with SSAS 2005 but incompatible with Mondrian's previous behavior.
+     */
+    public static final boolean Ssas2005Compatible = false;
+
+    /**
      * Whether
-     * <a href="http://sourceforge.net/tracker/index.php?func=detail&aid=1574942&group_id=35302&atid=414613">bug 1574942, "NON EMPTY when hierarchy's default member is not 'all'"</a>
+     * <a href="http://jira.pentaho.com/browse/MONDRIAN-229">MONDRIAN-229, "NON EMPTY when hierarchy's default member is not 'all'"</a>
      * is fixed.
      */
-    public static final boolean Bug1574942Fixed = false;
+    public static final boolean BugMondrian229Fixed = false;
 
     // Properties relating to checkin 7641.
     // This is part of the junit test Checkin_7641 that
@@ -42,67 +60,60 @@ public class Bug {
 
     /**
      * Whether
-     * <a href="http://sourceforge.net/tracker/index.php?func=detail&aid=1530543&group_id=35302&atid=414613">bug 1530543, "IS EMPTY and IS NULL"</a>
+     * <a href="http://jira.pentaho.com/browse/MONDRIAN-207">MONDRIAN-207, "IS EMPTY and IS NULL"</a>
      * is fixed.
      */
-    public static final boolean Bug1530543Fixed = false;
+    public static final boolean BugMondrian207Fixed = false;
 
     /**
      * Whether
-     * <a href="http://sourceforge.net/tracker/index.php?func=detail&aid=2076407&group_id=35302&atid=414613">bug Bug2076407Fixed, "Make Native NonEmpty consistant with MSAS"</a>
+     * <a href="http://jira.pentaho.com/browse/MONDRIAN-446">bug MONDRIAN-446, "Make Native NonEmpty consistant with MSAS"</a>
      * is fixed.
      */
-    public static final boolean Bug2076407Fixed = false;
+    public static final boolean BugMondrian446Fixed = false;
 
     /**
      * Whether
-     * <a href="http://sourceforge.net/tracker/index.php?func=detail&aid=1767775&group_id=35302&atid=414613">bug 1767775, "Predicate references RolapStar.Column when used in AggStar"</a>
+     * <a href="http://jira.pentaho.com/browse/MONDRIAN-313">bug MONDRIAN-313, "Predicate references RolapStar.Column when used in AggStar"</a>
      * is fixed.
      */
-    public static final boolean Bug1767775Fixed = false;
+    public static final boolean BugMondrian313Fixed = false;
 
     /**
      * Whether
-     * <a href="http://sourceforge.net/tracker/index.php?func=detail&aid=1767779&group_id=35302&atid=414613">bug 1767779, "Predicate sometimes has null RolapStar.Column"</a>
+     * <a href="http://jira.pentaho.com/browse/MONDRIAN-314">bug MONDRIAN-314, "Predicate sometimes has null RolapStar.Column"</a>
      * is fixed.
      */
-    public static final boolean Bug1767779Fixed = false;
+    public static final boolean BugMondrian314Fixed = false;
 
     /**
      * Whether
-     * <a href="http://sourceforge.net/tracker/index.php?func=detail&aid=1791609&group_id=35302&atid=414613">bug 1791609, "CrossJoin no empty optimizer eliminates calculated member"</a>
+     * <a href="http://jira.pentaho.com/browse/MONDRIAN-328">bug MONDRIAN-328, "CrossJoin no empty optimizer eliminates calculated member"</a>
      * is fixed.
      */
-    public static final boolean Bug1791609Fixed = false;
+    public static final boolean BugMondrian328Fixed = false;
 
     /**
      * Whether
-     * <a href="http://sourceforge.net/tracker/index.php?func=detail&aid=1867953&group_id=35302&atid=414613">bug 1867953, "Aggregate Tables not working with Shared Dimensions"</a>
+     * <a href="http://jira.pentaho.com/browse/MONDRIAN-361">bug MONDRIAN-361, "Aggregate Tables not working with Shared Dimensions"</a>
      * is fixed.
      *
      */
-    public static final boolean Bug1867953Fixed = false;
+    public static final boolean BugMondrian361Fixed = false;
 
     /**
      * Whether
-     * <a href="https://sourceforge.net/tracker/index.php?func=detail&aid=1888821&group_id=35302&atid=414613">bug 1888821, "Non Empty Crossjoin fails to enforce role access"</a>
+     * <a href="http://jira.pentaho.com/browse/MONDRIAN-486">bug MONDRIAN-486, "HighCardinalityTest test cases disabled"</a>
      * is fixed.
      */
-    public static final boolean Bug1888821Fixed = false;
+    public static final boolean BugMondrian486Fixed = false;
 
     /**
      * Whether
-     * <a href="https://sourceforge.net/tracker/index.php?func=detail&aid=2446228&group_id=35302&atid=414613">bug 2446228, "HighCardinalityTest test cases disabled"</a>
+     * <a href="http://jira.pentaho.com/browse/MONDRIAN-503">bug MONDRIAN-503, "RolapResultTest disabled"</a>
      * is fixed.
      */
-    public static final boolean Bug2446228Fixed = false;
-
-    /**
-     * Whether
-     * <a href="http://sourceforge.net/tracker/index.php?func=detail&aid=2583015&group_id=35302&atid=414613">bug 2583015, "RolapResultTest disabled"</a>
-     * is fixed.
-     */
-    public static final boolean Bug2583015Fixed = false;
+    public static final boolean BugMondrian503Fixed = false;
 
     /**
      * Returns whether to avoid a test because the memory monitor may cause it

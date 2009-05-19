@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian/testsrc/main/mondrian/test/SteelWheelsTestCase.java#2 $
+// $Id: //open/mondrian/testsrc/main/mondrian/test/SteelWheelsTestCase.java#3 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -21,10 +21,9 @@ import mondrian.olap.*;
  *
  * @author jhyde
  * @since 12 March 2009
- * @version $Id: //open/mondrian/testsrc/main/mondrian/test/SteelWheelsTestCase.java#2 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/test/SteelWheelsTestCase.java#3 $
  */
 public class SteelWheelsTestCase extends TestCase {
-    protected static final String nl = Util.nl;
 
     /**
      * Creates a SteelwheelsTestCase.
@@ -85,9 +84,7 @@ public class SteelWheelsTestCase extends TestCase {
         }
         testContext.assertAxisReturns(
             "Measures.Members",
-            TestContext.fold(
-                "[Measures].[Quantity]\n" +
-                "[Measures].[Sales]"));
+            "[Measures].[Quantity]\n" + "[Measures].[Sales]");
     }
 
     /**
@@ -101,69 +98,65 @@ public class SteelWheelsTestCase extends TestCase {
         }
         testContext.assertQueryReturns(
             "select [Markets].[All Markets].[Japan] on 0 from [SteelWheelsSales]",
-            TestContext.fold(
-                "Axis #0:\n" +
-                "{}\n" +
-                "Axis #1:\n" +
-                "{[Markets].[All Markets].[Japan]}\n" +
-                "Row #0: 4,923\n"));
+            "Axis #0:\n"
+            + "{}\n"
+            + "Axis #1:\n"
+            + "{[Markets].[All Markets].[Japan]}\n"
+            + "Row #0: 4,923\n");
 
         testContext.assertQueryReturns(
             "select [Markets].Children on 0 from [SteelWheelsSales]",
-            TestContext.fold(
-                "Axis #0:\n" +
-                "{}\n" +
-                "Axis #1:\n" +
-                "{[Markets].[All Markets].[#null]}\n" +
-                "{[Markets].[All Markets].[APAC]}\n" +
-                "{[Markets].[All Markets].[EMEA]}\n" +
-                "{[Markets].[All Markets].[Japan]}\n" +
-                "{[Markets].[All Markets].[NA]}\n" +
-                "Row #0: \n" +
-                "Row #0: 12,878\n" +
-                "Row #0: 49,578\n" +
-                "Row #0: 4,923\n" +
-                "Row #0: 37,952\n"));
+            "Axis #0:\n"
+            + "{}\n"
+            + "Axis #1:\n"
+            + "{[Markets].[All Markets].[#null]}\n"
+            + "{[Markets].[All Markets].[APAC]}\n"
+            + "{[Markets].[All Markets].[EMEA]}\n"
+            + "{[Markets].[All Markets].[Japan]}\n"
+            + "{[Markets].[All Markets].[NA]}\n"
+            + "Row #0: \n"
+            + "Row #0: 12,878\n"
+            + "Row #0: 49,578\n"
+            + "Row #0: 4,923\n"
+            + "Row #0: 37,952\n");
 
         testContext.assertQueryReturns(
             "select Subset([Markets].Members, 130, 8) on 0 from [SteelWheelsSales]",
-            TestContext.fold(
-                "Axis #0:\n" +
-                "{}\n" +
-                "Axis #1:\n" +
-                "{[Markets].[All Markets].[EMEA].[UK].[Isle of Wight].[Cowes]}\n" +
-                "{[Markets].[All Markets].[Japan]}\n" +
-                "{[Markets].[All Markets].[Japan].[Hong Kong]}\n" +
-                "{[Markets].[All Markets].[Japan].[Hong Kong].[#null]}\n" +
-                "{[Markets].[All Markets].[Japan].[Hong Kong].[#null].[Central Hong Kong]}\n" +
-                "{[Markets].[All Markets].[Japan].[Japan]}\n" +
-                "{[Markets].[All Markets].[Japan].[Japan].[Osaka]}\n" +
-                "{[Markets].[All Markets].[Japan].[Japan].[Osaka].[Osaka]}\n" +
-                "Row #0: 895\n" +
-                "Row #0: 4,923\n" +
-                "Row #0: 596\n" +
-                "Row #0: 58,396\n" +
-                "Row #0: 596\n" +
-                "Row #0: 1,842\n" +
-                "Row #0: 692\n" +
-                "Row #0: 692\n"));
+            "Axis #0:\n"
+            + "{}\n"
+            + "Axis #1:\n"
+            + "{[Markets].[All Markets].[EMEA].[UK].[Isle of Wight].[Cowes]}\n"
+            + "{[Markets].[All Markets].[Japan]}\n"
+            + "{[Markets].[All Markets].[Japan].[Hong Kong]}\n"
+            + "{[Markets].[All Markets].[Japan].[Hong Kong].[#null]}\n"
+            + "{[Markets].[All Markets].[Japan].[Hong Kong].[#null].[Central Hong Kong]}\n"
+            + "{[Markets].[All Markets].[Japan].[Japan]}\n"
+            + "{[Markets].[All Markets].[Japan].[Japan].[Osaka]}\n"
+            + "{[Markets].[All Markets].[Japan].[Japan].[Osaka].[Osaka]}\n"
+            + "Row #0: 895\n"
+            + "Row #0: 4,923\n"
+            + "Row #0: 596\n"
+            + "Row #0: 58,396\n"
+            + "Row #0: 596\n"
+            + "Row #0: 1,842\n"
+            + "Row #0: 692\n"
+            + "Row #0: 692\n");
 
         testContext.assertQueryReturns(
             "select [Markets].[Territory].Members on 0 from [SteelWheelsSales]",
-            TestContext.fold(
-                "Axis #0:\n" +
-                "{}\n" +
-                "Axis #1:\n" +
-                "{[Markets].[All Markets].[#null]}\n" +
-                "{[Markets].[All Markets].[APAC]}\n" +
-                "{[Markets].[All Markets].[EMEA]}\n" +
-                "{[Markets].[All Markets].[Japan]}\n" +
-                "{[Markets].[All Markets].[NA]}\n" +
-                "Row #0: \n" +
-                "Row #0: 12,878\n" +
-                "Row #0: 49,578\n" +
-                "Row #0: 4,923\n" +
-                "Row #0: 37,952\n"));
+            "Axis #0:\n"
+            + "{}\n"
+            + "Axis #1:\n"
+            + "{[Markets].[All Markets].[#null]}\n"
+            + "{[Markets].[All Markets].[APAC]}\n"
+            + "{[Markets].[All Markets].[EMEA]}\n"
+            + "{[Markets].[All Markets].[Japan]}\n"
+            + "{[Markets].[All Markets].[NA]}\n"
+            + "Row #0: \n"
+            + "Row #0: 12,878\n"
+            + "Row #0: 49,578\n"
+            + "Row #0: 4,923\n"
+            + "Row #0: 37,952\n");
     }
 }
 

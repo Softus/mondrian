@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian/testsrc/main/mondrian/test/Main.java#102 $
+// $Id: //open/mondrian/testsrc/main/mondrian/test/Main.java#104 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 1998-2002 Kana Software, Inc.
-// Copyright (C) 2001-2008 Julian Hyde and others
+// Copyright (C) 2001-2009 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -46,7 +46,7 @@ import org.apache.log4j.Logger;
  * Mondrian tests.
  *
  * @author jhyde
- * @version $Id: //open/mondrian/testsrc/main/mondrian/test/Main.java#102 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/test/Main.java#104 $
  */
 public class Main extends TestSuite {
     private static final Logger logger = Logger.getLogger(Main.class);
@@ -243,6 +243,7 @@ public class Main extends TestSuite {
             addTest(suite, FormatTest.class);
             addTest(suite, ParallelTest.class);
             addTest(suite, SchemaTest.class);
+            addTest(suite, PerformanceTest.class);
             // GroupingSetQueryTest must be run before any test derived from
             // CsvDBTestCase
             addTest(suite, GroupingSetQueryTest.class);
@@ -254,7 +255,7 @@ public class Main extends TestSuite {
             addTest(suite, RolapAxisTest.class);
             addTest(suite, MemberHelperTest.class);
             addTest(suite, CrossJoinTest.class);
-            if (Bug.Bug2583015Fixed) {
+            if (Bug.BugMondrian503Fixed) {
                 addTest(suite, RolapResultTest.class);
             }
             addTest(suite, ConstantCalcTest.class);
