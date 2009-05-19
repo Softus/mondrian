@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/gui/PropertyTableModel.java#15 $
+// $Id: //open/mondrian/src/main/mondrian/gui/PropertyTableModel.java#16 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -18,7 +18,7 @@ import org.apache.log4j.Logger;
 /**
  *
  * @author  sean
- * @version $Id: //open/mondrian/src/main/mondrian/gui/PropertyTableModel.java#15 $
+ * @version $Id: //open/mondrian/src/main/mondrian/gui/PropertyTableModel.java#16 $
  */
 public class PropertyTableModel extends javax.swing.table.AbstractTableModel {
 
@@ -183,7 +183,7 @@ public class PropertyTableModel extends javax.swing.table.AbstractTableModel {
                     (target instanceof MondrianGuiDef.Level && pName.equals("table")))  {
                 // updating all table values
                 if (aValue != null) {   // split and save only if value exists
-                    String[] aValues = ((String) aValue).split("->");
+                    String[] aValues = ((String) aValue).split(JDBCMetaData.LEVEL_SEPARATOR);
                     if (aValues.length == 2)  {
                         if (target instanceof MondrianGuiDef.Table) {
                             ((MondrianGuiDef.Table) target).name = aValues[1];
@@ -214,10 +214,11 @@ public class PropertyTableModel extends javax.swing.table.AbstractTableModel {
                     (target instanceof MondrianGuiDef.Property && pName.equals("column")))  {
                 // updating all column values
                 if (aValue != null) {   // split and save only if value exists
-                    String[] aValues = ((String) aValue).split("->");
+                    String[] aValues = ((String) aValue).split(JDBCMetaData.LEVEL_SEPARATOR);
                     Field f = target.getClass().getField(propertyNames[rowIndex]);
                     //EC: Avoids *Column="" to be set on schema
-                    aValue = aValues[aValues.length - 1];
+                    // Also remove column data type with the final split on a dash
+                    aValue = aValues[aValues.length - 1].split(" - ")[0];
                     setFieldValue(f, aValue);
                 }
 

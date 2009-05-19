@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/rolap/RolapAxis.java#20 $
+// $Id: //open/mondrian/src/main/mondrian/rolap/RolapAxis.java#21 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -32,7 +32,7 @@ import java.util.NoSuchElementException;
  * or an Iterable.
  *
  * @author <a>Richard M. Emberson</a>
- * @version $Id: //open/mondrian/src/main/mondrian/rolap/RolapAxis.java#20 $
+ * @version $Id: //open/mondrian/src/main/mondrian/rolap/RolapAxis.java#21 $
  */
 public abstract class RolapAxis implements Axis {
     private static final Logger LOGGER = Logger.getLogger(RolapAxis.class);
@@ -704,6 +704,44 @@ public abstract class RolapAxis implements Axis {
         extends PositionUnsupported
     {
         protected PositionBase() {
+        }
+
+        public boolean equals(Object o) {
+            if (o == this) {
+                return true;
+            }
+            if (!(o instanceof List)) {
+                return false;
+            }
+            List that = (List) o;
+            final int size = this.size();
+            if (size != that.size()) {
+                return false;
+            }
+            for (int i = 0; i < size; i++) {
+                final Member m1 = get(i);
+                final Object m2 = that.get(i);
+                if (!(m1 == null
+                    ? m2 == null
+                    : m1.equals(m2)))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public int hashCode() {
+            int hashCode = 1;
+            int size = size();
+            for (int i = 0; i < size; i++) {
+                Member obj = get(i);
+                hashCode =
+                    31 * hashCode + (obj == null
+                        ? 0
+                        : obj.hashCode());
+            }
+            return hashCode;
         }
 
         public ListIterator<Member> listIterator() {

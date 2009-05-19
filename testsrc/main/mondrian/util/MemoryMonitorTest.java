@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian/testsrc/main/mondrian/util/MemoryMonitorTest.java#10 $
+// $Id: //open/mondrian/testsrc/main/mondrian/util/MemoryMonitorTest.java#11 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2008 Julian Hyde and others
+// Copyright (C) 2006-2009 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -25,7 +25,7 @@ import java.util.List;
 /**
  * Test case for {@link ObjectPool}.
  *
- * @version $Id: //open/mondrian/testsrc/main/mondrian/util/MemoryMonitorTest.java#10 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/util/MemoryMonitorTest.java#11 $
  * @author Richard Emberson
  */
 public class MemoryMonitorTest extends FoodMartTestCase {
@@ -239,23 +239,23 @@ Does not work without the notify on add feature.
         }
         Listener listener = new Listener();
         final String queryString =
-            "select \n" +
-            "{ \n" +
-/*
-            "[Measures].[Unit Sales], \n" +
-            "[Measures].[Store Cost], \n" +
-*/
-            "[Measures].[Store Sales], \n" +
-            "[Measures].[Sales Count], \n" +
-            "[Measures].[Customer Count] \n" +
-            "} \n" +
-            "ON COLUMNS, \n" +
-            "Crossjoin(\n" +
-            "  Descendants([Store].[All Stores]), \n" +
-            "  Descendants([Product].[All Products]) \n" +
-            ") \n" +
-            "ON ROWS \n" +
-            "from [Sales]";
+            "select \n"
+            + "{ \n"
+            /*
+            + "[Measures].[Unit Sales], \n"
+            + "[Measures].[Store Cost], \n"
+            */
+            + "[Measures].[Store Sales], \n"
+            + "[Measures].[Sales Count], \n"
+            + "[Measures].[Customer Count] \n"
+            + "} \n"
+            + "ON COLUMNS, \n"
+            + "Crossjoin(\n"
+            + "  Descendants([Store].[All Stores]), \n"
+            + "  Descendants([Product].[All Products]) \n"
+            + ") \n"
+            + "ON ROWS \n"
+            + "from [Sales]";
 
         List<Result> list = new ArrayList<Result>();
         MemoryMonitor mm = null;

@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian/testsrc/main/mondrian/util/FormatTest.java#11 $
+// $Id: //open/mondrian/testsrc/main/mondrian/util/FormatTest.java#12 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2008 Julian Hyde
+// Copyright (C) 2006-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -23,7 +23,7 @@ import mondrian.test.I18nTest;
  * Unit test for {@link Format}.
  *
  * @author jhyde
- * @version $Id: //open/mondrian/testsrc/main/mondrian/util/FormatTest.java#11 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/util/FormatTest.java#12 $
  * @since May 26, 2006
  */
 public class FormatTest extends TestCase {
@@ -320,11 +320,15 @@ public class FormatTest extends TestCase {
         assertEquals(
             "[, dim., lun., mar., mer., jeu., ven., sam.]",
             Arrays.asList(fr.daysOfWeekShort).toString());
-        assertEquals("[janvier, f" + I18nTest.EA + "vrier, mars, avril, mai, juin," +
-            " juillet, ao" + I18nTest.UC + "t, septembre, octobre, novembre, d" + I18nTest.EA + "cembre, ]",
+        assertEquals(
+            "[janvier, f" + I18nTest.EA + "vrier, mars, avril, mai, juin,"
+            + " juillet, ao" + I18nTest.UC + "t, septembre, octobre, novembre, d"
+            + I18nTest.EA + "cembre, ]",
             Arrays.asList(fr.monthsLong).toString());
-        assertEquals("[janv., f" + I18nTest.EA + "vr., mars, avr., mai, juin," +
-            " juil., ao" + I18nTest.UC + "t, sept., oct., nov., d" + I18nTest.EA + "c., ]",
+        assertEquals(
+            "[janv., f" + I18nTest.EA + "vr., mars, avr., mai, juin,"
+            + " juil., ao" + I18nTest.UC + "t, sept., oct., nov., d"
+            + I18nTest.EA + "c., ]",
             Arrays.asList(fr.monthsShort).toString());
         assertEquals(',', fr.decimalPlaceholder);
         assertEquals(I18nTest.Nbsp, fr.thousandSeparator);

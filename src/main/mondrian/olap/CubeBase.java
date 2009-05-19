@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/olap/CubeBase.java#30 $
+// $Id: //open/mondrian/src/main/mondrian/olap/CubeBase.java#31 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
 // Copyright (C) 2001-2002 Kana Software, Inc.
-// Copyright (C) 2001-2008 Julian Hyde and others
+// Copyright (C) 2001-2009 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -22,7 +22,7 @@ import java.util.List;
  *
  * @author jhyde
  * @since 6 August, 2001
- * @version $Id: //open/mondrian/src/main/mondrian/olap/CubeBase.java#30 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/CubeBase.java#31 $
  */
 public abstract class CubeBase extends OlapElementBase implements Cube {
 
@@ -49,11 +49,19 @@ public abstract class CubeBase extends OlapElementBase implements Cube {
     public static final int MDPROP_USERDEFINED0 = 19;
 
     protected final String name;
+    private final String uniqueName;
     protected Dimension[] dimensions;
 
+    /**
+     * Creates a CubeBase.
+     *
+     * @param name Name
+     * @param dimensions List of dimensions
+     */
     protected CubeBase(String name, Dimension[] dimensions) {
         this.name = name;
         this.dimensions = dimensions;
+        this.uniqueName = Util.quoteMdxIdentifier(name);
     }
 
     // implement OlapElement
@@ -63,7 +71,7 @@ public abstract class CubeBase extends OlapElementBase implements Cube {
 
     public String getUniqueName() {
         // return e.g. '[Sales Ragged]'
-        return Util.quoteMdxIdentifier(name);
+        return uniqueName;
     }
 
     public String getQualifiedName() {
@@ -166,6 +174,12 @@ public abstract class CubeBase extends OlapElementBase implements Cube {
         return null;
     }
 
+    /**
+     * Looks up a dimension in this cube based on a component of its name.
+     *
+     * @param s Name segment
+     * @return Dimension, or null if not found
+     */
     public Dimension lookupDimension(Id.Segment s) {
         for (Dimension dimension : dimensions) {
             if (Util.equalName(dimension.getName(), s.name)) {
@@ -177,6 +191,12 @@ public abstract class CubeBase extends OlapElementBase implements Cube {
 
     // ------------------------------------------------------------------------
 
+    /**
+     * Returns the first level of a given type in this cube.
+     *
+     * @param levelType Level type
+     * @return First level of given type, or null
+     */
     private Level getTimeLevel(LevelType levelType) {
         for (Dimension dimension : dimensions) {
             if (dimension.getDimensionType() == DimensionType.TimeDimension) {

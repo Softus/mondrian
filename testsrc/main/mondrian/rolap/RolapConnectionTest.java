@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian/testsrc/main/mondrian/rolap/RolapConnectionTest.java#24 $
+// $Id: //open/mondrian/testsrc/main/mondrian/rolap/RolapConnectionTest.java#25 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -36,7 +36,7 @@ import java.util.Arrays;
  *
  * @author jng
  * @since 16 April, 2004
- * @version $Id: //open/mondrian/testsrc/main/mondrian/rolap/RolapConnectionTest.java#24 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/rolap/RolapConnectionTest.java#25 $
  */
 public class RolapConnectionTest extends TestCase {
     private static final ThreadLocal<InitialContext> THREAD_INITIAL_CONTEXT =
@@ -225,13 +225,11 @@ public class RolapConnectionTest extends TestCase {
                 + " FORMAT_STRING = '#,##.#' \n"
                 + "SELECT {[MEasures].[Foo]} ON COLUMNS FROM [Sales]";
             String expected2 =
-                TestContext.fold("Axis #0:\n" +
-                    "{}\n" +
-                    "Axis #1:\n" +
-                    "{[Measures].[Foo]}\n" +
-                    "Row #0: "
-                    + expected
-                    + "\n");
+                "Axis #0:\n"
+                + "{}\n"
+                + "Axis #1:\n"
+                + "{[Measures].[Foo]}\n"
+                + "Row #0: " + expected + "\n";
             testContextSpain.assertQueryReturns(query, expected2);
         } else {
             testContextSpain.assertExprReturns(expr, expected);

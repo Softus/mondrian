@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian/testsrc/main/mondrian/olap/CustomizedParserTest.java#10 $
+// $Id: //open/mondrian/testsrc/main/mondrian/olap/CustomizedParserTest.java#11 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2004-2008 Julian Hyde and others.
+// Copyright (C) 2004-2009 Julian Hyde and others.
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
  */
@@ -18,7 +18,7 @@ import java.util.*;
  * Tests a customized MDX Parser.
  *
  * @author Rushan Chen
- * @version $Id: //open/mondrian/testsrc/main/mondrian/olap/CustomizedParserTest.java#10 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/olap/CustomizedParserTest.java#11 $
  */
 public class CustomizedParserTest extends FoodMartTestCase {
 
@@ -38,9 +38,10 @@ public class CustomizedParserTest extends FoodMartTestCase {
     }
 
     private String wrapExpr(String expr) {
-        return "with member [Measures].[Foo] as " +
-        expr +
-        "\n select from [Sales]";
+        return
+            "with member [Measures].[Foo] as "
+            + expr
+            + "\n select from [Sales]";
     }
 
     private void checkErrorMsg(Throwable e, String expectedErrorMsg) {
@@ -48,7 +49,7 @@ public class CustomizedParserTest extends FoodMartTestCase {
             e = e.getCause();
         }
         String actualMsg = e.getMessage();
-        assertEquals(fold(expectedErrorMsg), actualMsg);
+        assertEquals(expectedErrorMsg, actualMsg);
     }
 
     private Query getParsedQueryForExpr(

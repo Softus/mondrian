@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian/testsrc/main/mondrian/rolap/BatchTestCase.java#20 $
+// $Id: //open/mondrian/testsrc/main/mondrian/rolap/BatchTestCase.java#21 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -23,7 +23,7 @@ import java.util.ArrayList;
  * To support all <code>Batch</code> related tests.
  *
  * @author Thiyagu
- * @version $Id: //open/mondrian/testsrc/main/mondrian/rolap/BatchTestCase.java#20 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/rolap/BatchTestCase.java#21 $
  * @since 06-Jun-2007
  */
 public class BatchTestCase extends FoodMartTestCase {
@@ -242,18 +242,17 @@ public class BatchTestCase extends FoodMartTestCase {
                 replaceQuotes(bomb.sql));
         }
 
-        /*
-         * Print warning message that no pattern was specified for the current dialect.
-         */
+        // Print warning message that no pattern was specified for the current
+        // dialect.
         if (!patternFound) {
             String warnDialect =
                 MondrianProperties.instance().WarnIfNoPatternForDialect.get();
 
             if (warnDialect.equals(d.toString())) {
                 System.out.println(
-                    "[No expected sqls found for dialect \"" +
-                    sqlDialect.toString() +
-                    "\" and test not run]");
+                    "[No expected SQL statements found for dialect \""
+                    + sqlDialect.toString()
+                    + "\" and test not run]");
             }
         }
     }
@@ -404,18 +403,17 @@ public class BatchTestCase extends FoodMartTestCase {
             }
         }
 
-        /*
-         * Print warning message that no pattern was specified for the current dialect.
-         */
+        // Print warning message that no pattern was specified for the current
+        // dialect.
         if (!patternFound) {
             String warnDialect =
                 MondrianProperties.instance().WarnIfNoPatternForDialect.get();
 
             if (warnDialect.equals(d.toString())) {
                 System.out.println(
-                    "[No expected sqls found for dialect \"" +
-                    dialect.toString() +
-                    "\" and test not run]");
+                    "[No expected SQL statements found for dialect \""
+                    + dialect.toString()
+                    + "\" and test not run]");
             }
         }
     }

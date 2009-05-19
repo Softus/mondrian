@@ -9,9 +9,7 @@
 package mondrian.spi.impl;
 
 import mondrian.olap.Util;
-import mondrian.spi.Dialect;
 
-import javax.sql.DataSource;
 import java.util.List;
 import java.sql.*;
 
@@ -19,7 +17,7 @@ import java.sql.*;
  * Implementation of {@link mondrian.spi.Dialect} for the MySQL database.
  *
  * @author jhyde
- * @version $Id: //open/mondrian/src/main/mondrian/spi/impl/MySqlDialect.java#4 $
+ * @version $Id: //open/mondrian/src/main/mondrian/spi/impl/MySqlDialect.java#7 $
  * @since Nov 23, 2008
  */
 public class MySqlDialect extends JdbcDialectImpl {
@@ -29,23 +27,16 @@ public class MySqlDialect extends JdbcDialectImpl {
             MySqlDialect.class,
             DatabaseProduct.MYSQL)
         {
-            @Override
-            public Dialect createDialect(
-                DataSource dataSource,
-                Connection connection)
-            {
-                final Dialect dialect =
-                    super.createDialect(
-                        dataSource, connection);
-                // Infobright looks a lot like MySQL. If this is an Infobright
-                // connection, yield to the Infobright dialect.
-                if (dialect != null &&
-                    dialect instanceof MySqlDialect &&
-                    ((MySqlDialect) dialect).getDatabaseProduct() ==
-                    DatabaseProduct.INFOBRIGHT) {
-                    return null;
+            protected boolean acceptsConnection(Connection connection) {
+                try {
+                    // Infobright looks a lot like MySQL. If this is an
+                    // Infobright connection, yield to the Infobright dialect.
+                    return super.acceptsConnection(connection)
+                        && !isInfobright(connection.getMetaData());
+                } catch (SQLException e) {
+                    throw Util.newError(
+                        e, "Error while instantiating dialect");
                 }
-                return dialect;
             }
         };
 
@@ -68,7 +59,7 @@ public class MySqlDialect extends JdbcDialectImpl {
      *
      * @return Whether this is Infobright
      */
-    private static boolean isInfobright(
+    public static boolean isInfobright(
         DatabaseMetaData databaseMetaData)
     {
         Statement statement = null;

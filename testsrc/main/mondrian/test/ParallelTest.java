@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian/testsrc/main/mondrian/test/ParallelTest.java#4 $
+// $Id: //open/mondrian/testsrc/main/mondrian/test/ParallelTest.java#5 $
 // This software is subject to the terms of the Common Public License
 // Agreement, available at the following URL:
 // http://www.opensource.org/licenses/cpl.html.
@@ -19,7 +19,7 @@ import java.util.Random;
  *
  * @author jhyde
  * @since Jun 26, 2006
- * @version $Id: //open/mondrian/testsrc/main/mondrian/test/ParallelTest.java#4 $
+ * @version $Id: //open/mondrian/testsrc/main/mondrian/test/ParallelTest.java#5 $
  */
 public class ParallelTest extends FoodMartTestCase {
 
@@ -65,9 +65,9 @@ public class ParallelTest extends FoodMartTestCase {
                 private void cycle() {
                     Connection connection = getConnection();
                     Query query = connection.parseQuery(
-                        "select {[Measures].[Unit Sales]} on columns," +
-                            " {[Product].Members} on rows " +
-                            "from [Sales]");
+                        "select {[Measures].[Unit Sales]} on columns,"
+                        + " {[Product].Members} on rows "
+                        + "from [Sales]");
                     Result result = connection.execute(query);
                     String s = result.toString();
                     assertNotNull(s);

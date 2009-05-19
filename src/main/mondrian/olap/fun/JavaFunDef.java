@@ -23,7 +23,7 @@ import java.util.*;
  * executed, the method is invoked via reflection.
  *
  * @author wgorman, jhyde
- * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/JavaFunDef.java#2 $
+ * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/JavaFunDef.java#4 $
  * @since Jan 5, 2008
 */
 public class JavaFunDef extends FunDefBase {
@@ -43,7 +43,7 @@ public class JavaFunDef extends FunDefBase {
         mapClazzToCategory.put(float.class, Category.Numeric);
         mapClazzToCategory.put(long.class, Category.Numeric);
         mapClazzToCategory.put(double[].class, Category.Array);
-        mapClazzToCategory.put(char.class, Category.Integer);
+        mapClazzToCategory.put(char.class, Category.String);
         mapClazzToCategory.put(byte.class, Category.Integer);
     }
 
@@ -183,21 +183,19 @@ public class JavaFunDef extends FunDefBase {
                 };
             }
         } else if (clazz == char.class) {
-            final IntegerCalc integerCalc = compiler.compileInteger(exp);
-            if (integerCalc.getResultStyle() == ResultStyle.VALUE_NOT_NULL) {
-                return new AbstractCalc2(exp, integerCalc) {
-                    public Object evaluate(Evaluator evaluator) {
-                        return (char) integerCalc.evaluateInteger(evaluator);
-                    }
-                };
-            } else {
-                return new AbstractCalc2(exp, integerCalc) {
-                    public Object evaluate(Evaluator evaluator) {
-                        Integer i = (Integer) integerCalc.evaluate(evaluator);
-                        return i == null ? null : (char) i.intValue();
-                    }
-                };
-            }
+            final StringCalc stringCalc = compiler.compileString(exp);
+            return new AbstractCalc2(exp, stringCalc) {
+                public Object evaluate(Evaluator evaluator) {
+                    final String string =
+                        stringCalc.evaluateString(evaluator);
+                    return
+                        Character.valueOf(
+                            string == null
+                            || string.length() < 1
+                                ? (char) 0
+                                : string.charAt(0));
+                }
+            };
         } else if (clazz == short.class) {
             final IntegerCalc integerCalc = compiler.compileInteger(exp);
             if (integerCalc.getResultStyle() == ResultStyle.VALUE_NOT_NULL) {
@@ -250,6 +248,8 @@ public class JavaFunDef extends FunDefBase {
             }
         } else if (clazz == double.class) {
             return compiler.compileDouble(exp);
+        } else if (clazz == Object.class) {
+            return compiler.compileScalar(exp, false);
         } else {
             throw newInternal("expected primitive type, got " + clazz);
         }
