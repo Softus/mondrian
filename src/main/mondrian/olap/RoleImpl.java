@@ -148,6 +148,7 @@ public class RoleImpl implements Role {
             if (hierarchyAccess.topLevel != null) {
                 final HierarchyAccessImpl hierarchyAccessClone =
                     new HierarchyAccessImpl(
+                        hierarchyAccess.role,
                         hierarchyAccess.hierarchy,
                         hierarchyAccess.access,
                         null,
@@ -245,7 +246,7 @@ public class RoleImpl implements Role {
         hierarchyGrants.put(
             hierarchy,
             new HierarchyAccessImpl(
-                hierarchy, access, topLevel, bottomLevel, rollupPolicy));
+                this, hierarchy, access, topLevel, bottomLevel, rollupPolicy));
     }
 
     public Access getAccess(Hierarchy hierarchy) {
@@ -349,6 +350,7 @@ public class RoleImpl implements Role {
     public static HierarchyAccess createAllAccess(Hierarchy hierarchy) {
         final Level[] levels = hierarchy.getLevels();
         return new HierarchyAccessImpl(
+            null,
             hierarchy, Access.ALL, levels[0],
             levels[levels.length - 1], Role.RollupPolicy.FULL);
     }
@@ -364,6 +366,7 @@ public class RoleImpl implements Role {
      * Represents the access that a role has to a particular hierarchy.
      */
     private static class HierarchyAccessImpl implements Role.HierarchyAccess {
+        private final Role role;
         private final Hierarchy hierarchy;
         private final Level topLevel;
         private final Access access;
@@ -376,6 +379,7 @@ public class RoleImpl implements Role {
          * Creates a <code>HierarchyAccessImpl</code>
          */
         HierarchyAccessImpl(
+            Role role,
             Hierarchy hierarchy,
             Access access,
             Level topLevel,
@@ -383,6 +387,7 @@ public class RoleImpl implements Role {
             RollupPolicy rollupPolicy)
         {
             assert access != null;
+            this.role = role;
             this.hierarchy = hierarchy;
             this.access = access;
             final Level[] levels = hierarchy.getLevels();
@@ -397,7 +402,7 @@ public class RoleImpl implements Role {
         public HierarchyAccess clone() {
             HierarchyAccessImpl hierarchyAccess =
                 new HierarchyAccessImpl(
-                    hierarchy, access, topLevel, bottomLevel, rollupPolicy);
+                    role, hierarchy, access, topLevel, bottomLevel, rollupPolicy);
             hierarchyAccess.memberGrants.putAll(memberGrants);
             return hierarchyAccess;
         }
@@ -525,7 +530,7 @@ public class RoleImpl implements Role {
                         }
                     }
                 }
-                return Access.NONE;
+                return (this.role == null ? Access.NONE : this.role.getAccess(member.getDimension()));
             }
         }
 

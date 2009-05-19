@@ -84,6 +84,25 @@ public class IifFunDef extends FunDefBase {
                 public Calc[] getCalcs() {
                     return new Calc[] {booleanCalc, calc1, calc2};
                 }
+
+                public ResultStyle getResultStyle() {
+                    final ResultStyle rs1 = calc1.getResultStyle();
+                    final ResultStyle rs2 = calc2.getResultStyle();
+
+                    if (ResultStyle.ITERABLE_LIST_MUTABLELIST.contains(rs1) &&
+                        ResultStyle.ITERABLE_LIST_MUTABLELIST.contains(rs2)) {
+
+                        if (rs1 == ResultStyle.ITERABLE || rs2 == ResultStyle.ITERABLE) {
+                            return ResultStyle.ITERABLE;
+                        } else if (rs1 == ResultStyle.LIST || rs2 == ResultStyle.LIST) {
+                            return ResultStyle.LIST;
+                        } else {
+                            return ResultStyle.MUTABLE_LIST;
+                        }
+                    }
+
+                    return ResultStyle.ANY;
+                }
             };
         } else {
             return new GenericCalc(call) {
