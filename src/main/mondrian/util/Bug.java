@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/util/Bug.java#4 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/util/Bug.java#5 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -19,7 +19,7 @@ import mondrian.spi.Dialect;
  * when its bug is fixed.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/util/Bug.java#4 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/util/Bug.java#5 $
  * @since Oct 11, 2006
  */
 public class Bug {
@@ -155,6 +155,14 @@ public class Bug {
      * is fixed.
      */
     public static final boolean BugMondrian675Fixed = false;
+
+    /**
+     * Whether
+     * <a href="http://jira.pentaho.com/browse/MONDRIAN-675">bug MONDRIAN-687,
+     * "Format treats negative numbers differently than SSAS"</a>
+     * is fixed.
+     */
+    public static final boolean BugMondrian687Fixed = false;
 
     /**
      * Returns whether to avoid a test because the memory monitor may cause it

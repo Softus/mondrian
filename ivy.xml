@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="http://ivyrep.jayasoft.org/ivy-doc.xsl"?>
 <!--
-  == $Id: //open/mondrian-release/3.1/ivy.xml#9 $
+  == $Id: //open/mondrian-release/3.1/ivy.xml#10 $
   == This software is subject to the terms of the Eclipse Public License v1.0
   == Agreement, available at the following URL:
   == http://www.eclipse.org/legal/epl-v10.html.
@@ -15,7 +15,7 @@
     xmlns:m="http://ant.apache.org/ivy/maven"
     xsi:noNamespaceSchemaLocation="http://ant.apache.org/ivy/schemas/ivy.xsd">
 
-    <info organisation="pentaho" module="mondrian" revision="3.1.5.13307">
+    <info organisation="pentaho" module="mondrian" revision="3.1.6.13364">
         <license name="EPL" url="http://www.eclipse.org/legal/epl-v10.html"/>
         <ivyauthor name="Julian Hyde" />
         <repository name="pentaho-rep" url="http://repo.pentaho.org"/>

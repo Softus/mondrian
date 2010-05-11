@@ -390,7 +390,7 @@ DFN { font-weight:bold; font-style:italic; }
 <Doc>
 This is the XML model for Mondrian schemas.
 <p></p>
-Revision is $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Mondrian.xml#3 $
+Revision is $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Mondrian.xml#6 $
     </Doc>
 </blockquote>
 <h2>Imports</h2>
@@ -420,6 +420,12 @@ Revision is $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Mondrian.xml
 </li>
 <li>
 <a href="#AggPattern">AggPattern</a>
+</li>
+<li>
+<a href="#Annotation">Annotation</a>
+</li>
+<li>
+<a href="#Annotations">Annotations</a>
 </li>
 <li>
 <a href="#CalculatedMember">CalculatedMember</a>
@@ -623,6 +629,13 @@ Revision is $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Mondrian.xml
 </td>
 </tr>
 <tr>
+<td>description</td><td><i>String</i></td><td><i>none</i></td><td>
+<Doc>
+                Description of this schema.
+            </Doc>
+</td>
+</tr>
+<tr>
 <td>measuresCaption</td><td><i>String</i></td><td><i>none</i></td><td>
 <Doc>
                 Label for the measures dimension.
@@ -642,6 +655,11 @@ Revision is $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Mondrian.xml
 <table border="1" class="clsStd">
 <tr>
 <th>Element</th><th>Java Name</th><th>Constraints</th><th>Description</th>
+</tr>
+<tr>
+<td><a href="#Annotations">Annotations</a></td><td>annotations</td><td><i>Optional</i></td><td>
+<Doc>Contains values of user-defined properties.</Doc>
+</td>
 </tr>
 <tr>
 <td><a href="#Parameter">Parameter</a></td><td>parameters</td><td><i>Array</i></td><td>
@@ -732,6 +750,14 @@ Revision is $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Mondrian.xml
 </td>
 </tr>
 <tr>
+<td>description</td><td><i>String</i></td><td><i>none</i></td><td>
+<Doc>
+                Description of this cube.
+                Can be localized from Properties file using #{propertyname}.
+            </Doc>
+</td>
+</tr>
+<tr>
 <td>defaultMeasure</td><td><i>String</i></td><td><i>none</i></td><td>
 <Doc>
                 The name of the measure that would be taken as the default
@@ -763,6 +789,11 @@ Revision is $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Mondrian.xml
 <table border="1" class="clsStd">
 <tr>
 <th>Element</th><th>Java Name</th><th>Constraints</th><th>Description</th>
+</tr>
+<tr>
+<td><a href="#Annotations">Annotations</a></td><td>annotations</td><td><i>Optional</i></td><td>
+<Doc>Contains values of user-defined properties.</Doc>
+</td>
 </tr>
 <tr>
 <td><a href="#Relation">Relation</a></td><td>fact</td><td><i>Required</i></td><td>
@@ -850,6 +881,14 @@ Revision is $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Mondrian.xml
             </Doc>
 </td>
 </tr>
+<tr>
+<td>description</td><td><i>String</i></td><td><i>none</i></td><td>
+<Doc>
+                Description of this virtual cube.
+                Can be localized from Properties file using #{propertyname}.
+            </Doc>
+</td>
+</tr>
 </table>
 </blockquote>
 <h3>Content</h3>
@@ -857,6 +896,11 @@ Revision is $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Mondrian.xml
 <table border="1" class="clsStd">
 <tr>
 <th>Element</th><th>Java Name</th><th>Constraints</th><th>Description</th>
+</tr>
+<tr>
+<td><a href="#Annotations">Annotations</a></td><td>annotations</td><td><i>Optional</i></td><td>
+<Doc>Contains values of user-defined properties.</Doc>
+</td>
 </tr>
 <tr>
 <td><a href="#CubeUsages">CubeUsages</a></td><td>cubeUsage</td><td><i>Optional</i></td><td>
@@ -1059,7 +1103,16 @@ Revision is $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Mondrian.xml
 </blockquote>
 <h3>Content</h3>
 <blockquote>
-<i>empty</i>
+<table border="1" class="clsStd">
+<tr>
+<th>Element</th><th>Java Name</th><th>Constraints</th><th>Description</th>
+</tr>
+<tr>
+<td><a href="#Annotations">Annotations</a></td><td>annotations</td><td><i>Optional</i></td><td>
+<Doc>Contains values of user-defined properties.</Doc>
+</td>
+</tr>
+</table>
 </blockquote>
 <p></p>
 <a name="DimensionUsage">
@@ -1171,6 +1224,14 @@ Revision is $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Mondrian.xml
 <td>caption</td><td><i>String</i></td><td><i>none</i></td><td>
 <Doc>
                 A string being displayed instead of the dimensions's name.
+                Can be localized from Properties file using #{propertyname}.
+            </Doc>
+</td>
+</tr>
+<tr>
+<td>description</td><td><i>String</i></td><td><i>none</i></td><td>
+<Doc>
+                Description of this dimension.
                 Can be localized from Properties file using #{propertyname}.
             </Doc>
 </td>
@@ -1311,6 +1372,14 @@ Revision is $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Mondrian.xml
 </td>
 </tr>
 <tr>
+<td>description</td><td><i>String</i></td><td><i>none</i></td><td>
+<Doc>
+                Description of this hierarchy.
+                Can be localized from Properties file using #{propertyname}.
+            </Doc>
+</td>
+</tr>
+<tr>
 <td>uniqueKeyLevelName</td><td><i>String</i></td><td><i>none</i></td><td>
 <Doc>
 		        Should be set to the level (if such a level exists) at which depth it is known
@@ -1326,6 +1395,11 @@ Revision is $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Mondrian.xml
 <table border="1" class="clsStd">
 <tr>
 <th>Element</th><th>Java Name</th><th>Constraints</th><th>Description</th>
+</tr>
+<tr>
+<td><a href="#Annotations">Annotations</a></td><td>annotations</td><td><i>Optional</i></td><td>
+<Doc>Contains values of user-defined properties.</Doc>
+</td>
 </tr>
 <tr>
 <td><a href="#RelationOrJoin">RelationOrJoin</a></td><td>relation</td><td><i>Optional</i></td><td>
@@ -1501,6 +1575,14 @@ Revision is $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Mondrian.xml
 </td>
 </tr>
 <tr>
+<td>description</td><td><i>String</i></td><td><i>none</i></td><td>
+<Doc>
+                Description of this level.
+                Can be localized from Properties file using #{propertyname}.
+            </Doc>
+</td>
+</tr>
+<tr>
 <td>captionColumn</td><td><i>String</i></td><td><i>none</i></td><td>
 <Doc>
                 The name of the column which holds the caption for
@@ -1515,6 +1597,11 @@ Revision is $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Mondrian.xml
 <table border="1" class="clsStd">
 <tr>
 <th>Element</th><th>Java Name</th><th>Constraints</th><th>Description</th>
+</tr>
+<tr>
+<td><a href="#Annotations">Annotations</a></td><td>annotations</td><td><i>Optional</i></td><td>
+<Doc>Contains values of user-defined properties.</Doc>
+</td>
 </tr>
 <tr>
 <td><a href="#KeyExpression">KeyExpression</a></td><td>keyExp</td><td><i>Optional</i></td><td>
@@ -1658,6 +1745,14 @@ Revision is $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Mondrian.xml
 </td>
 </tr>
 <tr>
+<td>description</td><td><i>String</i></td><td><i>none</i></td><td>
+<Doc>
+                Description of this member property.
+                Can be localized from Properties file using #{propertyname}.
+            </Doc>
+</td>
+</tr>
+<tr>
 <td>dependsOnLevelValue</td><td><i>Boolean</i></td><td><i>none</i></td><td>
 <Doc>
 		        Should be set to true if the value of the property is functionally dependent on
@@ -1752,6 +1847,14 @@ Revision is $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Mondrian.xml
 </td>
 </tr>
 <tr>
+<td>description</td><td><i>String</i></td><td><i>none</i></td><td>
+<Doc>
+                Description of this measure.
+                Can be localized from Properties file using #{propertyname}.
+            </Doc>
+</td>
+</tr>
+<tr>
 <td>visible</td><td><i>Boolean</i></td><td><i>none</i></td><td>
 <Doc>
                 Whether this member is visible in the user-interface.
@@ -1766,6 +1869,11 @@ Revision is $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Mondrian.xml
 <table border="1" class="clsStd">
 <tr>
 <th>Element</th><th>Java Name</th><th>Constraints</th><th>Description</th>
+</tr>
+<tr>
+<td><a href="#Annotations">Annotations</a></td><td>annotations</td><td><i>Optional</i></td><td>
+<Doc>Contains values of user-defined properties.</Doc>
+</td>
 </tr>
 <tr>
 <td><a href="#MeasureExpression">MeasureExpression</a></td><td>measureExp</td><td><i>Optional</i></td><td>
@@ -1823,6 +1931,14 @@ Revision is $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Mondrian.xml
 </td>
 </tr>
 <tr>
+<td>description</td><td><i>String</i></td><td><i>none</i></td><td>
+<Doc>
+                Description of this calculated member.
+                Can be localized from Properties file using #{propertyname}.
+            </Doc>
+</td>
+</tr>
+<tr>
 <td>formula</td><td><i>String</i></td><td><i>none</i></td><td>
 <Doc>
                 MDX expression which gives the value of this member.
@@ -1852,6 +1968,11 @@ Revision is $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Mondrian.xml
 <table border="1" class="clsStd">
 <tr>
 <th>Element</th><th>Java Name</th><th>Constraints</th><th>Description</th>
+</tr>
+<tr>
+<td><a href="#Annotations">Annotations</a></td><td>annotations</td><td><i>Optional</i></td><td>
+<Doc>Contains values of user-defined properties.</Doc>
+</td>
 </tr>
 <tr>
 <td><a href="#Formula">Formula</a></td><td>formulaElement</td><td><i>Optional</i></td><td>
@@ -1899,7 +2020,16 @@ Revision is $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Mondrian.xml
 <tr>
 <td>caption</td><td><i>String</i></td><td><i>none</i></td><td>
 <Doc>
-                A string being displayed instead of the Properties's name.
+                A string being displayed instead of the name of this calculated
+                member property.
+                Can be localized from Properties file using #{propertyname}.
+            </Doc>
+</td>
+</tr>
+<tr>
+<td>description</td><td><i>String</i></td><td><i>none</i></td><td>
+<Doc>
+                Description of this calculated member property.
                 Can be localized from Properties file using #{propertyname}.
             </Doc>
 </td>
@@ -1973,6 +2103,22 @@ Revision is $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Mondrian.xml
 </td>
 </tr>
 <tr>
+<td>caption</td><td><i>String</i></td><td><i>none</i></td><td>
+<Doc>
+                Caption of this named set.
+                Can be localized from Properties file using #{propertyname}.
+            </Doc>
+</td>
+</tr>
+<tr>
+<td>description</td><td><i>String</i></td><td><i>none</i></td><td>
+<Doc>
+                Description of this named set.
+                Can be localized from Properties file using #{propertyname}.
+            </Doc>
+</td>
+</tr>
+<tr>
 <td>formula</td><td><i>String</i></td><td><i>none</i></td><td>
 <Doc>
                 MDX expression which gives the value of this set.
@@ -1987,6 +2133,11 @@ Revision is $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Mondrian.xml
 <table border="1" class="clsStd">
 <tr>
 <th>Element</th><th>Java Name</th><th>Constraints</th><th>Description</th>
+</tr>
+<tr>
+<td><a href="#Annotations">Annotations</a></td><td>annotations</td><td><i>Optional</i></td><td>
+<Doc>Contains values of user-defined properties.</Doc>
+</td>
 </tr>
 <tr>
 <td><a href="#Formula">Formula</a></td><td>formulaElement</td><td><i>Optional</i></td><td>
@@ -2306,7 +2457,7 @@ Revision is $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Mondrian.xml
 </a>
 <blockquote>
 <Doc>
-            Dialect-specific table optimization hints
+            Dialect-specific table optimization hints.
         </Doc>
 </blockquote>
 <h3>Attributes</h3>
@@ -2318,7 +2469,7 @@ Revision is $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Mondrian.xml
 <tr>
 <td><b>type</b></td><td><i>String</i></td><td><i>none</i></td><td>
 <Doc>
-                Type of hint, interpreted and applied on a per-dialect basis
+                Type of hint, interpreted and applied on a per-dialect basis.
             </Doc>
 </td>
 </tr>
@@ -3057,6 +3208,11 @@ Revision is $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Mondrian.xml
 <th>Element</th><th>Java Name</th><th>Constraints</th><th>Description</th>
 </tr>
 <tr>
+<td><a href="#Annotations">Annotations</a></td><td>annotations</td><td><i>Optional</i></td><td>
+<Doc>Contains values of user-defined properties.</Doc>
+</td>
+</tr>
+<tr>
 <td><a href="#SchemaGrant">SchemaGrant</a></td><td>schemaGrants</td><td><i>Array</i></td><td><i>none</i></td>
 </tr>
 <tr>
@@ -3485,6 +3641,70 @@ Revision is $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Mondrian.xml
 <i>empty</i>
 </blockquote>
 <p></p>
+<a name="Annotations">
+<table width="100%" cellspacing="0" border="1">
+<tr>
+<td bgcolor="#3366cc"><font color="white">
+<h2>
+<i>Element</i>Annotations</h2>
+</font></td>
+</tr>
+</table>
+</a>
+<blockquote>
+<Doc>Holder for an array of Annotation elements</Doc>
+</blockquote>
+<h3>Attributes</h3>
+<blockquote>
+<i>none</i>
+</blockquote>
+<h3>Content</h3>
+<blockquote>
+<table border="1" class="clsStd">
+<tr>
+<th>Element</th><th>Java Name</th><th>Constraints</th><th>Description</th>
+</tr>
+<tr>
+<td><a href="#Annotation">Annotation</a></td><td>array</td><td><i>Array</i></td><td><i>none</i></td>
+</tr>
+</table>
+</blockquote>
+<p></p>
+<a name="Annotation">
+<table width="100%" cellspacing="0" border="1">
+<tr>
+<td bgcolor="#3366cc"><font color="white">
+<h2>
+<i>Element</i>Annotation</h2>
+</font></td>
+</tr>
+</table>
+</a>
+<blockquote>
+<Doc>
+            User-defined property value.
+        </Doc>
+</blockquote>
+<h3>Attributes</h3>
+<blockquote>
+<table border="1" class="clsStd">
+<tr>
+<th>Attribute</th><th>Type</th><th>Default</th><th>Description</th>
+</tr>
+<tr>
+<td><b>name</b></td><td><i>String</i></td><td><i>none</i></td><td>
+<Doc>
+                Name of the annotation.
+            </Doc>
+</td>
+</tr>
+</table>
+</blockquote>
+<h3>Content</h3>
+<blockquote>
+<i>Text</i>
+</blockquote>
+<p></p>
 <a name="CubeDimension">
 <table width="100%" cellspacing="0" border="0">
 <tr>
@@ -3519,6 +3739,14 @@ Revision is $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Mondrian.xml
 </td>
 </tr>
 <tr>
+<td>description</td><td><i>String</i></td><td><i>none</i></td><td>
+<Doc>
+                Description of this dimension.
+                Can be localized from Properties file using #{propertyname}.
+            </Doc>
+</td>
+</tr>
+<tr>
 <td>foreignKey</td><td><i>String</i></td><td><i>none</i></td><td>
 <Doc>
                 The name of the column in the fact table which joins
@@ -3540,7 +3768,16 @@ Revision is $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Mondrian.xml
 </blockquote>
 <h3>Content</h3>
 <blockquote>
-<i>empty</i>
+<table border="1" class="clsStd">
+<tr>
+<th>Element</th><th>Java Name</th><th>Constraints</th><th>Description</th>
+</tr>
+<tr>
+<td><a href="#Annotations">Annotations</a></td><td>annotations</td><td><i>Optional</i></td><td>
+<Doc>Contains values of user-defined properties.</Doc>
+</td>
+</tr>
+</table>
 </blockquote>
 <p></p>
 <a name="RelationOrJoin">

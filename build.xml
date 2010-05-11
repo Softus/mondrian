@@ -1,5 +1,5 @@
 <!--
-  == $Id: //open/mondrian-release/3.1/build.xml#12 $
+  == $Id: //open/mondrian-release/3.1/build.xml#13 $
   == This software is subject to the terms of the Eclipse Public License v1.0
   == Agreement, available at the following URL:
   == http://www.eclipse.org/legal/epl-v10.html.
@@ -23,7 +23,7 @@
   <property name="project.build.debug" value="on"/>
   <property name="Name" value="Mondrian"/>
   <property name="name" value="mondrian"/>
-  <property name="version" value="3.1.5.13307"/>
+  <property name="version" value="3.1.6.13364"/>
   <property name="vendor" value="Pentaho"/>
   <property name="driver.name" value="Mondrian olap4j driver"/>
   <property name="driver.version" value="3.1.2"/>
