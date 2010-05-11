@@ -37,7 +37,7 @@ import java.util.*;
  *
  * @author luis f. canals, Kurtis Walker
  * @since July 23, 2009
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/Target.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/Target.java#3 $
  */
 public class Target extends TargetBase {
     private final HighCardSqlTupleReader sqlTupleReader;
@@ -176,6 +176,10 @@ public class Target extends TargetBase {
 
                 if (idx == 0) {
                     this.first = getList().get(index);
+
+                    // Above might run into exception which is caught in
+                    // isEmpty(). So can change the state of the object after
+                    // that.
                     this.firstMemberAssigned = true;
                     return this.first;
                 } else {

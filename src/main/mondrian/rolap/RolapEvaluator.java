@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapEvaluator.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapEvaluator.java#6 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2001-2002 Kana Software, Inc.
-// Copyright (C) 2001-2009 Julian Hyde and others
+// Copyright (C) 2001-2010 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -43,7 +43,7 @@ import java.util.*;
  *
  * @author jhyde
  * @since 10 August, 2001
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapEvaluator.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapEvaluator.java#6 $
  */
 public class RolapEvaluator implements Evaluator {
     private static final Logger LOGGER = Logger.getLogger(RolapEvaluator.class);
@@ -54,11 +54,12 @@ public class RolapEvaluator implements Evaluator {
     private static final Object nullResult = new Object();
 
     private final RolapMember[] currentMembers;
-    private final Evaluator parent;
+    private final RolapEvaluator parent;
     protected CellReader cellReader;
     private final int depth;
 
     private Member expandingMember;
+    private boolean firstExpanding;
     private boolean nonEmpty;
     protected final RolapEvaluatorRoot root;
     private int iterationLength;
@@ -254,7 +255,7 @@ public class RolapEvaluator implements Evaluator {
         return depth;
     }
 
-    public final Evaluator getParent() {
+    public final RolapEvaluator getParent() {
         return parent;
     }
 
@@ -306,7 +307,7 @@ public class RolapEvaluator implements Evaluator {
         return new RolapEvaluator(root, this);
     }
 
-    public final Evaluator pop() {
+    public final RolapEvaluator pop() {
         return parent;
     }
 
@@ -375,7 +376,12 @@ public class RolapEvaluator implements Evaluator {
         final RolapMember m = (RolapMember) member;
         final int ordinal = m.getDimension().getOrdinal(root.cube);
         final RolapMember previous = currentMembers[ordinal];
-        if (m.equals(previous)) {
+
+        // If the context is unchanged, save ourselves some effort. It would be
+        // a mistake to use equals here; we might treat the visual total member
+        // 'Gender.All' the same as the true 'Gender.All' because they have the
+        // same unique name, and that would be wrong.
+        if (m == previous) {
             return m;
         }
         if (previous.isEvaluated()) {
@@ -396,7 +402,7 @@ public class RolapEvaluator implements Evaluator {
                 if (getLogger().isDebugEnabled()) {
                     getLogger().debug(
                         "RolapEvaluator.setContext: member == null "
-                         + " , count=" + i);
+                        + " , count=" + i);
                 }
                 assert false;
                 continue;
@@ -412,8 +418,8 @@ public class RolapEvaluator implements Evaluator {
                 if (getLogger().isDebugEnabled()) {
                     getLogger().debug(
                         "RolapEvaluator.setContext: "
-                            + "member == null, memberList: "
-                            + Arrays.asList(members));
+                        + "member == null, memberList: "
+                        + Arrays.asList(members));
                 }
                 assert false;
                 continue;
@@ -466,11 +472,13 @@ public class RolapEvaluator implements Evaluator {
     }
 
     void setExpanding(Member member) {
+        assert member != null;
         expandingMember = member;
+        firstExpanding = true;
         final int memberCount = currentMembers.length;
         if (depth > memberCount) {
             if (depth % memberCount == 0) {
-                checkRecursion((RolapEvaluator) parent);
+                checkRecursion(parent);
             }
         }
     }
@@ -504,18 +512,25 @@ public class RolapEvaluator implements Evaluator {
             if (eval == null) {
                 return;
             }
-            if (eval.expandingMember != null) {
+            if (eval.firstExpanding) {
                 break;
             }
-            eval = (RolapEvaluator) eval.getParent();
+            eval = eval.parent;
         }
 
+        // Find an ancestor evaluator that has identical context to this one:
+        // same member context, and expanding the same calculation.
         outer:
-        for (RolapEvaluator eval2 = (RolapEvaluator) eval.getParent();
+        for (RolapEvaluator eval2 = eval.parent;
              eval2 != null;
-             eval2 = (RolapEvaluator) eval2.getParent())
+            eval2 = eval2.parent)
         {
-            if (eval2.expandingMember != eval.expandingMember) {
+            // Ignore ancestors which are not the first level expanding a
+            // member. (They are dummy evaluators created to avoid stomping on
+            // context while iterating over a set, say.)
+            if (!eval2.firstExpanding
+                || eval2.expandingMember != eval.expandingMember)
+            {
                 continue;
             }
             for (int i = 0; i < eval.currentMembers.length; i++) {
@@ -526,7 +541,7 @@ public class RolapEvaluator implements Evaluator {
                     if (LOGGER.isDebugEnabled()) {
                         LOGGER.debug(
                             "RolapEvaluator.checkRecursion: member == null "
-                             + " , count=" + i);
+                            + " , count=" + i);
                     }
                     continue;
                 }
@@ -549,9 +564,7 @@ public class RolapEvaluator implements Evaluator {
         final boolean skipDefaultMembers = true;
         final StringBuilder buf = new StringBuilder("{");
         int frameCount = 0;
-        for (RolapEvaluator eval = this; eval != null;
-             eval = (RolapEvaluator) eval.getParent())
-        {
+        for (RolapEvaluator eval = this; eval != null; eval = eval.parent) {
             if (eval.expandingMember == null) {
                 continue;
             }
@@ -588,7 +601,7 @@ public class RolapEvaluator implements Evaluator {
                 if (getLogger().isDebugEnabled()) {
                     getLogger().debug(
                         "RolapEvaluator.getProperty: member == null "
-                         + " , count=" + i);
+                        + " , count=" + i);
                 }
                 continue;
             }
@@ -680,9 +693,7 @@ public class RolapEvaluator implements Evaluator {
         // "NON EMPTY [Customer].[Name].members" may return different results
         // for 1997-01 and 1997-02
         if (nonEmpty) {
-            for (int i = 0; i < currentMembers.length; i++) {
-                key.add(currentMembers[i]);
-            }
+            key.addAll(Arrays.asList(currentMembers));
             return key;
         }
 
@@ -759,8 +770,11 @@ public class RolapEvaluator implements Evaluator {
         return FunUtil.newEvalException((FunDef) context, s);
     }
 
-    public final NamedSetEvaluator getNamedSetEvaluator(String name, Exp exp) {
-        return root.evaluateNamedSet(name, exp);
+    public final NamedSetEvaluator getNamedSetEvaluator(
+        NamedSet namedSet,
+        boolean create)
+    {
+        return root.evaluateNamedSet(namedSet, create);
     }
 
     public final int getMissCount() {

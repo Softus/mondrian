@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/SetBase.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/SetBase.java#5 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -13,33 +13,72 @@
 
 package mondrian.olap;
 
-import mondrian.olap.type.Type;
+import mondrian.olap.type.*;
 
 import org.apache.log4j.Logger;
+
+import java.util.Map;
 
 /**
  * Skeleton implementation of {@link NamedSet} interface.
  *
  * @author jhyde
  * @since 6 August, 2001
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/SetBase.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/SetBase.java#5 $
  */
-class SetBase extends OlapElementBase implements NamedSet {
+public class SetBase extends OlapElementBase implements NamedSet {
 
     private static final Logger LOGGER = Logger.getLogger(SetBase.class);
 
     private String name;
+    private Map<String, Annotation> annotationMap;
+    private String description;
     private final String uniqueName;
-    private final Exp exp;
+    private Exp exp;
+    private boolean validated;
 
-    SetBase(String name, Exp exp) {
+    /**
+     * Creates a SetBase.
+     *
+     * @param name Name
+     * @param caption Caption
+     * @param description Description
+     * @param exp Expression
+     * @param validated Whether has been validated
+     * @param annotationMap Annotations
+     */
+    SetBase(
+        String name,
+        String caption,
+        String description,
+        Exp exp,
+        boolean validated,
+        Map<String, Annotation> annotationMap)
+    {
         this.name = name;
+        this.annotationMap = annotationMap;
+        this.caption = caption;
+        this.description = description;
         this.exp = exp;
+        this.validated = validated;
         this.uniqueName = "[" + name + "]";
     }
 
+    public Map<String, Annotation> getAnnotationMap() {
+        return annotationMap;
+    }
+
+    public String getNameUniqueWithinQuery() {
+        return System.identityHashCode(this) + "";
+    }
+
+    public boolean isDynamic() {
+        return false;
+    }
+
     public Object clone() {
-        return new SetBase(name, (Exp) exp.clone());
+        return new SetBase(
+            name, caption, description, exp.clone(), validated, annotationMap);
     }
 
     protected Logger getLogger() {
@@ -59,7 +98,7 @@ class SetBase extends OlapElementBase implements NamedSet {
     }
 
     public String getDescription() {
-        return null;
+        return description;
     }
 
     public Hierarchy getHierarchy() {
@@ -80,17 +119,37 @@ class SetBase extends OlapElementBase implements NamedSet {
         this.name = name;
     }
 
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setAnnotationMap(Map<String, Annotation> annotationMap) {
+        this.annotationMap = annotationMap;
+    }
+
     public Exp getExp() {
         return exp;
     }
 
     public NamedSet validate(Validator validator) {
-        Exp exp2 = validator.validate(exp, false);
-        return new SetBase(name, exp2);
+        if (!validated) {
+            exp = validator.validate(exp, false);
+            validated = true;
+        }
+        return this;
     }
 
     public Type getType() {
-        return exp.getType();
+        Type type = exp.getType();
+        if (type instanceof MemberType
+            || type instanceof TupleType)
+        {
+            // You can use a member or tuple as the expression for a set. It is
+            // implicitly converted to a set. The expression may not have been
+            // converted yet, so we wrap the type here.
+            type = new SetType(type);
+        }
+        return type;
     }
 }
 

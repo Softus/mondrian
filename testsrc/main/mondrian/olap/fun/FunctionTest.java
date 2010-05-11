@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/olap/fun/FunctionTest.java#2 $
+// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/olap/fun/FunctionTest.java#12 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
-// Copyright (C) 2003-2009 Julian Hyde and others
+// Copyright (C) 2003-2010 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -12,7 +12,6 @@ package mondrian.olap.fun;
 import junit.framework.Assert;
 import junit.framework.ComparisonFailure;
 import mondrian.olap.*;
-import static mondrian.olap.Util.nl;
 import mondrian.test.*;
 import mondrian.resource.MondrianResource;
 import mondrian.udf.CurrentDateMemberExactUdf;
@@ -33,7 +32,7 @@ import java.util.ArrayList;
  * {@link BuiltinFunTable}.
  *
  * @author gjohnson
- * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/olap/fun/FunctionTest.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/olap/fun/FunctionTest.java#12 $
  */
 public class FunctionTest extends FoodMartTestCase {
 
@@ -1907,7 +1906,7 @@ public class FunctionTest extends FoodMartTestCase {
         result =
             executeQuery(
                 "select {[Time.Weekly].DefaultMember} on columns\n"
-                 + "from Sales");
+                + "from Sales");
         Assert.assertEquals(
             MondrianProperties.instance().SsasCompatibleNaming.get()
                 ? "All Weeklys"
@@ -2604,23 +2603,23 @@ public class FunctionTest extends FoodMartTestCase {
         Result result =
             executeQuery(
                 "select {[Gender].[F].NextMember} ON COLUMNS from Sales");
-        Assert.assertTrue(
-            result.getAxes()[0].getPositions().get(0).get(0).getName()
-                .equals("M"));
+        assertEquals(
+            "M",
+            result.getAxes()[0].getPositions().get(0).get(0).getName());
     }
 
     public void testFirstInLevel2() {
         Result result =
             executeQuery(
                 "select {[Gender].[M].NextMember} ON COLUMNS from Sales");
-        Assert.assertTrue(result.getAxes()[0].getPositions().size() == 0);
+        assertEquals(0, result.getAxes()[0].getPositions().size());
     }
 
     public void testAll2() {
         Result result =
             executeQuery("select {[Gender].PrevMember} ON COLUMNS from Sales");
         // previous to [Gender].[All] is null, so no members are returned
-        Assert.assertTrue(result.getAxes()[0].getPositions().size() == 0);
+        assertEquals(0, result.getAxes()[0].getPositions().size());
     }
 
 
@@ -2629,9 +2628,9 @@ public class FunctionTest extends FoodMartTestCase {
             executeQuery(
                 "select{ [Product].[All Products].[Drink].Parent} on columns "
                 + "from Sales");
-        Assert.assertTrue(
-            result.getAxes()[0].getPositions().get(0).get(0).getName()
-                .equals("All Products"));
+        assertEquals(
+            "All Products",
+            result.getAxes()[0].getPositions().get(0).get(0).getName());
     }
 
     public void testFirstInLevel5() {
@@ -2639,8 +2638,9 @@ public class FunctionTest extends FoodMartTestCase {
             executeQuery(
                 "select {[Time].[1997].[Q2].[4].Parent} on columns,"
                 + "{[Gender].[M]} on rows from Sales");
-        Assert.assertTrue(result.getAxes()[0].getPositions().get(0).get(0)
-            .getName().equals("Q2"));
+        assertEquals(
+            "Q2",
+            result.getAxes()[0].getPositions().get(0).get(0).getName());
     }
 
     public void testAll5() {
@@ -2649,32 +2649,32 @@ public class FunctionTest extends FoodMartTestCase {
                 "select {[Time].[1997].[Q2].Parent} on columns,"
                 + "{[Gender].[M]} on rows from Sales");
         // previous to [Gender].[All] is null, so no members are returned
-        Assert.assertTrue(
-            result.getAxes()[0].getPositions().get(0).get(0).getName()
-                .equals("1997"));
+        assertEquals(
+            "1997",
+            result.getAxes()[0].getPositions().get(0).get(0).getName());
     }
 
     public void testBasic() {
         Result result =
             executeQuery(
                 "select {[Gender].[M].PrevMember} ON COLUMNS from Sales");
-        Assert.assertTrue(
-            result.getAxes()[0].getPositions().get(0).get(0).getName()
-                .equals("F"));
+        assertEquals(
+            "F",
+            result.getAxes()[0].getPositions().get(0).get(0).getName());
     }
 
     public void testFirstInLevel() {
         Result result =
             executeQuery(
                 "select {[Gender].[F].PrevMember} ON COLUMNS from Sales");
-        Assert.assertTrue(result.getAxes()[0].getPositions().size() == 0);
+        assertEquals(0, result.getAxes()[0].getPositions().size());
     }
 
     public void testAll() {
         Result result =
             executeQuery("select {[Gender].PrevMember} ON COLUMNS from Sales");
         // previous to [Gender].[All] is null, so no members are returned
-        Assert.assertTrue(result.getAxes()[0].getPositions().size() == 0);
+        assertEquals(0, result.getAxes()[0].getPositions().size());
     }
 
     public void testAggregateDepends() {
@@ -3220,6 +3220,394 @@ public class FunctionTest extends FoodMartTestCase {
             "2,888,660,329.13");
     }
 
+    /**
+     * Tests the AS operator, that gives an expression an alias.
+     */
+    public void testAs() {
+        assertAxisReturns(
+            "Filter([Customers].Children as t,\n"
+            + "t.Current.Name = 'USA')",
+            "[Customers].[All Customers].[USA]");
+
+        // 'AS' and the ':' operator have similar precedence, so it's worth
+        // checking that they play nice.
+        assertQueryReturns(
+            "select\n"
+            + "  filter(\n"
+            + "    [Time].[1997].[Q1].[2] : [Time].[1997].[Q3].[9] as t,"
+            + "    mod(t.CurrentOrdinal, 2) = 0) on 0\n"
+            + "from [Sales]",
+            "Axis #0:\n"
+            + "{}\n"
+            + "Axis #1:\n"
+            + "{[Time].[1997].[Q1].[2]}\n"
+            + "{[Time].[1997].[Q2].[4]}\n"
+            + "{[Time].[1997].[Q2].[6]}\n"
+            + "{[Time].[1997].[Q3].[8]}\n"
+            + "Row #0: 20,957\n"
+            + "Row #0: 20,179\n"
+            + "Row #0: 21,350\n"
+            + "Row #0: 21,697\n");
+
+        // AS member fails on SSAS with "The CHILDREN function expects a member
+        // expression for the 0 argument. A tuple set expression was used."
+        assertQueryThrows(
+            "select\n"
+            + " {([Time].[1997].[Q1] as t).Children, \n"
+            + "  t.Parent } on 0 \n"
+            + "from [Sales]",
+            "No function matches signature '<Set>.Children'");
+
+        // Set of members. OK.
+        assertQueryReturns(
+            "select Measures.[Unit Sales] on 0, \n"
+            + "  {[Time].[1997].Children as t, \n"
+            + "   Descendants(t, [Time].[Month])} on 1 \n"
+            + "from [Sales]",
+            "Axis #0:\n"
+            + "{}\n"
+            + "Axis #1:\n"
+            + "{[Measures].[Unit Sales]}\n"
+            + "Axis #2:\n"
+            + "{[Time].[1997].[Q1]}\n"
+            + "{[Time].[1997].[Q2]}\n"
+            + "{[Time].[1997].[Q3]}\n"
+            + "{[Time].[1997].[Q4]}\n"
+            + "{[Time].[1997].[Q1].[1]}\n"
+            + "{[Time].[1997].[Q1].[2]}\n"
+            + "{[Time].[1997].[Q1].[3]}\n"
+            + "{[Time].[1997].[Q2].[4]}\n"
+            + "{[Time].[1997].[Q2].[5]}\n"
+            + "{[Time].[1997].[Q2].[6]}\n"
+            + "{[Time].[1997].[Q3].[7]}\n"
+            + "{[Time].[1997].[Q3].[8]}\n"
+            + "{[Time].[1997].[Q3].[9]}\n"
+            + "{[Time].[1997].[Q4].[10]}\n"
+            + "{[Time].[1997].[Q4].[11]}\n"
+            + "{[Time].[1997].[Q4].[12]}\n"
+            + "Row #0: 66,291\n"
+            + "Row #1: 62,610\n"
+            + "Row #2: 65,848\n"
+            + "Row #3: 72,024\n"
+            + "Row #4: 21,628\n"
+            + "Row #5: 20,957\n"
+            + "Row #6: 23,706\n"
+            + "Row #7: 20,179\n"
+            + "Row #8: 21,081\n"
+            + "Row #9: 21,350\n"
+            + "Row #10: 23,763\n"
+            + "Row #11: 21,697\n"
+            + "Row #12: 20,388\n"
+            + "Row #13: 19,958\n"
+            + "Row #14: 25,270\n"
+            + "Row #15: 26,796\n");
+
+        // Alias a member. Implicitly becomes set. OK.
+        assertQueryReturns(
+            "select Measures.[Unit Sales] on 0,\n"
+            + "  {[Time].[1997] as t,\n"
+            + "   Descendants(t, [Time].[Month])} on 1\n"
+            + "from [Sales]",
+            "Axis #0:\n"
+            + "{}\n"
+            + "Axis #1:\n"
+            + "{[Measures].[Unit Sales]}\n"
+            + "Axis #2:\n"
+            + "{[Time].[1997]}\n"
+            + "{[Time].[1997].[Q1].[1]}\n"
+            + "{[Time].[1997].[Q1].[2]}\n"
+            + "{[Time].[1997].[Q1].[3]}\n"
+            + "{[Time].[1997].[Q2].[4]}\n"
+            + "{[Time].[1997].[Q2].[5]}\n"
+            + "{[Time].[1997].[Q2].[6]}\n"
+            + "{[Time].[1997].[Q3].[7]}\n"
+            + "{[Time].[1997].[Q3].[8]}\n"
+            + "{[Time].[1997].[Q3].[9]}\n"
+            + "{[Time].[1997].[Q4].[10]}\n"
+            + "{[Time].[1997].[Q4].[11]}\n"
+            + "{[Time].[1997].[Q4].[12]}\n"
+            + "Row #0: 266,773\n"
+            + "Row #1: 21,628\n"
+            + "Row #2: 20,957\n"
+            + "Row #3: 23,706\n"
+            + "Row #4: 20,179\n"
+            + "Row #5: 21,081\n"
+            + "Row #6: 21,350\n"
+            + "Row #7: 23,763\n"
+            + "Row #8: 21,697\n"
+            + "Row #9: 20,388\n"
+            + "Row #10: 19,958\n"
+            + "Row #11: 25,270\n"
+            + "Row #12: 26,796\n");
+
+        // Alias a tuple. Implicitly becomes set. The error confirms that the
+        // named set's type is a set of tuples. SSAS gives error "Descendants
+        // function expects a member or set ..."
+        assertQueryThrows(
+            "select Measures.[Unit Sales] on 0,\n"
+            + "  {([Time].[1997], [Customers].[USA].[CA]) as t,\n"
+            + "   Descendants(t, [Time].[Month])} on 1\n"
+            + "from [Sales]",
+            "Argument to Descendants function must be a member or set of members, not a set of tuples");
+    }
+
+    public void testAs2() {
+        // Named set and alias with same name (t) and a second alias (t2).
+        // Reference to t from within descendants resolves to alias, of type
+        // [Time], because it is nearer.
+        final String result =
+            "Axis #0:\n"
+            + "{}\n"
+            + "Axis #1:\n"
+            + "{[Measures].[Unit Sales], [Gender].[All Gender].[F]}\n"
+            + "{[Measures].[Unit Sales], [Gender].[All Gender].[M]}\n"
+            + "Axis #2:\n"
+            + "{[Time].[1997].[Q1]}\n"
+            + "{[Time].[1997].[Q2]}\n"
+            + "{[Time].[1997].[Q3]}\n"
+            + "{[Time].[1997].[Q4]}\n"
+            + "{[Time].[1997].[Q1].[1]}\n"
+            + "{[Time].[1997].[Q2].[6]}\n"
+            + "{[Time].[1997].[Q4].[11]}\n"
+            + "Row #0: 32,910\n"
+            + "Row #0: 33,381\n"
+            + "Row #1: 30,992\n"
+            + "Row #1: 31,618\n"
+            + "Row #2: 32,599\n"
+            + "Row #2: 33,249\n"
+            + "Row #3: 35,057\n"
+            + "Row #3: 36,967\n"
+            + "Row #4: 10,932\n"
+            + "Row #4: 10,696\n"
+            + "Row #5: 10,466\n"
+            + "Row #5: 10,884\n"
+            + "Row #6: 12,320\n"
+            + "Row #6: 12,950\n";
+        assertQueryReturns(
+            "with set t as [Gender].Children\n"
+            + "select\n"
+            + "  Measures.[Unit Sales] * t on 0,\n"
+            + "  {\n"
+            + "    [Time].[1997].Children as t,\n"
+            + "    Filter(\n"
+            + "      Descendants(t, [Time].[Month]) as t2,\n"
+            + "      Mod(t2.CurrentOrdinal, 5) = 0)\n"
+            + "  } on 1\n"
+            + "from [Sales]",
+            result);
+
+        // Two aliases with same name. OK.
+        assertQueryReturns(
+            "select\n"
+            + "  Measures.[Unit Sales] * [Gender].Children as t on 0,\n"
+            + "  {[Time].[1997].Children as t,\n"
+            + "    Filter(\n"
+            + "      Descendants(t, [Time].[Month]) as t2,\n"
+            + "      Mod(t2.CurrentOrdinal, 5) = 0)\n"
+            + "  } on 1\n"
+            + "from [Sales]",
+            result);
+
+        // Bug MONDRIAN-648 causes 'AS' to have lower precedence than '*'.
+        if (Bug.BugMondrian648Fixed) {
+            // Note that 'as' has higher precedence than '*'.
+            assertQueryReturns(
+                "select\n"
+                + "  Measures.[Unit Sales] * [Gender].Members as t on 0,\n"
+                + "  {t} on 1\n"
+                + "from [Sales]",
+                "xxxxx");
+        }
+
+        // Reference to hierarchy on other axis.
+        // On SSAS 2005, finds t, and gives error,
+        // "The Gender hierarchy already appears in the Axis0 axis."
+        // On Mondrian, cannot find t. FIXME.
+        assertQueryThrows(
+            "select\n"
+            + "  Measures.[Unit Sales] * ([Gender].Members as t) on 0,\n"
+            + "  {t} on 1\n"
+            + "from [Sales]",
+            "MDX object '[t]' not found in cube 'Sales'");
+
+        // As above, with parentheses. Tuple valued.
+        // On SSAS 2005, finds t, and gives error,
+        // "The Measures hierarchy already appears in the Axis0 axis."
+        // On Mondrian, cannot find t. FIXME.
+        assertQueryThrows(
+            "select\n"
+            + "  (Measures.[Unit Sales] * [Gender].Members) as t on 0,\n"
+            + "  {t} on 1\n"
+            + "from [Sales]",
+            "MDX object '[t]' not found in cube 'Sales'");
+
+        // Calculated set, CurrentMember
+        assertQueryReturns(
+            "select Measures.[Unit Sales] on 0,\n"
+            + "  filter(\n"
+            + "    (Time.Month.Members * Gender.Members) as s,\n"
+            + "    (s.Current.Item(0).Parent, [Marital Status].[S], [Gender].[F]) > 17000) on 1\n"
+            + "from [Sales]",
+            "Axis #0:\n"
+            + "{}\n"
+            + "Axis #1:\n"
+            + "{[Measures].[Unit Sales]}\n"
+            + "Axis #2:\n"
+            + "{[Time].[1997].[Q4].[10], [Gender].[All Gender]}\n"
+            + "{[Time].[1997].[Q4].[10], [Gender].[All Gender].[F]}\n"
+            + "{[Time].[1997].[Q4].[10], [Gender].[All Gender].[M]}\n"
+            + "{[Time].[1997].[Q4].[11], [Gender].[All Gender]}\n"
+            + "{[Time].[1997].[Q4].[11], [Gender].[All Gender].[F]}\n"
+            + "{[Time].[1997].[Q4].[11], [Gender].[All Gender].[M]}\n"
+            + "{[Time].[1997].[Q4].[12], [Gender].[All Gender]}\n"
+            + "{[Time].[1997].[Q4].[12], [Gender].[All Gender].[F]}\n"
+            + "{[Time].[1997].[Q4].[12], [Gender].[All Gender].[M]}\n"
+            + "Row #0: 19,958\n"
+            + "Row #1: 9,506\n"
+            + "Row #2: 10,452\n"
+            + "Row #3: 25,270\n"
+            + "Row #4: 12,320\n"
+            + "Row #5: 12,950\n"
+            + "Row #6: 26,796\n"
+            + "Row #7: 13,231\n"
+            + "Row #8: 13,565\n");
+
+        // As above, but don't override [Gender] in filter condition. Note that
+        // the filter condition is evaluated in the context created by the
+        // filter set. So, only items with [All Gender] pass the filter.
+        assertQueryReturns(
+            "select Measures.[Unit Sales] on 0,\n"
+            + "  filter(\n"
+            + "    (Time.Month.Members * Gender.Members) as s,\n"
+            + "    (s.Current.Item(0).Parent, [Marital Status].[S]) > 35000) on 1\n"
+            + "from [Sales]",
+            "Axis #0:\n"
+            + "{}\n"
+            + "Axis #1:\n"
+            + "{[Measures].[Unit Sales]}\n"
+            + "Axis #2:\n"
+            + "{[Time].[1997].[Q4].[10], [Gender].[All Gender]}\n"
+            + "{[Time].[1997].[Q4].[11], [Gender].[All Gender]}\n"
+            + "{[Time].[1997].[Q4].[12], [Gender].[All Gender]}\n"
+            + "Row #0: 19,958\n"
+            + "Row #1: 25,270\n"
+            + "Row #2: 26,796\n");
+
+        // Multiple definitions of alias within same axis
+        assertQueryReturns(
+            "select Measures.[Unit Sales] on 0,\n"
+            + "  generate(\n"
+            + "    [Marital Status].Children as s,\n"
+            + "    filter(\n"
+            + "      (Time.Month.Members * Gender.Members) as s,\n"
+            + "      (s.Current.Item(0).Parent, [Marital Status].[S], [Gender].[F]) > 17000),\n"
+            + "    ALL) on 1\n"
+            + "from [Sales]",
+            "Axis #0:\n"
+            + "{}\n"
+            + "Axis #1:\n"
+            + "{[Measures].[Unit Sales]}\n"
+            + "Axis #2:\n"
+            + "{[Time].[1997].[Q4].[10], [Gender].[All Gender]}\n"
+            + "{[Time].[1997].[Q4].[10], [Gender].[All Gender].[F]}\n"
+            + "{[Time].[1997].[Q4].[10], [Gender].[All Gender].[M]}\n"
+            + "{[Time].[1997].[Q4].[11], [Gender].[All Gender]}\n"
+            + "{[Time].[1997].[Q4].[11], [Gender].[All Gender].[F]}\n"
+            + "{[Time].[1997].[Q4].[11], [Gender].[All Gender].[M]}\n"
+            + "{[Time].[1997].[Q4].[12], [Gender].[All Gender]}\n"
+            + "{[Time].[1997].[Q4].[12], [Gender].[All Gender].[F]}\n"
+            + "{[Time].[1997].[Q4].[12], [Gender].[All Gender].[M]}\n"
+            + "{[Time].[1997].[Q4].[10], [Gender].[All Gender]}\n"
+            + "{[Time].[1997].[Q4].[10], [Gender].[All Gender].[F]}\n"
+            + "{[Time].[1997].[Q4].[10], [Gender].[All Gender].[M]}\n"
+            + "{[Time].[1997].[Q4].[11], [Gender].[All Gender]}\n"
+            + "{[Time].[1997].[Q4].[11], [Gender].[All Gender].[F]}\n"
+            + "{[Time].[1997].[Q4].[11], [Gender].[All Gender].[M]}\n"
+            + "{[Time].[1997].[Q4].[12], [Gender].[All Gender]}\n"
+            + "{[Time].[1997].[Q4].[12], [Gender].[All Gender].[F]}\n"
+            + "{[Time].[1997].[Q4].[12], [Gender].[All Gender].[M]}\n"
+            + "Row #0: 19,958\n"
+            + "Row #1: 9,506\n"
+            + "Row #2: 10,452\n"
+            + "Row #3: 25,270\n"
+            + "Row #4: 12,320\n"
+            + "Row #5: 12,950\n"
+            + "Row #6: 26,796\n"
+            + "Row #7: 13,231\n"
+            + "Row #8: 13,565\n"
+            + "Row #9: 19,958\n"
+            + "Row #10: 9,506\n"
+            + "Row #11: 10,452\n"
+            + "Row #12: 25,270\n"
+            + "Row #13: 12,320\n"
+            + "Row #14: 12,950\n"
+            + "Row #15: 26,796\n"
+            + "Row #16: 13,231\n"
+            + "Row #17: 13,565\n");
+
+        // Multiple definitions of alias within same axis.
+        //
+        // On SSAS 2005, gives error, "The CURRENT function cannot be called in
+        // current context because the 'x' set is not in scope". SSAS 2005 gives
+        // same error even if set does not exist.
+        assertQueryThrows(
+            "with member Measures.Foo as 'x.Current.Name'\n"
+            + "select\n"
+            + "  {Measures.[Unit Sales], Measures.Foo} on 0,\n"
+            + "  generate(\n"
+            + "    [Marital Status].\n"
+            + "    Children as x,\n"
+            + "    filter(\n"
+            + "      Gender.Members as x,\n"
+            + "      (x.Current, [Marital Status].[S]) > 50000),\n"
+            + "    ALL) on 1\n"
+            + "from [Sales]",
+            "MDX object '[x]' not found in cube 'Sales'");
+
+        // As above, but set is not out of scope; it does not exist; but error
+        // should be the same.
+        assertQueryThrows(
+            "with member Measures.Foo as 'z.Current.Name'\n"
+            + "select\n"
+            + "  {Measures.[Unit Sales], Measures.Foo} on 0,\n"
+            + "  generate(\n"
+            + "    [Marital Status].\n"
+            + "    Children as s,\n"
+            + "    filter(\n"
+            + "      Gender.Members as s,\n"
+            + "      (s.Current, [Marital Status].[S]) > 50000),\n"
+            + "    ALL) on 1\n"
+            + "from [Sales]",
+            "MDX object '[z]' not found in cube 'Sales'");
+
+        // 'set AS string' is invalid
+        assertQueryThrows(
+            "select Measures.[Unit Sales] on 0,\n"
+            + "  filter(\n"
+            + "    (Time.Month.Members * Gender.Members) as 'foo',\n"
+            + "    (s.Current.Item(0).Parent, [Marital Status].[S]) > 50000) on 1\n"
+            + "from [Sales]",
+            "Syntax error at line 3, column 47, token 'foo'");
+
+        // 'set AS numeric' is invalid
+        assertQueryThrows(
+            "select Measures.[Unit Sales] on 0,\n"
+            + "  filter(\n"
+            + "    (Time.Month.Members * Gender.Members) as 1234,\n"
+            + "    (s.Current.Item(0).Parent, [Marital Status].[S]) > 50000) on 1\n"
+            + "from [Sales]",
+            "Syntax error at line 3, column 47, token '1234.0'");
+
+        // 'numeric AS identifier' is invalid
+        assertQueryThrows(
+            "select Measures.[Unit Sales] on 0,\n"
+            + "  filter(\n"
+            + "    123 * 456 as s,\n"
+            + "    (s.Current.Item(0).Parent, [Marital Status].[S]) > 50000) on 1\n"
+            + "from [Sales]",
+            "No function matches signature '<Numeric Expression> AS <Set>'");
+    }
+
     public void testAscendants() {
         assertAxisReturns(
             "Ascendants([Store].[USA].[CA])",
@@ -3464,14 +3852,19 @@ public class FunctionTest extends FoodMartTestCase {
     }
 
     public void testCrossjoinAsteriskTuple() {
-        // TODO: Check whether SSAS regards this as an error.
-        assertQueryThrows(
+        assertQueryReturns(
             "select {[Measures].[Unit Sales]} ON COLUMNS, "
             + "NON EMPTY [Store].[All Stores] "
             + " * ([Product].[All Products], [Gender]) "
             + " * [Customers].[All Customers] ON ROWS "
             + "from [Sales]",
-            "Axis 'ROWS' expression is not a set");
+            "Axis #0:\n"
+            + "{}\n"
+            + "Axis #1:\n"
+            + "{[Measures].[Unit Sales]}\n"
+            + "Axis #2:\n"
+            + "{[Store].[All Stores], [Product].[All Products], [Gender].[All Gender], [Customers].[All Customers]}\n"
+            + "Row #0: 266,773\n");
     }
 
     public void testCrossjoinAsteriskAssoc() {
@@ -3726,20 +4119,20 @@ public class FunctionTest extends FoodMartTestCase {
     public void testCrossjoinResolve() {
         assertQueryReturns(
             "with\n"
-                + "member [Measures].[Filtered Unit Sales] as\n"
-                + " 'IIf((([Measures].[Unit Sales] > 50000.0)\n"
-                + "      OR ([Product].CurrentMember.Level.UniqueName <>\n"
-                + "          \"[Product].[Product Family]\")),\n"
-                + "      IIf(((Count([Product].CurrentMember.Children) = 0.0)),\n"
-                + "          [Measures].[Unit Sales],\n"
-                + "          Sum([Product].CurrentMember.Children,\n"
-                + "              [Measures].[Filtered Unit Sales])),\n"
-                + "      NULL)'\n"
-                + "select NON EMPTY {crossjoin({[Measures].[Filtered Unit Sales]},\n"
-                + "{[Gender].[M], [Gender].[F]})} ON COLUMNS,\n"
-                + "NON EMPTY {[Product].[All Products]} ON ROWS\n"
-                + "from [Sales]\n"
-                + "where [Time].[1997]",
+            + "member [Measures].[Filtered Unit Sales] as\n"
+            + " 'IIf((([Measures].[Unit Sales] > 50000.0)\n"
+            + "      OR ([Product].CurrentMember.Level.UniqueName <>\n"
+            + "          \"[Product].[Product Family]\")),\n"
+            + "      IIf(((Count([Product].CurrentMember.Children) = 0.0)),\n"
+            + "          [Measures].[Unit Sales],\n"
+            + "          Sum([Product].CurrentMember.Children,\n"
+            + "              [Measures].[Filtered Unit Sales])),\n"
+            + "      NULL)'\n"
+            + "select NON EMPTY {crossjoin({[Measures].[Filtered Unit Sales]},\n"
+            + "{[Gender].[M], [Gender].[F]})} ON COLUMNS,\n"
+            + "NON EMPTY {[Product].[All Products]} ON ROWS\n"
+            + "from [Sales]\n"
+            + "where [Time].[1997]",
             "Axis #0:\n"
             + "{[Time].[1997]}\n"
             + "Axis #1:\n"
@@ -3758,12 +4151,12 @@ public class FunctionTest extends FoodMartTestCase {
     public void testCrossjoinOrder() {
         assertQueryReturns(
             "WITH\n"
-                + "\n"
-                + "SET [S1] AS 'CROSSJOIN({[Time].[1997]}, {[Gender].[Gender].MEMBERS})'\n"
-                + "\n"
-                + "SELECT CROSSJOIN(ORDER([S1], [Measures].[Unit Sales], BDESC),\n"
-                + "{[Measures].[Unit Sales]}) ON AXIS(0)\n"
-                + "FROM [Sales]",
+            + "\n"
+            + "SET [S1] AS 'CROSSJOIN({[Time].[1997]}, {[Gender].[Gender].MEMBERS})'\n"
+            + "\n"
+            + "SELECT CROSSJOIN(ORDER([S1], [Measures].[Unit Sales], BDESC),\n"
+            + "{[Measures].[Unit Sales]}) ON AXIS(0)\n"
+            + "FROM [Sales]",
             "Axis #0:\n"
             + "{}\n"
             + "Axis #1:\n"
@@ -5592,6 +5985,31 @@ public class FunctionTest extends FoodMartTestCase {
         assertExprReturns("24 / 4 / 2 * 10 - -1", "31");
     }
 
+    public void testMod() {
+        // the following tests are consistent with excel xp
+
+        assertExprReturns("mod(11, 3)", "2");
+        assertExprReturns("mod(-12, 3)", "0");
+
+        // can handle non-ints, using the formula MOD(n, d) = n - d * INT(n / d)
+        assertExprReturns("mod(7.2, 3)", 1.2, 0.0001);
+        assertExprReturns("mod(7.2, 3.2)", .8, 0.0001);
+        assertExprReturns("mod(7.2, -3.2)", -2.4, 0.0001);
+
+        // per Excel doc "sign of result is same as divisor"
+        assertExprReturns("mod(3, 2)", "1");
+        assertExprReturns("mod(-3, 2)", "1");
+        assertExprReturns("mod(3, -2)", "-1");
+        assertExprReturns("mod(-3, -2)", "-1");
+
+        assertExprThrows(
+            "mod(4, 0)",
+            "java.lang.ArithmeticException: / by zero");
+        assertExprThrows(
+            "mod(0, 0)",
+            "java.lang.ArithmeticException: / by zero");
+    }
+
     public void testUnaryMinus() {
         assertExprReturns("-3", "-3");
     }
@@ -5969,7 +6387,7 @@ public class FunctionTest extends FoodMartTestCase {
             + "from Sales\n"
             + "where ([Time].[1997].[Q1])");
         List<Position> rows = result.getAxes()[1].getPositions();
-        Assert.assertTrue(rows.size() == 3);
+        Assert.assertEquals(3, rows.size());
         Assert.assertEquals("F", rows.get(0).get(0).getName());
         Assert.assertEquals("WA", rows.get(0).get(1).getName());
         Assert.assertEquals("M", rows.get(1).get(0).getName());
@@ -6009,11 +6427,17 @@ public class FunctionTest extends FoodMartTestCase {
             + "[Store].[All Stores].[USA].[CA].[San Francisco]");
     }
 
-    public void testGenerateNonSetFails() {
-        // TODO: check what SSAS does here; does it implicitly convert to set?
-        assertAxisThrows(
+    public void testGenerateNonSet() {
+        // SSAS implicitly converts arg #2 to a set
+        assertAxisReturns(
             "Generate({[Store].[USA], [Store].[USA].[CA]}, [Store].PrevMember, ALL)",
-            "No function matches signature 'Generate(<Set>, <Member>, <Symbol>)'");
+            "[Store].[All Stores].[Mexico]\n"
+            + "[Store].[All Stores].[Mexico].[Zacatecas]");
+
+        // SSAS implicitly converts arg #1 to a set
+        assertAxisReturns(
+            "Generate([Store].[USA], [Store].PrevMember, ALL)",
+            "[Store].[All Stores].[Mexico]");
     }
 
     public void testGenerateAll() {
@@ -6116,24 +6540,24 @@ public class FunctionTest extends FoodMartTestCase {
     public void testHeadBug() {
         assertQueryReturns(
             "SELECT\n"
-                + "                        UNION(\n"
-                + "                            {([Customers].CURRENTMEMBER)},\n"
-                + "                            HEAD(\n"
-                + "                                {([Customers].CURRENTMEMBER)},\n"
-                + "                                IIF(\n"
-                + "                                    COUNT(\n"
-                + "                                        FILTER(\n"
-                + "                                            DESCENDANTS(\n"
-                + "                                                [Customers].CURRENTMEMBER,\n"
-                + "                                                [Customers].[Country]),\n"
-                + "                                            [Measures].[Unit Sales] >= 66),\n"
-                + "                                        INCLUDEEMPTY)> 0,\n"
-                + "                                    1,\n"
-                + "                                    0)),\n"
-                + "                            ALL)\n"
-                + "    ON AXIS(0)\n"
-                + "FROM\n"
-                + "    [Sales]\n",
+            + "                        UNION(\n"
+            + "                            {([Customers].CURRENTMEMBER)},\n"
+            + "                            HEAD(\n"
+            + "                                {([Customers].CURRENTMEMBER)},\n"
+            + "                                IIF(\n"
+            + "                                    COUNT(\n"
+            + "                                        FILTER(\n"
+            + "                                            DESCENDANTS(\n"
+            + "                                                [Customers].CURRENTMEMBER,\n"
+            + "                                                [Customers].[Country]),\n"
+            + "                                            [Measures].[Unit Sales] >= 66),\n"
+            + "                                        INCLUDEEMPTY)> 0,\n"
+            + "                                    1,\n"
+            + "                                    0)),\n"
+            + "                            ALL)\n"
+            + "    ON AXIS(0)\n"
+            + "FROM\n"
+            + "    [Sales]\n",
             "Axis #0:\n"
             + "{}\n"
             + "Axis #1:\n"
@@ -6144,28 +6568,28 @@ public class FunctionTest extends FoodMartTestCase {
 
         assertQueryReturns(
             "WITH\n"
-                + "    MEMBER\n"
-                + "        [Customers].[COG_OQP_INT_t2]AS '1',\n"
-                + "        SOLVE_ORDER = 65535\n"
-                + "SELECT\n"
-                + "                        UNION(\n"
-                + "                            {([Customers].[COG_OQP_INT_t2])},\n"
-                + "                            HEAD(\n"
-                + "                                {([Customers].CURRENTMEMBER)},\n"
-                + "                                IIF(\n"
-                + "                                    COUNT(\n"
-                + "                                        FILTER(\n"
-                + "                                            DESCENDANTS(\n"
-                + "                                                [Customers].CURRENTMEMBER,\n"
-                + "                                                [Customers].[Country]),\n"
-                + "                                            [Measures].[Unit Sales]>= 66),\n"
-                + "                                        INCLUDEEMPTY)> 0,\n"
-                + "                                    1,\n"
-                + "                                    0)),\n"
-                + "                            ALL)\n"
-                + "    ON AXIS(0)\n"
-                + "FROM\n"
-                + "    [Sales]",
+            + "    MEMBER\n"
+            + "        [Customers].[COG_OQP_INT_t2]AS '1',\n"
+            + "        SOLVE_ORDER = 65535\n"
+            + "SELECT\n"
+            + "                        UNION(\n"
+            + "                            {([Customers].[COG_OQP_INT_t2])},\n"
+            + "                            HEAD(\n"
+            + "                                {([Customers].CURRENTMEMBER)},\n"
+            + "                                IIF(\n"
+            + "                                    COUNT(\n"
+            + "                                        FILTER(\n"
+            + "                                            DESCENDANTS(\n"
+            + "                                                [Customers].CURRENTMEMBER,\n"
+            + "                                                [Customers].[Country]),\n"
+            + "                                            [Measures].[Unit Sales]>= 66),\n"
+            + "                                        INCLUDEEMPTY)> 0,\n"
+            + "                                    1,\n"
+            + "                                    0)),\n"
+            + "                            ALL)\n"
+            + "    ON AXIS(0)\n"
+            + "FROM\n"
+            + "    [Sales]",
             "Axis #0:\n"
             + "{}\n"
             + "Axis #1:\n"
@@ -6177,12 +6601,12 @@ public class FunctionTest extends FoodMartTestCase {
         // More minimal test case. Also demonstrates similar problem with Tail.
         assertAxisReturns(
             "Union(\n"
-                + "  Union(\n"
-                + "    Tail([Customers].[USA].[CA].Children, 2),\n"
-                + "    Head([Customers].[USA].[WA].Children, 2),\n"
-                + "    ALL),\n"
-                + "  Tail([Customers].[USA].[OR].Children, 2),"
-                + "  ALL)",
+            + "  Union(\n"
+            + "    Tail([Customers].[USA].[CA].Children, 2),\n"
+            + "    Head([Customers].[USA].[WA].Children, 2),\n"
+            + "    ALL),\n"
+            + "  Tail([Customers].[USA].[OR].Children, 2),"
+            + "  ALL)",
             "[Customers].[All Customers].[USA].[CA].[West Covina]\n"
             + "[Customers].[All Customers].[USA].[CA].[Woodland Hills]\n"
             + "[Customers].[All Customers].[USA].[WA].[Anacortes]\n"
@@ -6395,10 +6819,10 @@ public class FunctionTest extends FoodMartTestCase {
 
         // clear the cache so that future tests don't fail that expect a
         // specific set of cubes
-        connection.getCacheControl(null).flushSchemaCache();
+        TestContext.instance().flushSchemaCache();
     }
 
-    public void testIntersect() {
+    public void testIntersectAll() {
         // Note: duplicates retained from left, not from right; and order is
         // preserved.
         assertAxisReturns(
@@ -6408,6 +6832,32 @@ public class FunctionTest extends FoodMartTestCase {
             "[Time].[1997].[Q2]\n"
             + "[Time].[1997]\n"
             + "[Time].[1997].[Q2]");
+    }
+
+    public void testIntersect() {
+        // Duplicates not preserved. Output in order that first duplicate
+        // occurred.
+        assertAxisReturns(
+            "Intersect(\n"
+            + "  {[Time].[1997].[Q2], [Time].[1997], [Time].[1997].[Q1], [Time].[1997].[Q2]}, "
+            + "{[Time].[1998], [Time].[1997], [Time].[1997].[Q2], [Time].[1997]})",
+            "[Time].[1997].[Q2]\n"
+            + "[Time].[1997]");
+    }
+
+    public void testIntersectTuples() {
+        assertAxisReturns(
+            "Intersect(\n"
+            + "  {([Time].[1997].[Q2], [Gender].[M]),\n"
+            + "   ([Time].[1997], [Gender].[F]),\n"
+            + "   ([Time].[1997].[Q1], [Gender].[M]),\n"
+            + "   ([Time].[1997].[Q2], [Gender].[M])},\n"
+            + "  {([Time].[1998], [Gender].[F]),\n"
+            + "   ([Time].[1997], [Gender].[F]),\n"
+            + "   ([Time].[1997].[Q2], [Gender].[M]),\n"
+            + "   ([Time].[1997], [Gender])})",
+            "{[Time].[1997].[Q2], [Gender].[All Gender].[M]}\n"
+            + "{[Time].[1997], [Gender].[All Gender].[F]}");
     }
 
     public void testIntersectRightEmpty() {
@@ -7425,9 +7875,12 @@ public class FunctionTest extends FoodMartTestCase {
             + "{[Gender].[All Gender].[F], [Marital Status].[All Marital Status].[S]}\n"
             + "{[Gender].[All Gender].[M], [Marital Status].[All Marital Status].[M]}\n"
             + "{[Gender].[All Gender].[M], [Marital Status].[All Marital Status].[S]}");
-        assertAxisThrows(
+
+        // implicitly convert member to set
+        assertAxisReturns(
             "Unorder([Gender].[M])",
-            "No function matches signature 'Unorder(<Member>)'");
+            "[Gender].[All Gender].[M]");
+
         assertAxisThrows(
             "Unorder(1 + 3)",
             "No function matches signature 'Unorder(<Numeric Expression>)'");
@@ -7696,7 +8149,7 @@ public class FunctionTest extends FoodMartTestCase {
     /**
      * Tests TopCount applied to a large result set.
      *
-     * Before optimizing (see FunUtil.partialSort), on a 2-core 32-bit 2.4GHz
+     * <p>Before optimizing (see FunUtil.partialSort), on a 2-core 32-bit 2.4GHz
      * machine, the 1st query took 14.5 secs, the 2nd query took 5.0 secs.
      * After optimizing, who knows?
      */
@@ -8482,6 +8935,69 @@ public class FunctionTest extends FoodMartTestCase {
             + "Row #4: 3\n");
     }
 
+    public void testRankMembersWithTiedExpr() {
+        assertQueryReturns(
+                    "with "
+                    + " Set [Beers] as {[Product].[All Products].[Drink].[Alcoholic Beverages].[Beer and Wine].[Beer].children} "
+                    + "  member [Measures].[Sales Rank] as ' Rank([Product].CurrentMember, [Beers], [Measures].[Unit Sales]) '\n"
+                    + "select {[Measures].[Unit Sales], [Measures].[Sales Rank]} on columns,\n"
+                    + " Generate([Beers], {[Product].CurrentMember}) on rows\n"
+                    + "from [Sales]\n"
+                    + "WHERE ([Store].[All Stores].[USA].[OR].[Portland].[Store 11], [Time].[1997].[Q2].[6])",
+                    "Axis #0:\n"
+                    + "{[Store].[All Stores].[USA].[OR].[Portland].[Store 11], [Time].[1997].[Q2].[6]}\n"
+                    + "Axis #1:\n"
+                    + "{[Measures].[Unit Sales]}\n"
+                    + "{[Measures].[Sales Rank]}\n"
+                    + "Axis #2:\n"
+                    + "{[Product].[All Products].[Drink].[Alcoholic Beverages].[Beer and Wine].[Beer].[Good]}\n"
+                    + "{[Product].[All Products].[Drink].[Alcoholic Beverages].[Beer and Wine].[Beer].[Pearl]}\n"
+                    + "{[Product].[All Products].[Drink].[Alcoholic Beverages].[Beer and Wine].[Beer].[Portsmouth]}\n"
+                    + "{[Product].[All Products].[Drink].[Alcoholic Beverages].[Beer and Wine].[Beer].[Top Measure]}\n"
+                    + "{[Product].[All Products].[Drink].[Alcoholic Beverages].[Beer and Wine].[Beer].[Walrus]}\n"
+                    + "Row #0: 5\n"
+                    + "Row #0: 1\n"
+                    + "Row #1: \n"
+                    + "Row #1: 5\n"
+                    + "Row #2: 3\n"
+                    + "Row #2: 3\n"
+                    + "Row #3: 5\n"
+                    + "Row #3: 1\n"
+                    + "Row #4: 3\n"
+                    + "Row #4: 3\n");
+    }
+    
+    public void testRankTuplesWithTiedExpr() {
+        assertQueryReturns(
+                    "with "
+                    + " Set [Beers for Store] as 'NonEmptyCrossJoin("
+                    + "[Product].[All Products].[Drink].[Alcoholic Beverages].[Beer and Wine].[Beer].children, "
+                    + "{[Store].[All Stores].[USA].[OR].[Portland].[Store 11]})' "
+                    + "  member [Measures].[Sales Rank] as ' Rank(([Product].CurrentMember,[Store].CurrentMember), [Beers for Store], [Measures].[Unit Sales]) '\n"
+                    + "select {[Measures].[Unit Sales], [Measures].[Sales Rank]} on columns,\n"
+                    + " Generate([Beers for Store], {([Product].CurrentMember, [Store].CurrentMember)}) on rows\n"
+                    + "from [Sales]\n"
+                    + "WHERE ([Time].[1997].[Q2].[6])",
+                    "Axis #0:\n"
+                    + "{[Time].[1997].[Q2].[6]}\n"
+                    + "Axis #1:\n"
+                    + "{[Measures].[Unit Sales]}\n"
+                    + "{[Measures].[Sales Rank]}\n"
+                    + "Axis #2:\n"
+                    + "{[Product].[All Products].[Drink].[Alcoholic Beverages].[Beer and Wine].[Beer].[Good], [Store].[All Stores].[USA].[OR].[Portland].[Store 11]}\n"
+                    + "{[Product].[All Products].[Drink].[Alcoholic Beverages].[Beer and Wine].[Beer].[Portsmouth], [Store].[All Stores].[USA].[OR].[Portland].[Store 11]}\n"
+                    + "{[Product].[All Products].[Drink].[Alcoholic Beverages].[Beer and Wine].[Beer].[Top Measure], [Store].[All Stores].[USA].[OR].[Portland].[Store 11]}\n"
+                    + "{[Product].[All Products].[Drink].[Alcoholic Beverages].[Beer and Wine].[Beer].[Walrus], [Store].[All Stores].[USA].[OR].[Portland].[Store 11]}\n"
+                    + "Row #0: 5\n"
+                    + "Row #0: 1\n"
+                    + "Row #1: 3\n"
+                    + "Row #1: 3\n"
+                    + "Row #2: 5\n"
+                    + "Row #2: 1\n"
+                    + "Row #3: 3\n"
+                    + "Row #3: 3\n");
+    }
+    
     public void testRankWithExpr2() {
         // Data: Unit Sales
         // All gender 266,733
@@ -9238,6 +9754,217 @@ Intel platforms):
             "Argument to 'VisualTotals' function must be a set of members; got set of tuples.");
     }
 
+    /**
+     * Test case for bug
+     * <a href="http://jira.pentaho.com/browse/MONDRIAN-615">MONDRIAN-615</a>,
+     * "VisualTotals doesn't work for the all member".
+     */
+    public void testVisualTotalsAll() {
+        assertQueryReturns(
+            "SELECT \n"
+            + "  {[Measures].[Unit Sales]} ON 0, \n"
+            + "  VisualTotals(\n"
+            + "    {[Customers].[All Customers],\n"
+            + "     [Customers].[USA],\n"
+            + "     [Customers].[USA].[CA],\n"
+            + "     [Customers].[USA].[OR]}) ON 1\n"
+            + "FROM [Sales]",
+            "Axis #0:\n"
+            + "{}\n"
+            + "Axis #1:\n"
+            + "{[Measures].[Unit Sales]}\n"
+            + "Axis #2:\n"
+            + "{[Customers].[All Customers]}\n"
+            + "{[Customers].[All Customers].[USA]}\n"
+            + "{[Customers].[All Customers].[USA].[CA]}\n"
+            + "{[Customers].[All Customers].[USA].[OR]}\n"
+            + "Row #0: 142,407\n"
+            + "Row #1: 142,407\n"
+            + "Row #2: 74,748\n"
+            + "Row #3: 67,659\n");
+    }
+
+    /**
+     * Test case involving a named set and query pivoted. Suggested in
+     * <a href="http://jira.pentaho.com/browse/MONDRIAN-615">MONDRIAN-615</a>,
+     * "VisualTotals doesn't work for the all member".
+     */
+    public void testVisualTotalsWithNamedSetAndPivot() {
+        assertQueryReturns(
+            "WITH SET [CA_OR] AS\n"
+            + "    VisualTotals(\n"
+            + "        {[Customers].[All Customers],\n"
+            + "         [Customers].[USA],\n"
+            + "         [Customers].[USA].[CA],\n"
+            + "         [Customers].[USA].[OR]})\n"
+            + "SELECT \n"
+            + "    Drilldownlevel({[Time].[1997]}) ON 0, \n"
+            + "    [CA_OR] ON 1 \n"
+            + "FROM [Sales] ",
+            "Axis #0:\n"
+            + "{}\n"
+            + "Axis #1:\n"
+            + "{[Time].[1997]}\n"
+            + "{[Time].[1997].[Q1]}\n"
+            + "{[Time].[1997].[Q2]}\n"
+            + "{[Time].[1997].[Q3]}\n"
+            + "{[Time].[1997].[Q4]}\n"
+            + "Axis #2:\n"
+            + "{[Customers].[All Customers]}\n"
+            + "{[Customers].[All Customers].[USA]}\n"
+            + "{[Customers].[All Customers].[USA].[CA]}\n"
+            + "{[Customers].[All Customers].[USA].[OR]}\n"
+            + "Row #0: 142,407\n"
+            + "Row #0: 36,177\n"
+            + "Row #0: 33,131\n"
+            + "Row #0: 35,310\n"
+            + "Row #0: 37,789\n"
+            + "Row #1: 142,407\n"
+            + "Row #1: 36,177\n"
+            + "Row #1: 33,131\n"
+            + "Row #1: 35,310\n"
+            + "Row #1: 37,789\n"
+            + "Row #2: 74,748\n"
+            + "Row #2: 16,890\n"
+            + "Row #2: 18,052\n"
+            + "Row #2: 18,370\n"
+            + "Row #2: 21,436\n"
+            + "Row #3: 67,659\n"
+            + "Row #3: 19,287\n"
+            + "Row #3: 15,079\n"
+            + "Row #3: 16,940\n"
+            + "Row #3: 16,353\n");
+
+        // same query, swap axes
+        assertQueryReturns(
+            "WITH SET [CA_OR] AS\n"
+            + "    VisualTotals(\n"
+            + "        {[Customers].[All Customers],\n"
+            + "         [Customers].[USA],\n"
+            + "         [Customers].[USA].[CA],\n"
+            + "         [Customers].[USA].[OR]})\n"
+            + "SELECT \n"
+            + "    [CA_OR] ON 0,\n"
+            + "    Drilldownlevel({[Time].[1997]}) ON 1\n"
+            + "FROM [Sales] ",
+            "Axis #0:\n"
+            + "{}\n"
+            + "Axis #1:\n"
+            + "{[Customers].[All Customers]}\n"
+            + "{[Customers].[All Customers].[USA]}\n"
+            + "{[Customers].[All Customers].[USA].[CA]}\n"
+            + "{[Customers].[All Customers].[USA].[OR]}\n"
+            + "Axis #2:\n"
+            + "{[Time].[1997]}\n"
+            + "{[Time].[1997].[Q1]}\n"
+            + "{[Time].[1997].[Q2]}\n"
+            + "{[Time].[1997].[Q3]}\n"
+            + "{[Time].[1997].[Q4]}\n"
+            + "Row #0: 142,407\n"
+            + "Row #0: 142,407\n"
+            + "Row #0: 74,748\n"
+            + "Row #0: 67,659\n"
+            + "Row #1: 36,177\n"
+            + "Row #1: 36,177\n"
+            + "Row #1: 16,890\n"
+            + "Row #1: 19,287\n"
+            + "Row #2: 33,131\n"
+            + "Row #2: 33,131\n"
+            + "Row #2: 18,052\n"
+            + "Row #2: 15,079\n"
+            + "Row #3: 35,310\n"
+            + "Row #3: 35,310\n"
+            + "Row #3: 18,370\n"
+            + "Row #3: 16,940\n"
+            + "Row #4: 37,789\n"
+            + "Row #4: 37,789\n"
+            + "Row #4: 21,436\n"
+            + "Row #4: 16,353\n");
+    }
+
+    /**
+     * Tests that members generated by VisualTotals have correct identity.
+     *
+     * <p>Testcase for <a href="http://jira.pentaho.com/browse/MONDRIAN-295">
+     * bug MONDRIAN-295, "Query generated by Excel 2007 gives incorrect
+     * results"</a>.
+     */
+    public void testVisualTotalsIntersect() {
+        assertQueryReturns(
+            "WITH\n"
+            + "SET [XL_Row_Dim_0] AS 'VisualTotals(Distinct(Hierarchize({Ascendants([Customers].[All Customers].[USA]), Descendants([Customers].[All Customers].[USA])})))' \n"
+            + "SELECT \n"
+            + "NON EMPTY Hierarchize({[Time].[Year].members}) ON COLUMNS , \n"
+            + "NON EMPTY Hierarchize(Intersect({DrilldownLevel({[Customers].[All Customers]})}, [XL_Row_Dim_0])) ON ROWS \n"
+            + "FROM [Sales] \n"
+            + "WHERE ([Measures].[Store Sales])",
+            "Axis #0:\n"
+            + "{[Measures].[Store Sales]}\n"
+            + "Axis #1:\n"
+            + "{[Time].[1997]}\n"
+            + "Axis #2:\n"
+            + "{[Customers].[All Customers]}\n"
+            + "{[Customers].[All Customers].[USA]}\n"
+            + "Row #0: 565,238.13\n"
+            + "Row #1: 565,238.13\n");
+    }
+
+    /**
+     * <p>Testcase for <a href="http://jira.pentaho.com/browse/MONDRIAN-668">
+     * bug MONDRIAN-668, "Intersect should return any VisualTotals members in
+     * right-hand set"</a>.
+     */
+    public void testVisualTotalsWithNamedSetAndPivotSameAxis() {
+        assertQueryReturns(
+            "WITH SET [XL_Row_Dim_0] AS\n"
+            + " VisualTotals(\n"
+            + "   Distinct(\n"
+            + "     Hierarchize(\n"
+            + "       {Ascendants([Store].[All Stores].[USA].[CA]),\n"
+            + "        Descendants([Store].[All Stores].[USA].[CA])})))\n"
+            + "select NON EMPTY \n"
+            + "  Hierarchize(\n"
+            + "    Intersect(\n"
+            + "      {DrilldownLevel({[Store].[All Stores].[USA]})},\n"
+            + "      [XL_Row_Dim_0])) ON COLUMNS\n"
+            + "from [Sales] "
+            + "where [Measures].[Sales count]\n",
+            "Axis #0:\n"
+            + "{[Measures].[Sales Count]}\n"
+            + "Axis #1:\n"
+            + "{[Store].[All Stores].[USA]}\n"
+            + "{[Store].[All Stores].[USA].[CA]}\n"
+            + "Row #0: 24,442\n"
+            + "Row #0: 24,442\n");
+
+        // now with tuples
+        assertQueryReturns(
+            "WITH SET [XL_Row_Dim_0] AS\n"
+            + " VisualTotals(\n"
+            + "   Distinct(\n"
+            + "     Hierarchize(\n"
+            + "       {Ascendants([Store].[All Stores].[USA].[CA]),\n"
+            + "        Descendants([Store].[All Stores].[USA].[CA])})))\n"
+            + "select NON EMPTY \n"
+            + "  Hierarchize(\n"
+            + "    Intersect(\n"
+            + "     [Marital Status].[M]\n"
+            + "     * {DrilldownLevel({[Store].[All Stores].[USA]})}\n"
+            + "     * [Gender].[F],\n"
+            + "     [Marital Status].[M]\n"
+            + "     * [XL_Row_Dim_0]\n"
+            + "     * [Gender].[F])) ON COLUMNS\n"
+            + "from [Sales] "
+            + "where [Measures].[Sales count]\n",
+            "Axis #0:\n"
+            + "{[Measures].[Sales Count]}\n"
+            + "Axis #1:\n"
+            + "{[Marital Status].[All Marital Status].[M], [Store].[All Stores].[USA], [Gender].[All Gender].[F]}\n"
+            + "{[Marital Status].[All Marital Status].[M], [Store].[All Stores].[USA].[CA], [Gender].[All Gender].[F]}\n"
+            + "Row #0: 6,054\n"
+            + "Row #0: 6,054\n");
+    }
+
     public void testCalculatedChild() {
         // Construct calculated children with the same name for both [Drink] and
         // [Non-Consumable].  Then, create a metric to select the calculated
@@ -9324,9 +10051,23 @@ Intel platforms):
 
         // From boolean
         // To String
-        assertExprReturns("'' || Cast(1 = 1 AND 1 = 2 AS String)", "false");
+        assertExprReturns("'' || Cast((1 = 1 AND 1 = 2) AS String)", "false");
+
+        // This case demonstrates the relative precedence of 'AS' in 'CAST'
+        // and 'AS' for creating inline named sets. See also bug MONDRIAN-648.
+        Util.discard(Bug.BugMondrian648Fixed);
+        assertExprReturns(
+            "'xxx' || Cast(1 = 1 AND 1 = 2 AS String)",
+            "xxxfalse");
+
         // To boolean (trivial)
-        assertExprReturns("1=1 AND Cast(1 = 1 AND 1 = 2 AS Boolean)", "false");
+        assertExprReturns(
+            "1=1 AND Cast((1 = 1 AND 1 = 2) AS Boolean)",
+            "false");
+
+        assertExprReturns(
+            "1=1 OR Cast(1 = 1 AND 1 = 2 AS Boolean)",
+            "true");
 
         // From null : should not throw exceptions since RolapResult.executeBody
         // can receive NULL values when the cell value is not loaded yet, so
@@ -9369,7 +10110,7 @@ Intel platforms):
     public void testCastBug524() {
         assertExprReturns(
             "Cast(Int([Measures].[Store Sales] / 3600) as String)",
-            "157.00");
+            "157");
     }
 
     /**
@@ -9664,9 +10405,9 @@ Intel platforms):
     public void testMidFunctionWithoutLength() {
         assertQueryReturns(
             "select filter([Store].MEMBERS,"
-                + "[Store].CURRENTMEMBER.Name = \"Bellingham\""
-                + "And Mid(\"Bellingham\", 2) = \"ellingham\")"
-                + "on 0 from sales",
+            + "[Store].CURRENTMEMBER.Name = \"Bellingham\""
+            + "And Mid(\"Bellingham\", 2) = \"ellingham\")"
+            + "on 0 from sales",
             "Axis #0:\n"
             + "{}\n"
             + "Axis #1:\n"
@@ -10151,7 +10892,100 @@ Intel platforms):
             + "Axis #1:\n");
     }
 
+    /**
+     * Executes a query that has a complex parse tree. Goal is to find
+     * algorithmic complexity bugs in the validator which would make the query
+     * run extremely slowly.
+     */
+    public void testComplexQuery() {
+        final String expected =
+            "Axis #0:\n"
+            + "{}\n"
+            + "Axis #1:\n"
+            + "{[Measures].[Unit Sales]}\n"
+            + "Axis #2:\n"
+            + "{[Gender].[All Gender]}\n"
+            + "{[Gender].[All Gender].[F]}\n"
+            + "{[Gender].[All Gender].[M]}\n"
+            + "Row #0: 266,773\n"
+            + "Row #1: 131,558\n"
+            + "Row #2: 135,215\n";
 
+        // hand written case
+        assertQueryReturns(
+            "select\n"
+            + "   [Measures].[Unit Sales] on 0,\n"
+            + "   Distinct({\n"
+            + "     [Gender],\n"
+            + "     Tail(\n"
+            + "       Head({\n"
+            + "         [Gender],\n"
+            + "         [Gender].[F],\n"
+            + "         [Gender].[M]},\n"
+            + "         2),\n"
+            + "       1),\n"
+            + "     Tail(\n"
+            + "       Head({\n"
+            + "         [Gender],\n"
+            + "         [Gender].[F],\n"
+            + "         [Gender].[M]},\n"
+            + "         2),\n"
+            + "       1),\n"
+            + "     [Gender].[M]}) on 1\n"
+            + "from [Sales]", expected);
+
+        // generated equivalent
+        StringBuilder buf = new StringBuilder();
+        buf.append(
+            "select\n"
+            + "   [Measures].[Unit Sales] on 0,\n");
+        generateComplex(buf, "   ", 0, 7, 3);
+        buf.append(
+            " on 1\n"
+            + "from [Sales]");
+        if (false) {
+            System.out.println(buf.toString().length() + ": " + buf.toString());
+        }
+        assertQueryReturns(buf.toString(), expected);
+    }
+
+    /**
+     * Recursive routine to generate a complex MDX expression.
+     *
+     * @param buf String builder
+     * @param indent Indent
+     * @param depth Current depth
+     * @param depthLimit Max recursion depth
+     * @param breadth Number of iterations at each depth
+     */
+    private void generateComplex(
+        StringBuilder buf,
+        String indent,
+        int depth,
+        int depthLimit,
+        int breadth)
+    {
+        buf.append(indent + "Distinct({\n");
+        buf.append(indent + "  [Gender],\n");
+        for (int i = 0; i < breadth; i++) {
+            if (depth < depthLimit) {
+                buf.append(indent + "  Tail(\n");
+                buf.append(indent + "    Head({\n");
+                generateComplex(
+                    buf,
+                    indent + "      ",
+                    depth + 1,
+                    depthLimit,
+                    breadth);
+                buf.append("},\n");
+                buf.append(indent + "      2),\n");
+                buf.append(indent + "    1),\n");
+            } else {
+                buf.append(indent + "  [Gender].[F],\n");
+            }
+        }
+        buf.append(indent + "  [Gender].[M]})");
+    }
 }
 
 // End FunctionTest.java

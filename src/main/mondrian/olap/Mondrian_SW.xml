@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-stylesheet type="text/xsl" href="../../../../misc/Meta.xsl" ?>
 <!--
-  == $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Mondrian_SW.xml#2 $
+  == $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Mondrian_SW.xml#4 $
   == This software is subject to the terms of the Eclipse Public License v1.0
   == Agreement, available at the following URL:
   == http://www.eclipse.org/legal/epl-v10.html.
@@ -38,7 +38,7 @@
             the Schema Workbench.</li>
         </ul>
         <p/>
-        Revision is $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Mondrian_SW.xml#2 $
+        Revision is $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Mondrian_SW.xml#4 $
     </Doc>
 
     <!-- Schema ========================================================== -->
@@ -1147,6 +1147,8 @@
                 <li>ingres</li>
                 <li>infobright</li>
                 <li>luciddb</li>
+                <li>vertica</li>
+                <li>neoview</li>
                 </ul>
             </Doc>
             <Value>generic</Value>
@@ -1164,6 +1166,8 @@
             <Value>ingres</Value>
             <Value>infobright</Value>
             <Value>luciddb</Value>
+            <Value>vertica</Value>
+            <Value>neoview</Value>
         </Attribute>
         <CData/>
         <Code><![CDATA[

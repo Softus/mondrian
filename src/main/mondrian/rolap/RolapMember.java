@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapMember.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapMember.java#5 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -29,7 +29,7 @@ import java.util.*;
  *
  * @author jhyde
  * @since 10 August, 2001
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapMember.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapMember.java#5 $
  */
 public class RolapMember extends MemberBase {
 
@@ -424,6 +424,12 @@ public class RolapMember extends MemberBase {
         return (RolapMember) super.getParentMember();
     }
 
+    // Regular members do not have annotations. Measures and calculated members
+    // do, so they override this method.
+    public Map<String, Annotation> getAnnotationMap() {
+        return Collections.emptyMap();
+    }
+
     public int hashCode() {
         return getUniqueName().hashCode();
     }
@@ -631,11 +637,9 @@ public class RolapMember extends MemberBase {
                 parentMember = getParentMember();
                 return parentMember == null ? 0 : 1;
 
-            case Property.DESCRIPTION_ORDINAL:
-                return getDescription();
-
             case Property.VISIBLE_ORDINAL:
                 break;
+
             case Property.MEMBER_KEY_ORDINAL:
             case Property.KEY_ORDINAL:
                 return this == this.getHierarchy().getAllMember()
@@ -643,7 +647,8 @@ public class RolapMember extends MemberBase {
                     : getKey();
 
             case Property.SCENARIO_ORDINAL:
-                return ScenarioImpl.forMember(this);
+                throw new UnsupportedOperationException(
+                    "writeback not yet supported");
 
             default:
                 break;

@@ -86,7 +86,7 @@ import java.util.Map;
  * @see mondrian.spi.DialectManager
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/spi/Dialect.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/spi/Dialect.java#4 $
  * @since Oct 10, 2008
  */
 public interface Dialect {
@@ -722,6 +722,7 @@ public interface Dialect {
         DB2_AS400,
         DB2,
         FIREBIRD,
+        HSQLDB,
         INFORMIX,
         INFOBRIGHT,
         INGRES,
@@ -735,7 +736,8 @@ public interface Dialect {
         MYSQL,
         SQLSTREAM,
         SYBASE,
-        TERADATA;
+        TERADATA,
+        VERTICA;
 
         /**
          * Return the root of the family of products this database product

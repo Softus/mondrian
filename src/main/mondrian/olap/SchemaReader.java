@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/SchemaReader.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/SchemaReader.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -25,7 +25,7 @@ import java.util.List;
  *
  * @author jhyde
  * @since Feb 24, 2003
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/SchemaReader.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/SchemaReader.java#3 $
  */
 public interface SchemaReader {
     /**
@@ -415,7 +415,27 @@ public interface SchemaReader {
      */
     Parameter getParameter(String name);
 
+    /**
+     * Returns the data source.
+     *
+     * @return data source
+     */
     DataSource getDataSource();
+
+    /**
+     * Returns a similar schema reader that has no access control.
+     *
+     * @return Schema reader that has a similar perspective (e.g. cube) but
+     * no access control
+     */
+    SchemaReader withoutAccessControl();
+
+    /**
+     * Returns the default cube in which to look for dimensions etc.
+     *
+     * @return Default cube
+     */
+    Cube getCube();
 }
 
 // End SchemaReader.java

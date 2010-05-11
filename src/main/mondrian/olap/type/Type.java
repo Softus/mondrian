@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/Type.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/Type.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -18,7 +18,7 @@ import mondrian.olap.Level;
  *
  * @author jhyde
  * @since Feb 17, 2005
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/Type.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/Type.java#3 $
  */
 public interface Type {
     /**
@@ -115,6 +115,14 @@ public interface Type {
      * @return More general type
      */
     Type computeCommonType(Type type, int[] conversionCount);
+
+    /**
+     * Returns whether a value is valid for a type.
+     *
+     * @param value Value
+     * @return Whether value is valid for this type
+     */
+    boolean isInstance(Object value);
 }
 
 // End Type.java

@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapEvaluatorRoot.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapEvaluatorRoot.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -24,7 +24,7 @@ import java.util.*;
  *
  * @author jhyde
  * @since Nov 11, 2008
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapEvaluatorRoot.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapEvaluatorRoot.java#3 $
  */
 class RolapEvaluatorRoot {
     final Map<Object, Object> expResultCache = new HashMap<Object, Object>();
@@ -104,10 +104,13 @@ class RolapEvaluatorRoot {
      *
      * <p>The default implementation throws
      * {@link UnsupportedOperationException}.
+     *
+     * @param namedSet Named set
+     * @param create Whether to create named set evaluator if not found
      */
     protected Evaluator.NamedSetEvaluator evaluateNamedSet(
-        String name,
-        Exp exp)
+        NamedSet namedSet,
+        boolean create)
     {
         throw new UnsupportedOperationException();
     }

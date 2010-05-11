@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/SetType.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/SetType.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -11,12 +11,14 @@ package mondrian.olap.type;
 
 import mondrian.olap.*;
 
+import java.util.List;
+
 /**
  * Set type.
  *
  * @author jhyde
  * @since Feb 17, 2005
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/SetType.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/SetType.java#3 $
  */
 public class SetType implements Type {
 
@@ -113,6 +115,19 @@ public class SetType implements Type {
             return null;
         }
         return new SetType(mostGeneralElementType);
+    }
+
+    public boolean isInstance(Object value) {
+        if (!(value instanceof List)) {
+            return false;
+        }
+        List list = (List) value;
+        for (Object o : list) {
+            if (!elementType.isInstance(o)) {
+                return false;
+            }
+        }
+        return true;
     }
 }
 

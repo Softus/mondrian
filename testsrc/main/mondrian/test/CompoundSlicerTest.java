@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/test/CompoundSlicerTest.java#1 $
+// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/test/CompoundSlicerTest.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -17,7 +17,7 @@ import mondrian.util.Bug;
  *
  * @author jhyde
  * @since 15 May, 2009
- * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/test/CompoundSlicerTest.java#1 $
+ * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/test/CompoundSlicerTest.java#3 $
  */
 public class CompoundSlicerTest extends FoodMartTestCase {
     /**
@@ -113,6 +113,91 @@ public class CompoundSlicerTest extends FoodMartTestCase {
             + "Row #2: 2.23\n"
             + "Row #3: 886\n"
             + "Row #3: 2.25\n");
+    }
+
+    /**
+     * Tests compound slicer with EXCEPT.
+     *
+     * <p>Test case for <a href="http://jira.pentaho.com/browse/MONDRIAN-637">
+     * Bug MONDRIAN-637, "Using Except in the slicer makes no sense"</a>.
+     */
+    public void testCompoundSlicerExcept() {
+        final String expected =
+            "Axis #0:\n"
+            + "{[Promotion Media].[All Media].[Bulk Mail]}\n"
+            + "{[Promotion Media].[All Media].[Cash Register Handout]}\n"
+            + "{[Promotion Media].[All Media].[Daily Paper, Radio]}\n"
+            + "{[Promotion Media].[All Media].[Daily Paper, Radio, TV]}\n"
+            + "{[Promotion Media].[All Media].[In-Store Coupon]}\n"
+            + "{[Promotion Media].[All Media].[No Media]}\n"
+            + "{[Promotion Media].[All Media].[Product Attachment]}\n"
+            + "{[Promotion Media].[All Media].[Radio]}\n"
+            + "{[Promotion Media].[All Media].[Street Handout]}\n"
+            + "{[Promotion Media].[All Media].[Sunday Paper]}\n"
+            + "{[Promotion Media].[All Media].[Sunday Paper, Radio]}\n"
+            + "{[Promotion Media].[All Media].[Sunday Paper, Radio, TV]}\n"
+            + "{[Promotion Media].[All Media].[TV]}\n"
+            + "Axis #1:\n"
+            + "{[Measures].[Unit Sales]}\n"
+            + "Axis #2:\n"
+            + "{[Gender].[All Gender]}\n"
+            + "{[Gender].[All Gender].[F]}\n"
+            + "{[Gender].[All Gender].[M]}\n"
+            + "Row #0: 259,035\n"
+            + "Row #1: 127,871\n"
+            + "Row #2: 131,164\n";
+
+        // slicer expression that inherits [Promotion Media] member from context
+        assertQueryReturns(
+            "select [Measures].[Unit Sales] on 0,\n"
+            + " [Gender].Members on 1\n"
+            + "from [Sales]\n"
+            + "where Except(\n"
+            + "  [Promotion Media].Children,\n"
+            + "  {[Promotion Media].[Daily Paper]})", expected);
+
+        // similar query, but don't assume that [Promotion Media].CurrentMember
+        // = [Promotion Media].[All Media]
+        assertQueryReturns(
+            "select [Measures].[Unit Sales] on 0,\n"
+            + " [Gender].Members on 1\n"
+            + "from [Sales]\n"
+            + "where Except(\n"
+            + "  [Promotion Media].[All Media].Children,\n"
+            + "  {[Promotion Media].[Daily Paper]})", expected);
+
+        // reference query, computing the same numbers a different way
+        assertQueryReturns(
+            "with member [Promotion Media].[Except Daily Paper] as\n"
+            + "  Aggregate(\n"
+            + "    Except(\n"
+            + "      [Promotion Media].Children,\n"
+            + "      {[Promotion Media].[Daily Paper]}))\n"
+            + "select [Measures].[Unit Sales]\n"
+            + " * {[Promotion Media],\n"
+            + "    [Promotion Media].[Daily Paper],\n"
+            + "    [Promotion Media].[Except Daily Paper]} on 0,\n"
+            + " [Gender].Members on 1\n"
+            + "from [Sales]",
+            "Axis #0:\n"
+            + "{}\n"
+            + "Axis #1:\n"
+            + "{[Measures].[Unit Sales], [Promotion Media].[All Media]}\n"
+            + "{[Measures].[Unit Sales], [Promotion Media].[All Media].[Daily Paper]}\n"
+            + "{[Measures].[Unit Sales], [Promotion Media].[Except Daily Paper]}\n"
+            + "Axis #2:\n"
+            + "{[Gender].[All Gender]}\n"
+            + "{[Gender].[All Gender].[F]}\n"
+            + "{[Gender].[All Gender].[M]}\n"
+            + "Row #0: 266,773\n"
+            + "Row #0: 7,738\n"
+            + "Row #0: 259,035\n"
+            + "Row #1: 131,558\n"
+            + "Row #1: 3,687\n"
+            + "Row #1: 127,871\n"
+            + "Row #2: 135,215\n"
+            + "Row #2: 4,051\n"
+            + "Row #2: 131,164\n");
     }
 
     /**
@@ -239,6 +324,10 @@ public class CompoundSlicerTest extends FoodMartTestCase {
             + "Row #2: \n");
     }
 
+    /**
+     * Test case for a basic query with more than one member of the same
+     * hierarchy in the WHERE clause.
+     */
     public void testCompoundSlicer() {
         // Reference query.
         assertQueryReturns(
@@ -247,16 +336,16 @@ public class CompoundSlicerTest extends FoodMartTestCase {
             + "from [Sales]\n"
             + "where {[Product].[Drink]}",
             "Axis #0:\n"
-                + "{[Product].[All Products].[Drink]}\n"
-                + "Axis #1:\n"
-                + "{[Measures].[Unit Sales]}\n"
-                + "Axis #2:\n"
-                + "{[Gender].[All Gender]}\n"
-                + "{[Gender].[All Gender].[F]}\n"
-                + "{[Gender].[All Gender].[M]}\n"
-                + "Row #0: 24,597\n"
-                + "Row #1: 12,202\n"
-                + "Row #2: 12,395\n");
+            + "{[Product].[All Products].[Drink]}\n"
+            + "Axis #1:\n"
+            + "{[Measures].[Unit Sales]}\n"
+            + "Axis #2:\n"
+            + "{[Gender].[All Gender]}\n"
+            + "{[Gender].[All Gender].[F]}\n"
+            + "{[Gender].[All Gender].[M]}\n"
+            + "Row #0: 24,597\n"
+            + "Row #1: 12,202\n"
+            + "Row #2: 12,395\n");
         // Reference query.
         assertQueryReturns(
             "select [Measures].[Unit Sales] on 0,\n"
@@ -552,6 +641,55 @@ public class CompoundSlicerTest extends FoodMartTestCase {
             + "{[Store].[All Stores].[USA].[OR].[Portland]}\n"
             + "Row #0: 1,175\n"
             + "Row #1: 352\n");
+    }
+
+    /**
+     * Tests compound slicer, and other rollups, with AVG function.
+     *
+     * <p>Test case for <a href="http://jira.pentaho.com/browse/MONDRIAN-675">
+     * Bug MONDRIAN-675,
+     * "Allow rollup of measures based on AVG aggregate function"</a>.
+     */
+    public void testRollupAvg() {
+        final TestContext testContext =
+            TestContext.createSubstitutingCube(
+                "Sales",
+                null,
+                "<Measure name='Avg Unit Sales' aggregator='avg' column='unit_sales'/>",
+                null,
+                null);
+        // basic query with avg
+        testContext.assertQueryReturns(
+            "select from [Sales]\n"
+            + "where [Measures].[Avg Unit Sales]",
+            "Axis #0:\n"
+            + "{[Measures].[Avg Unit Sales]}\n"
+            + "3.072");
+
+        // roll up using compound slicer
+        // (should give a real value, not an error)
+        testContext.assertQueryReturns(
+            "select from [Sales]\n"
+            + "where [Measures].[Avg Unit Sales]\n"
+            + "   * {[Customers].[USA].[OR], [Customers].[USA].[CA]}",
+            Bug.BugMondrian675Fixed
+            ? "what?"
+            : "Axis #0:\n"
+            + "{[Measures].[Avg Unit Sales], [Customers].[All Customers].[USA].[OR]}\n"
+            + "{[Measures].[Avg Unit Sales], [Customers].[All Customers].[USA].[CA]}\n"
+            + "#ERR: mondrian.olap.fun.MondrianEvaluationException: Don't know how to rollup aggregator 'avg'");
+
+        // roll up using a named set
+        testContext.assertQueryReturns(
+            "with member [Customers].[OR and CA] as Aggregate(\n"
+            + " {[Customers].[USA].[OR], [Customers].[USA].[CA]})\n"
+            + "select from [Sales]\n"
+            + "where ([Measures].[Avg Unit Sales], [Customers].[OR and CA])",
+            Bug.BugMondrian675Fixed
+            ? "what?"
+            : "Axis #0:\n"
+            + "{[Measures].[Avg Unit Sales], [Customers].[OR and CA]}\n"
+            + "#ERR: mondrian.olap.fun.MondrianEvaluationException: Don't know how to rollup aggregator 'avg'");
     }
 }
 

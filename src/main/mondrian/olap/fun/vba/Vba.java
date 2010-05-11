@@ -2,7 +2,7 @@
  // This software is subject to the terms of the Eclipse Public License v1.0
  // Agreement, available at the following URL:
  // http://www.eclipse.org/legal/epl-v10.html.
- // Copyright (C) 2007-2009 Julian Hyde
+ // Copyright (C) 2007-2010 Julian Hyde
  // All Rights Reserved.
  // You must accept the terms of that agreement to use this software.
  */
@@ -26,7 +26,7 @@ import java.text.*;
  * </a>.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/vba/Vba.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/vba/Vba.java#5 $
  * @since Dec 31, 2007
  */
 public class Vba {
@@ -220,6 +220,21 @@ public class Vba {
                 + "number parameter " + number
                 + " of Int function must be " + "of type number");
         }
+    }
+
+    /**
+     * Equivalent of the {@link #int_} function on the native 'double' type.
+     * Not an MDX function.
+     *
+     * @param dv Double value
+     * @return Value rounded towards negative infinity
+     */
+    static int intNative(double dv) {
+        int v = (int) dv;
+        if (v < 0 && v > dv) {
+            v--;
+        }
+        return v;
     }
 
     // public String oct$(Object number)
@@ -1727,7 +1742,7 @@ public class Vba {
     @Signature(
         "FormatPercent(Expression[,NumDigitsAfterDecimal "
         + "[,IncludeLeadingDigit [,UseParensForNegativeNumbers "
-            + "[,GroupDigits]]]])")
+        + "[,GroupDigits]]]])")
     @Description(
         "Returns an expression formatted as a percentage (multipled by 100) "
         + "with a trailing % character.")

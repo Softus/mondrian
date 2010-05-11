@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Member.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Member.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -35,7 +35,7 @@ import java.util.List;
  * <p> Members can have member properties. Their {@link Level#getProperties}
  * defines which are allowed.
  */
-public interface Member extends OlapElement, Comparable {
+public interface Member extends OlapElement, Comparable, Annotated {
 
     /**
      * Returns this member's parent, or null (not the 'null member', as

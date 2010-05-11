@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapCell.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapCell.java#5 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -21,7 +21,7 @@ import java.util.*;
  * <code>RolapCell</code> implements {@link mondrian.olap.Cell} within a
  * {@link RolapResult}.
  *
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapCell.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapCell.java#5 $
  */
 class RolapCell implements Cell {
     private final RolapResult result;
@@ -232,49 +232,6 @@ class RolapCell implements Cell {
         return result.getMember(pos, dimension);
     }
 
-    public void setValue(
-        Object newValue,
-        AllocationPolicy allocationPolicy,
-        Object... allocationArgs)
-    {
-        if (allocationPolicy == null) {
-            // user error
-            throw Util.newError(
-                "Allocation policy must not be null");
-        }
-        Scenario scenario = result.getQuery().getConnection().getScenario();
-        final Member[] members = result.getCellMembers(pos);
-        for (int i = 0; i < members.length; i++) {
-            Member member = members[i];
-            if (ScenarioImpl.isScenario(member.getDimension())) {
-                scenario =
-                    (Scenario) member.getPropertyValue(Property.SCENARIO.name);
-                members[i] = member.getHierarchy().getAllMember();
-            } else if (member.isCalculated()) {
-                throw Util.newError(
-                    "Cannot write to cell: one of the coordinates ("
-                    + member.getUniqueName()
-                    + ") is a calculcated member");
-            }
-        }
-        if (scenario == null) {
-            throw Util.newError("No active scenario");
-        }
-        if (allocationArgs == null) {
-            allocationArgs = new Object[0];
-        }
-        final Object currentValue = getValue();
-        double doubleCurrentValue = ((Number) currentValue).doubleValue();
-        double doubleNewValue = ((Number) newValue).doubleValue();
-        ((ScenarioImpl) scenario).setCellValue(
-            result.getQuery().getConnection(),
-            Arrays.asList(members),
-            doubleNewValue,
-            doubleCurrentValue,
-            allocationPolicy,
-            allocationArgs);
-    }
-
     /**
      * Visitor that walks over a cell's expression and checks whether the
      * cell should allow drill-through. If not, throws the {@link #bomb}
@@ -305,24 +262,18 @@ class RolapCell implements Cell {
         public Object visit(ResolvedFunCall call) {
             final FunDef def = call.getFunDef();
             final Exp[] args = call.getArgs();
-            if (def.getName().equals("+")
-                || def.getName().equals("-")
-                || def.getName().equals("/")
-                || def.getName().equals("*")
-                || def.getName().equals("CoalesceEmpty")
+            final String name = def.getName();
+            if (name.equals("+")
+                || name.equals("-")
+                || name.equals("/")
+                || name.equals("*")
+                || name.equals("CoalesceEmpty")
                 // Allow parentheses but don't allow tuple
-                || def.getName().equals("()") && args.length == 1)
+                || name.equals("()") && args.length == 1)
             {
-                visitChildren(args);
                 return null;
             }
             throw bomb;
-        }
-
-        private void visitChildren(Exp[] args) {
-            for (Exp arg : args) {
-                arg.accept(this);
-            }
         }
 
         public void handleMember(Member member) {

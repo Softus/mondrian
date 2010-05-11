@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap4j/MondrianOlap4jConnection.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap4j/MondrianOlap4jConnection.java#5 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
-// Copyright (C) 2007-2009 Julian Hyde
+// Copyright (C) 2007-2010 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -11,11 +11,13 @@ package mondrian.olap4j;
 
 import mondrian.mdx.*;
 import mondrian.olap.*;
-import mondrian.rolap.RolapMeasure;
+import mondrian.rolap.*;
+
 import org.olap4j.Axis;
 import org.olap4j.Cell;
 import org.olap4j.*;
 import org.olap4j.impl.Olap4jUtil;
+import org.olap4j.impl.UnmodifiableArrayList;
 import org.olap4j.mdx.*;
 import org.olap4j.mdx.parser.*;
 import org.olap4j.mdx.parser.impl.DefaultMdxParserImpl;
@@ -37,7 +39,7 @@ import java.util.*;
  * it is instantiated using {@link Factory#newConnection}.</p>
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap4j/MondrianOlap4jConnection.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap4j/MondrianOlap4jConnection.java#5 $
  * @since May 23, 2007
  */
 abstract class MondrianOlap4jConnection implements OlapConnection {
@@ -76,6 +78,7 @@ abstract class MondrianOlap4jConnection implements OlapConnection {
     private String roleName;
     private boolean autoCommit;
     private boolean readOnly;
+    private Scenario scenario;
 
     /**
      * Creates an Olap4j connection to Mondrian.
@@ -125,6 +128,18 @@ abstract class MondrianOlap4jConnection implements OlapConnection {
 
     public OlapStatement createStatement() {
         return new MondrianOlap4jStatement(this);
+    }
+
+    public Scenario createScenario() {
+        throw new UnsupportedOperationException("writeback not yet supported");
+    }
+
+    public void setScenario(Scenario scenario) {
+        this.scenario = scenario;
+    }
+
+    public Scenario getScenario() {
+        return scenario;
     }
 
     public PreparedStatement prepareStatement(String sql) throws SQLException {
@@ -532,6 +547,11 @@ abstract class MondrianOlap4jConnection implements OlapConnection {
 
     public String getRoleName() {
         return roleName;
+    }
+
+    public List<String> getAvailableRoleNames() {
+        return UnmodifiableArrayList.of(
+            ((RolapSchema) connection.getSchema()).roleNames());
     }
 
     // inner classes

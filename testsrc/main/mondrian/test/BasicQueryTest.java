@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/test/BasicQueryTest.java#4 $
+// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/test/BasicQueryTest.java#8 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -31,7 +31,7 @@ import junit.framework.Assert;
  *
  * @author jhyde
  * @since Feb 14, 2003
- * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/test/BasicQueryTest.java#4 $
+ * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/test/BasicQueryTest.java#8 $
  */
 public class BasicQueryTest extends FoodMartTestCase {
     static final String EmptyResult =
@@ -2384,6 +2384,35 @@ public class BasicQueryTest extends FoodMartTestCase {
             + "Row #0: NULL\n"
             + "Row #1: NULL\n"
             + "Row #2: $565,238.13\n");
+
+        // explicit null value
+        assertQueryReturns(
+            "with member [Measures].[Foo] as null,\n"
+            + " format_string = 'a;b;c;d'\n"
+            + "select {[Measures].[Foo]} on columns\n"
+            + "from Sales",
+            "Axis #0:\n"
+            + "{}\n"
+            + "Axis #1:\n"
+            + "{[Measures].[Foo]}\n"
+            + "Row #0: d\n");
+    }
+
+    /**
+     * Test case for bug
+     * <a href="http://jira.pentaho.com/browse/MONDRIAN-434">MONDRIAN-434</a>,
+     * "Small negative numbers cause exceptions w 2-section format".
+     */
+    public void testFormatOfNil() {
+        assertQueryReturns(
+            "with member measures.formatTest as '0.000001',\n"
+            + " FORMAT_STRING='#.##;(#.##)' \n"
+            + "select { measures.formatTest } on 0 from sales ",
+            "Axis #0:\n"
+            + "{}\n"
+            + "Axis #1:\n"
+            + "{[Measures].[formatTest]}\n"
+            + "Row #0: .\n");
     }
 
     /**
@@ -2511,7 +2540,7 @@ public class BasicQueryTest extends FoodMartTestCase {
      * <a href="http://jira.pentaho.com/browse/MONDRIAN-46">MONDRIAN-46</a>.
      */
     public void testBugMondrian46() {
-        getConnection().getCacheControl(null).flushSchemaCache();
+        TestContext.instance().flushSchemaCache();
         assertQueryReturns(
             "select {[Measures].[Customer Count]} ON columns,\n"
             + "  {([Promotion Media].[All Media], [Product].[All Products])} ON rows\n"
@@ -2882,6 +2911,9 @@ public class BasicQueryTest extends FoodMartTestCase {
             + "      <SQL dialect=\"oracle\">\n"
             + "        <![CDATA[SELECT * FROM \"customer\"]]>\n"
             + "      </SQL>\n"
+            + "      <SQL dialect=\"hsqldb\">\n"
+            + "        <![CDATA[SELECT * FROM \"customer\"]]>\n"
+            + "      </SQL>\n"
             + "      <SQL dialect=\"derby\">\n"
             + "        <![CDATA[SELECT * FROM \"customer\"]]>\n"
             + "      </SQL>\n"
@@ -2889,6 +2921,9 @@ public class BasicQueryTest extends FoodMartTestCase {
             + "        <![CDATA[SELECT * FROM \"customer\"]]>\n"
             + "      </SQL>\n"
             + "      <SQL dialect=\"db2\">\n"
+            + "        <![CDATA[SELECT * FROM \"customer\"]]>\n"
+            + "      </SQL>\n"
+            + "      <SQL dialect=\"neoview\">\n"
             + "        <![CDATA[SELECT * FROM \"customer\"]]>\n"
             + "      </SQL>\n"
             + "      <SQL dialect=\"netezza\">\n"
@@ -3444,7 +3479,7 @@ public class BasicQueryTest extends FoodMartTestCase {
      * test has been known to fail when run standalone.
      */
     public void testBasketAnalysisAfterFlush() {
-        getConnection().getCacheControl(null).flushSchemaCache();
+        TestContext.instance().flushSchemaCache();
         testBasketAnalysis();
     }
 
@@ -4645,8 +4680,7 @@ public class BasicQueryTest extends FoodMartTestCase {
                                 QueryAndResult query = queries.get(queryIndex);
                                 assertQueryReturns(query.query, query.result);
                                 if (flush && i == 0) {
-                                    getConnection().getCacheControl(null)
-                                        .flushSchemaCache();
+                                    TestContext.instance().flushSchemaCache();
                                 }
                                 synchronized (executeCount) {
                                     executeCount[0]++;
@@ -4774,7 +4808,7 @@ public class BasicQueryTest extends FoodMartTestCase {
      * were used in filters.
      */
     public void testFilteredCrossJoin() {
-        getConnection().getCacheControl(null).flushSchemaCache();
+        TestContext.instance().flushSchemaCache();
         Result result = executeQuery(
             "select {[Measures].[Store Sales]} on columns,\n"
             + "  NON EMPTY Crossjoin(\n"
@@ -4807,7 +4841,7 @@ public class BasicQueryTest extends FoodMartTestCase {
             // memory.
             return;
         }
-        getConnection().getCacheControl(null).flushSchemaCache();
+        TestContext.instance().flushSchemaCache();
         Result result = executeQuery(
             "select {[Measures].[Store Sales]} on columns,\n"
             + "  NON EMPTY Crossjoin(\n"
@@ -4830,7 +4864,7 @@ public class BasicQueryTest extends FoodMartTestCase {
      * (see http://blogs.msdn.com/bi_systems/articles/162841.aspx)
      */
     public void testNonEmptyNonEmptyCrossJoin1() {
-        getConnection().getCacheControl(null).flushSchemaCache();
+        TestContext.instance().flushSchemaCache();
         Result result = executeQuery(
             "select {[Education Level].[All Education Levels].[Graduate Degree]} on columns,\n"
             + "   CrossJoin(\n"
@@ -4844,7 +4878,7 @@ public class BasicQueryTest extends FoodMartTestCase {
     }
 
     public void testNonEmptyNonEmptyCrossJoin2() {
-        getConnection().getCacheControl(null).flushSchemaCache();
+        TestContext.instance().flushSchemaCache();
         Result result = executeQuery(
             "select {[Education Level].[All Education Levels].[Graduate Degree]} on columns,\n"
             + "   NonEmptyCrossJoin(\n"
@@ -4858,7 +4892,7 @@ public class BasicQueryTest extends FoodMartTestCase {
     }
 
     public void testNonEmptyNonEmptyCrossJoin3() {
-        getConnection().getCacheControl(null).flushSchemaCache();
+        TestContext.instance().flushSchemaCache();
         Result result = executeQuery(
             "select {[Education Level].[All Education Levels].[Graduate Degree]} on columns,\n"
             + "   Non Empty CrossJoin(\n"
@@ -4872,7 +4906,7 @@ public class BasicQueryTest extends FoodMartTestCase {
     }
 
     public void testNonEmptyNonEmptyCrossJoin4() {
-        getConnection().getCacheControl(null).flushSchemaCache();
+        TestContext.instance().flushSchemaCache();
         Result result = executeQuery(
             "select {[Education Level].[All Education Levels].[Graduate Degree]} on columns,\n"
             + "   Non Empty NonEmptyCrossJoin(\n"

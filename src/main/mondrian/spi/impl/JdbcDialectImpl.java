@@ -9,7 +9,6 @@
 package mondrian.spi.impl;
 
 import mondrian.olap.Util;
-import mondrian.olap.MondrianDef;
 import mondrian.spi.*;
 
 import java.util.*;
@@ -30,7 +29,7 @@ import java.sql.Date;
  * metadata, so can deduce some of the dialect's behavior.</p>
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/spi/impl/JdbcDialectImpl.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/spi/impl/JdbcDialectImpl.java#8 $
  * @since Oct 10, 2008
  */
 public class JdbcDialectImpl implements Dialect {
@@ -103,6 +102,8 @@ public class JdbcDialectImpl implements Dialect {
      * same.</p>
      *
      * @param connection Connection
+     *
+     * @throws java.sql.SQLException on error
      */
     public JdbcDialectImpl(
         Connection connection)
@@ -195,11 +196,11 @@ public class JdbcDialectImpl implements Dialect {
         DatabaseMetaData databaseMetaData)
     {
         Set<List<Integer>> supports = new HashSet<List<Integer>>();
-        try {
-            for (int type : RESULT_SET_TYPE_VALUES) {
-                for (int concurrency : CONCURRENCY_VALUES) {
+        for (int type : RESULT_SET_TYPE_VALUES) {
+            for (int concurrency : CONCURRENCY_VALUES) {
+                try {
                     if (databaseMetaData.supportsResultSetConcurrency(
-                            type, concurrency))
+                        type, concurrency))
                     {
                         String driverName =
                             databaseMetaData.getDriverName();
@@ -219,12 +220,15 @@ public class JdbcDialectImpl implements Dialect {
                             new ArrayList<Integer>(
                                 Arrays.asList(type, concurrency)));
                     }
+                } catch (SQLException e) {
+                    // DB2 throws "com.ibm.db2.jcc.b.SqlException: Unknown type
+                    // or Concurrency" for certain values of type/concurrency.
+                    // No harm in interpreting all such exceptions as 'this
+                    // database does not support this type/concurrency
+                    // combination'.
+                    Util.discard(e);
                 }
             }
-        } catch (SQLException e11) {
-            throw Util.newInternal(
-                e11,
-                "while detecting result set concurrency");
         }
         return supports;
     }
@@ -239,7 +243,7 @@ public class JdbcDialectImpl implements Dialect {
       *
       * @param conn The database connection
       * @return Whether the feature is enabled.
-      * @throws SQLException
+      * @throws SQLException on error
       */
     protected boolean deduceSupportsSelectNotInGroupBy(Connection conn)
         throws SQLException
@@ -712,7 +716,7 @@ public class JdbcDialectImpl implements Dialect {
                 // For ASC, we need to reverse the order.
                 // Use the SQL standard syntax 'ORDER BY x ASC NULLS LAST'.
                 if (ascending) {
-                    return expr + " ASC NULLS LAST";
+                    return generateOrderByNullsLast(expr, ascending);
                 } else {
                     return expr + " DESC";
                 }
@@ -720,7 +724,7 @@ public class JdbcDialectImpl implements Dialect {
                 if (ascending) {
                     return expr + " ASC";
                 } else {
-                    return expr + " DESC NULLS LAST";
+                    return generateOrderByNullsLast(expr, ascending);
                 }
             default:
                 throw Util.unexpected(collateLast);
@@ -732,6 +736,48 @@ public class JdbcDialectImpl implements Dialect {
                 return expr + " DESC";
             }
         }
+    }
+
+    /**
+     * Generates SQL to force null values to collate last.
+     *
+     * <p>ANSI SQL provides the syntax "ASC NULLS LAST" and "DESC
+     * NULLS LAST". Since this is not supported by many databases, the
+     * default implementation returns just "expr direction".
+     *
+     * <p>If your database supports the ANSI syntax, implement this
+     * method by calling {@link #generateOrderByNullsLastAnsi}.
+     *
+     * <p>This method is only called from
+     * {@link #generateOrderItem(String, boolean, boolean)}. Some dialects
+     * override that method and therefore never call this method.
+     *
+     * @param expr Expression
+     * @param ascending Whether ascending
+     * @return Expression to force null values to collate last
+     */
+    protected String generateOrderByNullsLast(
+        String expr,
+        boolean ascending)
+    {
+        // default implementation makes no attempt to force nulls to
+        // collate last
+        return expr + (ascending ? " ASC" : " DESC");
+    }
+
+    /**
+     * Implementation for the {@link #generateOrderByNullsLast} method
+     * that uses the ANSI syntax "expr direction NULLS LAST".
+     *
+     * @param expr Expression
+     * @param ascending Whether ascending
+     * @return Expression "expr direction NULLS LAST"
+     */
+    protected final String generateOrderByNullsLastAnsi(
+        String expr,
+        boolean ascending)
+    {
+        return expr + (ascending ? " ASC" : " DESC") + " NULLS LAST";
     }
 
     public boolean supportsGroupByExpressions() {
@@ -802,11 +848,12 @@ public class JdbcDialectImpl implements Dialect {
         String productName,
         String productVersion)
     {
+        final String upperProductName = productName.toUpperCase();
         if (productName.equals("ACCESS")) {
             return DatabaseProduct.ACCESS;
-        } else if (productName.trim().toUpperCase().equals("APACHE DERBY")) {
+        } else if (upperProductName.trim().equals("APACHE DERBY")) {
             return DatabaseProduct.DERBY;
-        } else if (productName.trim().toUpperCase().equals("DBMS:CLOUDSCAPE")) {
+        } else if (upperProductName.trim().equals("DBMS:CLOUDSCAPE")) {
             return DatabaseProduct.DERBY;
         } else if (productName.startsWith("DB2")) {
             if (productName.startsWith("DB2 UDB for AS/400")) {
@@ -831,34 +878,38 @@ public class JdbcDialectImpl implements Dialect {
                 // DB2 on NT returns "DB2/NT"
                 return DatabaseProduct.DB2;
             }
-        } else if (productName.toUpperCase().indexOf("FIREBIRD") >= 0) {
+        } else if (upperProductName.indexOf("FIREBIRD") >= 0) {
             return DatabaseProduct.FIREBIRD;
         } else if (productName.startsWith("Informix")) {
             return DatabaseProduct.INFORMIX;
-        } else if (productName.toUpperCase().equals("INGRES")) {
+        } else if (upperProductName.equals("INGRES")) {
             return DatabaseProduct.INGRES;
         } else if (productName.equals("Interbase")) {
             return DatabaseProduct.INTERBASE;
-        } else if (productName.toUpperCase().equals("LUCIDDB")) {
+        } else if (upperProductName.equals("LUCIDDB")) {
             return DatabaseProduct.LUCIDDB;
-        } else if (productName.toUpperCase().indexOf("SQL SERVER") >= 0) {
+        } else if (upperProductName.indexOf("SQL SERVER") >= 0) {
             return DatabaseProduct.MSSQL;
         } else if (productName.equals("Oracle")) {
             return DatabaseProduct.ORACLE;
-        } else if (productName.toUpperCase().indexOf("POSTGRE") >= 0) {
+        } else if (upperProductName.indexOf("POSTGRE") >= 0) {
             return DatabaseProduct.POSTGRESQL;
-        } else if (productName.toUpperCase().indexOf("NETEZZA") >= 0) {
+        } else if (upperProductName.indexOf("NETEZZA") >= 0) {
             return DatabaseProduct.NETEZZA;
-        } else if (productName.toUpperCase().equals("MYSQL (INFOBRIGHT)")) {
+        } else if (upperProductName.equals("MYSQL (INFOBRIGHT)")) {
             return DatabaseProduct.INFOBRIGHT;
-        } else if (productName.toUpperCase().equals("MYSQL")) {
+        } else if (upperProductName.equals("MYSQL")) {
             return DatabaseProduct.MYSQL;
         } else if (productName.startsWith("HP Neoview")) {
             return DatabaseProduct.NEOVIEW;
-        } else if (productName.toUpperCase().indexOf("SYBASE") >= 0) {
+        } else if (upperProductName.indexOf("SYBASE") >= 0) {
             return DatabaseProduct.SYBASE;
-        } else if (productName.toUpperCase().indexOf("TERADATA") >= 0) {
+        } else if (upperProductName.indexOf("TERADATA") >= 0) {
             return DatabaseProduct.TERADATA;
+        } else if (upperProductName.indexOf("HSQL") >= 0) {
+            return DatabaseProduct.HSQLDB;
+        } else if (upperProductName.indexOf("VERTICA") >= 0) {
+            return DatabaseProduct.VERTICA;
         } else {
             return DatabaseProduct.UNKNOWN;
         }

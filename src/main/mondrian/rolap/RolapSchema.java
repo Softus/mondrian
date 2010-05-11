@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapSchema.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapSchema.java#4 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -17,33 +17,13 @@ import java.io.*;
 import java.lang.ref.SoftReference;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Modifier;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 import javax.sql.DataSource;
 
-import mondrian.olap.Access;
-import mondrian.olap.Category;
-import mondrian.olap.Cube;
-import mondrian.olap.Dimension;
-import mondrian.olap.Exp;
-import mondrian.olap.Formula;
-import mondrian.olap.FunTable;
-import mondrian.olap.Hierarchy;
-import mondrian.olap.Level;
-import mondrian.olap.Member;
-import mondrian.olap.MondrianDef;
-import mondrian.olap.NamedSet;
-import mondrian.olap.Parameter;
-import mondrian.olap.Role;
-import mondrian.olap.RoleImpl;
-import mondrian.olap.Schema;
-import mondrian.olap.SchemaReader;
-import mondrian.olap.Syntax;
-import mondrian.olap.Util;
-import mondrian.olap.Id;
+import mondrian.olap.*;
 import mondrian.olap.fun.*;
 import mondrian.olap.type.MemberType;
 import mondrian.olap.type.NumericType;
@@ -58,6 +38,7 @@ import org.apache.log4j.Logger;
 import org.apache.commons.vfs.*;
 
 import org.eigenbase.xom.*;
+import org.eigenbase.xom.Parser;
 
 /**
  * A <code>RolapSchema</code> is a collection of {@link RolapCube}s and
@@ -67,7 +48,7 @@ import org.eigenbase.xom.*;
  * @see RolapConnection
  * @author jhyde
  * @since 26 July, 2001
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapSchema.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapSchema.java#4 $
  */
 public class RolapSchema implements Schema {
     private static final Logger LOGGER = Logger.getLogger(RolapSchema.class);
@@ -169,6 +150,7 @@ public class RolapSchema implements Schema {
      * {@link mondrian.rolap.RolapConnectionProperties#Ignore Ignore}=true.
      */
     private final List<Exception> warningList = new ArrayList<Exception>();
+    private Map<String, Annotation> annotationMap;
 
     /**
      * This is ONLY called by other constructors (and MUST be called
@@ -362,6 +344,10 @@ public class RolapSchema implements Schema {
         return name;
     }
 
+    public Map<String, Annotation> getAnnotationMap() {
+        return annotationMap;
+    }
+
     /**
      * Returns this schema's SQL dialect.
      *
@@ -381,6 +367,8 @@ public class RolapSchema implements Schema {
             throw Util.newError("<Schema> name must be set");
         }
 
+        this.annotationMap =
+            RolapHierarchy.createAnnotationMap(xmlSchema.annotations);
         // Validate user-defined functions. Must be done before we validate
         // calculated members, because calculated members will need to use the
         // function table.
@@ -1465,11 +1453,7 @@ System.out.println("RolapSchema.createMemberReader: CONTAINS NAME");
     }
 
     public SchemaReader getSchemaReader() {
-        return new RolapSchemaReader(defaultRole, this) {
-            public Cube getCube() {
-                throw new UnsupportedOperationException();
-            }
-        };
+        return new RolapSchemaReader(defaultRole, this);
     }
 
     /**

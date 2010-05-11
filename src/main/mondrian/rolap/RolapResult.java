@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapResult.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapResult.java#5 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -25,6 +25,7 @@ import mondrian.rolap.agg.AggregationManager;
 import mondrian.util.ConcatenableList;
 import mondrian.util.Format;
 import mondrian.util.ObjectPool;
+import mondrian.mdx.*;
 
 import org.apache.log4j.Logger;
 
@@ -35,7 +36,7 @@ import java.util.*;
  *
  * @author jhyde
  * @since 10 August, 2001
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapResult.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapResult.java#5 $
  */
 public class RolapResult extends ResultBase {
 
@@ -237,6 +238,10 @@ public class RolapResult extends ResultBase {
                 axisMembers);
             axisMembers.setSlicer(false);
 
+            // Save unadulterated context for the next time we need to evaluate
+            // the slicer.
+            final RolapEvaluator savedEvaluator = evaluator.push();
+
             if (!axisMembers.isEmpty()) {
                 for (Member m : axisMembers) {
                     if (m == null) {
@@ -308,7 +313,7 @@ public class RolapResult extends ResultBase {
                 evalExecute(
                     nonAllMembers,
                     nonAllMembers.size() - 1,
-                    evaluator.push(),
+                    savedEvaluator,
                     query.slicerAxis,
                     query.slicerCalc);
 
@@ -471,45 +476,27 @@ public class RolapResult extends ResultBase {
     }
 
     private static class CalculatedMeasureVisitor
-        extends mondrian.mdx.MdxVisitorImpl
+        extends MdxVisitorImpl
     {
         Dimension dimension;
 
         CalculatedMeasureVisitor() {
         }
-        public Object visit(mondrian.olap.Formula formula) {
-            return null;
-        }
-        public Object visit(mondrian.mdx.ResolvedFunCall call) {
-            return null;
-        }
-        public Object visit(mondrian.olap.Id id) {
-            return null;
-        }
-        public Object visit(mondrian.mdx.ParameterExpr parameterExpr) {
-            return null;
-        }
-        public Object visit(mondrian.mdx.DimensionExpr dimensionExpr) {
+
+        public Object visit(DimensionExpr dimensionExpr) {
             dimension = dimensionExpr.getDimension();
             return null;
         }
-        public Object visit(mondrian.mdx.HierarchyExpr hierarchyExpr) {
+
+        public Object visit(HierarchyExpr hierarchyExpr) {
             Hierarchy hierarchy = hierarchyExpr.getHierarchy();
             dimension = hierarchy.getDimension();
             return null;
         }
-        public Object visit(mondrian.mdx.LevelExpr levelExpr) {
-            return null;
-        }
-        public Object visit(mondrian.mdx.MemberExpr memberExpr)  {
+
+        public Object visit(MemberExpr memberExpr)  {
             Member member = memberExpr.getMember();
             dimension = member.getHierarchy().getDimension();
-            return null;
-        }
-        public Object visit(mondrian.mdx.NamedSetExpr namedSetExpr) {
-            return null;
-        }
-        public Object visit(mondrian.olap.Literal literal) {
             return null;
         }
     }
@@ -1317,12 +1304,18 @@ public class RolapResult extends ResultBase {
         }
 
         protected Evaluator.NamedSetEvaluator evaluateNamedSet(
-            final String name,
-            final Exp exp)
+            final NamedSet namedSet,
+            boolean create)
         {
-            RolapNamedSetEvaluator value = namedSetEvaluators.get(name);
+            final String name = namedSet.getNameUniqueWithinQuery();
+            RolapNamedSetEvaluator value;
+            if (namedSet.isDynamic() && !create) {
+                value = null;
+            } else {
+                value = namedSetEvaluators.get(name);
+            }
             if (value == null) {
-                value = new RolapNamedSetEvaluator(this, name, exp);
+                value = new RolapNamedSetEvaluator(this, namedSet);
                 namedSetEvaluators.put(name, value);
             }
             return value;

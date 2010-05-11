@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapConnection.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapConnection.java#6 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -20,8 +20,6 @@ import java.util.*;
 import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
 
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.sql.DataSource;
 
 import mondrian.olap.*;
@@ -30,8 +28,10 @@ import mondrian.util.FilteredIterableList;
 import mondrian.util.MemoryMonitor;
 import mondrian.util.MemoryMonitorFactory;
 import mondrian.util.Pair;
-import mondrian.spi.Dialect;
-import mondrian.spi.DialectManager;
+import mondrian.spi.*;
+import mondrian.spi.impl.JndiDataSourceResolver;
+
+import org.eigenbase.util.property.StringProperty;
 
 import org.apache.log4j.Logger;
 
@@ -46,7 +46,7 @@ import org.apache.log4j.Logger;
  * @see DriverManager
  * @author jhyde
  * @since 2 October, 2002
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapConnection.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapConnection.java#6 $
  */
 public class RolapConnection extends ConnectionBase {
     private static final Logger LOGGER =
@@ -67,7 +67,7 @@ public class RolapConnection extends ConnectionBase {
     private SchemaReader schemaReader;
     protected Role role;
     private Locale locale = Locale.US;
-    private Scenario scenario;
+    private static DataSourceResolver dataSourceResolver;
 
     /**
      * Creates a connection.
@@ -340,9 +340,10 @@ public class RolapConnection extends ConnectionBase {
             RolapUtil.loadDrivers(jdbcDriversProp);
 
             Properties jdbcProperties = getJdbcProperties(connectInfo);
-            for (Map.Entry<Object, Object> entry : jdbcProperties.entrySet()) {
+            final Map<String, String> map = Util.toMap(jdbcProperties);
+            for (Map.Entry<String, String> entry : map.entrySet()) {
                 // FIXME ordering is non-deterministic
-                appendKeyValue(buf, (String) entry.getKey(), entry.getValue());
+                appendKeyValue(buf, entry.getKey(), entry.getValue());
             }
 
             if (jdbcUser != null) {
@@ -396,10 +397,10 @@ public class RolapConnection extends ConnectionBase {
                     "false").equalsIgnoreCase("true");
 
             // Get connection from datasource.
+            DataSourceResolver dataSourceResolver = getDataSourceResolver();
             try {
-                dataSource =
-                    (DataSource) new InitialContext().lookup(dataSourceName);
-            } catch (NamingException e) {
+                dataSource = dataSourceResolver.lookup(dataSourceName);
+            } catch (Exception e) {
                 throw Util.newInternal(
                     e,
                     "Error while looking up data source ("
@@ -424,6 +425,43 @@ public class RolapConnection extends ConnectionBase {
                 + "' must contain either '" + RolapConnectionProperties.Jdbc
                 + "' or '" + RolapConnectionProperties.DataSource + "'");
         }
+    }
+
+    /**
+     * Returns the instance of the {@link mondrian.spi.DataSourceResolver}
+     * plugin.
+     *
+     * @return data source resolver
+     */
+    private static synchronized DataSourceResolver getDataSourceResolver() {
+        if (dataSourceResolver == null) {
+            final StringProperty property =
+                MondrianProperties.instance().DataSourceResolverClass;
+            final String className =
+                property.get(
+                    JndiDataSourceResolver.class.getName());
+            try {
+                final Class<?> clazz;
+                clazz = Class.forName(className);
+                if (!DataSourceResolver.class.isAssignableFrom(clazz)) {
+                    throw Util.newInternal(
+                        "Plugin class specified by property "
+                        + property.getPath() + " must implement "
+                        + DataSourceResolver.class.getName());
+                }
+                dataSourceResolver = (DataSourceResolver) clazz.newInstance();
+            } catch (ClassNotFoundException e) {
+                throw Util.newInternal(
+                    e, "Error while loading plugin class '" + className + "'");
+            } catch (IllegalAccessException e) {
+                throw Util.newInternal(
+                    e, "Error while loading plugin class '" + className + "'");
+            } catch (InstantiationException e) {
+                throw Util.newInternal(
+                    e, "Error while loading plugin class '" + className + "'");
+            }
+        }
+        return dataSourceResolver;
     }
 
     /**
@@ -526,9 +564,11 @@ public class RolapConnection extends ConnectionBase {
     public Result execute(Query query) {
         class Listener implements MemoryMonitor.Listener {
             private final Query query;
+
             Listener(final Query query) {
                 this.query = query;
             }
+
             public void memoryUsageNotification(long used, long max) {
                 StringBuilder buf = new StringBuilder(200);
                 buf.append("OutOfMemory used=");
@@ -542,6 +582,7 @@ public class RolapConnection extends ConnectionBase {
                 RolapConnection.memoryUsageNotification(query, buf.toString());
             }
         }
+
         Listener listener = new Listener(query);
         MemoryMonitor mm = MemoryMonitorFactory.getMemoryMonitor();
         long currId = -1;
@@ -607,11 +648,7 @@ public class RolapConnection extends ConnectionBase {
         assert role != null;
 
         this.role = role;
-        this.schemaReader = new RolapSchemaReader(role, schema) {
-            public Cube getCube() {
-                throw new UnsupportedOperationException();
-            }
-        };
+        this.schemaReader = new RolapSchemaReader(role, schema);
     }
 
     public Role getRole() {
@@ -711,20 +748,6 @@ public class RolapConnection extends ConnectionBase {
         return dataSource;
     }
 
-    public Scenario createScenario() {
-        final ScenarioImpl scenario = new ScenarioImpl();
-        scenario.register(schema);
-        return scenario;
-    }
-
-    public void setScenario(Scenario scenario) {
-        this.scenario = scenario;
-    }
-
-    public Scenario getScenario() {
-        return scenario;
-    }
-
     /**
      * A <code>NonEmptyResult</code> filters a result by removing empty rows
      * on a particular axis.
@@ -737,6 +760,13 @@ public class RolapConnection extends ConnectionBase {
         /** workspace. Synchronized access only. */
         private final int[] pos;
 
+        /**
+         * Creates a NonEmptyResult.
+         *
+         * @param result Result set
+         * @param query Query
+         * @param axis Which axis to make non-empty
+         */
         NonEmptyResult(Result result, Query query, int axis) {
             super(query, result.getAxes().clone());
 
@@ -810,13 +840,12 @@ public class RolapConnection extends ConnectionBase {
                 return isEmptyRecurse(fixedAxis, axis - 1);
             } else {
                 List<Position> positions = getAxes()[axis].getPositions();
-                int i = 0;
-                for (Position position : positions) {
+                final int positionCount = positions.size();
+                for (int i = 0; i < positionCount; i++) {
                     pos[axis] = i;
                     if (!isEmptyRecurse(fixedAxis, axis - 1)) {
                         return false;
                     }
-                    i++;
                 }
                 return true;
             }
@@ -960,7 +989,6 @@ public class RolapConnection extends ConnectionBase {
             return dataSource.getConnection(jdbcUser, jdbcPassword);
         }
     }
-
 }
 
 // End RolapConnection.java

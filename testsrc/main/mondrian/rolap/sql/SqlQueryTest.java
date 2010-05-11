@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/rolap/sql/SqlQueryTest.java#2 $
+// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/rolap/sql/SqlQueryTest.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -26,7 +26,7 @@ import java.util.HashMap;
  * <p>Test for <code>SqlQuery</code></p>
  *
  * @author Thiyagu
- * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/rolap/sql/SqlQueryTest.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/rolap/sql/SqlQueryTest.java#3 $
  * @since 06-Jun-2007
  */
 public class SqlQueryTest extends BatchTestCase {
@@ -544,15 +544,31 @@ public class SqlQueryTest extends BatchTestCase {
         assertQuerySql(testContext, query, patterns);
     }
 
-    public void testInvalidSQLMemberLookup() {
+    /**
+     * Testcase for
+     * <a href="http://jira.pentaho.com/browse/MONDRIAN-457">bug MONDRIAN-457,
+     * "Strange SQL condition appears when executing query"</a>. The fix
+     * implemented MatchType.EXACT_SCHEMA, which only
+     * queries known schema objects. This prevents SQL such as
+     * "UPPER(`store`.`store_country`) = UPPER('Time.Weekly')" from being
+     * generated.
+     */
+    public void testInvalidSqlMemberLookup() {
         String sqlMySql =
             "select `store`.`store_type` as `c0` from `store` as `store` "
             + "where UPPER(`store`.`store_type`) = UPPER('Time.Weekly') "
             + "group by `store`.`store_type` "
             + "order by ISNULL(`store`.`store_type`), `store`.`store_type` ASC";
+        String sqlOracle =
+            "select \"store\".\"store_type\" as \"c0\" from \"store\" \"store\" "
+            + "where UPPER(\"store\".\"store_type\") = UPPER('Time.Weekly') "
+            + "group by \"store\".\"store_type\" "
+            + "order by \"store\".\"store_type\" ASC";
 
         SqlPattern[] patterns = {
-            new SqlPattern(Dialect.DatabaseProduct.MYSQL, sqlMySql, sqlMySql)
+            new SqlPattern(Dialect.DatabaseProduct.MYSQL, sqlMySql, sqlMySql),
+            new SqlPattern(
+                Dialect.DatabaseProduct.ORACLE, sqlOracle, sqlOracle),
         };
 
         assertNoQuerySql(

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-stylesheet type="text/xsl" href="http://ivyrep.jayasoft.org/ivy-doc.xsl"?>
 <!--
-  == $Id: //open/mondrian-release/3.1/ivy.xml#2 $
+  == $Id: //open/mondrian-release/3.1/ivy.xml#9 $
   == This software is subject to the terms of the Eclipse Public License v1.0
   == Agreement, available at the following URL:
   == http://www.eclipse.org/legal/epl-v10.html.
-  == Copyright (C) 2008-2009 Julian Hyde
+  == Copyright (C) 2008-2010 Julian Hyde
   == All Rights Reserved.
   == You must accept the terms of that agreement to use this software.
   -->
@@ -15,7 +15,7 @@
     xmlns:m="http://ant.apache.org/ivy/maven"
     xsi:noNamespaceSchemaLocation="http://ant.apache.org/ivy/schemas/ivy.xsd">
 
-    <info organisation="pentaho" module="mondrian" revision="3.1.1.xxxxx">
+    <info organisation="pentaho" module="mondrian" revision="3.1.5.13307">
         <license name="EPL" url="http://www.eclipse.org/legal/epl-v10.html"/>
         <ivyauthor name="Julian Hyde" />
         <repository name="pentaho-rep" url="http://repo.pentaho.org"/>
@@ -55,7 +55,7 @@
         <dependency org="javax.servlet" name="jsp-api" rev="2.0"/>
         <dependency org="javax.servlet" name="servlet-api" rev="2.4"/>
         <dependency org="log4j" name="log4j" rev="1.2.9"/>
-        <dependency org="org.olap4j" name="olap4j" rev="0.9.7.241"
+        <dependency org="org.olap4j" name="olap4j" rev="0.9.7.296"
                 conf="default->default" changing="true">
             <artifact name="olap4j"/>
             <artifact name="olap4j" type="source" ext="jar"
@@ -67,6 +67,7 @@
         <dependency org="xerces" name="xercesImpl" rev="2.5.0"/>
         <dependency org="xmlunit" name="xmlunit" rev="1.1"/>
         <dependency org="org.apache.derby" name="derby" rev="10.2.2.0"/>
+        <dependency org="hsqldb" name="hsqldb" rev="1.8.0"/>
 
         <!-- Note that this is a build of jpivot's CVS trunk on 12-22-2008. -->
         <dependency org="com.tonbeller" name="jpivot" rev="1.8.0-090302">

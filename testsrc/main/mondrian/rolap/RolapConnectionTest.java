@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/rolap/RolapConnectionTest.java#2 $
+// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/rolap/RolapConnectionTest.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -36,7 +36,7 @@ import java.util.Arrays;
  *
  * @author jng
  * @since 16 April, 2004
- * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/rolap/RolapConnectionTest.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/rolap/RolapConnectionTest.java#3 $
  */
 public class RolapConnectionTest extends TestCase {
     private static final ThreadLocal<InitialContext> THREAD_INITIAL_CONTEXT =
@@ -274,6 +274,11 @@ public class RolapConnectionTest extends TestCase {
     }
 
     public void testJndiConnection() throws NamingException {
+        // Cannot guarantee that this test will work if they have chosen to
+        // resolve data sources other than by JNDI.
+        if (MondrianProperties.instance().DataSourceResolverClass.isSet()) {
+            return;
+        }
         // get a regular connection
         Util.PropertyList properties =
             TestContext.instance().getFoodMartConnectionProperties();

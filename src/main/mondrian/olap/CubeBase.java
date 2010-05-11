@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/CubeBase.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/CubeBase.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -22,7 +22,7 @@ import java.util.List;
  *
  * @author jhyde
  * @since 6 August, 2001
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/CubeBase.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/CubeBase.java#3 $
  */
 public abstract class CubeBase extends OlapElementBase implements Cube {
 
@@ -50,16 +50,26 @@ public abstract class CubeBase extends OlapElementBase implements Cube {
 
     protected final String name;
     private final String uniqueName;
+    private final String description;
     protected Dimension[] dimensions;
 
     /**
      * Creates a CubeBase.
      *
      * @param name Name
+     * @param caption Caption
+     * @param description Description
      * @param dimensions List of dimensions
      */
-    protected CubeBase(String name, Dimension[] dimensions) {
+    protected CubeBase(
+        String name,
+        String caption,
+        String description,
+        Dimension[] dimensions)
+    {
         this.name = name;
+        this.caption = caption;
+        this.description = description;
         this.dimensions = dimensions;
         this.uniqueName = Util.quoteMdxIdentifier(name);
     }
@@ -87,7 +97,7 @@ public abstract class CubeBase extends OlapElementBase implements Cube {
     }
 
     public String getDescription() {
-        return null;
+        return description;
     }
 
     public Dimension[] getDimensions() {
@@ -231,8 +241,6 @@ public abstract class CubeBase extends OlapElementBase implements Cube {
     public Level getWeekLevel() {
         return getTimeLevel(LevelType.TimeWeeks);
     }
-
 }
-
 
 // End CubeBase.java

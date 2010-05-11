@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/MultiResolver.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/MultiResolver.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -23,7 +23,7 @@ import java.util.List;
  *
  * @author jhyde
  * @since Feb 12, 2003
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/MultiResolver.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/MultiResolver.java#3 $
  */
 public abstract class MultiResolver extends FunUtil implements Resolver {
     private final String name;
@@ -107,7 +107,7 @@ outer:
             conversions.clear();
             for (int i = 0; i < args.length; i++) {
                 if (!validator.canConvert(
-                    args[i], parameterTypes[i], conversions))
+                    i, args[i], parameterTypes[i], conversions))
                 {
                     continue outer;
                 }

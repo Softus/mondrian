@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapCubeLevel.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapCubeLevel.java#5 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -23,7 +23,7 @@ import mondrian.rolap.agg.ValueColumnPredicate;
  * RolapCubeLevel wraps a RolapLevel for a specific Cube.
  *
  * @author Will Gorman (wgorman@pentaho.org)
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapCubeLevel.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapCubeLevel.java#5 $
  */
 public class RolapCubeLevel extends RolapLevel {
 
@@ -35,8 +35,10 @@ public class RolapCubeLevel extends RolapLevel {
     public RolapCubeLevel(RolapLevel level, RolapCubeHierarchy hierarchy) {
         super(
             hierarchy,
-            level.getDepth(),
             level.getName(),
+            level.getCaption(),
+            level.getDescription(),
+            level.getDepth(),
             level.getKeyExp(),
             level.getNameExp(),
             level.getCaptionExp(),
@@ -49,7 +51,8 @@ public class RolapCubeLevel extends RolapLevel {
             level.getDatatype(),
             level.getHideMemberCondition(),
             level.getLevelType(),
-            "" + level.getApproxRowCount());
+            "" + level.getApproxRowCount(),
+            level.getAnnotationMap());
 
         this.rolapLevel = level;
         MondrianDef.RelationOrJoin hierarchyRel = hierarchy.getRelation();
@@ -204,6 +207,21 @@ public class RolapCubeLevel extends RolapLevel {
         return (RolapCubeLevel) super.getParentLevel();
     }
 
+    public String getCaption() {
+        return rolapLevel.getCaption();
+    }
+
+    public void setCaption(String caption) {
+        // Cannot set the caption on the underlying level; other cube levels
+        // might be using it.
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Returns the underlying level.
+     *
+     * @return Underlying level
+     */
     public RolapLevel getRolapLevel() {
         return rolapLevel;
     }

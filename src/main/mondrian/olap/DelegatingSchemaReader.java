@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/DelegatingSchemaReader.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/DelegatingSchemaReader.java#4 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -26,7 +26,7 @@ import java.util.List;
  *
  * @author jhyde
  * @since Feb 26, 2003
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/DelegatingSchemaReader.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/DelegatingSchemaReader.java#4 $
  */
 public abstract class DelegatingSchemaReader implements SchemaReader {
     protected final SchemaReader schemaReader;
@@ -42,6 +42,10 @@ public abstract class DelegatingSchemaReader implements SchemaReader {
 
     public Role getRole() {
         return schemaReader.getRole();
+    }
+
+    public Cube getCube() {
+        return schemaReader.getCube();
     }
 
     public List<Dimension> getCubeDimensions(Cube cube) {
@@ -93,7 +97,7 @@ public abstract class DelegatingSchemaReader implements SchemaReader {
                 uniqueNameParts, failIfNotFound, matchType);
     }
 
-    public OlapElement lookupCompound(
+    public final OlapElement lookupCompound(
         OlapElement parent, List<Id.Segment> names,
         boolean failIfNotFound, int category)
     {
@@ -226,6 +230,10 @@ public abstract class DelegatingSchemaReader implements SchemaReader {
 
     public DataSource getDataSource() {
         return schemaReader.getDataSource();
+    }
+
+    public SchemaReader withoutAccessControl() {
+        return schemaReader.withoutAccessControl();
     }
 }
 

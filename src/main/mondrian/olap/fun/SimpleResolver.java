@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/SimpleResolver.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/SimpleResolver.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -21,7 +21,7 @@ import java.util.List;
  *
  * @author jhyde
  * @since 3 March, 2002
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/SimpleResolver.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/SimpleResolver.java#3 $
  */
 class SimpleResolver implements Resolver {
     private  final FunDef funDef;
@@ -65,7 +65,7 @@ class SimpleResolver implements Resolver {
         }
         for (int i = 0; i < args.length; i++) {
             if (!validator.canConvert(
-                args[i], parameterTypes[i], conversions))
+                i, args[i], parameterTypes[i], conversions))
             {
                 return null;
             }

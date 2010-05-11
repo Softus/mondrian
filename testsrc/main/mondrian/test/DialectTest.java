@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/test/DialectTest.java#2 $
+// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/test/DialectTest.java#5 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -43,7 +43,7 @@ import mondrian.spi.impl.PostgreSqlDialect;
  * about them, we can change mondrian to use those features.</p>
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/test/DialectTest.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/test/DialectTest.java#5 $
  * @since May 18, 2007
  */
 public class DialectTest extends TestCase {
@@ -54,6 +54,8 @@ public class DialectTest extends TestCase {
         + " Optimizer. Either restructure the query with supported syntax, or"
         + " enable the MySQL Query Path in the brighthouse.ini file to execute"
         + " the query with reduced performance.";
+    private static final String NEOVIEW_SYNTAX_ERROR =
+        "(?s).* ERROR\\[15001\\] A syntax error occurred at or before: .*";
 
     /**
      * Creates a DialectTest.
@@ -124,7 +126,8 @@ public class DialectTest extends TestCase {
             // Dialect has identified that it is PostgreSQL.
             assertTrue(dialect instanceof PostgreSqlDialect);
             assertFalse(dialect instanceof NetezzaDialect);
-            assertTrue(databaseMetaData.getDatabaseProductName()
+            assertTrue(
+                databaseMetaData.getDatabaseProductName()
                     .indexOf("PostgreSQL") >= 0);
             break;
         case NETEZZA:
@@ -132,7 +135,8 @@ public class DialectTest extends TestCase {
             // PostgreSql.
             assertTrue(dialect instanceof PostgreSqlDialect);
             assertTrue(dialect instanceof NetezzaDialect);
-            assertTrue(databaseMetaData.getDatabaseProductName()
+            assertTrue(
+                databaseMetaData.getDatabaseProductName()
                     .indexOf("Netezza") >= 0);
             break;
         default:
@@ -159,8 +163,12 @@ public class DialectTest extends TestCase {
                 "Syntax error: Encountered \",\" at line 1, column 36.",
                 // access
                 "\\[Microsoft\\]\\[ODBC Microsoft Access Driver\\] Syntax error \\(missing operator\\) in query expression '.*'.",
+                // hsqldb
+                "Unexpected token in statement \\[select count\\(distinct \"customer_id\",\\]",
                 // infobright
                 INFOBRIGHT_UNSUPPORTED,
+                // neoview
+                ".* ERROR\\[3129\\] Function COUNT DISTINCT accepts exactly one operand\\. .*",
                 // postgres
                 "ERROR: function count\\(integer, integer\\) does not exist",
                 // LucidDb
@@ -300,7 +308,11 @@ public class DialectTest extends TestCase {
                 // postgres
                 "ERROR: subquery in FROM must have an alias",
                 // teradata
-                ".*Syntax error, expected something like a name or a Unicode delimited identifier or an 'UDFCALLNAME' keyword between '\\)' and ';'\\.",
+                ".*Syntax error, expected something like a name or a Unicode "
+                + "delimited identifier or an 'UDFCALLNAME' keyword between "
+                + "'\\)' and ';'\\.",
+                // neoview
+                NEOVIEW_SYNTAX_ERROR,
                 // netezza
                 "(?s).*ERROR:  sub-SELECT in FROM must have an alias.*",
             };
@@ -320,6 +332,8 @@ public class DialectTest extends TestCase {
             final String[] errs = {
                 // infobright
                 INFOBRIGHT_UNSUPPORTED,
+                // neoview
+                NEOVIEW_SYNTAX_ERROR,
             };
             assertQueryFails(sql, errs);
         } else {
@@ -371,6 +385,10 @@ public class DialectTest extends TestCase {
                 + "included in an ORDER BY expression\\.",
                 // derby (yes, lame message)
                 "Java exception: ': java.lang.NullPointerException'.",
+                // hsqldb
+                "(?s)Cannot be in ORDER BY clause in statement .*",
+                // neoview
+                NEOVIEW_SYNTAX_ERROR,
                 // oracle
                 "ORA-01785: ORDER BY item must be the number of a SELECT-list "
                 + "expression\n",
@@ -393,6 +411,8 @@ public class DialectTest extends TestCase {
             final String[] errs = {
                 // mysql
                 "'sum\\(`unit_sales` \\+ 3\\) \\+ 8' isn't in GROUP BY",
+                // neoview
+                ".* ERROR\\[4197\\] This expression cannot be used in the GROUP BY clause\\. .*",
             };
             assertQueryFails(sql, errs);
         }
@@ -421,12 +441,16 @@ public class DialectTest extends TestCase {
             String[] errs = {
                 // derby
                 "Syntax error: Encountered \"SETS\" at line 6, column 19.",
+                // hsqldb
+                "(?s)Unexpected token: GROUPING in statement .*",
                 // mysql
                 "(?s)You have an error in your SQL syntax; check .*",
                 // access
                 "(?s)\\[Microsoft\\]\\[ODBC Microsoft Access Driver\\] Syntax error \\(missing operator\\) in query expression 'GROUPING SETS.*",
                 // postgres
                 "ERROR: syntax error at or near \"SETS\"",
+                // neoview
+                NEOVIEW_SYNTAX_ERROR,
                 // netezza
                 "(?s).*found \"SETS\" \\(at char 135\\) expecting `EXCEPT' or `FOR' or `INTERSECT' or `ORDER' or `UNION'.*",
             };
@@ -449,8 +473,12 @@ public class DialectTest extends TestCase {
                 "Syntax error: Encountered \",\" at line 3, column 20.",
                 // access
                 "\\[Microsoft\\]\\[ODBC Microsoft Access Driver\\] Syntax error \\(comma\\) in query expression '.*'.",
+                // hsqldb
+                "(?s)Unexpected token: , in statement .*",
                 // infobright
                 INFOBRIGHT_UNSUPPORTED,
+                // neoview
+                NEOVIEW_SYNTAX_ERROR,
                 // teradata
                 ".*Syntax error, expected something like a 'SELECT' keyword or '\\(' between '\\(' and the integer '1'\\.",
                 // netezza
@@ -590,6 +618,11 @@ public class DialectTest extends TestCase {
             assertFirstLast(query, "Brown", null);
         } else {
             // Largest value comes first, null comes last.
+            switch (dialect.getDatabaseProduct()) {
+            case NEOVIEW:
+                // Neoview cannot force nulls to appear last
+                return;
+            }
             assertFirstLast(query, "Williams", null);
         }
     }
@@ -611,8 +644,8 @@ public class DialectTest extends TestCase {
         resultSet.close();
         String actualFirst = values.get(0);
         String actualLast = values.get(values.size() - 1);
-        assertEquals(expectedFirst, actualFirst);
-        assertEquals(expectedLast, actualLast);
+        assertEquals(query, expectedFirst, actualFirst);
+        assertEquals(query, expectedLast, actualLast);
     }
 
     private void assertInline(
@@ -792,6 +825,8 @@ public class DialectTest extends TestCase {
                 + "invalid expression. If a SELECT list has a GROUP BY, the "
                 + "list may only contain valid grouping expressions and valid "
                 + "aggregate expressions.  ",
+                // hsqldb
+                "(?s)Not in aggregate function or group by clause: .*",
                 // mysql (if sql_mode contains ONLY_FULL_GROUP_BY)
                 "ERROR 1055 (42000): 'foodmart.time_by_day.the_month' isn't in "
                 + "GROUP BY",
@@ -799,6 +834,9 @@ public class DialectTest extends TestCase {
                 "\\[Microsoft\\]\\[ODBC Microsoft Access Driver\\] You tried "
                 + "to execute a query that does not include the specified "
                 + "expression 'the_month' as part of an aggregate function.",
+                // neoview
+                ".* ERROR\\[4005\\] Column reference \"the_month\" must be a "
+                + "grouping column or be specified within an aggregate. .*",
                 // teradata
                 ".*Selected non-aggregate values must be part of the "
                 + "associated group.",

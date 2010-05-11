@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Id.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Id.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -23,7 +23,7 @@ import java.util.Collections;
 /**
  * Multi-part identifier.
  *
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Id.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Id.java#3 $
  */
 public class Id
     extends ExpBase
@@ -106,7 +106,8 @@ public class Id
         }
         final Exp element =
             Util.lookup(
-                validator.getQuery(), segments, true);
+                validator.getQuery(), validator.getSchemaReader(), segments,
+                true);
 
         if (element == null) {
             return null;

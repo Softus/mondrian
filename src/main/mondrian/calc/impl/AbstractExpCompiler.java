@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/calc/impl/AbstractExpCompiler.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/calc/impl/AbstractExpCompiler.java#4 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -16,6 +16,7 @@ import mondrian.olap.type.DimensionType;
 import mondrian.olap.type.LevelType;
 import mondrian.resource.MondrianResource;
 import mondrian.calc.*;
+import mondrian.mdx.UnresolvedFunCall;
 
 import java.util.*;
 
@@ -23,7 +24,7 @@ import java.util.*;
  * Abstract implementation of the {@link mondrian.calc.ExpCompiler} interface.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/calc/impl/AbstractExpCompiler.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/calc/impl/AbstractExpCompiler.java#4 $
  * @since Sep 29, 2005
  */
 public class AbstractExpCompiler implements ExpCompiler {
@@ -119,6 +120,8 @@ public class AbstractExpCompiler implements ExpCompiler {
                     return compileHierarchy(exp);
                 } else if (resultType instanceof DimensionType) {
                     return compileDimension(exp);
+                } else if (resultType instanceof ScalarType) {
+                    return compileScalar(exp, false);
                 }
             }
             final Calc calc = compile(exp);
@@ -153,7 +156,7 @@ public class AbstractExpCompiler implements ExpCompiler {
         } else if (type instanceof HierarchyType) {
             final HierarchyCalc hierarchyCalc = compileHierarchy(exp);
             return new HierarchyCurrentMemberFunDef.CalcImpl(
-                    new DummyExp(TypeUtil.toMemberType(type)), hierarchyCalc);
+                new DummyExp(TypeUtil.toMemberType(type)), hierarchyCalc);
         } else if (type instanceof NullType) {
             throw MondrianResource.instance().NullNotSupported.ex();
         }
@@ -167,8 +170,8 @@ public class AbstractExpCompiler implements ExpCompiler {
             // <Member> --> <Member>.Level
             final MemberCalc memberCalc = compileMember(exp);
             return new MemberLevelFunDef.CalcImpl(
-                    new DummyExp(LevelType.forType(type)),
-                    memberCalc);
+                new DummyExp(LevelType.forType(type)),
+                memberCalc);
         }
         assert type instanceof LevelType;
         return (LevelCalc) compile(exp);
@@ -180,7 +183,7 @@ public class AbstractExpCompiler implements ExpCompiler {
             final HierarchyCalc hierarchyCalc = compileHierarchy(exp);
             return new HierarchyDimensionFunDef.CalcImpl(
                 new DummyExp(new DimensionType(type.getDimension())),
-                    hierarchyCalc);
+                hierarchyCalc);
         }
         assert type instanceof DimensionType : type;
         return (DimensionCalc) compile(exp);
@@ -261,6 +264,7 @@ public class AbstractExpCompiler implements ExpCompiler {
     }
 
     public ListCalc compileList(Exp exp, boolean mutable) {
+        assert exp.getType() instanceof SetType : "must be a set: " + exp;
         final List<ResultStyle> resultStyleList;
         if (mutable) {
             resultStyleList = ResultStyle.MUTABLELIST_ONLY;
@@ -395,34 +399,34 @@ public class AbstractExpCompiler implements ExpCompiler {
             MemberType memberType = (MemberType) type;
             MemberCalc calc = compileMember(exp);
             return new MemberValueCalc(
-                    new DummyExp(memberType.getValueType()),
-                    new MemberCalc[] {calc});
+                new DummyExp(memberType.getValueType()),
+                new MemberCalc[] {calc});
         } else if (type instanceof DimensionType) {
             final DimensionCalc dimensionCalc = compileDimension(exp);
             MemberType memberType = MemberType.forType(type);
             final MemberCalc dimensionCurrentMemberCalc =
-                    new DimensionCurrentMemberCalc(
-                            new DummyExp(memberType),
-                            dimensionCalc);
+                new DimensionCurrentMemberCalc(
+                    new DummyExp(memberType),
+                    dimensionCalc);
             return new MemberValueCalc(
-                    new DummyExp(memberType.getValueType()),
-                    new MemberCalc[] {dimensionCurrentMemberCalc});
+                new DummyExp(memberType.getValueType()),
+                new MemberCalc[] {dimensionCurrentMemberCalc});
         } else if (type instanceof HierarchyType) {
             HierarchyType hierarchyType = (HierarchyType) type;
             MemberType memberType =
-                    MemberType.forHierarchy(hierarchyType.getHierarchy());
+                MemberType.forHierarchy(hierarchyType.getHierarchy());
             final HierarchyCalc hierarchyCalc = compileHierarchy(exp);
             final MemberCalc hierarchyCurrentMemberCalc =
-                    new HierarchyCurrentMemberFunDef.CalcImpl(
-                            new DummyExp(memberType), hierarchyCalc);
+                new HierarchyCurrentMemberFunDef.CalcImpl(
+                    new DummyExp(memberType), hierarchyCalc);
             return new MemberValueCalc(
-                    new DummyExp(memberType.getValueType()),
-                    new MemberCalc[] {hierarchyCurrentMemberCalc});
+                new DummyExp(memberType.getValueType()),
+                new MemberCalc[] {hierarchyCurrentMemberCalc});
         } else if (type instanceof TupleType) {
             TupleType tupleType = (TupleType) type;
             TupleCalc tupleCalc = compileTuple(exp);
             final TupleValueCalc scalarCalc = new TupleValueCalc(
-                    new DummyExp(tupleType.getValueType()), tupleCalc);
+                new DummyExp(tupleType.getValueType()), tupleCalc);
             return scalarCalc.optimize();
         } else if (type instanceof ScalarType) {
             if (specific) {
@@ -455,7 +459,26 @@ public class AbstractExpCompiler implements ExpCompiler {
 
         // Compile the expression only AFTER the parameter has been
         // registered with a slot. Otherwise a cycle is possible.
-        Calc calc = parameter.getDefaultExp().accept(this);
+        final Type type = parameter.getType();
+        Exp defaultExp = parameter.getDefaultExp();
+        Calc calc;
+        if (type instanceof ScalarType) {
+            if (!defaultExp.getType().equals(type)) {
+                defaultExp =
+                    new UnresolvedFunCall(
+                        "Cast",
+                        Syntax.Cast,
+                        new Exp[] {
+                            defaultExp,
+                            Literal.createSymbol(
+                                Category.instance.getName(
+                                    TypeUtil.typeToCategory(type)))});
+                defaultExp = getValidator().validate(defaultExp, true);
+            }
+            calc = compileScalar(defaultExp, true);
+        } else {
+            calc = compileAs(defaultExp, type, resultStyles);
+        }
         slot2.setDefaultValueCalc(calc);
         return slot2;
     }
@@ -588,7 +611,7 @@ public class AbstractExpCompiler implements ExpCompiler {
                 MondrianResource.instance()
                     .CannotImplicitlyConvertDimensionToHierarchy
                     .ex(
-                        dimension.getName()));
+                    dimension.getName()));
         }
     }
 
@@ -612,7 +635,7 @@ public class AbstractExpCompiler implements ExpCompiler {
 
         public Member evaluateMember(Evaluator evaluator) {
             Dimension dimension =
-                    dimensionCalc.evaluateDimension(evaluator);
+                dimensionCalc.evaluateDimension(evaluator);
             return evaluator.getContext(dimension);
         }
 

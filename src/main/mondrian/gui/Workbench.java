@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/gui/Workbench.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/gui/Workbench.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -42,7 +42,7 @@ import java.util.List;
 
 /**
  * @author sean
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/gui/Workbench.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/gui/Workbench.java#3 $
  */
 public class Workbench extends javax.swing.JFrame {
 
@@ -117,7 +117,7 @@ public class Workbench extends javax.swing.JFrame {
 
         ImageIcon icon = new javax.swing.ImageIcon(
             myClassLoader.getResource(
-                getResourceConverter().getGUIReference("cube")));
+                getResourceConverter().getGUIReference("productIcon")));
 
         this.setIconImage(icon.getImage());
     }

@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/NumericType.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/NumericType.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -17,7 +17,7 @@ import mondrian.olap.Hierarchy;
  *
  * @author jhyde
  * @since Feb 17, 2005
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/NumericType.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/NumericType.java#3 $
  */
 public class NumericType extends ScalarType {
 
@@ -35,6 +35,11 @@ public class NumericType extends ScalarType {
     public boolean equals(Object obj) {
         return obj instanceof NumericType
             && toString().equals(obj.toString());
+    }
+
+    public boolean isInstance(Object value) {
+        return value instanceof Number
+            || value instanceof Character;
     }
 }
 

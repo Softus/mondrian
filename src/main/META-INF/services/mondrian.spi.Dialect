@@ -3,6 +3,7 @@ mondrian.spi.impl.Db2Dialect
 mondrian.spi.impl.Db2OldAs400Dialect
 mondrian.spi.impl.DerbyDialect
 mondrian.spi.impl.FirebirdDialect
+mondrian.spi.impl.HsqldbDialect
 mondrian.spi.impl.InfobrightDialect
 mondrian.spi.impl.InformixDialect
 mondrian.spi.impl.IngresDialect
@@ -10,6 +11,7 @@ mondrian.spi.impl.InterbaseDialect
 mondrian.spi.impl.LucidDbDialect
 mondrian.spi.impl.MicrosoftSqlServerDialect
 mondrian.spi.impl.MySqlDialect
+mondrian.spi.impl.NeoviewDialect
 mondrian.spi.impl.NetezzaDialect
 mondrian.spi.impl.OracleDialect
 mondrian.spi.impl.PostgreSqlDialect

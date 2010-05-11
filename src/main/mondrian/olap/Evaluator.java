@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Evaluator.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Evaluator.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -24,7 +24,7 @@ import java.util.Date;
  *
  * @author jhyde
  * @since 27 July, 2001
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Evaluator.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Evaluator.java#3 $
  */
 public interface Evaluator {
 
@@ -207,11 +207,11 @@ public interface Evaluator {
     /**
      * Returns an evaluator for a named set.
      *
-     * @param name Name of set
-     * @param exp Expression to compute named set
+     * @param namedSet Named set
+     * @param create Whether to create evaluator if not found
      * @return Evaluator of named set
      */
-    NamedSetEvaluator getNamedSetEvaluator(String name, Exp exp);
+    NamedSetEvaluator getNamedSetEvaluator(NamedSet namedSet, boolean create);
 
     /**
      * Returns an array of the members which make up the current context.

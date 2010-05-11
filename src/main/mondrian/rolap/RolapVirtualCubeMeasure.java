@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapVirtualCubeMeasure.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapVirtualCubeMeasure.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -9,15 +9,16 @@
 */
 package mondrian.rolap;
 
-import mondrian.olap.MondrianDef;
-import mondrian.olap.CellFormatter;
+import mondrian.olap.*;
+
+import java.util.Map;
 
 /**
  * Measure which is defined in a virtual cube, and based on a stored measure
  * in one of the virtual cube's base cubes.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapVirtualCubeMeasure.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapVirtualCubeMeasure.java#3 $
  * @since Aug 18, 2006
  */
 public class RolapVirtualCubeMeasure
@@ -28,14 +29,17 @@ public class RolapVirtualCubeMeasure
      * The measure in the underlying cube.
      */
     private final RolapStoredMeasure cubeMeasure;
+    private final Map<String, Annotation> annotationMap;
 
     public RolapVirtualCubeMeasure(
         RolapMember parentMember,
         RolapLevel level,
-        RolapStoredMeasure cubeMeasure)
+        RolapStoredMeasure cubeMeasure,
+        Map<String, Annotation> annotationMap)
     {
         super(parentMember, level, cubeMeasure.getName());
         this.cubeMeasure = cubeMeasure;
+        this.annotationMap = annotationMap;
     }
 
     public Object getPropertyValue(String propertyName, boolean matchCase) {
@@ -68,6 +72,10 @@ public class RolapVirtualCubeMeasure
 
     public CellFormatter getFormatter() {
         return cubeMeasure.getFormatter();
+    }
+
+    public Map<String, Annotation> getAnnotationMap() {
+        return annotationMap;
     }
 }
 

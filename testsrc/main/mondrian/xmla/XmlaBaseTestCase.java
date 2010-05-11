@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/xmla/XmlaBaseTestCase.java#2 $
+// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/xmla/XmlaBaseTestCase.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -38,7 +38,7 @@ import java.util.*;
  * functionality, for example LAST_SCHEMA_UPDATE
  *
  * @author mkambol
- * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/xmla/XmlaBaseTestCase.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/xmla/XmlaBaseTestCase.java#3 $
  */
 public abstract class XmlaBaseTestCase extends FoodMartTestCase {
     protected static final String LAST_SCHEMA_UPDATE_DATE_PROP =
@@ -191,7 +191,7 @@ public abstract class XmlaBaseTestCase extends FoodMartTestCase {
     }
 
     protected Document fileToDocument(String filename)
-        throws IOException , SAXException
+        throws IOException, SAXException
     {
         String s = getDiffRepos().expand(null, filename);
         if (s.equals(filename)) {

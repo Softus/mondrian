@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/CacheControlImpl.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/CacheControlImpl.java#4 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
-// Copyright (C) 2006-2009 Julian Hyde and others
+// Copyright (C) 2006-2010 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -23,7 +23,7 @@ import org.eigenbase.util.property.BooleanProperty;
  * Implementation of {@link CacheControl} API.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/CacheControlImpl.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/CacheControlImpl.java#4 $
  * @since Sep 27, 2006
  */
 public class CacheControlImpl implements CacheControl {
@@ -221,8 +221,8 @@ public class CacheControlImpl implements CacheControl {
         if (RolapSchema.class.isInstance(schema)) {
             RolapSchema.Pool.instance().remove((RolapSchema)schema);
         } else {
-            throw new UnsupportedOperationException(schema.getClass().getName()+
-                    " cannot be flushed");
+            throw new UnsupportedOperationException(
+                schema.getClass().getName() + " cannot be flushed");
         }
     }
 
@@ -639,7 +639,7 @@ public class CacheControlImpl implements CacheControl {
         if (prop.get()) {
             throw new IllegalArgumentException(
                 "Member cache control operations are not allowed unless "
-                    + "property " + prop.getPath() + " is false");
+                + "property " + prop.getPath() + " is false");
         }
         synchronized (MEMBER_CACHE_LOCK) {
             final List<CellRegion> cellRegionList =

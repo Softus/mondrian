@@ -15,7 +15,7 @@ import java.sql.SQLException;
  * Implementation of {@link mondrian.spi.Dialect} for the PostgreSQL database.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/spi/impl/PostgreSqlDialect.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/spi/impl/PostgreSqlDialect.java#4 $
  * @since Nov 23, 2008
  */
 public class PostgreSqlDialect extends JdbcDialectImpl {
@@ -36,6 +36,16 @@ public class PostgreSqlDialect extends JdbcDialectImpl {
 
     public boolean requiresAliasForFromQuery() {
         return true;
+    }
+
+    @Override
+    protected String generateOrderByNullsLast(String expr, boolean ascending) {
+        // Support for "ORDER BY ... NULLS LAST" was introduced in Postgres 8.3.
+        if (productVersion.compareTo("8.3") >= 0) {
+            return generateOrderByNullsLastAnsi(expr, ascending);
+        } else {
+            return super.generateOrderByNullsLast(expr, ascending);
+        }
     }
 }
 

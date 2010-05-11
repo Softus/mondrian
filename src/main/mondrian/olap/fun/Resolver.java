@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/Resolver.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/Resolver.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -22,7 +22,7 @@ import java.util.List;
  *
  * @author jhyde
  * @since 3 March, 2002
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/Resolver.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/Resolver.java#3 $
  */
 public interface Resolver {
     /**
@@ -112,6 +112,15 @@ public interface Resolver {
          * dimension to a hierarchy is valid if is only one hierarchy.
          */
         void checkValid();
+
+        /**
+         * Applies this conversion to its argument, modifying the argument list
+         * in place.
+         *
+         * @param validator Validator
+         * @param args Argument list
+         */
+        void apply(Validator validator, List<Exp> args);
     }
 }
 

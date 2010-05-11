@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/aggmatcher/JdbcSchema.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/aggmatcher/JdbcSchema.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -51,7 +51,7 @@ import java.util.*;
  * {@link SQLException}, rats.
  *
  * @author Richard M. Emberson
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/aggmatcher/JdbcSchema.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/aggmatcher/JdbcSchema.java#3 $
  */
 public class JdbcSchema {
     private static final Logger LOGGER =
@@ -650,6 +650,14 @@ public class JdbcSchema {
             }
 
             /**
+             * flushes all star usage references
+             */
+            public void flushUsages() {
+                usages.clear();
+                usageTypes.clear();
+            }
+
+            /**
              * Return true if the column has at least one usage.
              */
             public boolean hasUsage() {
@@ -822,6 +830,16 @@ public class JdbcSchema {
 
         public void load() throws SQLException {
             loadColumns();
+        }
+
+        /**
+         * flushes all star usage references
+         */
+        public void flushUsages() {
+            tableUsageType = TableUsageType.UNKNOWN;
+            for (Table.Column col : getColumns()) {
+                col.flushUsages();
+            }
         }
 
         /**
@@ -1078,7 +1096,7 @@ public class JdbcSchema {
         loadTables();
     }
 
-    protected void clear() {
+    protected synchronized void clear() {
         // keep the DataSource, clear/reset everything else
         allTablesLoaded = false;
         schema = null;
@@ -1143,6 +1161,15 @@ public class JdbcSchema {
      */
     public synchronized Collection<Table> getTables() {
         return getTablesMap().values();
+    }
+
+    /**
+     * flushes all star usage references
+     */
+    public synchronized void flushUsages() {
+        for (Table table : getTables()) {
+            table.flushUsages();
+        }
     }
 
     /**

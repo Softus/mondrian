@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/CaseTestFunDef.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/CaseTestFunDef.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -33,7 +33,7 @@ import java.util.ArrayList;
  * @see CaseMatchFunDef
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/CaseTestFunDef.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/CaseTestFunDef.java#3 $
  * @since Mar 23, 2006
  */
 class CaseTestFunDef extends FunDefBase {
@@ -103,16 +103,20 @@ class CaseTestFunDef extends FunDefBase {
             int returnType = args[1].getCategory();
             for (int i = 0; i < clauseCount; i++) {
                 if (!validator.canConvert(
-                    args[j++], Category.Logical, conversions))
+                    j, args[j++], Category.Logical, conversions))
                 {
                     mismatchingArgs++;
                 }
-                if (!validator.canConvert(args[j++], returnType, conversions)) {
+                if (!validator.canConvert(
+                    j, args[j++], returnType, conversions))
+                {
                     mismatchingArgs++;
                 }
             }
             if (j < args.length) {
-                if (!validator.canConvert(args[j++], returnType, conversions)) {
+                if (!validator.canConvert(
+                    j, args[j++], returnType, conversions))
+                {
                     mismatchingArgs++;
                 }
             }

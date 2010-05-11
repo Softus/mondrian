@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/xmla/XmlaBasicTest.java#2 $
+// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/xmla/XmlaBasicTest.java#5 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -22,7 +22,7 @@ import java.util.Properties;
  * Test XML/A functionality.
  *
  * @author Richard M. Emberson
- * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/xmla/XmlaBasicTest.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/xmla/XmlaBasicTest.java#5 $
  */
 public class XmlaBasicTest extends XmlaBaseTestCase {
 
@@ -520,6 +520,30 @@ System.out.println("XmlaBasicTest.getServletCallbackClass");
         doTest(requestType, props, TestContext.instance());
     }
 
+    /**
+     * Tests an 'DRILLTHROUGH SELECT' statement with a zero-dimensional query,
+     * that is, a query with 'SELECT FROM', and no axes.
+     *
+     * @throws Exception on error
+     */
+    public void testDrillThroughZeroDimensionalQuery() throws Exception {
+        // NOTE: this test uses the filter method to adjust the expected result
+        // for different databases
+        if (!MondrianProperties.instance().EnableTotalCount.booleanValue()) {
+            return;
+        }
+        String requestType = "EXECUTE";
+        Properties props = new Properties();
+        props.setProperty(REQUEST_TYPE_PROP, requestType);
+        props.setProperty(CATALOG_PROP, CATALOG);
+        props.setProperty(CATALOG_NAME_PROP, CATALOG);
+        props.setProperty(CUBE_NAME_PROP, SALES_CUBE);
+        props.setProperty(FORMAT_PROP, FORMAT_TABLULAR);
+        props.setProperty(DATA_SOURCE_INFO_PROP, DATA_SOURCE_INFO);
+
+        doTest(requestType, props, TestContext.instance());
+    }
+
     protected String filter(
         String testCaseName,
         String filename,
@@ -553,11 +577,13 @@ System.out.println("XmlaBasicTest.getServletCallbackClass");
                     " sql:field=\"Unit Sales\" type=\"xsd:double\"",
                     " sql:field=\"Unit Sales\" type=\"xsd:decimal\"");
                 break;
-            case MYSQL:
-            case INFOBRIGHT:
             case DERBY:
-            case TERADATA:
+            case HSQLDB:
+            case INFOBRIGHT:
             case NETEZZA:
+            case NEOVIEW:
+            case MYSQL:
+            case TERADATA:
                 content = Util.replace(
                     content,
                     " sql:field=\"Store Sqft\" type=\"xsd:double\"",

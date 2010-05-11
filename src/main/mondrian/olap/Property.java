@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Property.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Property.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -55,7 +55,7 @@ import java.util.HashMap;
  * <li>{@link #VALUE}</li>
  * </ul>
  *
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Property.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Property.java#3 $
  * @author jhyde
  */
 public class Property extends EnumeratedValues.BasicValue {
@@ -569,7 +569,6 @@ public class Property extends EnumeratedValues.BasicValue {
             "DISPLAY_INFO", Datatype.TYPE_NUMERIC, DISPLAY_INFO_ORDINAL, false,
             true, false, "Display instruction of a member for XML/A");
 
-
      public static final int MEMBER_KEY_ORDINAL = 45;
     /**
      * Definition of the property which
@@ -610,6 +609,18 @@ public class Property extends EnumeratedValues.BasicValue {
         new Property(
             "$scenario", Datatype.TYPE_OTHER,
             SCENARIO_ORDINAL, true, true, false, null);
+
+    public static final int DISPLAY_FOLDER_ORDINAL = 49;
+    /**
+     * Definition of the property which
+     * holds the DISPLAY_FOLDER. For measures, a client tool may use this
+     * folder to display measures in groups. This property has no meaning for
+     * other members.
+     */
+    public static final Property DISPLAY_FOLDER =
+        new Property(
+            "DISPLAY_FOLDER", Datatype.TYPE_STRING, DISPLAY_FOLDER_ORDINAL,
+            false, true, false, "Folder in which to display a measure");
 
     /**
      * The various property names which define a format string.
@@ -749,6 +760,7 @@ public class Property extends EnumeratedValues.BasicValue {
                 KEY,
                 UNIQUE_NAME_WITHOUT_HIERARCHY,
                 SCENARIO,
+                DISPLAY_FOLDER,
             });
 
     static {

@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapCalculatedMember.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapCalculatedMember.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -15,6 +15,9 @@ package mondrian.rolap;
 
 import mondrian.olap.*;
 
+import java.util.Map;
+import java.util.Collections;
+
 /**
  * A <code>RolapCalculatedMember</code> is a member based upon a
  * {@link Formula}.
@@ -24,10 +27,11 @@ import mondrian.olap.*;
  *
  * @author jhyde
  * @since 26 August, 2001
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapCalculatedMember.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapCalculatedMember.java#3 $
  */
 public class RolapCalculatedMember extends RolapMember {
     private final Formula formula;
+    private Map<String, Annotation> annotationMap;
 
     /**
      * Creates a RolapCalculatedMember.
@@ -47,6 +51,7 @@ public class RolapCalculatedMember extends RolapMember {
         // overrides MEASURE.
         super(parentMember, level, name, null, MemberType.FORMULA);
         this.formula = formula;
+        this.annotationMap = Collections.emptyMap();
     }
 
     // override RolapMember
@@ -86,6 +91,16 @@ public class RolapCalculatedMember extends RolapMember {
 
     public Formula getFormula() {
         return formula;
+    }
+
+    @Override
+    public Map<String, Annotation> getAnnotationMap() {
+        return annotationMap;
+    }
+
+    void setAnnotationMap(Map<String, Annotation> annotationMap) {
+        assert annotationMap != null;
+        this.annotationMap = annotationMap;
     }
 }
 

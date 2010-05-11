@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/olap/CustomizedParserTest.java#2 $
+// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/olap/CustomizedParserTest.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -18,7 +18,7 @@ import java.util.*;
  * Tests a customized MDX Parser.
  *
  * @author Rushan Chen
- * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/olap/CustomizedParserTest.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/olap/CustomizedParserTest.java#3 $
  */
 public class CustomizedParserTest extends FoodMartTestCase {
 
@@ -287,7 +287,7 @@ public class CustomizedParserTest extends FoodMartTestCase {
         } catch (Throwable e) {
             checkErrorMsg(
                 e,
-                "Mondrian Error:No function matches signature 'CrossJoin(<Member>, <Member>)'");
+                "Mondrian Error:Tuple contains more than one member of dimension '[Measures]'.");
         }
     }
 

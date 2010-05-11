@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/ExtractFunDef.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/ExtractFunDef.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -26,7 +26,7 @@ import java.util.*;
  * &lt;Dimension&gt;...])</code></blockquote>
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/ExtractFunDef.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/ExtractFunDef.java#3 $
  * @since Jun 10, 2007
  */
 class ExtractFunDef extends FunDefBase {
@@ -44,14 +44,12 @@ class ExtractFunDef extends FunDefBase {
             if (args.length < 2) {
                 return null;
             }
-            if (!validator.canConvert(
-                args[0], Category.Set, conversions))
-            {
+            if (!validator.canConvert(0, args[0], Category.Set, conversions)) {
                 return null;
             }
             for (int i = 1; i < args.length; ++i) {
                 if (!validator.canConvert(
-                    args[i], Category.Dimension, conversions))
+                    0, args[i], Category.Dimension, conversions))
                 {
                     return null;
                 }

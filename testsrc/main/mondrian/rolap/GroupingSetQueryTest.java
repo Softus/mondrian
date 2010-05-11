@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/rolap/GroupingSetQueryTest.java#2 $
+// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/rolap/GroupingSetQueryTest.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
-// Copyright (C) 2004-2009 Julian Hyde and others
+// Copyright (C) 2004-2010 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -24,7 +24,7 @@ import mondrian.spi.Dialect;
  * construct, if the DBMS supports it.
  *
  * @author Thiyagu
- * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/rolap/GroupingSetQueryTest.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/rolap/GroupingSetQueryTest.java#3 $
  * @since 08-Jun-2007
  */
 public class GroupingSetQueryTest extends BatchTestCase {
@@ -108,14 +108,14 @@ public class GroupingSetQueryTest extends BatchTestCase {
             new SqlPattern(
                 ORACLE_TERADATA,
                 "select sum(\"agg_c_10_sales_fact_1997\".\"unit_sales\") as \"m0\""
-                    + " from \"agg_c_10_sales_fact_1997\" \"agg_c_10_sales_fact_1997\"",
+                + " from \"agg_c_10_sales_fact_1997\" \"agg_c_10_sales_fact_1997\"",
                 null),
             new SqlPattern(
                 ORACLE_TERADATA,
                 "select \"agg_g_ms_pcat_sales_fact_1997\".\"gender\" as \"c0\","
-                    + " sum(\"agg_g_ms_pcat_sales_fact_1997\".\"unit_sales\") as \"m0\" "
-                    + "from \"agg_g_ms_pcat_sales_fact_1997\" \"agg_g_ms_pcat_sales_fact_1997\" "
-                    + "group by \"agg_g_ms_pcat_sales_fact_1997\".\"gender\"",
+                + " sum(\"agg_g_ms_pcat_sales_fact_1997\".\"unit_sales\") as \"m0\" "
+                + "from \"agg_g_ms_pcat_sales_fact_1997\" \"agg_g_ms_pcat_sales_fact_1997\" "
+                + "group by \"agg_g_ms_pcat_sales_fact_1997\".\"gender\"",
                 null)
         };
 

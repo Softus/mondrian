@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/test/TestContext.java#2 $
+// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/test/TestContext.java#5 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -14,11 +14,15 @@ package mondrian.test;
 
 import junit.framework.Assert;
 import junit.framework.ComparisonFailure;
+
 import mondrian.calc.*;
 import mondrian.olap.*;
 import mondrian.olap.Connection;
 import mondrian.olap.DriverManager;
 import mondrian.olap.Member;
+import mondrian.olap.Position;
+import mondrian.olap.Cell;
+import mondrian.olap.Axis;
 import mondrian.olap.fun.FunUtil;
 import mondrian.resource.MondrianResource;
 import mondrian.rolap.RolapConnectionProperties;
@@ -37,8 +41,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.lang.reflect.*;
 
-import org.olap4j.OlapWrapper;
-import org.olap4j.OlapConnection;
+import org.olap4j.*;
 import org.olap4j.impl.CoordinateIterator;
 
 /**
@@ -55,7 +58,7 @@ import org.olap4j.impl.CoordinateIterator;
  *
  * @author jhyde
  * @since 29 March, 2002
- * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/test/TestContext.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/test/TestContext.java#5 $
  */
 public class TestContext {
     private static TestContext instance; // the singleton
@@ -201,6 +204,13 @@ public class TestContext {
      */
     public Connection getConnection() {
         return getFoodMartConnection();
+    }
+
+    public synchronized void flushSchemaCache() {
+        // it's pointless to flush the schema cache if we
+        // have a handle on the connection object already
+        clearConnection();
+        getConnection().getCacheControl(null).flushSchemaCache();
     }
 
     public synchronized void clearConnection() {
@@ -413,7 +423,7 @@ public class TestContext {
         String memberDefs)
     {
         return getFoodMartSchemaSubstitutingCube(
-            cubeName, dimensionDefs, memberDefs, null);
+            cubeName, dimensionDefs, null, memberDefs, null);
     }
 
     /**
@@ -423,6 +433,7 @@ public class TestContext {
     public String getFoodMartSchemaSubstitutingCube(
         String cubeName,
         String dimensionDefs,
+        String measureDefs,
         String memberDefs,
         String namedSetDefs)
     {
@@ -448,6 +459,17 @@ public class TestContext {
             int i = s.indexOf("<Dimension ", h);
             s = s.substring(0, i)
                 + dimensionDefs
+                + s.substring(i);
+        }
+
+        // Add measure definitions, if specified.
+        if (measureDefs != null) {
+            int i = s.indexOf("<Measure", h);
+            if (i < 0 || i > end) {
+                i = end;
+            }
+            s = s.substring(0, i)
+                + measureDefs
                 + s.substring(i);
         }
 
@@ -496,6 +518,24 @@ public class TestContext {
     }
 
     /**
+     * Executes a query using olap4j.
+     */
+    public CellSet executeOlap4jQuery(String queryString) throws SQLException {
+        OlapConnection connection = getOlap4jConnection();
+        queryString = upgradeQuery(queryString);
+        OlapStatement stmt = connection.createStatement();
+        final CellSet cellSet = stmt.executeOlapQuery(queryString);
+
+        // If we're deep testing, check that we never return the dummy null
+        // value when cells are null. TestExpDependencies isn't the perfect
+        // switch to enable this, but it will do for now.
+        if (MondrianProperties.instance().TestExpDependencies.booleanValue()) {
+            assertCellSetValid(cellSet);
+        }
+        return cellSet;
+    }
+
+    /**
      * Checks that a {@link Result} is valid.
      *
      * @param result Query result
@@ -536,6 +576,47 @@ public class TestContext {
     }
 
     /**
+     * Checks that a {@link CellSet} is valid.
+     *
+     * @param cellSet Cell set
+     */
+    private void assertCellSetValid(CellSet cellSet) {
+        for (org.olap4j.Cell cell : cellIter(cellSet)) {
+            final Object value = cell.getValue();
+
+            // Check that the dummy value used to represent null cells never
+            // leaks into the outside world.
+            Assert.assertNotSame(value, Util.nullValue);
+            Assert.assertFalse(
+                value instanceof Number
+                && ((Number) value).doubleValue() == FunUtil.DoubleNull);
+
+            // Similarly empty values.
+            Assert.assertNotSame(value, Util.EmptyValue);
+            Assert.assertFalse(
+                value instanceof Number
+                && ((Number) value).doubleValue() == FunUtil.DoubleEmpty);
+
+            // Cells should be null if and only if they are null or empty.
+            if (cell.getValue() == null) {
+                Assert.assertTrue(cell.isNull());
+            } else {
+                Assert.assertFalse(cell.isNull());
+            }
+        }
+
+        // There should be no null members.
+        for (CellSetAxis axis : cellSet.getAxes()) {
+            for (org.olap4j.Position position : axis.getPositions()) {
+                for (org.olap4j.metadata.Member member : position.getMembers())
+                {
+                    Assert.assertNotNull(member);
+                }
+            }
+        }
+    }
+
+    /**
      * Returns an iterator over cells in a result.
      */
     static Iterable<Cell> cellIter(final Result result) {
@@ -566,6 +647,47 @@ public class TestContext {
         };
     }
 
+    /**
+     * Returns an iterator over cells in an olap4j cell set.
+     */
+    static Iterable<org.olap4j.Cell> cellIter(final CellSet cellSet) {
+        return new Iterable<org.olap4j.Cell>() {
+            public Iterator<org.olap4j.Cell> iterator() {
+                int[] axisDimensions = new int[cellSet.getAxes().size()];
+                int k = 0;
+                for (CellSetAxis axis : cellSet.getAxes()) {
+                    axisDimensions[k++] = axis.getPositions().size();
+                }
+                final CoordinateIterator
+                    coordIter = new CoordinateIterator(axisDimensions);
+                return new Iterator<org.olap4j.Cell>() {
+                    public boolean hasNext() {
+                        return coordIter.hasNext();
+                    }
+
+                    public org.olap4j.Cell next() {
+                        final int[] ints = coordIter.next();
+                        final List<Integer> list =
+                            new AbstractList<Integer>() {
+                                public Integer get(int index) {
+                                    return ints[index];
+                                }
+
+                                public int size() {
+                                    return ints.length;
+                                }
+                            };
+                        return cellSet.getCell(
+                            list);
+                    }
+
+                    public void remove() {
+                        throw new UnsupportedOperationException();
+                    }
+                };
+            }
+        };
+    }
 
     /**
      * Executes a query, and asserts that it throws an exception which contains
@@ -1091,7 +1213,7 @@ public class TestContext {
      * Converts a {@link mondrian.olap.Result} to text in traditional format.
      *
      * <p>For more exotic formats, see
-     * {@link org.olap4j.query.CellSetFormatter}.
+     * {@link org.olap4j.layout.CellSetFormatter}.
      *
      * @param result Query result
      * @return Result as text
@@ -1105,20 +1227,20 @@ public class TestContext {
     }
 
     /**
-     * Returns a test context whose {@link #getConnection()} methods always
+     * Returns a test context whose {@link #getOlap4jConnection()} method always
      * returns the same connection object, and which has an active
-     * {@link mondrian.olap.Scenario}, thus enabling writeback.
+     * {@link org.olap4j.Scenario}, thus enabling writeback.
      *
      * @return Test context with active scenario
      */
     public TestContext withScenario() {
         return new DelegatingTestContext(this)
         {
-            Connection connection;
+            OlapConnection connection;
 
-            public Connection getConnection() {
+            public OlapConnection getOlap4jConnection() throws SQLException {
                 if (connection == null) {
-                    connection = super.getConnection();
+                    connection = super.getOlap4jConnection();
                     connection.setScenario(
                         connection.createScenario());
                 }
@@ -1605,7 +1727,7 @@ public class TestContext {
         final String memberDefs)
     {
         return createSubstitutingCube(
-            cubeName, dimensionDefs, memberDefs, null);
+            cubeName, dimensionDefs, null, memberDefs, null);
     }
 
 
@@ -1615,6 +1737,7 @@ public class TestContext {
      *
      * @param cubeName Name of a cube in the schema (cube must exist)
      * @param dimensionDefs String defining dimensions, or null
+     * @param measureDefs String defining measures, or null
      * @param memberDefs String defining calculated members, or null
      * @param namedSetDefs String defining named set definitions, or null
      * @return TestContext with modified cube defn
@@ -1622,6 +1745,7 @@ public class TestContext {
     public static TestContext createSubstitutingCube(
         final String cubeName,
         final String dimensionDefs,
+        final String measureDefs,
         final String memberDefs,
         final String namedSetDefs)
     {
@@ -1629,7 +1753,8 @@ public class TestContext {
             public Util.PropertyList getFoodMartConnectionProperties() {
                 final String schema =
                     getFoodMartSchemaSubstitutingCube(
-                        cubeName, dimensionDefs, memberDefs, namedSetDefs);
+                        cubeName, dimensionDefs,
+                        measureDefs, memberDefs, namedSetDefs);
                 Util.PropertyList properties =
                     super.getFoodMartConnectionProperties();
                 properties.put(

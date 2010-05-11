@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/test/clearview/ClearViewBase.java#2 $
+// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/test/clearview/ClearViewBase.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -35,7 +35,7 @@ import java.lang.reflect.*;
  * @author Khanh Vu
  *
  * @since Jan 25, 2007
- * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/test/clearview/ClearViewBase.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/test/clearview/ClearViewBase.java#3 $
  */
 public abstract class ClearViewBase extends BatchTestCase {
 
@@ -97,6 +97,12 @@ public abstract class ClearViewBase extends BatchTestCase {
                 (! (customDimensions.equals("")
                     || customDimensions.equals("${customDimensions}")))
                 ? customDimensions : null;
+            String measures = diffRepos.expand(
+                null, "${measures}");
+            measures =
+                (! (measures.equals("")
+                    || measures.equals("${measures}")))
+                ? measures : null;
             String calculatedMembers = diffRepos.expand(
                 null, "${calculatedMembers}");
             calculatedMembers =
@@ -109,8 +115,9 @@ public abstract class ClearViewBase extends BatchTestCase {
                 (! (namedSets.equals("")
                     || namedSets.equals("${namedSets}")))
                 ? namedSets : null;
-            testContext = testContext.createSubstitutingCube(
-                cubeName, customDimensions, calculatedMembers, namedSets);
+            testContext = TestContext.createSubstitutingCube(
+                cubeName, customDimensions, measures, calculatedMembers,
+                namedSets);
         }
 
         // Set some properties to match the way we configure them
@@ -121,7 +128,7 @@ public abstract class ClearViewBase extends BatchTestCase {
 
         try {
             String mdx = diffRepos.expand(null, "${mdx}");
-            String result = Util.nl + testContext.toString(
+            String result = Util.nl + TestContext.toString(
                 testContext.executeQuery(mdx));
             diffRepos.assertEquals("result", "${result}", result);
         } finally {
@@ -175,10 +182,9 @@ public abstract class ClearViewBase extends BatchTestCase {
             testCaseName, "expectedSql", dialect.name());
         if (sql != null) {
             sql = sql.replaceAll("[ \t\n\f\r]+", " ").trim();
-            SqlPattern[] patterns = {
+            return new SqlPattern[]{
                 new SqlPattern(dialect, sql, null)
             };
-            return patterns;
         }
         return null;
     }

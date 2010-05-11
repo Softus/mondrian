@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/LevelBase.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/LevelBase.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -20,17 +20,16 @@ import mondrian.resource.MondrianResource;
  *
  * @author jhyde
  * @since 6 August, 2001
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/LevelBase.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/LevelBase.java#3 $
  */
 public abstract class LevelBase
     extends OlapElementBase
     implements Level
 {
-
     protected final Hierarchy hierarchy;
     protected final String name;
     protected final String uniqueName;
-    protected String description;
+    protected final String description;
     protected final int depth;
     protected final LevelType levelType;
     protected MemberFormatter memberFormatter;
@@ -39,11 +38,15 @@ public abstract class LevelBase
     protected LevelBase(
         Hierarchy hierarchy,
         String name,
+        String caption,
+        String description,
         int depth,
         LevelType levelType)
     {
         this.hierarchy = hierarchy;
         this.name = name;
+        this.caption = caption;
+        this.description = description;
         this.uniqueName = Util.makeFqName(hierarchy, name);
         this.depth = depth;
         this.levelType = levelType;

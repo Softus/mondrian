@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap4j/MondrianOlap4jCellSet.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap4j/MondrianOlap4jCellSet.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
-// Copyright (C) 2007-2009 Julian Hyde
+// Copyright (C) 2007-2010 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -31,7 +31,7 @@ import java.net.URL;
  * it is instantiated using {@link Factory#newCellSet}.</p>
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap4j/MondrianOlap4jCellSet.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap4j/MondrianOlap4jCellSet.java#3 $
  * @since May 24, 2007
  */
 abstract class MondrianOlap4jCellSet implements CellSet {
@@ -141,8 +141,8 @@ abstract class MondrianOlap4jCellSet implements CellSet {
         if (ordinal < 0 || ordinal >= modulo) {
             throw new IndexOutOfBoundsException(
                 "Cell ordinal " + ordinal
-                    + ") lies outside CellSet bounds ("
-                    + getBoundsAsString() + ")");
+                + ") lies outside CellSet bounds ("
+                + getBoundsAsString() + ")");
         }
         return pos;
     }
@@ -230,9 +230,9 @@ abstract class MondrianOlap4jCellSet implements CellSet {
             if (coordinate < 0 || coordinate >= axis.getPositionCount()) {
                 throw new IndexOutOfBoundsException(
                     "Coordinate " + coordinate
-                        + " of axis " + k
-                        + " is out of range ("
-                        + getBoundsAsString() + ")");
+                    + " of axis " + k
+                    + " is out of range ("
+                    + getBoundsAsString() + ")");
             }
             ordinal += coordinate * modulo;
             modulo *= axis.getPositionCount();

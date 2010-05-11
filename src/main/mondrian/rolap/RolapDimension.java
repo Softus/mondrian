@@ -1,5 +1,5 @@
 /*
- // $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapDimension.java#2 $
+ // $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapDimension.java#4 $
  // This software is subject to the terms of the Eclipse Public License v1.0
  // Agreement, available at the following URL:
  // http://www.eclipse.org/legal/epl-v10.html.
@@ -16,6 +16,9 @@ package mondrian.rolap;
 import org.apache.log4j.Logger;
 import mondrian.olap.*;
 import mondrian.resource.MondrianResource;
+
+import java.util.Map;
+import java.util.Collections;
 
 /**
  * <code>RolapDimension</code> implements {@link Dimension}for a ROLAP
@@ -54,24 +57,30 @@ import mondrian.resource.MondrianResource;
  *
  * @author jhyde
  * @since 10 August, 2001
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapDimension.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapDimension.java#4 $
  */
 class RolapDimension extends DimensionBase {
 
     private static final Logger LOGGER = Logger.getLogger(RolapDimension.class);
 
     private final Schema schema;
+    private final Map<String, Annotation> annotationMap;
 
     RolapDimension(
         Schema schema,
         String name,
+        String caption,
+        String description,
         DimensionType dimensionType,
-        final boolean highCardinality)
+        final boolean highCardinality,
+        Map<String, Annotation> annotationMap)
     {
         // todo: recognition of a time dimension should be improved
         // allow multiple time dimensions
-        super(name, dimensionType, highCardinality);
+        super(name, caption, description, dimensionType, highCardinality);
+        assert annotationMap != null;
         this.schema = schema;
+        this.annotationMap = annotationMap;
         this.hierarchies = new RolapHierarchy[0];
     }
 
@@ -89,8 +98,11 @@ class RolapDimension extends DimensionBase {
         this(
             schema,
             xmlDimension.name,
+            xmlDimension.caption,
+            xmlDimension.description,
             xmlDimension.getDimensionType(),
-            xmlDimension.highCardinality);
+            xmlDimension.highCardinality,
+            RolapHierarchy.createAnnotationMap(xmlCubeDimension.annotations));
 
         Util.assertPrecondition(schema != null);
 
@@ -176,7 +188,11 @@ class RolapDimension extends DimensionBase {
     }
 
     RolapHierarchy newHierarchy(String subName, boolean hasAll) {
-        RolapHierarchy hierarchy = new RolapHierarchy(this, subName, hasAll);
+        RolapHierarchy hierarchy =
+            new RolapHierarchy(
+                this, subName,
+                caption, description, hasAll,
+                Collections.<String, Annotation>emptyMap());
         this.hierarchies = (RolapHierarchy[])
             RolapUtil.addElement(this.hierarchies, hierarchy);
         return hierarchy;
@@ -201,6 +217,10 @@ class RolapDimension extends DimensionBase {
 
     public Schema getSchema() {
         return schema;
+    }
+
+    public Map<String, Annotation> getAnnotationMap() {
+        return annotationMap;
     }
 }
 

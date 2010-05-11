@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Util.java#3 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Util.java#6 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -39,7 +39,7 @@ import mondrian.util.*;
  *
  * @author jhyde
  * @since 6 August, 2001
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Util.java#3 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Util.java#6 $
  */
 public class Util extends XOMUtil {
 
@@ -730,7 +730,7 @@ public class Util extends XOMUtil {
      * <p>If <code>allowProp</code> is true, also allows property references
      * from valid members, for example
      * <code>[Measures].[Unit Sales].FORMATTED_VALUE</code>.
-     * In this case, the result will be a {@link ResolvedFunCall}.
+     * In this case, the result will be a {@link mondrian.mdx.ResolvedFunCall}.
      *
      * @param q Query expression belongs to
      * @param nameParts Parts of the identifier
@@ -742,23 +742,49 @@ public class Util extends XOMUtil {
         List<Id.Segment> nameParts,
         boolean allowProp)
     {
+        return lookup(q, q.getSchemaReader(true), nameParts, allowProp);
+    }
+
+    /**
+     * Converts an identifier into an expression by resolving its parts into
+     * an OLAP object (dimension, hierarchy, level or member) within the
+     * context of a query.
+     *
+     * <p>If <code>allowProp</code> is true, also allows property references
+     * from valid members, for example
+     * <code>[Measures].[Unit Sales].FORMATTED_VALUE</code>.
+     * In this case, the result will be a {@link ResolvedFunCall}.
+     *
+     * @param q Query expression belongs to
+     * @param schemaReader Schema reader
+     * @param nameParts Parts of the identifier
+     * @param allowProp Whether to allow property references
+     * @return OLAP object or property reference
+     */
+    public static Exp lookup(
+        Query q,
+        SchemaReader schemaReader,
+        List<Id.Segment> nameParts,
+        boolean allowProp)
+    {
         // First, look for a calculated member defined in the query.
         final String fullName = quoteMdxIdentifier(nameParts);
         // Look for any kind of object (member, level, hierarchy,
         // dimension) in the cube. Use a schema reader without restrictions.
-        final SchemaReader schemaReader = q.getSchemaReader(false);
+        final SchemaReader schemaReaderSansAc =
+            schemaReader.withoutAccessControl();
+        final Cube cube = q.getCube();
         OlapElement olapElement =
-            schemaReader.lookupCompound(
-                q.getCube(), nameParts, false, Category.Unknown);
+            schemaReaderSansAc.lookupCompound(
+                cube, nameParts, false, Category.Unknown);
         if (olapElement != null) {
-            final SchemaReader accessConSchemaReader = q.getSchemaReader(true);
-            Role role = accessConSchemaReader.getRole();
+            Role role = schemaReader.getRole();
             if (!role.canAccess(olapElement)) {
                 olapElement = null;
             }
             if (olapElement instanceof Member) {
                 olapElement =
-                    accessConSchemaReader.substitute((Member) olapElement);
+                    schemaReader.substitute((Member) olapElement);
             }
         }
         if (olapElement == null) {
@@ -768,8 +794,8 @@ public class Util extends XOMUtil {
                 final String propertyName =
                     nameParts.get(nameParts.size() - 1).name;
                 olapElement =
-                    schemaReader.lookupCompound(
-                        q.getCube(), namePartsButOne, false, Category.Member);
+                    schemaReaderSansAc.lookupCompound(
+                        cube, namePartsButOne, false, Category.Member);
                 if (olapElement != null
                     && isValidProperty((Member) olapElement, propertyName))
                 {
@@ -789,19 +815,19 @@ public class Util extends XOMUtil {
                 while (nameLen > 0 && olapElement == null) {
                     List<Id.Segment> partialName =
                         nameParts.subList(0, nameLen);
-                    olapElement = schemaReader.lookupCompound(
-                        q.getCube(), partialName, false, Category.Unknown);
+                    olapElement = schemaReaderSansAc.lookupCompound(
+                        cube, partialName, false, Category.Unknown);
                     nameLen--;
                 }
                 if (olapElement != null) {
                     olapElement = olapElement.getHierarchy().getNullMember();
                 } else {
-                    throw MondrianResource.instance().MdxChildObjectNotFound
-                        .ex(fullName, q.getCube().getQualifiedName());
+                    throw MondrianResource.instance().MdxChildObjectNotFound.ex(
+                        fullName, cube.getQualifiedName());
                 }
             } else {
                 throw MondrianResource.instance().MdxChildObjectNotFound.ex(
-                    fullName, q.getCube().getQualifiedName());
+                    fullName, cube.getQualifiedName());
             }
         }
         // keep track of any measure members referenced; these will be used
@@ -1952,6 +1978,57 @@ public class Util extends XOMUtil {
     }
 
     /**
+     * Concatenates one or more arrays.
+     *
+     * <p>Resulting array has same element type as first array. Each arrays may
+     * be empty, but must not be null.
+     *
+     * @param a0 First array
+     * @param as Zero or more subsequent arrays
+     * @return Array containing all elements
+     */
+    public static <T> T[] appendArrays(
+        T[] a0,
+        T[]... as)
+    {
+        int n = a0.length;
+        for (T[] a : as) {
+            n += a.length;
+        }
+        // Would use Arrays.copyOf but only exists in JDK 1.6 and higher.
+        //noinspection unchecked
+        T[] copy =
+            (T[]) Array.newInstance(a0.getClass().getComponentType(), n);
+        System.arraycopy(a0, 0, copy, 0, a0.length);
+        n = a0.length;
+        for (T[] a : as) {
+            System.arraycopy(a, 0, copy, n, a.length);
+            n += a.length;
+        }
+        return copy;
+    }
+
+    /**
+     * Adds an object to the end of an array.  The resulting array is of the
+     * same type (e.g. <code>String[]</code>) as the input array.
+     *
+     * @param a Array
+     * @param o Element
+     * @return New array containing original array plus element
+     *
+     * @see #appendArrays
+     */
+    public static <T> T[] append(T[] a, T o) {
+        Class clazz = a.getClass().getComponentType();
+        // Would use Arrays.copyOf but only exists in JDK 1.6 and higher.
+        //noinspection unchecked
+        T[] a2 = (T[]) Array.newInstance(clazz, a.length + 1);
+        System.arraycopy(a, 0, a2, 0, a.length);
+        a2[a.length] = o;
+        return a2;
+    }
+
+    /**
      * Returns the cumulative amount of time spent accessing the database.
      */
     public static long dbTimeMillis() {
@@ -1984,6 +2061,10 @@ public class Util extends XOMUtil {
         return new Validator() {
             public Query getQuery() {
                 return null;
+            }
+
+            public SchemaReader getSchemaReader() {
+                throw new UnsupportedOperationException();
             }
 
             public Exp validate(Exp exp, boolean scalar) {
@@ -2021,7 +2102,7 @@ public class Util extends XOMUtil {
             }
 
             public boolean canConvert(
-                Exp fromExp,
+                int ordinal, Exp fromExp,
                 int to,
                 List<Resolver.Conversion> conversions)
             {
@@ -2573,6 +2654,33 @@ public class Util extends XOMUtil {
             throw MondrianResource.instance().LimitExceededDuringCrossjoin.ex(
                 resultSize, Integer.MAX_VALUE);
         }
+    }
+
+    /**
+     * Converts an olap4j connect string into a legacy mondrian connect string.
+     *
+     * <p>For example,
+     * "jdbc:mondrian:Datasource=jdbc/SampleData;Catalog=foodmart/FoodMart.xml;"
+     * becomes
+     * "Provider=Mondrian;
+     * Datasource=jdbc/SampleData;Catalog=foodmart/FoodMart.xml;"
+     *
+     * <p>This method is intended to allow legacy applications (such as JPivot
+     * and Mondrian's XMLA server) to continue to create connections using
+     * Mondrian's legacy connection API even when they are handed an olap4j
+     * connect string.
+     *
+     * @param url olap4j connect string
+     * @return mondrian connect string, or null if cannot be converted
+     */
+    public static String convertOlap4jConnectStringToNativeMondrian(
+        String url)
+    {
+        if (url.startsWith("jdbc:mondrian:")) {
+            return "Provider=Mondrian; "
+                   + url.substring("jdbc:mondrian:".length());
+        }
+        return null;
     }
 }
 

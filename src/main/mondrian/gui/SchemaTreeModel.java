@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/gui/SchemaTreeModel.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/gui/SchemaTreeModel.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -15,7 +15,7 @@ import java.util.*;
 
 /**
  * @author sean
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/gui/SchemaTreeModel.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/gui/SchemaTreeModel.java#3 $
  */
 public class SchemaTreeModel extends DefaultTreeModel {
     /**
@@ -65,7 +65,7 @@ public class SchemaTreeModel extends DefaultTreeModel {
             // Return children in this order: fact table, dimensions, measures,
             // calculatedMembers, namedSets
             return new CompoundList<Object>(
-                Collections.singletonList(c.fact),
+                ifList(c.fact),
                 Arrays.asList(c.dimensions),
                 Arrays.asList(c.measures),
                 Arrays.asList(c.calculatedMembers),
@@ -82,7 +82,7 @@ public class SchemaTreeModel extends DefaultTreeModel {
             return new CompoundList<Object>(
                 Arrays.asList(h.levels),
                 Arrays.asList(h.memberReaderParameters),
-                Collections.singletonList(h.relation));
+                ifList(h.relation));
         } else if (parent instanceof MondrianGuiDef.Join) {
             MondrianGuiDef.Join j = (MondrianGuiDef.Join) parent;
             return Arrays.<Object>asList(
@@ -102,10 +102,12 @@ public class SchemaTreeModel extends DefaultTreeModel {
                 (MondrianGuiDef.CalculatedMember) parent;
             return new CompoundList<Object>(
                 ifList(c.formulaElement),
-                Arrays.asList(c.memberProperties));
+                arrayList(c.memberProperties));
         } else if (parent instanceof MondrianGuiDef.Measure) {
             MondrianGuiDef.Measure m = (MondrianGuiDef.Measure) parent;
-            return ifList((Object) m.measureExp);
+            return new CompoundList<Object>(
+                ifList(m.measureExp),
+                arrayList(m.memberProperties));
         } else if (parent instanceof MondrianGuiDef.NamedSet) {
             MondrianGuiDef.NamedSet m = (MondrianGuiDef.NamedSet) parent;
             return ifList((Object) m.formulaElement);

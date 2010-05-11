@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/tui/XmlaSupport.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/tui/XmlaSupport.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -55,7 +55,7 @@ import javax.xml.transform.TransformerConfigurationException;
  * the responses.
  *
  * @author Richard M. Emberson
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/tui/XmlaSupport.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/tui/XmlaSupport.java#3 $
  */
 public class XmlaSupport {
     private static final Logger LOGGER = Logger.getLogger(XmlaSupport.class);
@@ -959,8 +959,8 @@ public class XmlaSupport {
         rootNode.removeChild(schemaNode);
 
         // Convert nodes to Documents.
-        Document schemaDoc = XmlUtil.newDocument(schemaNode , true);
-        Document dataDoc = XmlUtil.newDocument(rootNode , true);
+        Document schemaDoc = XmlUtil.newDocument(schemaNode, true);
+        Document dataDoc = XmlUtil.newDocument(rootNode, true);
 
         String xmlns = XmlUtil.getNamespaceAttributeValue(dataDoc);
         String schemaLocationPropertyValue = xmlns + ' ' + "xmlschema";

@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapBaseCubeMeasure.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapBaseCubeMeasure.java#4 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -13,8 +13,7 @@ import mondrian.olap.*;
 import mondrian.resource.MondrianResource;
 import mondrian.spi.Dialect;
 
-import java.util.List;
-import java.util.Arrays;
+import java.util.*;
 
 /**
  * Measure which is computed from a SQL column (or expression) and which is
@@ -24,7 +23,7 @@ import java.util.Arrays;
  *
  * @author jhyde
  * @since 24 August, 2006
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapBaseCubeMeasure.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapBaseCubeMeasure.java#4 $
  */
 public class RolapBaseCubeMeasure
     extends RolapMember
@@ -44,6 +43,7 @@ public class RolapBaseCubeMeasure
     private final RolapAggregator aggregator;
 
     private final RolapCube cube;
+    private final Map<String, Annotation> annotationMap;
 
     /**
      * Holds the {@link mondrian.rolap.RolapStar.Measure} from which this
@@ -61,24 +61,38 @@ public class RolapBaseCubeMeasure
      * @param parentMember Parent member
      * @param level Level this member belongs to
      * @param name Name of this member
+     * @param caption Caption
+     * @param description Description
      * @param formatString Format string
      * @param expression Expression
      * @param aggregatorName Aggregator
      * @param datatype Data type
+     * @param annotationMap Annotations
      */
     RolapBaseCubeMeasure(
         RolapCube cube,
         RolapMember parentMember,
         RolapLevel level,
         String name,
+        String caption,
+        String description,
         String formatString,
         MondrianDef.Expression expression,
         String aggregatorName,
-        String datatype)
+        String datatype,
+        Map<String, Annotation> annotationMap)
     {
         super(parentMember, level, name, null, MemberType.MEASURE);
+        assert annotationMap != null;
         this.cube = cube;
+        this.annotationMap = annotationMap;
+        this.caption = caption;
         this.expression = expression;
+        if (description != null) {
+            setProperty(
+                Property.DESCRIPTION.name,
+                description);
+        }
         if (formatString == null) {
             formatString = "";
         }
@@ -147,6 +161,11 @@ public class RolapBaseCubeMeasure
 
     void setStarMeasure(Object starMeasure) {
         this.starMeasure = starMeasure;
+    }
+
+    @Override
+    public Map<String, Annotation> getAnnotationMap() {
+        return annotationMap;
     }
 
     public Dialect.Datatype getDatatype() {

@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapCubeDimension.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapCubeDimension.java#4 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -22,7 +22,7 @@ import mondrian.olap.Schema;
  * RolapCubeDimension wraps a RolapDimension for a specific Cube.
  *
  * @author Will Gorman (wgorman@pentaho.org)
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapCubeDimension.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapCubeDimension.java#4 $
  */
 public class RolapCubeDimension extends RolapDimension {
 
@@ -40,7 +40,18 @@ public class RolapCubeDimension extends RolapDimension {
         int cubeOrdinal,
         final boolean highCardinality)
     {
-        super(null, name, null, highCardinality);
+        super(
+            null,
+            name,
+            cubeDim.caption != null
+                ? cubeDim.caption
+                : rolapDim.getCaption(),
+            cubeDim.caption != null
+                ? cubeDim.description
+                : rolapDim.getDescription(),
+            null,
+            highCardinality,
+            RolapHierarchy.createAnnotationMap(cubeDim.annotations));
         this.xmlDimension = cubeDim;
         this.rolapDimension = rolapDim;
         this.cubeOrdinal = cubeOrdinal;

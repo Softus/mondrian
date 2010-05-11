@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapCubeMember.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapCubeMember.java#4 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -13,18 +13,11 @@
 
 package mondrian.rolap;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import mondrian.mdx.HierarchyExpr;
 import mondrian.mdx.ResolvedFunCall;
-import mondrian.olap.Exp;
-import mondrian.olap.Id;
-import mondrian.olap.MatchType;
-import mondrian.olap.Member;
-import mondrian.olap.OlapElement;
-import mondrian.olap.Property;
-import mondrian.olap.SchemaReader;
+import mondrian.olap.*;
 
 /**
  * RolapCubeMember wraps RolapMembers and binds them to a specific cube.
@@ -33,7 +26,7 @@ import mondrian.olap.SchemaReader;
  * methods do not need wrapped.
  *
  * @author Will Gorman (wgorman@pentaho.org)
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapCubeMember.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapCubeMember.java#4 $
  */
 public class RolapCubeMember extends RolapMember {
 
@@ -118,6 +111,10 @@ public class RolapCubeMember extends RolapMember {
         return rolapMember;
     }
 
+    public Map<String, Annotation> getAnnotationMap() {
+        return rolapMember.getAnnotationMap();
+    }
+
     /**
      * Returns the cube this cube member belongs to.
      *
@@ -150,9 +147,16 @@ public class RolapCubeMember extends RolapMember {
     }
 
     public boolean equals(Object o) {
-        return (o == this)
-               || ((o instanceof RolapCubeMember)
-                   && equals((RolapCubeMember) o));
+        if (o == this) {
+            return true;
+        }
+        if (o instanceof RolapCubeMember) {
+            return equals((RolapCubeMember) o);
+        }
+        if (o instanceof Member) {
+            return getUniqueName().equals(((Member) o).getUniqueName());
+        }
+        return false;
     }
 
     public boolean equals(OlapElement o) {
