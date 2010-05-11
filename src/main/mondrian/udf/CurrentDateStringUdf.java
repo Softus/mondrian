@@ -1,8 +1,8 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/udf/CurrentDateStringUdf.java#6 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/udf/CurrentDateStringUdf.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2006-2007 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
@@ -25,7 +25,7 @@ import java.util.*;
  * by {@link Format}.
  *
  * @author Zelaine Fong
- * @version $Id: //open/mondrian/src/main/mondrian/udf/CurrentDateStringUdf.java#6 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/udf/CurrentDateStringUdf.java#2 $
  */
 public class CurrentDateStringUdf implements UserDefinedFunction {
 
@@ -39,7 +39,8 @@ public class CurrentDateStringUdf implements UserDefinedFunction {
     }
 
     public String getDescription() {
-        return "Returns the current date formatted as specified by the format parameter.";
+        return "Returns the current date formatted as specified by the format "
+            + "parameter.";
     }
 
     public String getName() {

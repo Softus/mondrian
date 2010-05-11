@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/olap/type/SetType.java#11 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/SetType.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2008 Julian Hyde
+// http://www.eclipse.org/legal/epl-v10.html.
+// Copyright (C) 2005-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -16,7 +16,7 @@ import mondrian.olap.*;
  *
  * @author jhyde
  * @since Feb 17, 2005
- * @version $Id: //open/mondrian/src/main/mondrian/olap/type/SetType.java#11 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/SetType.java#2 $
  */
 public class SetType implements Type {
 
@@ -31,8 +31,8 @@ public class SetType implements Type {
      */
     public SetType(Type elementType) {
         if (elementType != null) {
-            assert elementType instanceof MemberType ||
-                    elementType instanceof TupleType;
+            assert elementType instanceof MemberType
+                || elementType instanceof TupleType;
         }
         this.elementType = elementType;
         this.digest = "SetType<" + elementType + ">";
@@ -72,18 +72,21 @@ public class SetType implements Type {
     }
 
     public Dimension getDimension() {
-        return elementType == null ? null :
-                elementType.getDimension();
+        return elementType == null
+            ? null
+            : elementType.getDimension();
     }
 
     public Hierarchy getHierarchy() {
-        return elementType == null ? null :
-                elementType.getHierarchy();
+        return elementType == null
+            ? null
+            : elementType.getHierarchy();
     }
 
     public Level getLevel() {
-        return elementType == null ? null :
-                elementType.getLevel();
+        return elementType == null
+            ? null
+            : elementType.getLevel();
     }
 
     /**
@@ -93,9 +96,9 @@ public class SetType implements Type {
      * @return Dimensionality of this SetType
      */
     public int getArity() {
-        return elementType instanceof TupleType ?
-            ((TupleType) elementType).elementTypes.length :
-            1;
+        return elementType instanceof TupleType
+            ? ((TupleType) elementType).elementTypes.length
+            : 1;
     }
 
     public Type computeCommonType(Type type, int[] conversionCount) {

@@ -1,8 +1,8 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/calc/impl/DimensionCurrentMemberCalc.java#2 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/calc/impl/DimensionCurrentMemberCalc.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2006-2006 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
@@ -11,7 +11,6 @@ package mondrian.calc.impl;
 
 import mondrian.olap.*;
 import mondrian.olap.type.MemberType;
-import mondrian.calc.impl.AbstractMemberCalc;
 import mondrian.calc.DummyExp;
 import mondrian.calc.Calc;
 
@@ -19,7 +18,7 @@ import mondrian.calc.Calc;
  * Expression which returns the current member of a given dimension.
  *
  * @author jhyde
- * @version $Id: //open/mondrian/src/main/mondrian/calc/impl/DimensionCurrentMemberCalc.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/calc/impl/DimensionCurrentMemberCalc.java#2 $
  * @since Sep 26, 2005
  */
 public class DimensionCurrentMemberCalc extends AbstractMemberCalc {

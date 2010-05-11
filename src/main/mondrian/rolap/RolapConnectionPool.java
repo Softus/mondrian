@@ -1,8 +1,8 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/rolap/RolapConnectionPool.java#11 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapConnectionPool.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2003-2006 Robin Bagot and others
 // Copyright (C) 2003-2009 Julian Hyde
 // All Rights Reserved.
@@ -26,7 +26,7 @@ import java.util.*;
  * @author jhyde
  * @author Robin Bagot
  * @since 7 July, 2003
- * @version $Id: //open/mondrian/src/main/mondrian/rolap/RolapConnectionPool.java#11 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapConnectionPool.java#2 $
  */
 class RolapConnectionPool {
 
@@ -120,8 +120,8 @@ class RolapConnectionPool {
         } catch (Throwable e) {
             throw Util.newInternal(
                 e,
-                "Error while creating connection pool (with URI " +
-                    jdbcConnectString + ")");
+                "Error while creating connection pool (with URI "
+                + jdbcConnectString + ")");
         }
         dataSourceMap.put(key, dataSource);
         return dataSource;
@@ -163,8 +163,8 @@ class RolapConnectionPool {
         } catch (Exception e) {
             throw Util.newInternal(
                 e,
-                "Error while creating connection pool (with URI " +
-                    dataSourceName + ")");
+                "Error while creating connection pool (with URI "
+                + dataSourceName + ")");
         }
         dataSourceMap.put(key, pooledDataSource);
         return dataSource;

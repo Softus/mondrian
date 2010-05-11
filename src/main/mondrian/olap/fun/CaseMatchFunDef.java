@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/olap/fun/CaseMatchFunDef.java#8 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/CaseMatchFunDef.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2008 Julian Hyde
+// http://www.eclipse.org/legal/epl-v10.html.
+// Copyright (C) 2006-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -31,7 +31,7 @@ import java.util.ArrayList;
  *
  * @see CaseTestFunDef
  * @author jhyde
- * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/CaseMatchFunDef.java#8 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/CaseMatchFunDef.java#2 $
  * @since Mar 23, 2006
  */
 class CaseMatchFunDef extends FunDefBase {
@@ -57,9 +57,9 @@ class CaseMatchFunDef extends FunDefBase {
             calcList.add(exprCalcs[i]);
         }
         final Calc defaultCalc =
-                args.length % 2 == 0 ?
-                compiler.compile(args[args.length - 1]) :
-                ConstantCalc.constantNull(call.getType());
+            args.length % 2 == 0
+            ? compiler.compile(args[args.length - 1])
+            : ConstantCalc.constantNull(call.getType());
         calcList.add(defaultCalc);
         final Calc[] calcs = calcList.toArray(new Calc[calcList.size()]);
 

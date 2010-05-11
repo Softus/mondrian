@@ -1,8 +1,8 @@
 /*
-// $Id: //open/mondrian/testsrc/main/mondrian/rolap/aggmatcher/BUG_1541077.java#12 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/rolap/aggmatcher/BUG_1541077.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2005-2009 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
@@ -19,7 +19,7 @@ import mondrian.olap.Result;
  * and a couple of other aggregate table ExplicitRecognizer conditions.
  *
  * @author Richard M. Emberson
- * @version $Id: //open/mondrian/testsrc/main/mondrian/rolap/aggmatcher/BUG_1541077.java#12 $
+ * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/rolap/aggmatcher/BUG_1541077.java#2 $
  */
 public class BUG_1541077 extends AggTableTestCase {
 
@@ -42,7 +42,8 @@ public class BUG_1541077 extends AggTableTestCase {
         // get value without aggregates
         props.UseAggregates.setString("false");
 
-        String mdx = "select {[Measures].[Store Count]} on columns from Cheques";
+        String mdx =
+            "select {[Measures].[Store Count]} on columns from Cheques";
         Result result = getCubeTestContext().executeQuery(mdx);
         Object v = result.getCell(new int[]{0}).getValue();
 
@@ -64,7 +65,8 @@ public class BUG_1541077 extends AggTableTestCase {
         // get value without aggregates
         props.UseAggregates.setString("false");
 
-        String mdx = "select {[Measures].[Sales Count]} on columns from Cheques";
+        String mdx =
+            "select {[Measures].[Sales Count]} on columns from Cheques";
         Result result = getCubeTestContext().executeQuery(mdx);
         Object v = result.getCell(new int[]{0}).getValue();
 
@@ -86,7 +88,8 @@ public class BUG_1541077 extends AggTableTestCase {
         // get value without aggregates
         props.UseAggregates.setString("false");
 
-        String mdx = "select {[Measures].[Total Amount]} on columns from Cheques";
+        String mdx =
+            "select {[Measures].[Total Amount]} on columns from Cheques";
         Result result = getCubeTestContext().executeQuery(mdx);
         Object v = result.getCell(new int[]{0}).getValue();
 

@@ -1,8 +1,8 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/mdx/DimensionExpr.java#5 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/mdx/DimensionExpr.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2006-2006 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
@@ -19,7 +19,7 @@ import mondrian.calc.impl.ConstantCalc;
  * Usage of a {@link mondrian.olap.Dimension} as an MDX expression.
  *
  * @author jhyde
- * @version $Id: //open/mondrian/src/main/mondrian/mdx/DimensionExpr.java#5 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/mdx/DimensionExpr.java#2 $
  * @since Sep 26, 2005
  */
 public class DimensionExpr extends ExpBase implements Exp {

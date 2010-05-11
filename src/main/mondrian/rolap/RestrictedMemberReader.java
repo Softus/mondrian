@@ -1,8 +1,8 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/rolap/RestrictedMemberReader.java#16 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RestrictedMemberReader.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2003-2007 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
@@ -25,7 +25,7 @@ import mondrian.rolap.sql.MemberChildrenConstraint;
  *
  * @author jhyde
  * @since Feb 26, 2003
- * @version $Id: //open/mondrian/src/main/mondrian/rolap/RestrictedMemberReader.java#16 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RestrictedMemberReader.java#2 $
  */
 class RestrictedMemberReader extends DelegatingMemberReader {
 
@@ -125,7 +125,8 @@ class RestrictedMemberReader extends DelegatingMemberReader {
                     } else {
                         grandChildren.clear();
                     }
-                    memberReader.getMemberChildren(member, grandChildren, constraint);
+                    memberReader.getMemberChildren(
+                        member, grandChildren, constraint);
                     fullChildren.addAll(i, grandChildren);
                     // Step back to before the first child we just inserted,
                     // and go through the loop again.

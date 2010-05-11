@@ -1,8 +1,8 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/olap/fun/ValueFunDef.java#10 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/ValueFunDef.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2002-2002 Kana Software, Inc.
 // Copyright (C) 2002-2006 Julian Hyde and others
 // All Rights Reserved.
@@ -24,7 +24,7 @@ import java.io.PrintWriter;
  *
  * @author jhyde
  * @since Jun 14, 2002
- * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/ValueFunDef.java#10 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/ValueFunDef.java#2 $
  */
 class ValueFunDef extends FunDefBase {
     private final int[] argTypes;

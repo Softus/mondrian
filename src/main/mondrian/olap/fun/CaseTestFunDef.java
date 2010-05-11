@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/olap/fun/CaseTestFunDef.java#6 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/CaseTestFunDef.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2007 Julian Hyde
+// http://www.eclipse.org/legal/epl-v10.html.
+// Copyright (C) 2006-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -33,7 +33,7 @@ import java.util.ArrayList;
  * @see CaseMatchFunDef
  *
  * @author jhyde
- * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/CaseTestFunDef.java#6 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/CaseTestFunDef.java#2 $
  * @since Mar 23, 2006
  */
 class CaseTestFunDef extends FunDefBase {
@@ -58,9 +58,9 @@ class CaseTestFunDef extends FunDefBase {
             calcList.add(exprCalcs[i]);
         }
         final Calc defaultCalc =
-                args.length % 2 == 1 ?
-                compiler.compileScalar(args[args.length - 1], true) :
-                ConstantCalc.constantNull(call.getType());
+            args.length % 2 == 1
+            ? compiler.compileScalar(args[args.length - 1], true)
+            : ConstantCalc.constantNull(call.getType());
         calcList.add(defaultCalc);
         final Calc[] calcs = calcList.toArray(new Calc[calcList.size()]);
 
@@ -102,7 +102,9 @@ class CaseTestFunDef extends FunDefBase {
             int mismatchingArgs = 0;
             int returnType = args[1].getCategory();
             for (int i = 0; i < clauseCount; i++) {
-                if (!validator.canConvert(args[j++], Category.Logical, conversions)) {
+                if (!validator.canConvert(
+                    args[j++], Category.Logical, conversions))
+                {
                     mismatchingArgs++;
                 }
                 if (!validator.canConvert(args[j++], returnType, conversions)) {

@@ -6,7 +6,7 @@
 #
 # Must set location of the cmdrunner.jar
 #
-# $Id: //open/mondrian/bin/cmdrunner.sh#2 $
+# $Id: //open/mondrian-release/3.1/bin/cmdrunner.sh#1 $
 #####################################################################
 
 declare -r DIR=$(dirname $0)

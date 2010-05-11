@@ -1,18 +1,18 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/util/TraversalList.java#2 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/util/TraversalList.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2008 Julian Hyde
+// http://www.eclipse.org/legal/epl-v10.html.
+// Copyright (C) 2006-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
 /*
-// $Id: //open/mondrian/src/main/mondrian/util/TraversalList.java#2 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/util/TraversalList.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2008 Julian Hyde
+// http://www.eclipse.org/legal/epl-v10.html.
+// Copyright (C) 2006-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -26,7 +26,7 @@ import java.lang.reflect.Array;
  * lists.
  *
  * @author Luis F. Canals
- * @version $Id: //open/mondrian/src/main/mondrian/util/TraversalList.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/util/TraversalList.java#2 $
  * @since Dec, 2007
  */
 public class TraversalList<T> extends UnsupportedList<T[]> {
@@ -123,7 +123,8 @@ public class TraversalList<T> extends UnsupportedList<T[]> {
         final T[][] array;
         if (a != null
             && a.length == size()
-            && a.getClass().getComponentType() == clazz) {
+            && a.getClass().getComponentType() == clazz)
+        {
             array = (T[][]) a;
         } else {
             // TODO: use reflection to create a real T[][]

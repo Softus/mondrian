@@ -1,8 +1,8 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/olap/fun/ResolverBase.java#11 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/ResolverBase.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2002-2002 Kana Software, Inc.
 // Copyright (C) 2002-2006 Julian Hyde and others
 // All Rights Reserved.
@@ -21,7 +21,7 @@ import mondrian.olap.FunDef;
  *
  * @author jhyde
  * @since 3 March, 2002
- * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/ResolverBase.java#11 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/ResolverBase.java#2 $
  */
 abstract class ResolverBase extends FunUtil implements Resolver {
     private final String name;
@@ -29,10 +29,12 @@ abstract class ResolverBase extends FunUtil implements Resolver {
     private final String description;
     private final Syntax syntax;
 
-    ResolverBase(String name,
-                 String signature,
-                 String description,
-                 Syntax syntax) {
+    ResolverBase(
+        String name,
+        String signature,
+        String description,
+        Syntax syntax)
+    {
         this.name = name;
         this.signature = signature;
         this.description = description;

@@ -1,8 +1,8 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/udf/CurrentDateMemberExactUdf.java#5 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/udf/CurrentDateMemberExactUdf.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2006-2007 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
@@ -30,14 +30,18 @@ import mondrian.util.*;
  * {@link Format}.
  *
  * @author Zelaine Fong
- * @version $Id: //open/mondrian/src/main/mondrian/udf/CurrentDateMemberExactUdf.java#5 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/udf/CurrentDateMemberExactUdf.java#2 $
  */
 public class CurrentDateMemberExactUdf extends CurrentDateMemberUdf {
 
     public String getDescription() {
-        return "Returns the exact member within the specified dimension corresponding to the current date, in the format specified by the format parameter. "
+        return "Returns the exact member within the specified dimension "
+            + "corresponding to the current date, in the format specified by "
+            + "the format parameter. "
             + "If there is no such date, returns the NULL member. "
-            + "Format strings are the same as used by the MDX Format function, namely the Visual Basic format strings. See http://www.apostate.com/programming/vb-format.html.";
+            + "Format strings are the same as used by the MDX Format function, "
+            + "namely the Visual Basic format strings. "
+            + "See http://www.apostate.com/programming/vb-format.html.";
     }
 
     public Type[] getParameterTypes() {

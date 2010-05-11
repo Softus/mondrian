@@ -1,8 +1,8 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/olap/fun/HeadTailFunDef.java#8 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/HeadTailFunDef.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2006-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
@@ -24,7 +24,7 @@ import java.util.*;
  * MDX builtin functions.
  *
  * @author jhyde
- * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/HeadTailFunDef.java#8 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/HeadTailFunDef.java#2 $
  * @since Mar 23, 2006
  */
 class HeadTailFunDef extends FunDefBase {
@@ -51,13 +51,15 @@ class HeadTailFunDef extends FunDefBase {
 
     public Calc compileCall(ResolvedFunCall call, ExpCompiler compiler) {
         final ListCalc listCalc =
-                compiler.compileList(call.getArg(0));
+            compiler.compileList(call.getArg(0));
         final IntegerCalc integerCalc =
-                call.getArgCount() > 1 ?
-                compiler.compileInteger(call.getArg(1)) :
-                ConstantCalc.constantInteger(1);
+            call.getArgCount() > 1
+            ? compiler.compileInteger(call.getArg(1))
+            : ConstantCalc.constantInteger(1);
         if (head) {
-            return new AbstractListCalc(call, new Calc[] {listCalc, integerCalc}) {
+            return new AbstractListCalc(
+                call, new Calc[] {listCalc, integerCalc})
+            {
                 public List evaluateList(Evaluator evaluator) {
                     evaluator = evaluator.push(false);
                     List list = listCalc.evaluateList(evaluator);
@@ -66,7 +68,9 @@ class HeadTailFunDef extends FunDefBase {
                 }
             };
         } else {
-            return new AbstractListCalc(call, new Calc[] {listCalc, integerCalc}) {
+            return new AbstractListCalc(
+                call, new Calc[] {listCalc, integerCalc})
+            {
                 public List evaluateList(Evaluator evaluator) {
                     evaluator = evaluator.push(false);
                     List list = listCalc.evaluateList(evaluator);

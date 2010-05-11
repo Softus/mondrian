@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/util/MemoryMonitorFactory.java#8 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/util/MemoryMonitorFactory.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2002-2002 Kana Software, Inc.
-// Copyright (C) 2002-2008 Julian Hyde and others
+// Copyright (C) 2002-2009 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -38,10 +38,11 @@ import mondrian.olap.Util;
  *
  * @author <a>Richard M. Emberson</a>
  * @since Feb 03 2007
- * @version $Id: //open/mondrian/src/main/mondrian/util/MemoryMonitorFactory.java#8 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/util/MemoryMonitorFactory.java#2 $
  */
 public final class MemoryMonitorFactory
-        extends ObjectFactory.Singleton<MemoryMonitor> {
+    extends ObjectFactory.Singleton<MemoryMonitor>
+{
 
     /**
      * Single instance of the <code>MemoryMonitorFactory</code>.
@@ -159,9 +160,11 @@ public final class MemoryMonitorFactory
      * @throws CreationException if the <code>MemoryMonitor</code> can not be
      * created.
      */
-    protected MemoryMonitor getDefault(Class[] parameterTypes,
-                                       Object[] parameterValues)
-            throws CreationException {
+    protected MemoryMonitor getDefault(
+        Class[] parameterTypes,
+        Object[] parameterValues)
+        throws CreationException
+    {
         return (! enabled() || Util.PreJdk15)
                     // not enabled or Java4 or below
                 ? new FauxMemoryMonitor()

@@ -1,8 +1,8 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/olap4j/MondrianOlap4jCellSetAxis.java#6 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap4j/MondrianOlap4jCellSetAxis.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2007-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
@@ -20,7 +20,7 @@ import java.util.*;
  * for the Mondrian OLAP engine.
  *
  * @author jhyde
- * @version $Id: //open/mondrian/src/main/mondrian/olap4j/MondrianOlap4jCellSetAxis.java#6 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap4j/MondrianOlap4jCellSetAxis.java#2 $
  * @since May 24, 2007
  */
 class MondrianOlap4jCellSetAxis implements CellSetAxis {
@@ -135,7 +135,9 @@ class MondrianOlap4jCellSetAxis implements CellSetAxis {
          * @param index Index
          */
         public MondrianOlap4jPosition(
-            mondrian.olap.Position mondrianPosition, int index) {
+            mondrian.olap.Position mondrianPosition,
+            int index)
+        {
             this.mondrianPosition = mondrianPosition;
             this.index = index;
         }

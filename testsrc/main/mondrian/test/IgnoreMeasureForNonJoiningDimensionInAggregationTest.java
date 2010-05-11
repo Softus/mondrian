@@ -1,8 +1,8 @@
 /*
-// $Id: //open/mondrian/testsrc/main/mondrian/test/IgnoreMeasureForNonJoiningDimensionInAggregationTest.java#8 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/test/IgnoreMeasureForNonJoiningDimensionInAggregationTest.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2001-2009 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
@@ -19,7 +19,7 @@ import mondrian.olap.MondrianProperties;
  * set to true.
  *
  * @author ajoglekar
- * @version $Id: //open/mondrian/testsrc/main/mondrian/test/IgnoreMeasureForNonJoiningDimensionInAggregationTest.java#8 $
+ * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/test/IgnoreMeasureForNonJoiningDimensionInAggregationTest.java#2 $
  * @since Dec 12, 2007
  */
 public class IgnoreMeasureForNonJoiningDimensionInAggregationTest extends
@@ -44,7 +44,8 @@ public class IgnoreMeasureForNonJoiningDimensionInAggregationTest extends
             originalEliminateUnrelatedDimensions);
     }
 
-    public void testNoTotalsForCompoundMeasureWithComponentsHavingNonJoiningDims() {
+    public void testNoTotalsForCompdMeasureWithComponentsHavingNonJoiningDims()
+    {
         assertQueryReturns(
             "with member [Measures].[Total Sales] as "
             + "'[Measures].[Store Sales] + [Measures].[Warehouse Sales]'"
@@ -231,9 +232,7 @@ public class IgnoreMeasureForNonJoiningDimensionInAggregationTest extends
             + "'IIF(1=0,\n"
             + "[Warehouse].[All Warehouses],\n"
             + "([Warehouse].[All Warehouses], [Store].[All Stores]))'\n"
-            +
-
-            "\n"
+            + "\n"
             + "SELECT\n"
             + "{[Measures].[Total Sales]} ON AXIS(0),\n"
             + "{[Warehouse].[AggSP1_1],[Warehouse].[AggSP1_2],[Warehouse].[AggSP1_3],"

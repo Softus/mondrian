@@ -1,8 +1,8 @@
 /*
-// $Id: //open/mondrian/testsrc/main/mondrian/util/PrimeFinderTest.java#2 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/util/PrimeFinderTest.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2007-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
@@ -20,7 +20,7 @@ import mondrian.test.TestContext;
  * Testcase for {@link mondrian.util.PrimeFinder}.
  *
  * @author jhyde
- * @version $Id: //open/mondrian/testsrc/main/mondrian/util/PrimeFinderTest.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/util/PrimeFinderTest.java#2 $
  * @since Feb 4, 2007
  */
 public class PrimeFinderTest extends TestCase {

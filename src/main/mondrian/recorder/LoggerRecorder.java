@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/recorder/LoggerRecorder.java#5 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/recorder/LoggerRecorder.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2006 Julian Hyde and others.
+// http://www.eclipse.org/legal/epl-v10.html.
+// Copyright (C) 2005-2009 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -16,7 +16,7 @@ import org.apache.log4j.Logger;
  * {@link Logger log4j logger}.
  *
  * @author Richard M. Emberson
- * @version $Id: //open/mondrian/src/main/mondrian/recorder/LoggerRecorder.java#5 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/recorder/LoggerRecorder.java#2 $
  */
 public class LoggerRecorder extends AbstractRecorder {
     private final Logger logger;
@@ -26,9 +26,10 @@ public class LoggerRecorder extends AbstractRecorder {
     }
 
     protected void recordMessage(
-            final String msg,
-            final Object info,
-            final MsgType msgType) {
+        final String msg,
+        final Object info,
+        final MsgType msgType)
+    {
         String context = getContext();
         logMessage(context, msg, msgType, logger);
     }

@@ -1,5 +1,5 @@
 @echo off
-rem $Id: //open/mondrian/buildJdk16.bat#4 $
+rem $Id: //open/mondrian-release/3.1/buildJdk16.bat#1 $
 rem Called recursively from 'ant release' to build the files which can only be
 rem built under JDK 1.6.
 

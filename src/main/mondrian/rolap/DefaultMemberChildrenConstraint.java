@@ -1,8 +1,9 @@
 /*
-// This software is subject to the terms of the Common Public License
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2004-2005 TONBELLER AG
+// Copyright (C) 2006-2009 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -19,10 +20,11 @@ import mondrian.rolap.aggmatcher.AggStar;
  * MemberChildren query.  If called with a calculated member an
  * exception will be thrown.
  *
- * @version $Id: //open/mondrian/src/main/mondrian/rolap/DefaultMemberChildrenConstraint.java#11 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/DefaultMemberChildrenConstraint.java#2 $
  */
 public class DefaultMemberChildrenConstraint
-    implements MemberChildrenConstraint {
+    implements MemberChildrenConstraint
+{
 
     private static final MemberChildrenConstraint instance
         = new DefaultMemberChildrenConstraint();
@@ -57,7 +59,8 @@ public class DefaultMemberChildrenConstraint
         SqlQuery query,
         RolapCube baseCube,
         AggStar aggStar,
-        RolapLevel level) {
+        RolapLevel level)
+    {
     }
 
     public String toString() {

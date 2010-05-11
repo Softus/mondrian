@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/calc/impl/AbstractMemberListCalc.java#2 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/calc/impl/AbstractMemberListCalc.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2008 Julian Hyde
+// http://www.eclipse.org/legal/epl-v10.html.
+// Copyright (C) 2006-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -11,7 +11,6 @@ package mondrian.calc.impl;
 
 import mondrian.olap.*;
 import mondrian.olap.type.SetType;
-import mondrian.olap.type.Type;
 import mondrian.calc.*;
 
 import java.util.List;
@@ -27,14 +26,13 @@ import java.util.List;
  * @see mondrian.calc.impl.AbstractListCalc
  *
  * @author jhyde
- * @version $Id: //open/mondrian/src/main/mondrian/calc/impl/AbstractMemberListCalc.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/calc/impl/AbstractMemberListCalc.java#2 $
  * @since Feb 20, 2008
  */
 public abstract class AbstractMemberListCalc
     extends AbstractCalc
     implements MemberListCalc
 {
-    private final Calc[] calcs;
     private final boolean mutable;
 
     /**
@@ -59,8 +57,7 @@ public abstract class AbstractMemberListCalc
      * @param mutable Whether the list is mutable
      */
     protected AbstractMemberListCalc(Exp exp, Calc[] calcs, boolean mutable) {
-        super(exp);
-        this.calcs = calcs;
+        super(exp, calcs);
         this.mutable = mutable;
         assert type instanceof SetType : "expecting a set: " + getType();
         assert getType().getArity() == 1;
@@ -76,14 +73,10 @@ public abstract class AbstractMemberListCalc
         return memberList;
     }
 
-    public Calc[] getCalcs() {
-        return calcs;
-    }
-
     public ResultStyle getResultStyle() {
-        return mutable ?
-            ResultStyle.MUTABLE_LIST :
-            ResultStyle.LIST;
+        return mutable
+            ? ResultStyle.MUTABLE_LIST
+            : ResultStyle.LIST;
     }
 
     public String toString() {
@@ -92,10 +85,6 @@ public abstract class AbstractMemberListCalc
 
     public List<Member> evaluateList(Evaluator evaluator) {
         return evaluateMemberList(evaluator);
-    }
-
-    public List<Member[]> evaluateTupleList(Evaluator evaluator) {
-        throw new UnsupportedOperationException();
     }
 }
 

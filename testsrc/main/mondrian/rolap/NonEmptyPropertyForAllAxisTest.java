@@ -1,8 +1,8 @@
 /*
-// $Id: //open/mondrian/testsrc/main/mondrian/rolap/NonEmptyPropertyForAllAxisTest.java#7 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/rolap/NonEmptyPropertyForAllAxisTest.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2006-2009 Julian Hyde and others
 // Copyright (C) 2005-2006 Thomson Medstat, Inc, Ann Arbor, MI.
 // All Rights Reserved.
@@ -17,7 +17,7 @@ import org.eigenbase.util.property.BooleanProperty;
 /**
  * Tests the {@link MondrianProperties#EnableNonEmptyOnAllAxis} property.
  *
- * @version $Id: //open/mondrian/testsrc/main/mondrian/rolap/NonEmptyPropertyForAllAxisTest.java#7 $
+ * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/rolap/NonEmptyPropertyForAllAxisTest.java#2 $
  */
 public class NonEmptyPropertyForAllAxisTest extends FoodMartTestCase {
 
@@ -78,7 +78,9 @@ public class NonEmptyPropertyForAllAxisTest extends FoodMartTestCase {
     }
 
     public void testNonEmptyForAllAxesWithOutPropertySet() {
-        final String MDX_QUERY = "SELECT {customers.USA.CA.[Santa Cruz].[Brian Merlo]} on 0, [product].[product category].members on 1 FROM [sales]";
+        final String MDX_QUERY =
+            "SELECT {customers.USA.CA.[Santa Cruz].[Brian Merlo]} on 0, "
+            + "[product].[product category].members on 1 FROM [sales]";
         final String EXPECTED_RESULT =
             "Axis #0:\n"
             + "{}\n"

@@ -1,8 +1,8 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/olap/QueryTimeoutException.java#2 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/QueryTimeoutException.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2004-2005 TONBELLER AG
 // Copyright (C) 2005-2007 Julian Hyde and others
 // All Rights Reserved.
@@ -14,7 +14,7 @@ package mondrian.olap;
  * Exception which indicates that a query executed for longer than its allowed
  * time and was automatically canceled.
  *
- * @version $Id: //open/mondrian/src/main/mondrian/olap/QueryTimeoutException.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/QueryTimeoutException.java#2 $
  */
 public class QueryTimeoutException extends ResultLimitExceededException {
     /**

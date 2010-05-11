@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/olap/fun/StdevPFunDef.java#6 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/StdevPFunDef.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2008 Julian Hyde
+// http://www.eclipse.org/legal/epl-v10.html.
+// Copyright (C) 2006-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -27,7 +27,7 @@ import java.util.List;
  * <code>StddevP</code>.
  *
  * @author jhyde
- * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/StdevPFunDef.java#6 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/StdevPFunDef.java#2 $
  * @since Mar 23, 2006
  */
 class StdevPFunDef extends AbstractAggregateFunDef {
@@ -52,14 +52,16 @@ class StdevPFunDef extends AbstractAggregateFunDef {
 
     public Calc compileCall(ResolvedFunCall call, ExpCompiler compiler) {
         final ListCalc listCalc =
-                compiler.compileList(call.getArg(0));
-        final Calc calc = call.getArgCount() > 1 ?
-                compiler.compileScalar(call.getArg(1), true) :
-                new ValueCalc(call);
+            compiler.compileList(call.getArg(0));
+        final Calc calc =
+            call.getArgCount() > 1
+            ? compiler.compileScalar(call.getArg(1), true)
+            : new ValueCalc(call);
         return new AbstractDoubleCalc(call, new Calc[] {listCalc, calc}) {
             public double evaluateDouble(Evaluator evaluator) {
                 List memberList = evaluateCurrentList(listCalc, evaluator);
-                return (Double)stdev(evaluator.push(false), memberList, calc, true);
+                return (Double) stdev(
+                    evaluator.push(false), memberList, calc, true);
             }
 
             public boolean dependsOn(Dimension dimension) {

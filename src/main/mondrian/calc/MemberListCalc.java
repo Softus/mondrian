@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/calc/MemberListCalc.java#1 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/calc/MemberListCalc.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2008 Julian Hyde
+// http://www.eclipse.org/legal/epl-v10.html.
+// Copyright (C) 2006-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -14,13 +14,11 @@ import java.util.List;
 import mondrian.olap.Evaluator;
 import mondrian.olap.Member;
 
-// End ListCalc.java
-
 /**
  * Expression which evaluates a set of members or tuples to a list.
  *
  * @author jhyde
- * @version $Id: //open/mondrian/src/main/mondrian/calc/MemberListCalc.java#1 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/calc/MemberListCalc.java#2 $
  * @since Sep 27, 2005
  */
 public interface MemberListCalc extends ListCalc {

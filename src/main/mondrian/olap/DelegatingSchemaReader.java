@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/olap/DelegatingSchemaReader.java#32 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/DelegatingSchemaReader.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2003-2008 Julian Hyde
+// http://www.eclipse.org/legal/epl-v10.html.
+// Copyright (C) 2003-2009 Julian Hyde
 // Copyright (C) 2004-2005 TONBELLER AG
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
@@ -26,7 +26,7 @@ import java.util.List;
  *
  * @author jhyde
  * @since Feb 26, 2003
- * @version $Id: //open/mondrian/src/main/mondrian/olap/DelegatingSchemaReader.java#32 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/DelegatingSchemaReader.java#2 $
  */
 public abstract class DelegatingSchemaReader implements SchemaReader {
     protected final SchemaReader schemaReader;
@@ -118,10 +118,11 @@ public abstract class DelegatingSchemaReader implements SchemaReader {
     }
 
     public void getMemberRange(
-            Level level,
-            Member startMember,
-            Member endMember,
-            List<Member> list) {
+        Level level,
+        Member startMember,
+        Member endMember,
+        List<Member> list)
+    {
         schemaReader.getMemberRange(level, startMember, endMember, list);
     }
 
@@ -143,7 +144,9 @@ public abstract class DelegatingSchemaReader implements SchemaReader {
         return schemaReader.getElementChild(parent, name, matchType);
     }
 
-    public List<Member> getLevelMembers(Level level, boolean includeCalculated) {
+    public List<Member> getLevelMembers(
+        Level level, boolean includeCalculated)
+    {
         return schemaReader.getLevelMembers(level, includeCalculated);
     }
 
@@ -191,15 +194,17 @@ public abstract class DelegatingSchemaReader implements SchemaReader {
     }
 
     public List<Member> getLevelMembers(Level level, Evaluator context) {
-      return schemaReader.getLevelMembers(level, context);
+        return schemaReader.getLevelMembers(level, context);
     }
 
     public List<Member> getMemberChildren(Member member, Evaluator context) {
-      return schemaReader.getMemberChildren(member, context);
+        return schemaReader.getMemberChildren(member, context);
     }
 
-    public List<Member> getMemberChildren(List<Member> members, Evaluator context) {
-      return schemaReader.getMemberChildren(members, context);
+    public List<Member> getMemberChildren(
+        List<Member> members, Evaluator context)
+    {
+        return schemaReader.getMemberChildren(members, context);
     }
 
     public Member lookupMemberChildByName(
@@ -210,7 +215,8 @@ public abstract class DelegatingSchemaReader implements SchemaReader {
     }
 
     public NativeEvaluator getNativeSetEvaluator(
-            FunDef fun, Exp[] args, Evaluator evaluator, Calc calc) {
+        FunDef fun, Exp[] args, Evaluator evaluator, Calc calc)
+    {
         return schemaReader.getNativeSetEvaluator(fun, args, evaluator, calc);
     }
 

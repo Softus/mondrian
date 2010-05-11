@@ -1,10 +1,10 @@
 /*
- // $Id: //open/mondrian/src/main/mondrian/rolap/RolapDimension.java#33 $
- // This software is subject to the terms of the Common Public License
+ // $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapDimension.java#2 $
+ // This software is subject to the terms of the Eclipse Public License v1.0
  // Agreement, available at the following URL:
- // http://www.opensource.org/licenses/cpl.html.
+ // http://www.eclipse.org/legal/epl-v10.html.
  // Copyright (C) 2001-2002 Kana Software, Inc.
- // Copyright (C) 2001-2008 Julian Hyde and others
+ // Copyright (C) 2001-2009 Julian Hyde and others
  // All Rights Reserved.
  // You must accept the terms of that agreement to use this software.
  //
@@ -54,7 +54,7 @@ import mondrian.resource.MondrianResource;
  *
  * @author jhyde
  * @since 10 August, 2001
- * @version $Id: //open/mondrian/src/main/mondrian/rolap/RolapDimension.java#33 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapDimension.java#2 $
  */
 class RolapDimension extends DimensionBase {
 
@@ -106,9 +106,10 @@ class RolapDimension extends DimensionBase {
             // remaps the xml hierarchy relation to the fact table.
             // moved out of RolapHierarchy constructor
             // this should eventually be phased out completely
-            if (xmlDimension.hierarchies[i].relation == null &&
-                    xmlDimension.hierarchies[i].memberReaderClass == null &&
-                    cube != null) {
+            if (xmlDimension.hierarchies[i].relation == null
+                && xmlDimension.hierarchies[i].memberReaderClass == null
+                && cube != null)
+            {
                 xmlDimension.hierarchies[i].relation = cube.fact;
             }
 
@@ -138,15 +139,19 @@ class RolapDimension extends DimensionBase {
                     } else {
                         // Dimension type was set according to first level.
                         // Make sure that other levels fit to definition.
-                        if (dimensionType == DimensionType.TimeDimension &&
-                            !lev.getLevelType().isTime() &&
-                            !lev.isAll()) {
-                            throw MondrianResource.instance().NonTimeLevelInTimeHierarchy.ex(
+                        if (dimensionType == DimensionType.TimeDimension
+                            && !lev.getLevelType().isTime()
+                            && !lev.isAll())
+                        {
+                            throw MondrianResource.instance()
+                                .NonTimeLevelInTimeHierarchy.ex(
                                     getUniqueName());
                         }
-                        if (dimensionType != DimensionType.TimeDimension &&
-                            lev.getLevelType().isTime()) {
-                            throw MondrianResource.instance().TimeLevelInNonTimeHierarchy.ex(
+                        if (dimensionType != DimensionType.TimeDimension
+                            && lev.getLevelType().isTime())
+                        {
+                            throw MondrianResource.instance()
+                                .TimeLevelInNonTimeHierarchy.ex(
                                     getUniqueName());
                         }
                     }

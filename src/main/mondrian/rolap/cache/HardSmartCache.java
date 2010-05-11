@@ -1,7 +1,7 @@
 /*
-// This software is subject to the terms of the Common Public License
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2004-2005 TONBELLER AG
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
@@ -14,7 +14,7 @@ import java.util.*;
  * An implementation of {@link SmartCache} that uses hard
  * references. Used for testing.
  *
- * @version $Id: //open/mondrian/src/main/mondrian/rolap/cache/HardSmartCache.java#5 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/cache/HardSmartCache.java#2 $
  */
 public class HardSmartCache <K, V> implements SmartCache <K, V> {
     Map<K, V> cache = new HashMap<K, V>();

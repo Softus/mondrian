@@ -1,8 +1,8 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/rolap/agg/SparseSegmentDataset.java#9 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/agg/SparseSegmentDataset.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2002-2002 Kana Software, Inc.
 // Copyright (C) 2002-2007 Julian Hyde and others
 // All Rights Reserved.
@@ -32,7 +32,7 @@ import java.util.Iterator;
  *
  * @author jhyde
  * @since 21 March, 2002
- * @version $Id: //open/mondrian/src/main/mondrian/rolap/agg/SparseSegmentDataset.java#9 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/agg/SparseSegmentDataset.java#2 $
  */
 class SparseSegmentDataset implements SegmentDataset {
     private final Map<CellKey, Object> values = new HashMap<CellKey, Object>();

@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/olap4j/MondrianOlap4jDimension.java#2 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap4j/MondrianOlap4jDimension.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2007-2008 Julian Hyde
+// http://www.eclipse.org/legal/epl-v10.html.
+// Copyright (C) 2007-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -22,7 +22,7 @@ import java.util.Locale;
  * for the Mondrian OLAP engine.
  *
  * @author jhyde
- * @version $Id: //open/mondrian/src/main/mondrian/olap4j/MondrianOlap4jDimension.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap4j/MondrianOlap4jDimension.java#2 $
  * @since May 24, 2007
  */
 class MondrianOlap4jDimension implements Dimension, Named {
@@ -38,8 +38,8 @@ class MondrianOlap4jDimension implements Dimension, Named {
     }
 
     public boolean equals(Object obj) {
-        return obj instanceof MondrianOlap4jDimension &&
-            dimension.equals(((MondrianOlap4jDimension) obj).dimension);
+        return obj instanceof MondrianOlap4jDimension
+            && dimension.equals(((MondrianOlap4jDimension) obj).dimension);
     }
 
     public int hashCode() {

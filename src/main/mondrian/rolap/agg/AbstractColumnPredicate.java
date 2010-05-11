@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/rolap/agg/AbstractColumnPredicate.java#6 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/agg/AbstractColumnPredicate.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2004-2005 TONBELLER AG
-// Copyright (C) 2006-2008 Julian Hyde and others
+// Copyright (C) 2006-2009 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -25,7 +25,7 @@ import java.util.ArrayList;
  * A <code>AbstractColumnPredicate</code> is an abstract implementation for
  * {@link mondrian.rolap.StarColumnPredicate}.
  *
- * @version $Id: //open/mondrian/src/main/mondrian/rolap/agg/AbstractColumnPredicate.java#6 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/agg/AbstractColumnPredicate.java#2 $
  */
 public abstract class AbstractColumnPredicate implements StarColumnPredicate {
     protected final RolapStar.Column constrainedColumn;
@@ -85,8 +85,9 @@ public abstract class AbstractColumnPredicate implements StarColumnPredicate {
         if (predicate instanceof StarColumnPredicate) {
             StarColumnPredicate starColumnPredicate =
                 (StarColumnPredicate) predicate;
-            if (starColumnPredicate.getConstrainedColumn() ==
-                getConstrainedColumn()) {
+            if (starColumnPredicate.getConstrainedColumn()
+                == getConstrainedColumn())
+            {
                 return orColumn(starColumnPredicate);
             }
         }
@@ -193,7 +194,9 @@ public abstract class AbstractColumnPredicate implements StarColumnPredicate {
          * @return Predicate which tests whether the column's value is equal
          *   to a column predicate's value
          */
-        public static StarColumnPredicate equal(ValueColumnPredicate predicate) {
+        public static StarColumnPredicate equal(
+            ValueColumnPredicate predicate)
+        {
             return equal(
                 predicate.getConstrainedColumn(),
                 predicate.getValue());

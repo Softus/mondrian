@@ -1,7 +1,7 @@
 /*
-// This software is subject to the terms of the Common Public License
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2009-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
@@ -16,7 +16,7 @@ import java.sql.SQLException;
  * SQL system.
  *
  * @author jhyde
- * @version $Id: //open/mondrian/src/main/mondrian/spi/impl/SqlStreamDialect.java#1 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/spi/impl/SqlStreamDialect.java#2 $
  * @since Mar 23, 2009
  */
 public class SqlStreamDialect extends LucidDbDialect {

@@ -1,7 +1,7 @@
 /*
-// This software is subject to the terms of the Common Public License
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2009-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
@@ -24,7 +24,7 @@ import java.lang.reflect.*;
  * objects.
  *
  * @author jhyde
- * @version $Id: //open/mondrian/src/main/mondrian/spi/DialectManager.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/spi/DialectManager.java#2 $
  * @since Jan 13, 2009
  */
 public abstract class DialectManager {
@@ -326,18 +326,18 @@ public abstract class DialectManager {
             } catch (InstantiationException e) {
                 throw Util.newError(
                     e,
-                    "Error while instantiating dialect of class " +
-                        constructor.getClass());
+                    "Error while instantiating dialect of class "
+                    + constructor.getClass());
             } catch (IllegalAccessException e) {
                 throw Util.newError(
                     e,
-                    "Error while instantiating dialect of class " +
-                        constructor.getClass());
+                    "Error while instantiating dialect of class "
+                    + constructor.getClass());
             } catch (InvocationTargetException e) {
                 throw Util.newError(
                     e,
-                    "Error while instantiating dialect of class " +
-                        constructor.getClass());
+                    "Error while instantiating dialect of class "
+                    + constructor.getClass());
             }
         }
     }

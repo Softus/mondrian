@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/olap4j/MondrianOlap4jCellSetMetaData.java#3 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap4j/MondrianOlap4jCellSetMetaData.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2007-2008 Julian Hyde
+// http://www.eclipse.org/legal/epl-v10.html.
+// Copyright (C) 2007-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -22,7 +22,7 @@ import java.sql.SQLException;
  * for the Mondrian OLAP engine.
  *
  * @author jhyde
- * @version $Id: //open/mondrian/src/main/mondrian/olap4j/MondrianOlap4jCellSetMetaData.java#3 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap4j/MondrianOlap4jCellSetMetaData.java#2 $
  * @since Jun 13, 2007
  */
 class MondrianOlap4jCellSetMetaData implements CellSetMetaData {
@@ -62,8 +62,8 @@ class MondrianOlap4jCellSetMetaData implements CellSetMetaData {
                     return property.getName();
                 }
             };
-        for (Property.StandardCellProperty property :
-            Property.StandardCellProperty.values())
+        for (Property.StandardCellProperty property
+            : Property.StandardCellProperty.values())
         {
             if (query.hasCellProperty(property.getName())) {
                 list.add(property);

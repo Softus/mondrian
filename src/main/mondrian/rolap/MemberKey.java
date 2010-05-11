@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/rolap/MemberKey.java#6 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/MemberKey.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2002-2002 Kana Software, Inc.
-// Copyright (C) 2002-2008 Julian Hyde and others
+// Copyright (C) 2002-2009 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -17,7 +17,7 @@ package mondrian.rolap;
  *
  * @author jhyde
  * @since 21 March, 2002
- * @version $Id: //open/mondrian/src/main/mondrian/rolap/MemberKey.java#6 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/MemberKey.java#2 $
  */
 class MemberKey {
     private final RolapMember parent;
@@ -32,8 +32,8 @@ class MemberKey {
             return false;
         }
         MemberKey other = (MemberKey) o;
-        return (other.parent == this.parent) &&
-            other.value.equals(this.value);
+        return (other.parent == this.parent)
+            && other.value.equals(this.value);
     }
     // override Object
     public int hashCode() {
