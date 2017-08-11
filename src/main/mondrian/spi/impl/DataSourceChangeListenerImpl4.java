@@ -13,6 +13,7 @@ import java.util.Random;
 
 import mondrian.spi.DataSourceChangeListener;
 import mondrian.olap.MondrianDef;
+import mondrian.olap.Query;
 import mondrian.rolap.RolapHierarchy;
 import mondrian.rolap.agg.Aggregation;
 
@@ -57,6 +58,12 @@ public class DataSourceChangeListenerImpl4 implements DataSourceChangeListener {
             int flushInverseFrequencyAggregation) {
         this.flushInverseFrequencyHierarchy = flushInverseFrequencyHierarchy;
         this.flushInverseFrequencyAggregation = flushInverseFrequencyAggregation;
+    }
+
+    public void beforeQuery(Query query) {
+    }
+
+    public void afterQuery(Query query) {
     }
 
     public synchronized boolean isHierarchyChanged(RolapHierarchy hierarchy) {

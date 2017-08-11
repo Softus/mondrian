@@ -225,7 +225,7 @@ public class RolapCube extends CubeBase {
             if (aggregator.equals("distinct count")) {
                 aggregator = RolapAggregator.DistinctCount.getName();
             }
-            
+
             RolapCubeDimension[] depDims = null;
 
             if (null != xmlMeasure.functionallyDependentDims && xmlMeasure.functionallyDependentDims.length > 0) {
@@ -2226,7 +2226,13 @@ public class RolapCube extends CubeBase {
         if (levelDimName.endsWith("$Closure")) {
             isClosure = true;
             closDimName = levelDimName.substring(0, levelDimName.length() - 8);
-            closHierName = levelHierName.substring(0, levelHierName.length() - 8);
+            if (levelHierName.endsWith("$Closure")) {
+                closHierName = levelHierName.substring(0, levelHierName.length() - 8);
+            } else {
+                int pos = levelHierName.indexOf("$Closure.");
+                closHierName = levelHierName.substring(0, pos) +
+                    levelHierName.substring(pos + 8);
+            }
         }
 
         for (int i = 0; i < getDimensions().length; i++) {

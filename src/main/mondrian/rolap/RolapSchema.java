@@ -558,6 +558,8 @@ public class RolapSchema implements Schema {
                             Category.Hierarchy);
                     final Access hierarchyAccess =
                         getAccess(hierarchyGrant.access, hierarchyAllowed);
+                    final Access hierarchyMemberAccess = (hierarchyGrant.memberAccess != null)
+                        ? getAccess(hierarchyGrant.memberAccess, memberAllowed) : Access.NONE;
                     Level topLevel = null;
                     if (hierarchyGrant.topLevel != null) {
                         if (hierarchyAccess != Access.CUSTOM) {
@@ -593,7 +595,7 @@ public class RolapSchema implements Schema {
                         rollupPolicy = Role.RollupPolicy.FULL;
                     }
                     role.grant(
-                        hierarchy, hierarchyAccess, topLevel, bottomLevel,
+                        hierarchy, hierarchyAccess, hierarchyMemberAccess, topLevel, bottomLevel,
                         rollupPolicy);
                     for (MondrianDef.MemberGrant memberGrant : hierarchyGrant.memberGrants) {
                         if (hierarchyAccess != Access.CUSTOM) {
@@ -1300,55 +1302,9 @@ System.out.println("RolapSchema.getSharedHierarchy: "+
             throw MondrianResource.instance().UdfClassNotFound.ex(name,
                     className);
         }
-        // Find a constructor.
-        Constructor<?> constructor;
-        Object[] args = {};
-        // 1. Look for a constructor "public Udf(String name)".
-        try {
-            constructor = klass.getConstructor(String.class);
-            if (Modifier.isPublic(constructor.getModifiers())) {
-                args = new Object[] {name};
-            } else {
-                constructor = null;
-            }
-        } catch (NoSuchMethodException e) {
-            constructor = null;
-        }
-        // 2. Otherwise, look for a constructor "public Udf()".
-        if (constructor == null) {
-            try {
-                constructor = klass.getConstructor();
-                if (Modifier.isPublic(constructor.getModifiers())) {
-                    args = new Object[] {};
-                } else {
-                    constructor = null;
-                }
-            } catch (NoSuchMethodException e) {
-                constructor = null;
-            }
-        }
-        // 3. Else, no constructor suitable.
-        if (constructor == null) {
-            throw MondrianResource.instance().UdfClassWrongIface.ex(name,
-                    className, UserDefinedFunction.class.getName());
-        }
-        // Instantiate class.
-        final UserDefinedFunction udf;
-        try {
-            udf = (UserDefinedFunction) constructor.newInstance(args);
-        } catch (InstantiationException e) {
-            throw MondrianResource.instance().UdfClassWrongIface.ex(name,
-                    className, UserDefinedFunction.class.getName());
-        } catch (IllegalAccessException e) {
-            throw MondrianResource.instance().UdfClassWrongIface.ex(name,
-                    className, UserDefinedFunction.class.getName());
-        } catch (ClassCastException e) {
-            throw MondrianResource.instance().UdfClassWrongIface.ex(name,
-                    className, UserDefinedFunction.class.getName());
-        } catch (InvocationTargetException e) {
-            throw MondrianResource.instance().UdfClassWrongIface.ex(name,
-                    className, UserDefinedFunction.class.getName());
-        }
+
+        final UserDefinedFunction udf = Util.createUdf(klass, name);
+
         // Validate function.
         validateFunction(udf);
         // Check for duplicate.

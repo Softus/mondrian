@@ -31,7 +31,10 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.math.BigDecimal;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 
 import mondrian.olap.fun.*;
 import mondrian.olap.type.Type;
@@ -2422,6 +2425,73 @@ public class Util extends XOMUtil {
                     className, UserDefinedFunction.class.getName());
         } catch (ClassCastException e) {
             throw MondrianResource.instance().UdfClassWrongIface.ex("",
+                    className, UserDefinedFunction.class.getName());
+        }
+
+        return udf;
+    }
+
+    /**
+     * Creates a new udf instance from the given udf class.
+     *
+     * @param udfClass the class to create new instance for
+     * @param name the name of UDF
+     * @return an instance of UserDefinedFunction
+     */
+    public static UserDefinedFunction createUdf(Class<?> udfClass, String name) {
+    	
+        final String className = udfClass.getName();
+        
+        // Find a constructor.
+        Constructor<?> constructor;
+        Object[] args = {};
+        
+        // 1. Look for a constructor "public Udf(String name)".
+        try {
+            constructor = udfClass.getConstructor(String.class);
+            if (Modifier.isPublic(constructor.getModifiers())) {
+                args = new Object[] {name};
+            } else {
+                constructor = null;
+            }
+        } catch (NoSuchMethodException e) {
+            constructor = null;
+        }
+        
+        // 2. Otherwise, look for a constructor "public Udf()".
+        if (constructor == null) {
+            try {
+                constructor = udfClass.getConstructor();
+                if (!Modifier.isPublic(constructor.getModifiers())) {
+                    constructor = null;
+                }
+            } catch (NoSuchMethodException e) {
+                constructor = null;
+            }
+        }
+        
+        // 3. Else, no constructor suitable.
+        if (constructor == null) {
+            throw MondrianResource.instance().UdfClassWrongIface.ex(name,
+                    className, UserDefinedFunction.class.getName());
+        }
+        
+        // Instantiate class.
+        final UserDefinedFunction udf;
+        
+        try {
+            udf = (UserDefinedFunction) constructor.newInstance(args);
+        } catch (InstantiationException e) {
+            throw MondrianResource.instance().UdfClassWrongIface.ex(name,
+                    className, UserDefinedFunction.class.getName());
+        } catch (IllegalAccessException e) {
+            throw MondrianResource.instance().UdfClassWrongIface.ex(name,
+                    className, UserDefinedFunction.class.getName());
+        } catch (ClassCastException e) {
+            throw MondrianResource.instance().UdfClassWrongIface.ex(name,
+                    className, UserDefinedFunction.class.getName());
+        } catch (InvocationTargetException e) {
+            throw MondrianResource.instance().UdfClassWrongIface.ex(name,
                     className, UserDefinedFunction.class.getName());
         }
 

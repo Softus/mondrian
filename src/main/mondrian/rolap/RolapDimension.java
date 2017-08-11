@@ -159,6 +159,17 @@ class RolapDimension extends DimensionBase {
         return LOGGER;
     }
 
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof RolapDimension) || isMeasures() || ((RolapDimension)o).isMeasures()) {
+            return false;
+        }
+
+        return super.equals(o);
+    }
+
     /**
      * Initializes a dimension within the context of a cube.
      */

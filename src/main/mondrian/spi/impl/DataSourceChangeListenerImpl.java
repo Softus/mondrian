@@ -11,6 +11,7 @@ package mondrian.spi.impl;
 
 import mondrian.spi.DataSourceChangeListener;
 import mondrian.olap.MondrianDef;
+import mondrian.olap.Query;
 import mondrian.rolap.RolapHierarchy;
 import mondrian.rolap.agg.Aggregation;
 
@@ -48,6 +49,11 @@ public class DataSourceChangeListenerImpl implements DataSourceChangeListener {
     public DataSourceChangeListenerImpl() {
     }
 
+    public void beforeQuery(Query query) {
+    }
+
+    public void afterQuery(Query query) {
+    }
 
     public synchronized boolean isHierarchyChanged(RolapHierarchy hierarchy) {
         return false;

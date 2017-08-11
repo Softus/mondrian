@@ -14,6 +14,7 @@ import mondrian.olap.type.*;
 import mondrian.spi.UserDefinedFunction;
 import mondrian.calc.*;
 import mondrian.calc.impl.GenericCalc;
+import mondrian.calc.impl.GenericIterCalc;
 import mondrian.mdx.ResolvedFunCall;
 
 import java.util.List;
@@ -140,8 +141,11 @@ public class UdfResolver implements Resolver {
                 final Calc scalarCalc = compiler.compileScalar(arg, true);
                 expCalcs[i] = new CalcExp(calc, scalarCalc);
             }
-
-            return new CalcImpl(call, calcs, udf, expCalcs);
+            
+            return
+                (returnType instanceof SetType)
+                    ? new IterCalcImpl(call, calcs, udf, expCalcs)
+                    : new CalcImpl(call, calcs, udf, expCalcs);
         }
     }
 
@@ -160,7 +164,40 @@ public class UdfResolver implements Resolver {
                 UserDefinedFunction.Argument[] args) {
             super(call);
             this.calcs = calcs;
-            this.udf = Util.createUdf(udf.getClass());
+            this.udf = Util.createUdf(udf.getClass(), udf.getName());
+            this.args = args;
+        }
+
+        public Calc[] getCalcs() {
+            return calcs;
+        }
+
+        public Object evaluate(Evaluator evaluator) {
+            return udf.execute(evaluator, args);
+        }
+
+        public boolean dependsOn(Dimension dimension) {
+            // Be pessimistic. This effectively disables expression caching.
+            return true;
+        }
+    }
+
+    /**
+     * Expression which evaluates a user-defined function.
+     */
+    private static class IterCalcImpl extends GenericIterCalc {
+        private final Calc[] calcs;
+        private final UserDefinedFunction udf;
+        private final UserDefinedFunction.Argument[] args;
+
+        public IterCalcImpl(
+                ResolvedFunCall call,
+                Calc[] calcs,
+                UserDefinedFunction udf,
+                UserDefinedFunction.Argument[] args) {
+            super(call);
+            this.calcs = calcs;
+            this.udf = Util.createUdf(udf.getClass(), udf.getName());
             this.args = args;
         }
 

@@ -10,11 +10,19 @@
 package mondrian.olap.fun;
 
 import mondrian.olap.*;
+import mondrian.olap.type.BooleanType;
+import mondrian.olap.type.NumericType;
+import mondrian.olap.type.SetType;
+import mondrian.olap.type.StringType;
+import mondrian.olap.type.Type;
+import mondrian.olap.type.TypeUtil;
 import mondrian.calc.Calc;
 import mondrian.calc.ExpCompiler;
 import mondrian.calc.BooleanCalc;
+import mondrian.calc.ResultStyle;
 import mondrian.calc.impl.ConstantCalc;
 import mondrian.calc.impl.GenericCalc;
+import mondrian.calc.impl.GenericIterCalc;
 import mondrian.mdx.ResolvedFunCall;
 
 import java.util.List;
@@ -43,6 +51,29 @@ class CaseTestFunDef extends FunDefBase {
         super(dummyFunDef);
     }
 
+    public Type getResultType(Validator validator, Exp[] args) {
+        switch (returnCategory) {
+        case Category.Numeric:
+            return new NumericType();
+        case Category.String:
+            return new StringType();
+        case Category.Logical:
+            return new BooleanType();
+        default:
+            final int typeCount = args.length / 2;
+            final Type[] resultTypes = new Type[typeCount];
+            int i = 0;
+
+            for (int j = 1; j < args.length; j += 2) {
+                resultTypes[i++] = args[j].getType();
+            }
+            if (i < typeCount) {
+                resultTypes[i] = args[args.length - 1].getType();
+            }
+            return TypeUtil.computeCommonType(true, resultTypes);
+        }
+    }
+
     public Calc compileCall(ResolvedFunCall call, ExpCompiler compiler) {
         final Exp[] args = call.getArgs();
         final BooleanCalc[] conditionCalcs =
@@ -59,25 +90,61 @@ class CaseTestFunDef extends FunDefBase {
         }
         final Calc defaultCalc =
                 args.length % 2 == 1 ?
-                compiler.compileScalar(args[args.length - 1], true) :
+                compiler.compile(args[args.length - 1]) :
                 ConstantCalc.constantNull(call.getType());
         calcList.add(defaultCalc);
         final Calc[] calcs = calcList.toArray(new Calc[calcList.size()]);
 
-        return new GenericCalc(call) {
-            public Object evaluate(Evaluator evaluator) {
+        if (call.getType() instanceof SetType) {
+            ResultStyle rs = ResultStyle.MUTABLE_LIST;
+            for (int i = 0; i <= exprCalcs.length; i++) {
+            final Calc resultCalc = i < exprCalcs.length ? exprCalcs[i] : defaultCalc;
+                final ResultStyle calcRs = resultCalc.getResultStyle();
+
+                if (calcRs == ResultStyle.ITERABLE) {
+                    rs = ResultStyle.ITERABLE;
+                } else if (calcRs == ResultStyle.LIST) {
+                    if (rs == ResultStyle.MUTABLE_LIST) {
+                    rs = ResultStyle.LIST;
+                    }
+                }
+            }
+
+            final ResultStyle resultStyle = rs;
+            return new GenericIterCalc(call) {
+                public Object evaluate(Evaluator evaluator) {
                 for (int i = 0; i < conditionCalcs.length; i++) {
                     if (conditionCalcs[i].evaluateBoolean(evaluator)) {
                         return exprCalcs[i].evaluate(evaluator);
                     }
                 }
                 return defaultCalc.evaluate(evaluator);
-            }
+                }
 
-            public Calc[] getCalcs() {
-                return calcs;
-            }
-        };
+                public Calc[] getCalcs() {
+                    return calcs;
+                }
+
+                public ResultStyle getResultStyle() {
+                    return resultStyle;
+                }
+            };
+        } else {
+            return new GenericCalc(call) {
+                public Object evaluate(Evaluator evaluator) {
+                    for (int i = 0; i < conditionCalcs.length; i++) {
+                        if (conditionCalcs[i].evaluateBoolean(evaluator)) {
+                            return exprCalcs[i].evaluate(evaluator);
+                        }
+                    }
+                    return defaultCalc.evaluate(evaluator);
+                }
+
+                public Calc[] getCalcs() {
+                    return calcs;
+                }
+            };
+        }
     }
 
     private static class ResolverImpl extends ResolverBase {
@@ -101,6 +168,14 @@ class CaseTestFunDef extends FunDefBase {
             int clauseCount = args.length / 2;
             int mismatchingArgs = 0;
             int returnType = args[1].getCategory();
+
+            if (Category.Null == returnType) {
+                // Try find first not Null return expression
+                for (int i = 3; Category.Null == returnType && i <= args.length; i += 2) {
+                    returnType =  args[i < args.length ? i : args.length - 1].getCategory();
+                }
+            }
+
             for (int i = 0; i < clauseCount; i++) {
                 if (!validator.canConvert(args[j++], Category.Logical, conversions)) {
                     mismatchingArgs++;

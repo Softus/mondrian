@@ -95,6 +95,10 @@ public abstract class RolapAggregationManager {
         final List<List<Member[]>> aggregationLists =
             evaluator.getAggregationLists();
 
+        if (!(currentMembers[0] instanceof RolapStoredMeasure)) {
+            return null;
+        }
+
         final RolapStoredMeasure measure =
             (RolapStoredMeasure) currentMembers[0];
         final RolapStar.Measure starMeasure =

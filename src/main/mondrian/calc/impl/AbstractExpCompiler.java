@@ -248,7 +248,7 @@ public class AbstractExpCompiler implements ExpCompiler {
     }
 
     public StringCalc compileString(Exp exp) {
-        return (StringCalc) compile(exp);
+        return (StringCalc) compileScalar(exp, false);
     }
 
     public DateTimeCalc compileDateTime(Exp exp) {

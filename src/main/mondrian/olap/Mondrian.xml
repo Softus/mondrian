@@ -1783,6 +1783,12 @@ Revision is $Id: //open/mondrian/src/main/mondrian/olap/Mondrian.xml#74 $
                 the current role. Allowable values are 'full' (the default),
                 'partial', and 'hidden'.</Doc>
         </Attribute>
+        <Attribute name="memberAccess" required="false">
+            <Doc></Doc>
+            <Doc>Values correspond to <code>Access</code>. Default access to members of hierarchy.</Doc>
+            <Value>all</Value>
+            <Value>none</Value>
+        </Attribute>
         <Array name="memberGrants" type="MemberGrant"/>
     </Element>
 

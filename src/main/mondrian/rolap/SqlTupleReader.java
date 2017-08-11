@@ -843,7 +843,6 @@ public class SqlTupleReader implements TupleReader {
                 String ordinalSql = ordinalExp.getExpression(sqlQuery);
 
                 hierarchy.addToFrom(sqlQuery, keyExp);
-                hierarchy.addToFrom(sqlQuery, ordinalExp);
 
                 String captionSql = null;
                 if (captionExp != null) {
@@ -851,14 +850,16 @@ public class SqlTupleReader implements TupleReader {
                     hierarchy.addToFrom(sqlQuery, captionExp);
                 }
 
-                sqlQuery.addSelectGroupBy(keySql);
+                hierarchy.addToFrom(sqlQuery, ordinalExp);
 
-                if (!ordinalSql.equals(keySql)) {
-                    sqlQuery.addSelectGroupBy(ordinalSql);
-                }
+                sqlQuery.addSelectGroupBy(keySql);
 
                 if (captionSql != null) {
                     sqlQuery.addSelectGroupBy(captionSql);
+                }
+
+                if (!ordinalSql.equals(keySql)) {
+                    sqlQuery.addSelectGroupBy(ordinalSql);
                 }
 
                 constraint.addLevelConstraint(
