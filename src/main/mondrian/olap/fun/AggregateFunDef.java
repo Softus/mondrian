@@ -95,6 +95,9 @@ public class AggregateFunDef extends AbstractAggregateFunDef {
                     null,
                     "Could not find an aggregator in the current evaluation context");
             }
+            if (aggregator == RolapAggregator.None) {
+                return DoubleNull;
+            }
             Aggregator rollup = aggregator.getRollup();
             if (rollup == null) {
                 throw newEvalException(

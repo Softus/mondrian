@@ -13,6 +13,7 @@
 package mondrian.rolap;
 
 import mondrian.olap.*;
+import mondrian.olap.MondrianDef.Expression;
 import mondrian.rolap.agg.CellRequest;
 import mondrian.rolap.agg.MemberColumnPredicate;
 import mondrian.rolap.agg.MemberTuplePredicate;
@@ -61,6 +62,15 @@ public class RolapCubeLevel extends RolapLevel {
         captionExp = convertExpression(level.getCaptionExp(), hierarchyRel);
         ordinalExp = convertExpression(level.getOrdinalExp(), hierarchyRel);
         parentExp = convertExpression(level.getParentExp(), hierarchyRel);
+
+        int i = 0;
+        properties = new RolapProperty[level.getProperties().length];
+        for (RolapProperty property : level.getProperties()) {
+            Expression exp = convertExpression(property.getExp(), hierarchyRel);
+
+            properties[i++] = (exp != property.getExp()) ?
+                new RolapProperty(property, exp) : property;
+        }
     }
 
     void init(MondrianDef.CubeDimension xmlDimension) {

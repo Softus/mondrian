@@ -980,7 +980,7 @@ public class RolapHierarchy extends HierarchyBase {
             Collections.<String, Annotation>emptyMap());
 
         // Create a peer hierarchy.
-        RolapHierarchy peerHier = peerDimension.newHierarchy(null, true);
+        RolapHierarchy peerHier = peerDimension.newHierarchy(subName, true);
         peerHier.allMemberName = getAllMemberName();
         peerHier.allMember = getAllMember();
         peerHier.allLevelName = getAllLevelName();
@@ -1086,6 +1086,10 @@ public class RolapHierarchy extends HierarchyBase {
         RolapNullMember(final RolapLevel level) {
             super(null, level, null, RolapUtil.mdxNullLiteral, MemberType.NULL);
             assert level != null;
+
+            if (getDimension().isMeasures()) {
+                setProperty(Property.AGGREGATION_TYPE.name, RolapAggregator.None);
+            }
         }
     }
 

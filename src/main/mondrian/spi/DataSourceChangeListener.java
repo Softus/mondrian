@@ -10,6 +10,7 @@
 package mondrian.spi;
 
 
+import mondrian.olap.Query;
 import mondrian.rolap.RolapHierarchy;
 import mondrian.rolap.agg.Aggregation;
 
@@ -42,6 +43,14 @@ import mondrian.rolap.agg.Aggregation;
  */
 
 public interface DataSourceChangeListener {
+
+    /**
+     */
+    public void beforeQuery(Query query);
+
+    /**
+     */
+    public void afterQuery(Query query);
 
     /**
      * Checks if the given hierarchy has changed since the previous

@@ -1455,7 +1455,8 @@ public class RolapResult extends ResultBase {
                 return format.format(null);
             } else if (value instanceof Throwable) {
                 return "#ERR: " + value.toString();
-            } else if (value instanceof String) {
+            } else if (value instanceof String &&
+            		(formatString == null || formatString.length() == 0)) {
                 return (String) value;
             } else {
                 Format format = getFormat(formatString);

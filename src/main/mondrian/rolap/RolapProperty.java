@@ -38,7 +38,7 @@ class RolapProperty extends Property {
     private final boolean dependsOnLevelValue;
 
     /** The column or expression which yields the property's value. */
-    private final MondrianDef.Expression exp;
+    private /*final*/ MondrianDef.Expression exp;
 
 
     /**
@@ -67,6 +67,16 @@ class RolapProperty extends Property {
         this.formatter = makePropertyFormatter(formatterDef);
         this.dependsOnLevelValue =
             dependsOnLevelValue != null && dependsOnLevelValue;
+    }
+
+    RolapProperty(
+        RolapProperty property,
+        MondrianDef.Expression exp)
+    {
+        super(property.getName(), property.getType(), -1, property.isInternal(), false, false, null);
+        this.exp = exp;
+        this.caption = property.caption;
+        this.formatter = property.formatter;
     }
 
     private PropertyFormatter makePropertyFormatter(String formatterDef) {

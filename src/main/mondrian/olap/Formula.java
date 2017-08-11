@@ -429,6 +429,8 @@ public class Formula extends QueryPart {
                 }
             }
             return Literal.createString(formatString);
+        } else if (type instanceof StringType) {
+        	return Literal.createString("");
         }
 
         if (!mdxMember.isMeasure()) {

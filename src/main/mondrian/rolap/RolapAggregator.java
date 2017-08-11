@@ -28,6 +28,13 @@ public abstract class RolapAggregator
 {
     private static int index = 0;
 
+    public static final RolapAggregator None =
+        new RolapAggregator("none", index++, false) {
+            public Object aggregate(Evaluator evaluator, List members, Calc exp) {
+                return FunUtil.nullValue;
+            }
+        };
+
     public static final RolapAggregator Sum =
         new RolapAggregator("sum", index++, false) {
             public Object aggregate(Evaluator evaluator, List members, Calc exp)
