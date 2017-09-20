@@ -17,6 +17,7 @@
         <artifact pattern="https://public.nexus.pentaho.org/service/local/repositories/proxy-public-3rd-party-release/content/[organisation]/[module]/[revision]/[artifact].[ext]" />
         <artifact pattern="http://nexus.dc-local/service/local/repositories/dc-local/content/[organisation]/[module]/[revision]/[artifact]-[revision].[ext]" />
         <artifact pattern="http://nexus.dc-local/service/local/repositories/dc-local/content/[organisation]/[module]/[revision]/[artifact].[ext]" />
+        <artifact pattern="http://nexus.dc-local/service/local/repositories/jboss.public/content/[organisation]/[module]/[revision]/[artifact]-[revision].[ext]" />
       </url>
       <ibiblio name="ibiblio" m2compatible="true" />
     </chain>
