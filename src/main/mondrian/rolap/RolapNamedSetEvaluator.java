@@ -1,8 +1,8 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/rolap/RolapNamedSetEvaluator.java#2 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapNamedSetEvaluator.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2008-2009 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
@@ -21,7 +21,7 @@ import java.util.*;
  *
  * @author jhyde
  * @since November 11, 2008
- * @version $Id: //open/mondrian/src/main/mondrian/rolap/RolapNamedSetEvaluator.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapNamedSetEvaluator.java#2 $
  */
 class RolapNamedSetEvaluator
     implements Evaluator.NamedSetEvaluator
@@ -123,8 +123,8 @@ class RolapNamedSetEvaluator
             if (list == DUMMY_LIST) {
                 throw rrer.slicerEvaluator.newEvalException(
                     null,
-                    "Illegal attempt to reference value of named set '" +
-                        name + "' while evaluating itself");
+                    "Illegal attempt to reference value of named set '"
+                    + name + "' while evaluating itself");
             }
             return;
         }
@@ -156,10 +156,13 @@ class RolapNamedSetEvaluator
             }
         }
         if (RolapResult.LOGGER.isDebugEnabled()) {
-            final StringBuilder buf =
-                new StringBuilder(
-                    this + ": " +
-                    "Named set " + name + " evaluated to:" + Util.nl);
+            final StringBuilder buf = new StringBuilder();
+            buf.append(this);
+            buf.append(": ");
+            buf.append("Named set ");
+            buf.append(name);
+            buf.append(" evaluated to:");
+            buf.append(Util.nl);
             int arity = ((SetType) calc.getType()).getArity();
             int rowCount = 0;
             final int maxRowCount = 100;

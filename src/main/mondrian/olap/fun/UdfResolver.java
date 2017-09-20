@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/olap/fun/UdfResolver.java#18 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/UdfResolver.java#3 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2008 Julian Hyde
+// http://www.eclipse.org/legal/epl-v10.html.
+// Copyright (C) 2005-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -14,7 +14,7 @@ import mondrian.olap.type.*;
 import mondrian.spi.UserDefinedFunction;
 import mondrian.calc.*;
 import mondrian.calc.impl.GenericCalc;
-import mondrian.calc.impl.GenericIterCalc;
+import mondrian.calc.impl.AbstractListCalc;
 import mondrian.mdx.ResolvedFunCall;
 
 import java.util.List;
@@ -24,7 +24,7 @@ import java.util.List;
  *
  * @author jhyde
  * @since 2.0
- * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/UdfResolver.java#18 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/UdfResolver.java#3 $
  */
 public class UdfResolver implements Resolver {
     private final UserDefinedFunction udf;
@@ -70,9 +70,9 @@ public class UdfResolver implements Resolver {
     }
 
     public FunDef resolve(
-            Exp[] args,
-            Validator validator,
-            List<Conversion> conversions)
+        Exp[] args,
+        Validator validator,
+        List<Conversion> conversions)
     {
         final Type[] parameterTypes = udf.getParameterTypes();
         if (args.length != parameterTypes.length) {
@@ -84,9 +84,11 @@ public class UdfResolver implements Resolver {
             Type parameterType = parameterTypes[i];
             final Exp arg = args[i];
             final Type argType = arg.getType();
-            final int parameterCategory = TypeUtil.typeToCategory(parameterType);
+            final int parameterCategory =
+                TypeUtil.typeToCategory(parameterType);
             if (!validator.canConvert(
-                    arg, parameterCategory, conversions)) {
+                arg, parameterCategory, conversions))
+            {
                 return null;
             }
             parameterCategories[i] = parameterCategory;
@@ -139,32 +141,47 @@ public class UdfResolver implements Resolver {
                     castType(arg.getType(), parameterCategories[i]),
                     ResultStyle.ANY_LIST);
                 final Calc scalarCalc = compiler.compileScalar(arg, true);
-                expCalcs[i] = new CalcExp(calc, scalarCalc);
+                final ListCalc listCalc;
+                final IterCalc iterCalc;
+                if (arg.getType() instanceof SetType) {
+                    listCalc = compiler.compileList(arg, true);
+                    iterCalc = compiler.compileIter(arg);
+                } else {
+                    listCalc = null;
+                    iterCalc = null;
+                }
+                expCalcs[i] = new CalcExp(calc, scalarCalc, listCalc, iterCalc);
             }
-            
-            return
-                (returnType instanceof SetType)
-                    ? new IterCalcImpl(call, calcs, udf, expCalcs)
-                    : new CalcImpl(call, calcs, udf, expCalcs);
+
+            // Clone the UDF, because some UDFs use member variables as state.
+            UserDefinedFunction udf2 =
+                Util.createUdf(
+                    udf.getClass(), udf.getName());
+            if (call.getType() instanceof SetType) {
+                return new ListCalcImpl(call, calcs, udf2, expCalcs);
+            } else {
+                return new ScalarCalcImpl(call, calcs, udf2, expCalcs);
+            }
         }
     }
 
     /**
-     * Expression which evaluates a user-defined function.
+     * Expression that evaluates a scalar user-defined function.
      */
-    private static class CalcImpl extends GenericCalc {
+    private static class ScalarCalcImpl extends GenericCalc {
         private final Calc[] calcs;
         private final UserDefinedFunction udf;
         private final UserDefinedFunction.Argument[] args;
 
-        public CalcImpl(
-                ResolvedFunCall call,
-                Calc[] calcs,
-                UserDefinedFunction udf,
-                UserDefinedFunction.Argument[] args) {
+        public ScalarCalcImpl(
+            ResolvedFunCall call,
+            Calc[] calcs,
+            UserDefinedFunction udf,
+            UserDefinedFunction.Argument[] args)
+        {
             super(call);
             this.calcs = calcs;
-            this.udf = Util.createUdf(udf.getClass(), udf.getName());
+            this.udf = udf;
             this.args = args;
         }
 
@@ -183,30 +200,25 @@ public class UdfResolver implements Resolver {
     }
 
     /**
-     * Expression which evaluates a user-defined function.
+     * Expression that evaluates a list user-defined function.
      */
-    private static class IterCalcImpl extends GenericIterCalc {
-        private final Calc[] calcs;
+    private static class ListCalcImpl extends AbstractListCalc {
         private final UserDefinedFunction udf;
         private final UserDefinedFunction.Argument[] args;
 
-        public IterCalcImpl(
-                ResolvedFunCall call,
-                Calc[] calcs,
-                UserDefinedFunction udf,
-                UserDefinedFunction.Argument[] args) {
-            super(call);
-            this.calcs = calcs;
-            this.udf = Util.createUdf(udf.getClass(), udf.getName());
+        public ListCalcImpl(
+            ResolvedFunCall call,
+            Calc[] calcs,
+            UserDefinedFunction udf,
+            UserDefinedFunction.Argument[] args)
+        {
+            super(call, calcs);
+            this.udf = udf;
             this.args = args;
         }
 
-        public Calc[] getCalcs() {
-            return calcs;
-        }
-
-        public Object evaluate(Evaluator evaluator) {
-            return udf.execute(evaluator, args);
+        public List evaluateList(Evaluator evaluator) {
+            return (List) udf.execute(evaluator, args);
         }
 
         public boolean dependsOn(Dimension dimension) {
@@ -224,10 +236,29 @@ public class UdfResolver implements Resolver {
     private static class CalcExp implements UserDefinedFunction.Argument {
         private final Calc calc;
         private final Calc scalarCalc;
+        private final IterCalc iterCalc;
+        private final ListCalc listCalc;
 
-        public CalcExp(Calc calc, Calc scalarCalc) {
+        /**
+         * Creates a CalcExp.
+         *
+         * @param calc Compiled expression
+         * @param scalarCalc Compiled expression that evaluates to a scalar
+         * @param listCalc Compiled expression that evaluates an MDX set to
+         *     a java list
+         * @param iterCalc Compiled expression that evaluates an MDX set to
+         *     a java iterable
+         */
+        public CalcExp(
+            Calc calc,
+            Calc scalarCalc,
+            ListCalc listCalc,
+            IterCalc iterCalc)
+        {
             this.calc = calc;
             this.scalarCalc = scalarCalc;
+            this.listCalc = listCalc;
+            this.iterCalc = iterCalc;
         }
 
         public Type getType() {
@@ -241,8 +272,21 @@ public class UdfResolver implements Resolver {
         public Object evaluateScalar(Evaluator evaluator) {
             return scalarCalc.evaluate(evaluator);
         }
-    }
 
+        public List evaluateList(Evaluator eval) {
+            if (listCalc == null) {
+                throw new RuntimeException("Expression is not a set");
+            }
+            return listCalc.evaluateList(eval);
+        }
+
+        public Iterable evaluateIterable(Evaluator eval) {
+            if (iterCalc == null) {
+                throw new RuntimeException("Expression is not a set");
+            }
+            return iterCalc.evaluateIterable(eval);
+        }
+    }
 }
 
 // End UdfResolver.java

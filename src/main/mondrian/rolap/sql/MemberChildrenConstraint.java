@@ -1,8 +1,8 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/rolap/sql/MemberChildrenConstraint.java#10 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/sql/MemberChildrenConstraint.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2004-2005 TONBELLER AG
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
@@ -23,7 +23,7 @@ import mondrian.rolap.aggmatcher.AggStar;
  *
  * @author av
  * @since Nov 2, 2005
- * @version $Id: //open/mondrian/src/main/mondrian/rolap/sql/MemberChildrenConstraint.java#10 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/sql/MemberChildrenConstraint.java#2 $
  */
 public interface MemberChildrenConstraint extends SqlConstraint {
 
@@ -47,10 +47,11 @@ public interface MemberChildrenConstraint extends SqlConstraint {
      * children of <em>all</em> parent members contained in <code>parents</code>
      * will be returned in the result set.
      *
-     * @param sqlQuery the query to modify
-     * @param baseCube base cube for virtual members
+     * @param sqlQuery Query to modify
+     * @param baseCube Base cube for virtual members
      * @param aggStar Aggregate table, or null if query is against fact table
-     * @param parents list of parent members that restrict the returned children.
+     * @param parents List of parent members that restrict the returned
+     *        children
      */
     public void addMemberConstraint(
         SqlQuery sqlQuery,

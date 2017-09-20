@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/olap/type/DimensionType.java#9 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/DimensionType.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2008 Julian Hyde
+// http://www.eclipse.org/legal/epl-v10.html.
+// Copyright (C) 2005-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -16,7 +16,7 @@ import mondrian.olap.*;
  *
  * @author jhyde
  * @since Feb 17, 2005
- * @version $Id: //open/mondrian/src/main/mondrian/olap/type/DimensionType.java#9 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/DimensionType.java#2 $
  */
 public class DimensionType implements Type {
     private final Dimension dimension;
@@ -49,16 +49,16 @@ public class DimensionType implements Type {
     }
 
     public boolean usesDimension(Dimension dimension, boolean definitely) {
-        return this.dimension == dimension ||
-            (definitely && this.dimension == null);
+        return this.dimension == dimension
+            || (definitely && this.dimension == null);
     }
 
     public Hierarchy getHierarchy() {
-        return dimension == null ?
-                null :
-                dimension.getHierarchies().length > 1 ?
-                null :
-                dimension.getHierarchies()[0];
+        return dimension == null
+            ? null
+            : dimension.getHierarchies().length > 1
+            ? null
+            : dimension.getHierarchies()[0];
     }
 
     public Level getLevel() {
@@ -99,7 +99,8 @@ public class DimensionType implements Type {
         }
         DimensionType that = (DimensionType) type;
         if (this.getDimension() != null
-            && this.getDimension().equals(that.getDimension())) {
+            && this.getDimension().equals(that.getDimension()))
+        {
             return new DimensionType(
                 this.getDimension());
         }

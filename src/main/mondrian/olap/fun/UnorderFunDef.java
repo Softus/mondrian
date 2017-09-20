@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/olap/fun/UnorderFunDef.java#1 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/UnorderFunDef.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2008-2008 Julian Hyde and others
+// http://www.eclipse.org/legal/epl-v10.html.
+// Copyright (C) 2008-2009 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -18,7 +18,7 @@ import mondrian.olap.FunDef;
  * Definition of the <code>Unorder</code> MDX function.
  *
  * @author jhyde
- * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/UnorderFunDef.java#1 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/UnorderFunDef.java#2 $
  * @since Sep 06, 2008
  */
 class UnorderFunDef extends FunDefBase {

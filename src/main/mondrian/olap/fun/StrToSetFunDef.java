@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/olap/fun/StrToSetFunDef.java#10 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/StrToSetFunDef.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2008 Julian Hyde
+// http://www.eclipse.org/legal/epl-v10.html.
+// Copyright (C) 2006-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -27,16 +27,18 @@ import java.util.List;
  * Definition of the <code>StrToSet</code> MDX builtin function.
  *
  * @author jhyde
- * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/StrToSetFunDef.java#10 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/StrToSetFunDef.java#2 $
  * @since Mar 23, 2006
  */
 class StrToSetFunDef extends FunDefBase {
     static final ResolverImpl Resolver = new ResolverImpl();
 
     private StrToSetFunDef(int[] parameterTypes) {
-        super("StrToSet", "<Set> StrToSet(<String>[, <Dimension>...])",
-                "Constructs a set from a string expression.",
-                Syntax.Function, Category.Set, parameterTypes);
+        super(
+            "StrToSet",
+            "<Set> StrToSet(<String>[, <Dimension>...])",
+            "Constructs a set from a string expression.",
+            Syntax.Function, Category.Set, parameterTypes);
     }
 
     public Calc compileCall(ResolvedFunCall call, ExpCompiler compiler) {
@@ -304,8 +306,14 @@ class StrToSetFunDef extends FunDefBase {
         return i;
     }
 
-    private static RuntimeException fail(String string, int i, String expecting) {
-        throw Util.newInternal("expected '" + expecting + "' at position " + i + " in '" + string + "'");
+    private static RuntimeException fail(
+        String string,
+        int i,
+        String expecting)
+    {
+        throw Util.newInternal(
+            "expected '" + expecting + "' at position " + i + " in '"
+            + string + "'");
     }
 
     public Exp createCall(Validator validator, Exp[] args) {
@@ -363,7 +371,8 @@ class StrToSetFunDef extends FunDefBase {
                 final Type argType = arg.getType();
                 list.add(TypeUtil.toMemberType(argType));
             }
-            final MemberType[] types = list.toArray(new MemberType[list.size()]);
+            final MemberType[] types =
+                list.toArray(new MemberType[list.size()]);
             TupleType.checkDimensions(types);
             return new SetType(new TupleType(types));
         }

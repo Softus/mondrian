@@ -1,7 +1,7 @@
 /*
-// This software is subject to the terms of the Common Public License
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2004-2005 TONBELLER AG
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
@@ -22,7 +22,7 @@ import mondrian.rolap.aggmatcher.AggStar;
  *
  * @author av
  * @since Nov 10, 2005
- * @version $Id: //open/mondrian/src/main/mondrian/rolap/DescendantsConstraint.java#13 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/DescendantsConstraint.java#2 $
  */
 class DescendantsConstraint implements TupleConstraint {
     List<RolapMember> parentMembers;
@@ -32,7 +32,8 @@ class DescendantsConstraint implements TupleConstraint {
      * Creates a DescendantsConstraint.
      *
      * @param parentMembers list of parents all from the same level
-     * @param mcc the constraint that would return the children for each single parent
+     * @param mcc the constraint that would return the children for each single
+     * parent
      */
     public DescendantsConstraint(
         List<RolapMember> parentMembers,
@@ -59,7 +60,9 @@ class DescendantsConstraint implements TupleConstraint {
         mcc.addLevelConstraint(sqlQuery, baseCube, aggStar, level);
     }
 
-    public MemberChildrenConstraint getMemberChildrenConstraint(RolapMember parent) {
+    public MemberChildrenConstraint getMemberChildrenConstraint(
+        RolapMember parent)
+    {
         return mcc;
     }
 

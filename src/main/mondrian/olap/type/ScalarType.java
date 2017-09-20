@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/olap/type/ScalarType.java#7 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/ScalarType.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2008 Julian Hyde
+// http://www.eclipse.org/legal/epl-v10.html.
+// Copyright (C) 2005-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -22,7 +22,7 @@ import mondrian.olap.Level;
  *
  * @author jhyde
  * @since Feb 17, 2005
- * @version $Id: //open/mondrian/src/main/mondrian/olap/type/ScalarType.java#7 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/ScalarType.java#2 $
  */
 public class ScalarType implements Type {
     private final String digest;
@@ -76,20 +76,24 @@ public class ScalarType implements Type {
         } else if (type instanceof NullType) {
             return this;
         } else if (this instanceof NullType
-            && type instanceof ScalarType) {
+            && type instanceof ScalarType)
+        {
             return type;
         } else if (this.getClass() == ScalarType.class
-            && type instanceof ScalarType) {
+            && type instanceof ScalarType)
+        {
             return this;
         } else if (type.getClass() == ScalarType.class) {
             return type;
         } else if (type instanceof ScalarType) {
             return new ScalarType();
         } else if (type instanceof MemberType) {
-            return computeCommonType(((MemberType) type).getValueType(),
+            return computeCommonType(
+                ((MemberType) type).getValueType(),
                 conversionCount);
         } else if (type instanceof TupleType) {
-            return computeCommonType(((TupleType) type).getValueType(),
+            return computeCommonType(
+                ((TupleType) type).getValueType(),
                 conversionCount);
         } else {
             return null;

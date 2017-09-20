@@ -1,7 +1,7 @@
-# $Id: //open/mondrian/workbench/readme.txt#3 $
-# This software is subject to the terms of the Common Public License
+# $Id: //open/mondrian-release/3.1/workbench/readme.txt#2 $
+# This software is subject to the terms of the Eclipse Public License v1.0
 # Agreement, available at the following URL:
-# http://www.opensource.org/licenses/cpl.html.
+# http://www.eclipse.org/legal/epl-v10.html.
 # Copyright (C) 2007-2008 Cincom Inc, JasperSoft, Pentaho, and others
 
 Welcome to the Mondrian Schema Workbench.

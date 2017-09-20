@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/olap/DimensionBase.java#24 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/DimensionBase.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2001-2002 Kana Software, Inc.
-// Copyright (C) 2001-2008 Julian Hyde and others
+// Copyright (C) 2001-2009 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -20,11 +20,12 @@ import mondrian.resource.MondrianResource;
  *
  * @author jhyde
  * @since 6 August, 2001
- * @version $Id: //open/mondrian/src/main/mondrian/olap/DimensionBase.java#24 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/DimensionBase.java#2 $
  */
 public abstract class DimensionBase
     extends OlapElementBase
-    implements Dimension {
+    implements Dimension
+{
 
     protected final String name;
     protected final String uniqueName;
@@ -74,7 +75,8 @@ public abstract class DimensionBase
     }
 
     public String getQualifiedName() {
-        return MondrianResource.instance().MdxDimensionName.str(getUniqueName());
+        return MondrianResource.instance().MdxDimensionName.str(
+            getUniqueName());
     }
 
     public boolean isMeasures() {
@@ -108,8 +110,8 @@ public abstract class DimensionBase
             // New (SSAS-compatible) behavior. If there is no matching
             // hierarchy, find the first level with the given name.
             if (oe == null) {
-                for (Hierarchy hierarchy :
-                    schemaReader.getDimensionHierarchies(this))
+                for (Hierarchy hierarchy
+                    : schemaReader.getDimensionHierarchies(this))
                 {
                     oe = hierarchy.lookupChild(schemaReader, s, matchType);
                     if (oe != null) {

@@ -1,8 +1,8 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/rolap/RolapVirtualCubeMeasure.java#2 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapVirtualCubeMeasure.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2006-2006 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
@@ -17,7 +17,7 @@ import mondrian.olap.CellFormatter;
  * in one of the virtual cube's base cubes.
  *
  * @author jhyde
- * @version $Id: //open/mondrian/src/main/mondrian/rolap/RolapVirtualCubeMeasure.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapVirtualCubeMeasure.java#2 $
  * @since Aug 18, 2006
  */
 public class RolapVirtualCubeMeasure

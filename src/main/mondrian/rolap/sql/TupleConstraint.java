@@ -1,8 +1,8 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/rolap/sql/TupleConstraint.java#11 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/sql/TupleConstraint.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2004-2005 TONBELLER AG
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
@@ -24,7 +24,7 @@ import mondrian.rolap.aggmatcher.AggStar;
  * @see mondrian.rolap.SqlMemberSource
  *
  * @author av
- * @version $Id: //open/mondrian/src/main/mondrian/rolap/sql/TupleConstraint.java#11 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/sql/TupleConstraint.java#2 $
  */
 public interface TupleConstraint extends SqlConstraint {
     /**
@@ -64,13 +64,13 @@ public interface TupleConstraint extends SqlConstraint {
      * and the MemberChildrenConstraint#hashKey(). So we need a matching
      * MemberChildrenConstraint to store the parent with its children into
      * the parent/children cache.
-     * <p>
-     * The returned MemberChildrenConstraint must be one that would have returned
-     * the same children for the given parent as the MemberLevel query has found
-     * for that parent.
-     * <p>
-     * If null is returned, the parent/children will not be cached (but
-     * the level/members still will be).
+     *
+     * <p>The returned MemberChildrenConstraint must be one that would have
+     * returned the same children for the given parent as the MemberLevel query
+     * has found for that parent.
+     *
+     * <p>If null is returned, the parent/children will not be cached (but the
+     * level/members still will be).
      */
     MemberChildrenConstraint getMemberChildrenConstraint(RolapMember parent);
 

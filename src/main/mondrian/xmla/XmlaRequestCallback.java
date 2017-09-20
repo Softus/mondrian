@@ -1,8 +1,8 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/xmla/XmlaRequestCallback.java#10 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/xmla/XmlaRequestCallback.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2005-2007 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
@@ -26,7 +26,7 @@ import org.w3c.dom.Element;
  * {@link XmlaServlet#handleSoapHeader} and {@link XmlaServlet#handleSoapBody}.
  *
  * @author Gang Chen
- * @version $Id: //open/mondrian/src/main/mondrian/xmla/XmlaRequestCallback.java#10 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/xmla/XmlaRequestCallback.java#2 $
  */
 public interface XmlaRequestCallback {
     String AUTHORIZATION = "Authorization";
@@ -109,10 +109,11 @@ public interface XmlaRequestCallback {
      * occurred.
      *
      */
-    void postAction(HttpServletRequest request,
-                HttpServletResponse response,
-                byte[][] responseSoapParts,
-                Map<String, Object> context) throws Exception;
+    void postAction(
+        HttpServletRequest request,
+        HttpServletResponse response,
+        byte[][] responseSoapParts,
+        Map<String, Object> context) throws Exception;
 }
 
 // End XmlaRequestCallback.java

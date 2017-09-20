@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/olap/fun/ParenthesesFunDef.java#13 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/ParenthesesFunDef.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2002-2002 Kana Software, Inc.
-// Copyright (C) 2002-2008 Julian Hyde and others
+// Copyright (C) 2002-2009 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -25,7 +25,7 @@ import java.io.PrintWriter;
  *
  * @author jhyde
  * @since 3 March, 2002
- * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/ParenthesesFunDef.java#13 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/ParenthesesFunDef.java#2 $
  */
 public class ParenthesesFunDef extends FunDefBase {
     private final int argType;

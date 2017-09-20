@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/spi/impl/FilterDynamicSchemaProcessor.java#3 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/spi/impl/FilterDynamicSchemaProcessor.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2007-2007 Julian Hyde
+// http://www.eclipse.org/legal/epl-v10.html.
+// Copyright (C) 2007-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -42,7 +42,7 @@ import java.io.InputStreamReader;
  * </ul>
  *
  * @author jhyde
- * @version $Id: //open/mondrian/src/main/mondrian/spi/impl/FilterDynamicSchemaProcessor.java#3 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/spi/impl/FilterDynamicSchemaProcessor.java#2 $
  * @since Mar 30, 2007
  */
 public class FilterDynamicSchemaProcessor implements DynamicSchemaProcessor {
@@ -58,8 +58,8 @@ public class FilterDynamicSchemaProcessor implements DynamicSchemaProcessor {
         String schemaUrl,
         Util.PropertyList connectInfo) throws Exception
     {
-        FileContent fileContent = Util.readVirtualFile(schemaUrl);
-        return filter(schemaUrl, connectInfo, fileContent.getInputStream());
+        InputStream in = Util.readVirtualFile(schemaUrl);
+        return filter(schemaUrl, connectInfo, in);
     }
 
     /**

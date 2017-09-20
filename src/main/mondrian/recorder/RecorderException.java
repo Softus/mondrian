@@ -1,8 +1,8 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/recorder/RecorderException.java#4 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/recorder/RecorderException.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2005-2006 Julian Hyde and others.
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
@@ -16,7 +16,7 @@ import mondrian.olap.MondrianException;
  * have been reported.
  *
  * @author Richard M. Emberson
- * @version $Id: //open/mondrian/src/main/mondrian/recorder/RecorderException.java#4 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/recorder/RecorderException.java#2 $
  */
 public final class RecorderException extends MondrianException {
      protected RecorderException(String msg) {

@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/calc/impl/TupleValueCalc.java#8 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/calc/impl/TupleValueCalc.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2008 Julian Hyde
+// http://www.eclipse.org/legal/epl-v10.html.
+// Copyright (C) 2006-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -29,7 +29,7 @@ import mondrian.calc.DummyExp;
  * @see mondrian.calc.impl.MemberValueCalc
  *
  * @author jhyde
- * @version $Id: //open/mondrian/src/main/mondrian/calc/impl/TupleValueCalc.java#8 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/calc/impl/TupleValueCalc.java#2 $
  * @since Sep 27, 2005
  */
 public class TupleValueCalc extends GenericCalc {

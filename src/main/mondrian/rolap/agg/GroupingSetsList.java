@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/rolap/agg/GroupingSetsList.java#3 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/agg/GroupingSetsList.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2007-2008 Julian Hyde and others
+// http://www.eclipse.org/legal/epl-v10.html.
+// Copyright (C) 2007-2009 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -29,7 +29,7 @@ import java.util.*;
  * </ul>
  *
  * @author Thiyagu
- * @version $Id: //open/mondrian/src/main/mondrian/rolap/agg/GroupingSetsList.java#3 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/agg/GroupingSetsList.java#2 $
  * @since 24 May 2007
  */
 class GroupingSetsList {
@@ -122,7 +122,8 @@ class GroupingSetsList {
     private void loadRollupIndex() {
         RolapStar.Column[] detailedColumns = getDefaultColumns();
         for (int columnIndex = 0; columnIndex < detailedColumns.length;
-             columnIndex++) {
+             columnIndex++)
+        {
             int rollupIndex =
                 rollupColumns.indexOf(detailedColumns[columnIndex]);
             columnIndexToGroupingIndexMap.put(columnIndex, rollupIndex);

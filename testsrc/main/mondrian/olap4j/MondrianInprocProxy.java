@@ -1,8 +1,8 @@
 /*
-// This software is subject to the terms of the Common Public License
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2008-2008 Julian Hyde
+// http://www.eclipse.org/legal/epl-v10.html.
+// Copyright (C) 2008-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -24,7 +24,7 @@ import mondrian.tui.XmlaSupport;
  * in-process. This is more convenient to debug than an inter-process
  * request using HTTP.
  *
- * @version $Id: //open/mondrian/testsrc/main/mondrian/olap4j/MondrianInprocProxy.java#4 $
+ * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/olap4j/MondrianInprocProxy.java#2 $
  * @author jhyde
  */
 public class MondrianInprocProxy
@@ -75,7 +75,7 @@ public class MondrianInprocProxy
         final String request)
     {
         return singleThreadExecutor.submit(
-            new Callable<byte[] >() {
+            new Callable<byte[]>() {
                 public byte[] call() throws Exception {
                     return get(url, request);
                 }

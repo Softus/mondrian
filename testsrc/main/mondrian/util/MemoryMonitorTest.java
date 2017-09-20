@@ -1,8 +1,8 @@
 /*
-// $Id: //open/mondrian/testsrc/main/mondrian/util/MemoryMonitorTest.java#11 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/util/MemoryMonitorTest.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2006-2009 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
@@ -25,13 +25,16 @@ import java.util.List;
 /**
  * Test case for {@link ObjectPool}.
  *
- * @version $Id: //open/mondrian/testsrc/main/mondrian/util/MemoryMonitorTest.java#11 $
+ * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/util/MemoryMonitorTest.java#2 $
  * @author Richard Emberson
  */
 public class MemoryMonitorTest extends FoodMartTestCase {
     final static int PERCENT_100 = 100;
-    protected static int convertThresholdToPercentage(final long threshold,
-            final long maxMemory) {
+
+    protected static int convertThresholdToPercentage(
+        final long threshold,
+        final long maxMemory)
+    {
         return (int) ((PERCENT_100 * threshold) / maxMemory);
     }
 
@@ -141,7 +144,8 @@ Does not work without the notify on add feature.
         // force a notification.
         long maxMemory = mm.getMaxMemory();
         long usedMemory = mm.getUsedMemory();
-        int currentPercentage = convertThresholdToPercentage(usedMemory, maxMemory);
+        int currentPercentage =
+            convertThresholdToPercentage(usedMemory, maxMemory);
         int delta = (int) (maxMemory - usedMemory) / 10;
         int percentage = convertThresholdToPercentage(delta, maxMemory);
         try {
@@ -181,7 +185,8 @@ Does not work without the notify on add feature.
         // update percentage to below new usage level.
         long maxMemory = mm.getMaxMemory();
         long usedMemory = mm.getUsedMemory();
-        int currentPercentage = convertThresholdToPercentage(usedMemory, maxMemory);
+        int currentPercentage =
+            convertThresholdToPercentage(usedMemory, maxMemory);
         int delta = (int) (maxMemory - usedMemory)/10;
         int percentage = convertThresholdToPercentage(delta, maxMemory);
         try {
@@ -260,7 +265,8 @@ Does not work without the notify on add feature.
         List<Result> list = new ArrayList<Result>();
         MemoryMonitor mm = null;
         try {
-            MemoryMonitorFactory.setThreadLocalClassName(TestMM.class.getName());
+            MemoryMonitorFactory.setThreadLocalClassName(
+                TestMM.class.getName());
             mm = MemoryMonitorFactory.getMemoryMonitor();
             boolean b = causeGC(mm);
 //System.out.println("causeGC="+b);

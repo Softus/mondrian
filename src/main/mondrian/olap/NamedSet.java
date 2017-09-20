@@ -1,8 +1,8 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/olap/NamedSet.java#5 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/NamedSet.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2000-2002 Kana Software, Inc.
 // Copyright (C) 2001-2006 Julian Hyde and others
 // All Rights Reserved.
@@ -22,7 +22,7 @@ import mondrian.olap.type.Type;
  *
  * @author jhyde
  * @since 6 August, 2001
- * @version $Id: //open/mondrian/src/main/mondrian/olap/NamedSet.java#5 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/NamedSet.java#2 $
  */
 public interface NamedSet extends OlapElement {
     /**

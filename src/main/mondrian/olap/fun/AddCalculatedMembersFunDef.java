@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/olap/fun/AddCalculatedMembersFunDef.java#5 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/AddCalculatedMembersFunDef.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2008 Julian Hyde
+// http://www.eclipse.org/legal/epl-v10.html.
+// Copyright (C) 2006-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -30,7 +30,7 @@ import java.util.*;
  * <blockquote><pre>AddCalculatedMembers(&lt;Set&gt;)</pre></blockquote>
 
  * @author jhyde
- * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/AddCalculatedMembersFunDef.java#5 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/AddCalculatedMembersFunDef.java#2 $
  * @since Mar 23, 2006
  */
 class AddCalculatedMembersFunDef extends FunDefBase {
@@ -71,10 +71,11 @@ class AddCalculatedMembersFunDef extends FunDefBase {
             if (dim == null) {
                 dim = member.getDimension();
             } else if (dim != member.getDimension()) {
-                throw newEvalException(this,
-                    "Only members from the same dimension are allowed in the AddCalculatedMembers set: "
-                        + dim.toString() + " vs " +
-                        member.getDimension().toString());
+                throw newEvalException(
+                    this,
+                    "Only members from the same dimension are allowed in the "
+                    + "AddCalculatedMembers set: " + dim.toString()
+                    + " vs " + member.getDimension().toString());
             }
             if (!levelMap.containsKey(member.getLevel())) {
                 levelMap.put(member.getLevel(), null);

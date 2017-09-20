@@ -1,7 +1,7 @@
 /*
-// This software is subject to the terms of the Common Public License
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2007-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
@@ -23,7 +23,7 @@ import java.util.*;
  * for the Mondrian OLAP engine.
  *
  * @author jhyde
- * @version $Id: //open/mondrian/src/main/mondrian/olap4j/MondrianOlap4jCellSetAxisMetaData.java#6 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap4j/MondrianOlap4jCellSetAxisMetaData.java#2 $
 * @since Nov 17, 2007
 */
 class MondrianOlap4jCellSetAxisMetaData implements CellSetAxisMetaData {
@@ -69,16 +69,19 @@ class MondrianOlap4jCellSetAxisMetaData implements CellSetAxisMetaData {
             // each dimension not already in the slicer or in another axes.
             Set<Dimension> dimensionSet = new HashSet<Dimension>();
             for (CellSetAxisMetaData cellSetAxisMetaData
-                : cellSetMetaData.getAxesMetaData()) {
+                : cellSetMetaData.getAxesMetaData())
+            {
                 for (Hierarchy hierarchy
-                    : cellSetAxisMetaData.getHierarchies()) {
+                    : cellSetAxisMetaData.getHierarchies())
+                {
                     dimensionSet.add(hierarchy.getDimension());
                 }
             }
             List<Hierarchy> hierarchyList =
                 new ArrayList<Hierarchy>();
             for (Dimension dimension
-                : cellSetMetaData.getCube().getDimensions()) {
+                : cellSetMetaData.getCube().getDimensions())
+            {
                 if (dimensionSet.add(dimension)) {
                     hierarchyList.add(dimension.getDefaultHierarchy());
                 }

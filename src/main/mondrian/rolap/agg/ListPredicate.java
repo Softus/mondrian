@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/rolap/agg/ListPredicate.java#8 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/agg/ListPredicate.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2007-2008 Julian Hyde
+// http://www.eclipse.org/legal/epl-v10.html.
+// Copyright (C) 2007-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -25,7 +25,7 @@ import java.util.ArrayList;
  * @see mondrian.rolap.agg.ListColumnPredicate
  *
  * @author jhyde
- * @version $Id: //open/mondrian/src/main/mondrian/rolap/agg/ListPredicate.java#8 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/agg/ListPredicate.java#2 $
  */
 public abstract class ListPredicate implements StarPredicate {
     protected final List<StarPredicate> children =
@@ -61,8 +61,9 @@ public abstract class ListPredicate implements StarPredicate {
                     columnBitKey.or(predicate.getConstrainedColumnBitKey());
             }
             children.add(predicate);
-            for (RolapStar.Column column :
-                predicate.getConstrainedColumnList()) {
+            for (RolapStar.Column column
+                : predicate.getConstrainedColumnList())
+            {
                 if (!columns.contains(column)) {
                     columns.add(column);
                 }
@@ -100,14 +101,15 @@ public abstract class ListPredicate implements StarPredicate {
 
     public boolean equalConstraint(StarPredicate that) {
         boolean isEqual =
-            that instanceof ListPredicate &&
-            getConstrainedColumnBitKey().equals(
+            that instanceof ListPredicate
+            && getConstrainedColumnBitKey().equals(
                 that.getConstrainedColumnBitKey());
 
         if (isEqual) {
             ListPredicate thatPred = (ListPredicate) that;
-            if (getOp() != thatPred.getOp() ||
-                getChildren().size() != thatPred.getChildren().size()) {
+            if (getOp() != thatPred.getOp()
+                || getChildren().size() != thatPred.getChildren().size())
+            {
                 isEqual = false;
             }
 

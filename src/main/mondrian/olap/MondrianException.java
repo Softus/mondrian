@@ -1,8 +1,8 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/olap/MondrianException.java#5 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/MondrianException.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2004-2002 Kana Software, Inc.
 // Copyright (C) 2004-2005 Julian Hyde and others
 // All Rights Reserved.
@@ -17,7 +17,7 @@ package mondrian.olap;
  * resource classes generated from mondrian.resource.MondrianResource.xml.
  *
  * @author Galt Johnson (gjabx)
- * @version $Id: //open/mondrian/src/main/mondrian/olap/MondrianException.java#5 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/MondrianException.java#2 $
  * @see org.eigenbase.xom
  */
 public class MondrianException extends RuntimeException {

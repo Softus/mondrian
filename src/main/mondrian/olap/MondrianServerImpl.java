@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/olap/MondrianServerImpl.java#10 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/MondrianServerImpl.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2006-2008 Julian Hyde
+// http://www.eclipse.org/legal/epl-v10.html.
+// Copyright (C) 2006-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -21,7 +21,7 @@ import java.util.Arrays;
  * Implementation of {@link MondrianServer}.
  *
  * @author jhyde
- * @version $Id: //open/mondrian/src/main/mondrian/olap/MondrianServerImpl.java#10 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/MondrianServerImpl.java#2 $
  * @since Jun 25, 2006
  */
 class MondrianServerImpl extends MondrianServer {
@@ -109,12 +109,14 @@ class MondrianServerImpl extends MondrianServer {
             }
             int dot1 = versionString.indexOf('.');
             final int majorVersion =
-                dot1 < 0 ? 1 :
-                Integer.valueOf(versionString.substring(0, dot1));
+                dot1 < 0
+                ? 1
+                : Integer.valueOf(versionString.substring(0, dot1));
             int dot2 = versionString.indexOf('.', dot1 + 1);
             final int minorVersion =
-                dot2 < 0 ? 0 :
-                Integer.valueOf(versionString.substring(dot1 + 1, dot2));
+                dot2 < 0
+                ? 0
+                : Integer.valueOf(versionString.substring(dot1 + 1, dot2));
             version = new MondrianVersion() {
                 public String getVersionString() {
                     return versionString;

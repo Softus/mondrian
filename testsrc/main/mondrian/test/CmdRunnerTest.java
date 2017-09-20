@@ -1,8 +1,8 @@
 /*
-// $Id: //open/mondrian/testsrc/main/mondrian/test/CmdRunnerTest.java#2 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/test/CmdRunnerTest.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2006-2006 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
@@ -18,7 +18,7 @@ import java.io.*;
  * Unit test for {@link mondrian.tui.CmdRunner}.
  *
  * @author jhyde
- * @version $Id: //open/mondrian/testsrc/main/mondrian/test/CmdRunnerTest.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/test/CmdRunnerTest.java#2 $
  * @since Jun 2, 2006
  */
 public class CmdRunnerTest extends FoodMartTestCase {

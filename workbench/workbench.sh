@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: //open/mondrian/workbench/workbench.sh#10 $
+# $Id: //open/mondrian-release/3.1/workbench/workbench.sh#1 $
 # Launch Mondrian Schema Workbench on Linux, UNIX or Cygwin
 
 # Platform specific path-separator.

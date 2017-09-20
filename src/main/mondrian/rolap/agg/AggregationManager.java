@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/rolap/agg/AggregationManager.java#61 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/agg/AggregationManager.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2001-2002 Kana Software, Inc.
-// Copyright (C) 2001-2008 Julian Hyde and others
+// Copyright (C) 2001-2009 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -13,8 +13,7 @@
 
 package mondrian.rolap.agg;
 
-import mondrian.olap.MondrianProperties;
-import mondrian.olap.Util;
+import mondrian.olap.*;
 import mondrian.rolap.*;
 import mondrian.rolap.aggmatcher.AggStar;
 
@@ -28,7 +27,7 @@ import java.util.*;
  *
  * @author jhyde
  * @since 30 August, 2001
- * @version $Id: //open/mondrian/src/main/mondrian/rolap/agg/AggregationManager.java#61 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/agg/AggregationManager.java#2 $
  */
 public class AggregationManager extends RolapAggregationManager {
 
@@ -36,7 +35,7 @@ public class AggregationManager extends RolapAggregationManager {
         MondrianProperties.instance();
 
     private static final Logger LOGGER =
-            Logger.getLogger(AggregationManager.class);
+        Logger.getLogger(AggregationManager.class);
 
     private static AggregationManager instance;
 
@@ -52,11 +51,19 @@ public class AggregationManager extends RolapAggregationManager {
         return instance;
     }
 
+    /**
+     * Creates the AggregationManager.
+     */
     AggregationManager() {
         super();
     }
 
-    public Logger getLogger() {
+    /**
+     * Returns the log4j logger.
+     *
+     * @return Logger
+     */
+    public final Logger getLogger() {
         return LOGGER;
     }
 
@@ -124,11 +131,10 @@ public class AggregationManager extends RolapAggregationManager {
         String sql = spec.generateSqlQuery();
 
         if (getLogger().isDebugEnabled()) {
-            StringBuilder buf = new StringBuilder(256);
-            buf.append("DrillThroughSQL: ");
-            buf.append(sql);
-            buf.append(Util.nl);
-            getLogger().debug(buf.toString());
+            getLogger().debug(
+                "DrillThroughSQL: "
+                + sql
+                + Util.nl);
         }
 
         return sql;
@@ -151,7 +157,9 @@ public class AggregationManager extends RolapAggregationManager {
             // Do not use Aggregate tables if compound predicates are present.
             hasCompoundPredicates = true;
         }
-        if (MondrianProperties.instance().UseAggregates.get() && !hasCompoundPredicates) {
+        if (MondrianProperties.instance().UseAggregates.get()
+             && !hasCompoundPredicates)
+        {
             RolapStar star = groupingSetsList.getStar();
 
             final boolean[] rollup = {false};
@@ -179,8 +187,9 @@ public class AggregationManager extends RolapAggregationManager {
                     buf.append("AggStar=");
                     buf.append(aggStar.getFactTable().getName());
                     buf.append(Util.nl);
-                    for (AggStar.Table.Column column : aggStar.getFactTable()
-                        .getColumns()) {
+                    for (AggStar.Table.Column column
+                        : aggStar.getFactTable().getColumns())
+                    {
                         buf.append("   ");
                         buf.append(column);
                         buf.append(Util.nl);
@@ -189,15 +198,14 @@ public class AggregationManager extends RolapAggregationManager {
                 }
 
                 AggQuerySpec aggQuerySpec =
-                    new AggQuerySpec(aggStar, rollup[0],
-                        groupingSetsList);
+                    new AggQuerySpec(
+                        aggStar, rollup[0], groupingSetsList);
                 String sql = aggQuerySpec.generateSqlQuery();
 
                 if (getLogger().isDebugEnabled()) {
-                    StringBuilder buf = new StringBuilder(256);
-                    buf.append("generateSqlQuery: sql=");
-                    buf.append(sql);
-                    getLogger().debug(buf.toString());
+                    getLogger().debug(
+                        "generateSqlQuery: sql="
+                        + sql);
                 }
 
                 return sql;
@@ -239,10 +247,9 @@ public class AggregationManager extends RolapAggregationManager {
         String sql = spec.generateSqlQuery();
 
         if (getLogger().isDebugEnabled()) {
-            StringBuilder buf = new StringBuilder(256);
-            buf.append("generateSqlQuery: sql=");
-            buf.append(sql);
-            getLogger().debug(buf.toString());
+            getLogger().debug(
+                "generateSqlQuery: sql="
+                + sql);
         }
 
         return sql;
@@ -265,10 +272,11 @@ public class AggregationManager extends RolapAggregationManager {
      * @return An aggregate, or null if none is suitable.
      */
     public AggStar findAgg(
-            RolapStar star,
-            final BitKey levelBitKey,
-            final BitKey measureBitKey,
-            boolean[] rollup) {
+        RolapStar star,
+        final BitKey levelBitKey,
+        final BitKey measureBitKey,
+        boolean[] rollup)
+    {
         // If there is no distinct count measure, isDistinct == false,
         // then all we want is an AggStar whose BitKey is a superset
         // of the combined measure BitKey and foreign-key/level BitKey.
@@ -318,7 +326,8 @@ public class AggregationManager extends RolapAggregationManager {
             final BitSet distinctMeasures = distinctMeasuresBitKey.toBitSet();
             BitKey combinedLevelBitKey = null;
             for (int k = distinctMeasures.nextSetBit(0); k >= 0;
-                k = distinctMeasures.nextSetBit(k + 1)) {
+                k = distinctMeasures.nextSetBit(k + 1))
+            {
                 final AggStar.FactTable.Measure distinctMeasure =
                     aggStar.lookupMeasure(k);
                 BitKey rollableLevelBitKey =
@@ -416,7 +425,8 @@ System.out.println(buf.toString());
      */
     public static class PinSetImpl
         extends HashSet<Segment>
-        implements RolapAggregationManager.PinSet {
+        implements RolapAggregationManager.PinSet
+    {
     }
 }
 

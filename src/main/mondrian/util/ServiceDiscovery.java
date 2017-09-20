@@ -1,8 +1,8 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/util/ServiceDiscovery.java#2 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/util/ServiceDiscovery.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2009-2009 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
@@ -30,7 +30,7 @@ import org.apache.commons.logging.LogFactory;
  * entries in a JAR file and discovers implementors of an interface.
  *
  * @author Marc Batchelor
- * @version $Id: //open/mondrian/src/main/mondrian/util/ServiceDiscovery.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/util/ServiceDiscovery.java#2 $
  */
 public class ServiceDiscovery<T> {
 
@@ -94,8 +94,8 @@ public class ServiceDiscovery<T> {
                     }
                 } catch (IOException e) {
                     logger.warn(
-                        "Error while finding service file " + resourceURL +
-                            " for " + theInterface,
+                        "Error while finding service file " + resourceURL
+                        + " for " + theInterface,
                         e);
                 } finally {
                     if (is != null) {
@@ -126,8 +126,8 @@ public class ServiceDiscovery<T> {
         Set<Class<T>> uniqueClasses)
     {
         // Split should leave me with a class name in the first string
-        // which will nicely ignore comments in the line. I checked and found that
-        // it also doesn't choke if:
+        // which will nicely ignore comments in the line. I checked
+        // and found that it also doesn't choke if:
         // a- There are no spaces on the line - you end up with one entry
         // b- A line begins with a whitespace character (the trim() fixes that)
         // c- Multiples of the same interface are filtered out

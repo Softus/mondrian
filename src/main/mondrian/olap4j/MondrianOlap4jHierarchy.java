@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/olap4j/MondrianOlap4jHierarchy.java#3 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap4j/MondrianOlap4jHierarchy.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2007-2008 Julian Hyde
+// http://www.eclipse.org/legal/epl-v10.html.
+// Copyright (C) 2007-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -26,7 +26,7 @@ import org.olap4j.metadata.NamedList;
  * for the Mondrian OLAP engine.
  *
  * @author jhyde
- * @version $Id: //open/mondrian/src/main/mondrian/olap4j/MondrianOlap4jHierarchy.java#3 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap4j/MondrianOlap4jHierarchy.java#2 $
  * @since May 25, 2007
  */
 class MondrianOlap4jHierarchy implements Hierarchy, Named {
@@ -42,8 +42,8 @@ class MondrianOlap4jHierarchy implements Hierarchy, Named {
     }
 
     public boolean equals(Object obj) {
-        return obj instanceof MondrianOlap4jHierarchy &&
-            hierarchy.equals(((MondrianOlap4jHierarchy) obj).hierarchy);
+        return obj instanceof MondrianOlap4jHierarchy
+            && hierarchy.equals(((MondrianOlap4jHierarchy) obj).hierarchy);
     }
 
     public int hashCode() {

@@ -1,8 +1,8 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/rolap/RolapEvaluatorRoot.java#2 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapEvaluatorRoot.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2008-2009 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
@@ -24,13 +24,11 @@ import java.util.*;
  *
  * @author jhyde
  * @since Nov 11, 2008
- * @version $Id: //open/mondrian/src/main/mondrian/rolap/RolapEvaluatorRoot.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapEvaluatorRoot.java#2 $
  */
 class RolapEvaluatorRoot {
-    final Map<Object, Object> expResultCache =
-        new HashMap<Object, Object>();
-    final Map<Object, Object> tmpExpResultCache =
-        new HashMap<Object, Object>();
+    final Map<Object, Object> expResultCache = new HashMap<Object, Object>();
+    final Map<Object, Object> tmpExpResultCache = new HashMap<Object, Object>();
     final RolapCube cube;
     final RolapConnection connection;
     final SchemaReader schemaReader;
@@ -46,6 +44,12 @@ class RolapEvaluatorRoot {
      * happens very often.
      */
     final RolapMember[] defaultMembers;
+
+    final MondrianProperties.SolveOrderModeEnum solveOrderMode =
+        Util.lookup(
+            MondrianProperties.SolveOrderModeEnum.class,
+            MondrianProperties.instance().SolveOrderMode.get().toUpperCase(),
+            MondrianProperties.SolveOrderModeEnum.ABSOLUTE);
 
     /**
      * Creates a RolapEvaluatorRoot.
@@ -101,7 +105,10 @@ class RolapEvaluatorRoot {
      * <p>The default implementation throws
      * {@link UnsupportedOperationException}.
      */
-    protected Evaluator.NamedSetEvaluator evaluateNamedSet(String name, Exp exp) {
+    protected Evaluator.NamedSetEvaluator evaluateNamedSet(
+        String name,
+        Exp exp)
+    {
         throw new UnsupportedOperationException();
     }
 

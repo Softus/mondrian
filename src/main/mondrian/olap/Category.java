@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/olap/Category.java#13 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Category.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2003-2008 Julian Hyde
+// http://www.eclipse.org/legal/epl-v10.html.
+// Copyright (C) 2003-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -23,7 +23,7 @@ package mondrian.olap;
  *
  * @author jhyde
  * @since Feb 21, 2003
- * @version $Id: //open/mondrian/src/main/mondrian/olap/Category.java#13 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Category.java#2 $
  */
 public class Category extends EnumeratedValues {
     /**

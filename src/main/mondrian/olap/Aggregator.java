@@ -1,8 +1,8 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/olap/Aggregator.java#5 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Aggregator.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2003-2006 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
@@ -21,7 +21,7 @@ import java.util.List;
  *
  * @author jhyde$
  * @since Jul 9, 2003$
- * @version $Id: //open/mondrian/src/main/mondrian/olap/Aggregator.java#5 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Aggregator.java#2 $
  */
 public interface Aggregator {
     /**

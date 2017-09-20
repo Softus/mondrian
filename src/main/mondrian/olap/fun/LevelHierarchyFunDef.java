@@ -1,8 +1,8 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/olap/fun/LevelHierarchyFunDef.java#3 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/LevelHierarchyFunDef.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2006-2007 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
@@ -23,7 +23,7 @@ import mondrian.olap.Level;
  * Definition of the <code>&lt;Level&gt;.Hierarchy</code> MDX builtin function.
  *
  * @author jhyde
- * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/LevelHierarchyFunDef.java#3 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/LevelHierarchyFunDef.java#2 $
  * @since Mar 23, 2006
  */
 public class LevelHierarchyFunDef extends FunDefBase {

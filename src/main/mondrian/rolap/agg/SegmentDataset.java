@@ -1,8 +1,8 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/rolap/agg/SegmentDataset.java#6 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/agg/SegmentDataset.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2002-2002 Kana Software, Inc.
 // Copyright (C) 2002-2007 Julian Hyde and others
 // All Rights Reserved.
@@ -21,9 +21,9 @@ import java.util.Map;
  *
  * @author jhyde
  * @since 21 March, 2002
- * @version $Id: //open/mondrian/src/main/mondrian/rolap/agg/SegmentDataset.java#6 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/agg/SegmentDataset.java#2 $
  */
-interface SegmentDataset extends Iterable<Map.Entry<CellKey,Object>> {
+interface SegmentDataset extends Iterable<Map.Entry<CellKey, Object>> {
     /**
      * Returns the value at a given coordinate.
      *

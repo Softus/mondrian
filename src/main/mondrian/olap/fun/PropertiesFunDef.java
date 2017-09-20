@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/olap/fun/PropertiesFunDef.java#17 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/PropertiesFunDef.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2006 Julian Hyde and others
+// http://www.eclipse.org/legal/epl-v10.html.
+// Copyright (C) 2005-2009 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -20,19 +20,20 @@ import java.util.List;
  * Definition of the <code>Properties</code> MDX function.
  *
  * @author jhyde
- * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/PropertiesFunDef.java#17 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/PropertiesFunDef.java#2 $
  * @since Mar 23, 2006
  */
 class PropertiesFunDef extends FunDefBase {
     static final ResolverImpl Resolver = new ResolverImpl();
 
     public PropertiesFunDef(
-            String name,
-            String signature,
-            String description,
-            Syntax syntax,
-            int returnType,
-            int[] parameterTypes) {
+        String name,
+        String signature,
+        String description,
+        Syntax syntax,
+        int returnType,
+        int[] parameterTypes)
+    {
         super(name, signature, description, syntax, returnType, parameterTypes);
     }
 
@@ -58,8 +59,8 @@ class PropertiesFunDef extends FunDefBase {
         if (o == null) {
             if (!Util.isValidProperty(member, s)) {
                 throw new MondrianEvaluationException(
-                        "Property '" + s +
-                        "' is not valid for member '" + member + "'");
+                    "Property '" + s
+                    + "' is not valid for member '" + member + "'");
             }
         }
         return o;
@@ -70,10 +71,11 @@ class PropertiesFunDef extends FunDefBase {
      */
     private static class ResolverImpl extends ResolverBase {
         private ResolverImpl() {
-            super("Properties",
-                  "<Member>.Properties(<String Expression>)",
-                  "Returns the value of a member property.",
-                  Syntax.Method);
+            super(
+                "Properties",
+                "<Member>.Properties(<String Expression>)",
+                "Returns the value of a member property.",
+                Syntax.Method);
         }
 
         public FunDef resolve(
@@ -84,9 +86,10 @@ class PropertiesFunDef extends FunDefBase {
             final int[] argTypes = new int[]{Category.Member, Category.String};
             final Exp propertyNameExp = args[1];
             final Exp memberExp = args[0];
-            if ((args.length != 2) ||
-                    (memberExp.getCategory() != Category.Member) ||
-                    (propertyNameExp.getCategory() != Category.String)) {
+            if ((args.length != 2)
+                || (memberExp.getCategory() != Category.Member)
+                || (propertyNameExp.getCategory() != Category.String))
+            {
                 return null;
             }
             int returnType = deducePropertyCategory(memberExp, propertyNameExp);
@@ -111,7 +114,8 @@ class PropertiesFunDef extends FunDefBase {
             if (!(propertyNameExp instanceof Literal)) {
                 return Category.Value;
             }
-            String propertyName = (String) ((Literal) propertyNameExp).getValue();
+            String propertyName =
+                (String) ((Literal) propertyNameExp).getValue();
             Hierarchy hierarchy = memberExp.getType().getHierarchy();
             if (hierarchy == null) {
                 return Category.Value;

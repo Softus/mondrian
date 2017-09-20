@@ -1,8 +1,8 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/util/Bug.java#28 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/util/Bug.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
+// http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2006-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
@@ -19,7 +19,7 @@ import mondrian.spi.Dialect;
  * when its bug is fixed.
  *
  * @author jhyde
- * @version $Id: //open/mondrian/src/main/mondrian/util/Bug.java#28 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/util/Bug.java#2 $
  * @since Oct 11, 2006
  */
 public class Bug {
@@ -109,11 +109,28 @@ public class Bug {
     public static final boolean BugMondrian486Fixed = false;
 
     /**
+     * Whether bug <a href="http://jira.pentaho.com/browse/MONDRIAN-495">
+     * MONDRIAN-495, "Table filter concept does not support dialects."</a>
+     * is fixed.
+     */
+    public static final boolean BugMondrian495Fixed = false;
+
+    /**
      * Whether
      * <a href="http://jira.pentaho.com/browse/MONDRIAN-503">bug MONDRIAN-503, "RolapResultTest disabled"</a>
      * is fixed.
      */
     public static final boolean BugMondrian503Fixed = false;
+
+    /**
+     * Whether
+     * <a href="http://jira.pentaho.com/browse/MONDRIAN-555">bug MONDRIAN-555,
+     * "Compound slicer counts cells twice in certain cases"</a> is fixed.
+     * If a set in the slicer contains the same member more than once, or more
+     * generally, if the regions overlap, then mondrian counts the overlaps
+     * twice, whereas SSAS 2005 does not.
+     */
+    public static final boolean BugMondrian555Fixed = false;
 
     /**
      * Returns whether to avoid a test because the memory monitor may cause it

@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/olap4j/MondrianOlap4jMember.java#4 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap4j/MondrianOlap4jMember.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2007-2008 Julian Hyde
+// http://www.eclipse.org/legal/epl-v10.html.
+// Copyright (C) 2007-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -27,7 +27,7 @@ import mondrian.rolap.RolapMeasure;
  * {@link mondrian.olap.Member}.
  *
  * @author jhyde
- * @version $Id: //open/mondrian/src/main/mondrian/olap4j/MondrianOlap4jMember.java#4 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap4j/MondrianOlap4jMember.java#2 $
  * @since May 25, 2007
  */
 class MondrianOlap4jMember implements Member, Named {
@@ -46,8 +46,8 @@ class MondrianOlap4jMember implements Member, Named {
     }
 
     public boolean equals(Object obj) {
-        return obj instanceof MondrianOlap4jMember &&
-            member.equals(((MondrianOlap4jMember) obj).member);
+        return obj instanceof MondrianOlap4jMember
+            && member.equals(((MondrianOlap4jMember) obj).member);
     }
 
     public int hashCode() {
@@ -64,7 +64,8 @@ class MondrianOlap4jMember implements Member, Named {
             }
 
             public MondrianOlap4jMember get(int index) {
-                return new MondrianOlap4jMember(olap4jSchema, children.get(index));
+                return new MondrianOlap4jMember(
+                    olap4jSchema, children.get(index));
             }
 
             public int size() {
@@ -139,7 +140,9 @@ class MondrianOlap4jMember implements Member, Named {
         return member.getPropertyFormattedValue(property.getName());
     }
 
-    public void setProperty(Property property, Object value) throws OlapException {
+    public void setProperty(Property property, Object value)
+        throws OlapException
+    {
         member.setProperty(property.getName(), value);
     }
 

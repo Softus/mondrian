@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/olap/fun/XtdFunDef.java#14 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/XtdFunDef.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2008 Julian Hyde
+// http://www.eclipse.org/legal/epl-v10.html.
+// Copyright (C) 2005-2009 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -25,7 +25,7 @@ import java.util.List;
  * and <code>Wtd</code> MDX builtin functions.
  *
  * @author jhyde
- * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/XtdFunDef.java#14 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/XtdFunDef.java#2 $
  * @since Mar 23, 2006
  */
 class XtdFunDef extends FunDefBase {
@@ -71,15 +71,16 @@ class XtdFunDef extends FunDefBase {
             Dimension defaultTimeDimension =
                 validator.getQuery().getCube().getTimeDimension();
             if (defaultTimeDimension == null) {
-                throw MondrianResource.instance().
-                            NoTimeDimensionInCube.ex(getName());
+                throw MondrianResource.instance().NoTimeDimensionInCube.ex(
+                    getName());
             }
             Hierarchy hierarchy = defaultTimeDimension.getHierarchy();
             return new SetType(MemberType.forHierarchy(hierarchy));
         }
         final Type type = args[0].getType();
-        if (type.getDimension().getDimensionType() !=
-                DimensionType.TimeDimension) {
+        if (type.getDimension().getDimensionType()
+            != DimensionType.TimeDimension)
+        {
             throw MondrianResource.instance().TimeArgNeeded.ex(getName());
         }
         return super.getResultType(validator, args);
@@ -112,17 +113,18 @@ class XtdFunDef extends FunDefBase {
                 }
 
                 public boolean dependsOn(Dimension dimension) {
-                    return dimension.getDimensionType() ==
-                            mondrian.olap.DimensionType.TimeDimension;
+                    return dimension.getDimensionType()
+                        == mondrian.olap.DimensionType.TimeDimension;
                 }
             };
         default:
             final MemberCalc memberCalc =
-                    compiler.compileMember(call.getArg(0));
+                compiler.compileMember(call.getArg(0));
             return new AbstractListCalc(call, new Calc[] {memberCalc}) {
                 public List evaluateList(Evaluator evaluator) {
-                    return periodsToDate(evaluator, level,
-                            memberCalc.evaluateMember(evaluator));
+                    return periodsToDate(
+                        evaluator, level,
+                        memberCalc.evaluateMember(evaluator));
                 }
             };
         }
@@ -132,11 +134,12 @@ class XtdFunDef extends FunDefBase {
         private final LevelType levelType;
 
         public ResolverImpl(
-                String name,
-                String signature,
-                String description,
-                String[] signatures,
-                LevelType levelType) {
+            String name,
+            String signature,
+            String description,
+            String[] signatures,
+            LevelType levelType)
+        {
             super(name, signature, description, signatures);
             this.levelType = levelType;
         }

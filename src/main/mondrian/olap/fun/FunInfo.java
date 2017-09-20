@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian/src/main/mondrian/olap/fun/FunInfo.java#16 $
-// This software is subject to the terms of the Common Public License
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/FunInfo.java#2 $
+// This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
-// http://www.opensource.org/licenses/cpl.html.
-// Copyright (C) 2005-2008 Julian Hyde and others
+// http://www.eclipse.org/legal/epl-v10.html.
+// Copyright (C) 2005-2009 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -22,7 +22,7 @@ import java.lang.reflect.Array;
  * available functions and their syntax.
  *
  * @author Richard M. Emberson
- * @version $Id: //open/mondrian/src/main/mondrian/olap/fun/FunInfo.java#16 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/FunInfo.java#2 $
  */
 public class FunInfo implements Comparable<FunInfo> {
     private final Syntax syntax;
@@ -71,7 +71,8 @@ public class FunInfo implements Comparable<FunInfo> {
         this.parameterTypes = new int[signatures.length][];
         for (int i = 0; i < signatures.length; i++) {
             returnTypes[i] = FunUtil.decodeReturnCategory(signatures[i]);
-            parameterTypes[i] = FunUtil.decodeParameterCategories(signatures[i]);
+            parameterTypes[i] =
+                FunUtil.decodeParameterCategories(signatures[i]);
         }
         this.sigs = makeSigs(syntax, name, returnTypes, parameterTypes);
     }
@@ -85,8 +86,10 @@ public class FunInfo implements Comparable<FunInfo> {
         this.returnTypes = null;
         this.parameterTypes = null;
         final String signature = resolver.getSignature();
-        this.sigs = signature == null ? new String[0] :
-                new String[] {signature};
+        this.sigs =
+            signature == null
+            ? new String[0]
+            : new String[] {signature};
     }
 
     FunInfo(
