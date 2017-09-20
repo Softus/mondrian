@@ -1,3 +1,10 @@
 lib/
 classes/
 ivy/
+
+src/main/mondrian/gui/MondrianGuiDef.java
+src/main/mondrian/olap/MondrianDef.java
+src/main/mondrian/olap/Parser.java
+src/main/mondrian/olap/ParserSym.java
+src/main/mondrian/resource/MondrianResource*.java
+src/main/mondrian/xmla/DataSourcesConfig.java
