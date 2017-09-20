@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/util/Bug.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/util/Bug.java#4 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -19,7 +19,7 @@ import mondrian.spi.Dialect;
  * when its bug is fixed.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/util/Bug.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/util/Bug.java#4 $
  * @since Oct 11, 2006
  */
 public class Bug {
@@ -43,7 +43,8 @@ public class Bug {
 
     /**
      * Whether
-     * <a href="http://jira.pentaho.com/browse/MONDRIAN-229">MONDRIAN-229, "NON EMPTY when hierarchy's default member is not 'all'"</a>
+     * <a href="http://jira.pentaho.com/browse/MONDRIAN-229">MONDRIAN-229,
+     * "NON EMPTY when hierarchy's default member is not 'all'"</a>
      * is fixed.
      */
     public static final boolean BugMondrian229Fixed = false;
@@ -60,42 +61,47 @@ public class Bug {
 
     /**
      * Whether
-     * <a href="http://jira.pentaho.com/browse/MONDRIAN-207">MONDRIAN-207, "IS EMPTY and IS NULL"</a>
-     * is fixed.
+     * <a href="http://jira.pentaho.com/browse/MONDRIAN-207">MONDRIAN-207,
+     * "IS EMPTY and IS NULL"</a> is fixed.
      */
     public static final boolean BugMondrian207Fixed = false;
 
     /**
      * Whether
-     * <a href="http://jira.pentaho.com/browse/MONDRIAN-446">bug MONDRIAN-446, "Make Native NonEmpty consistant with MSAS"</a>
+     * <a href="http://jira.pentaho.com/browse/MONDRIAN-446">bug MONDRIAN-446,
+     * "Make Native NonEmpty consistant with MSAS"</a>
      * is fixed.
      */
     public static final boolean BugMondrian446Fixed = false;
 
     /**
      * Whether
-     * <a href="http://jira.pentaho.com/browse/MONDRIAN-313">bug MONDRIAN-313, "Predicate references RolapStar.Column when used in AggStar"</a>
+     * <a href="http://jira.pentaho.com/browse/MONDRIAN-313">bug MONDRIAN-313,
+     * "Predicate references RolapStar.Column when used in AggStar"</a>
      * is fixed.
      */
     public static final boolean BugMondrian313Fixed = false;
 
     /**
      * Whether
-     * <a href="http://jira.pentaho.com/browse/MONDRIAN-314">bug MONDRIAN-314, "Predicate sometimes has null RolapStar.Column"</a>
+     * <a href="http://jira.pentaho.com/browse/MONDRIAN-314">bug MONDRIAN-314,
+     * "Predicate sometimes has null RolapStar.Column"</a>
      * is fixed.
      */
     public static final boolean BugMondrian314Fixed = false;
 
     /**
      * Whether
-     * <a href="http://jira.pentaho.com/browse/MONDRIAN-328">bug MONDRIAN-328, "CrossJoin no empty optimizer eliminates calculated member"</a>
+     * <a href="http://jira.pentaho.com/browse/MONDRIAN-328">bug MONDRIAN-328,
+     * "CrossJoin no empty optimizer eliminates calculated member"</a>
      * is fixed.
      */
     public static final boolean BugMondrian328Fixed = false;
 
     /**
      * Whether
-     * <a href="http://jira.pentaho.com/browse/MONDRIAN-361">bug MONDRIAN-361, "Aggregate Tables not working with Shared Dimensions"</a>
+     * <a href="http://jira.pentaho.com/browse/MONDRIAN-361">bug MONDRIAN-361,
+     * "Aggregate Tables not working with Shared Dimensions"</a>
      * is fixed.
      *
      */
@@ -103,7 +109,8 @@ public class Bug {
 
     /**
      * Whether
-     * <a href="http://jira.pentaho.com/browse/MONDRIAN-486">bug MONDRIAN-486, "HighCardinalityTest test cases disabled"</a>
+     * <a href="http://jira.pentaho.com/browse/MONDRIAN-486">bug MONDRIAN-486,
+     * "HighCardinalityTest test cases disabled"</a>
      * is fixed.
      */
     public static final boolean BugMondrian486Fixed = false;
@@ -117,7 +124,8 @@ public class Bug {
 
     /**
      * Whether
-     * <a href="http://jira.pentaho.com/browse/MONDRIAN-503">bug MONDRIAN-503, "RolapResultTest disabled"</a>
+     * <a href="http://jira.pentaho.com/browse/MONDRIAN-503">bug MONDRIAN-503,
+     * "RolapResultTest disabled"</a>
      * is fixed.
      */
     public static final boolean BugMondrian503Fixed = false;
@@ -131,6 +139,22 @@ public class Bug {
      * twice, whereas SSAS 2005 does not.
      */
     public static final boolean BugMondrian555Fixed = false;
+
+    /**
+     * Whether
+     * <a href="http://jira.pentaho.com/browse/MONDRIAN-648">bug MONDRIAN-648,
+     * "AS operator has lower precedence than required by MDX specification"</a>
+     * is fixed.
+     */
+    public static final boolean BugMondrian648Fixed = false;
+
+    /**
+     * Whether
+     * <a href="http://jira.pentaho.com/browse/MONDRIAN-675">bug MONDRIAN-675,
+     * "Allow rollup of measures based on AVG aggregate function"</a>
+     * is fixed.
+     */
+    public static final boolean BugMondrian675Fixed = false;
 
     /**
      * Returns whether to avoid a test because the memory monitor may cause it

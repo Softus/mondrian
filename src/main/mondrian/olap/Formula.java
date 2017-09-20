@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Formula.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Formula.java#6 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -20,9 +20,7 @@ import mondrian.mdx.MdxVisitorImpl;
 import mondrian.rolap.RolapCalculatedMember;
 
 import java.io.PrintWriter;
-import java.util.Arrays;
-import java.util.List;
-import java.util.ArrayList;
+import java.util.*;
 
 /**
  * A <code>Formula</code> is a clause in an MDX query which defines a Set or a
@@ -65,7 +63,7 @@ public class Formula extends QueryPart {
         this(true, id, exp, memberProperties, null, null);
     }
 
-    private Formula(
+    Formula(
         boolean isMember,
         Id id,
         Exp exp,
@@ -206,7 +204,17 @@ public class Formula extends QueryPart {
             Util.assertTrue(
                 id.getSegments().size() == 1,
                 "set names must not be compound");
-            mdxSet = new SetBase(id.getSegments().get(0).name, exp);
+            // Caption and description are initialized to null, and annotations
+            // to the empty map. If named set is defined in the schema, we will
+            // give these their true values later.
+            mdxSet =
+                new SetBase(
+                    id.getSegments().get(0).name,
+                    null,
+                    null,
+                    exp,
+                    false,
+                    Collections.<String, Annotation>emptyMap());
         }
     }
 
@@ -218,7 +226,6 @@ public class Formula extends QueryPart {
             children, 1, memberProperties.length);
         return children;
     }
-
 
     public void unparse(PrintWriter pw)
     {

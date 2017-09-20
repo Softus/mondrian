@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Level.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Level.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -13,11 +13,13 @@
 
 package mondrian.olap;
 
+import java.util.Map;
+
 /**
  * A <code>Level</code> is a group of {@link Member}s in a {@link Hierarchy},
  * all with the same attributes and at the same depth in the hierarchy.
  */
-public interface Level extends OlapElement {
+public interface Level extends OlapElement, Annotated {
 
     /**
      * Returns the depth of this level.

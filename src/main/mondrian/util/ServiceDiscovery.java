@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/util/ServiceDiscovery.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/util/ServiceDiscovery.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
-// Copyright (C) 2009-2009 Julian Hyde and others
+// Copyright (C) 2009-2010 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -30,7 +30,7 @@ import org.apache.commons.logging.LogFactory;
  * entries in a JAR file and discovers implementors of an interface.
  *
  * @author Marc Batchelor
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/util/ServiceDiscovery.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/util/ServiceDiscovery.java#3 $
  */
 public class ServiceDiscovery<T> {
 
@@ -151,7 +151,7 @@ public class ServiceDiscovery<T> {
             } else {
                 logger.error(
                     "Class " + interfaceImplementor
-                        + " cannot be assigned to interface "
+                    + " cannot be assigned to interface "
                     + theInterface);
             }
         } catch (ClassNotFoundException ignored) {

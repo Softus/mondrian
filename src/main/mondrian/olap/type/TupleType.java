@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/TupleType.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/TupleType.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -21,7 +21,7 @@ import java.util.List;
  *
  * @author jhyde
  * @since Feb 17, 2005
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/TupleType.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/TupleType.java#3 $
  */
 public class TupleType implements Type {
     public final Type[] elementTypes;
@@ -113,6 +113,22 @@ public class TupleType implements Type {
             return null;
         }
         return commonTupleType(type, conversionCount);
+    }
+
+    public boolean isInstance(Object value) {
+        if (!(value instanceof Object[])) {
+            return false;
+        }
+        Object[] objects = (Object[]) value;
+        if (objects.length != elementTypes.length) {
+            return false;
+        }
+        for (int i = 0; i < objects.length; i++) {
+            if (!elementTypes[i].isInstance(objects[i])) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private Type commonTupleType(Type type, int[] conversionCount) {

@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/olap/UtilTestCase.java#2 $
+// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/olap/UtilTestCase.java#4 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -290,6 +290,18 @@ public class UtilTestCase extends TestCase {
         }
     }
 
+    /**
+     * Unit test for {@link Util#convertOlap4jConnectStringToNativeMondrian}.
+     */
+    public void testConvertConnectString() {
+        assertEquals(
+            "Provider=Mondrian; Datasource=jdbc/SampleData;"
+            + "Catalog=foodmart/FoodMart.xml;",
+            Util.convertOlap4jConnectStringToNativeMondrian(
+                "jdbc:mondrian:Datasource=jdbc/SampleData;"
+                + "Catalog=foodmart/FoodMart.xml;"));
+    }
+
     public void testQuoteMdxIdentifier() {
         assertEquals(
             "[San Francisco]", Util.quoteMdxIdentifier("San Francisco"));
@@ -571,6 +583,46 @@ public class UtilTestCase extends TestCase {
             expectedClassNames.remove(driverClass.getName());
         }
         assertTrue(expectedClassNames.toString(), expectedClassNames.isEmpty());
+    }
+
+    /**
+     * Unit test for {@link mondrian.util.ArrayStack}.
+     */
+    public void testArrayStack() {
+        final ArrayStack<String> stack = new ArrayStack<String>();
+        assertEquals(0, stack.size());
+        stack.add("a");
+        assertEquals(1, stack.size());
+        assertEquals("a", stack.peek());
+        stack.push("b");
+        assertEquals(2, stack.size());
+        assertEquals("b", stack.peek());
+        assertEquals("b", stack.pop());
+        assertEquals(1, stack.size());
+        stack.add(0, "z");
+        assertEquals("a", stack.peek());
+        assertEquals(2, stack.size());
+        stack.push(null);
+        assertEquals(3, stack.size());
+        assertEquals(stack, Arrays.asList("z", "a", null));
+        String z = "";
+        for (String s : stack) {
+            z += s;
+        }
+        assertEquals("zanull", z);
+        stack.clear();
+        try {
+            String x = stack.peek();
+            fail("expected error, got " + x);
+        } catch (EmptyStackException e) {
+            // ok
+        }
+        try {
+            String x = stack.pop();
+            fail("expected error, got " + x);
+        } catch (EmptyStackException e) {
+            // ok
+        }
     }
 }
 

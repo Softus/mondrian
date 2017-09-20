@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/HierarchyUsage.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/HierarchyUsage.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -34,7 +34,7 @@ import org.apache.log4j.Logger;
  *
  * @author jhyde
  * @since 21 March, 2002
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/HierarchyUsage.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/HierarchyUsage.java#3 $
  */
 public class HierarchyUsage {
     private static final Logger LOGGER = Logger.getLogger(HierarchyUsage.class);
@@ -223,7 +223,8 @@ public class HierarchyUsage {
             init(cube, hierarchy, null);
         }
         if (getLogger().isDebugEnabled()) {
-            getLogger().debug(toString()
+            getLogger().debug(
+                toString()
                 + ", cubeDim="
                 + cubeDim.getClass().getName());
         }

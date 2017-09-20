@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/VisualTotalsFunDef.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/VisualTotalsFunDef.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -14,8 +14,7 @@ import mondrian.calc.impl.AbstractListCalc;
 import mondrian.mdx.*;
 import mondrian.olap.*;
 import mondrian.olap.type.*;
-import mondrian.rolap.RolapLevel;
-import mondrian.rolap.RolapMember;
+import mondrian.rolap.*;
 import mondrian.resource.MondrianResource;
 
 import java.util.ArrayList;
@@ -25,7 +24,7 @@ import java.util.List;
  * Definition of the <code>VisualTotals</code> MDX function.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/VisualTotalsFunDef.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/VisualTotalsFunDef.java#3 $
  * @since Jan 16, 2006
  */
 public class VisualTotalsFunDef extends FunDefBase {
@@ -197,7 +196,7 @@ public class VisualTotalsFunDef extends FunDefBase {
      * <li>its value is a calculation computed by aggregating all of the
      *     members which occur following it in the list</ul></p>
      */
-    private static class VisualTotalMember extends RolapMember {
+    public static class VisualTotalMember extends RolapMember {
         private final Member member;
         private final Exp exp;
 
@@ -212,6 +211,22 @@ public class VisualTotalsFunDef extends FunDefBase {
                 null, name, MemberType.FORMULA);
             this.member = member;
             this.exp = exp;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            // A visual total member must compare equal to the member it wraps
+            // (for purposes of the MDX Intersect function, for instance).
+            return o instanceof VisualTotalMember
+                && this.member.equals(((VisualTotalMember) o).member)
+                && this.exp.equals(((VisualTotalMember) o).exp)
+                || o instanceof Member
+                && this.member.equals(o);
+        }
+
+        @Override
+        public int hashCode() {
+            return member.hashCode();
         }
 
         protected boolean computeCalculated(final MemberType memberType) {
@@ -247,6 +262,10 @@ public class VisualTotalsFunDef extends FunDefBase {
 
         public String getQualifiedName() {
             throw new UnsupportedOperationException();
+        }
+
+        public Member getMember() {
+            return member;
         }
     }
 

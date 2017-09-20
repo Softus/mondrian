@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/mdx/NamedSetExpr.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/mdx/NamedSetExpr.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -22,7 +22,7 @@ import java.util.List;
  * Usage of a {@link mondrian.olap.NamedSet} in an MDX expression.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/mdx/NamedSetExpr.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/mdx/NamedSetExpr.java#3 $
  * @since Sep 26, 2005
  */
 public class NamedSetExpr extends ExpBase implements Exp {
@@ -133,8 +133,7 @@ public class NamedSetExpr extends ExpBase implements Exp {
     }
 
     public Evaluator.NamedSetEvaluator getEval(Evaluator evaluator) {
-        return evaluator.getNamedSetEvaluator(
-            namedSet.getName(), namedSet.getExp());
+        return evaluator.getNamedSetEvaluator(namedSet, true);
     }
 
     public Object accept(MdxVisitor visitor) {

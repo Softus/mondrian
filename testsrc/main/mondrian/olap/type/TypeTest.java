@@ -19,7 +19,7 @@ import java.util.ArrayList;
  * Unit test for mondrian type facility.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/olap/type/TypeTest.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/olap/type/TypeTest.java#3 $
  * @since Jan 17, 2008
  */
 
@@ -136,6 +136,7 @@ public class TypeTest extends TestCase {
                     new ArrayList<Resolver.Conversion>();
                 final boolean canConvert =
                     TypeUtil.canConvert(
+                        0,
                         fromType,
                         toCategory,
                         conversions);

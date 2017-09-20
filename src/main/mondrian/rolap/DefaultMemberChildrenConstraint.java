@@ -20,7 +20,7 @@ import mondrian.rolap.aggmatcher.AggStar;
  * MemberChildren query.  If called with a calculated member an
  * exception will be thrown.
  *
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/DefaultMemberChildrenConstraint.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/DefaultMemberChildrenConstraint.java#3 $
  */
 public class DefaultMemberChildrenConstraint
     implements MemberChildrenConstraint
@@ -42,7 +42,7 @@ public class DefaultMemberChildrenConstraint
         RolapMember parent)
     {
         SqlConstraintUtils.addMemberConstraint(
-                sqlQuery, baseCube, aggStar, parent, true);
+            sqlQuery, baseCube, aggStar, parent, true);
     }
 
     public void addMemberConstraint(
@@ -51,8 +51,9 @@ public class DefaultMemberChildrenConstraint
         AggStar aggStar,
         List<RolapMember> parents)
     {
+    	boolean exclude = false;
         SqlConstraintUtils.addMemberConstraint(
-            sqlQuery, baseCube, aggStar, parents, true, false);
+            sqlQuery, baseCube, aggStar, parents, true, false, exclude);
     }
 
     public void addLevelConstraint(

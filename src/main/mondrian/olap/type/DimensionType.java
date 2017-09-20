@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/DimensionType.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/DimensionType.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -16,7 +16,7 @@ import mondrian.olap.*;
  *
  * @author jhyde
  * @since Feb 17, 2005
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/DimensionType.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/DimensionType.java#3 $
  */
 public class DimensionType implements Type {
     private final Dimension dimension;
@@ -105,6 +105,12 @@ public class DimensionType implements Type {
                 this.getDimension());
         }
         return DimensionType.Unknown;
+    }
+
+    public boolean isInstance(Object value) {
+        return value instanceof Dimension
+            && (dimension == null
+                || value.equals(dimension));
     }
 }
 

@@ -34,7 +34,7 @@ import java.io.PrintWriter;
  * An <code>XmlaHandler</code> responds to XML for Analysis (XML/A) requests.
  *
  * @author jhyde, Gang Chen
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/xmla/XmlaHandler.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/xmla/XmlaHandler.java#4 $
  * @since 27 April, 2003
  */
 public class XmlaHandler implements XmlaConstants {
@@ -1252,7 +1252,9 @@ public class XmlaHandler implements XmlaConstants {
         final Query query = connection.parseQuery(statement);
         query.setResultStyle(ResultStyle.LIST);
         final Result result = connection.execute(query);
-        Cell dtCell = result.getCell(new int[] {0, 0});
+        // cell [0, 0] in a 2-dimensional query, [0, 0, 0] in 3 dimensions, etc.
+        final int[] coords = new int[result.getAxes().length];
+        Cell dtCell = result.getCell(coords);
 
         if (!dtCell.canDrillThrough()) {
             throw new XmlaException(
@@ -1299,11 +1301,27 @@ public class XmlaHandler implements XmlaConstants {
                     for (MondrianDef.Relation relation1 : relationList) {
                         final String tableName = relation1.toString();
                         List<String> fieldNameList = new ArrayList<String>();
-                        // FIXME: Quote table name
-                        dtSql = "SELECT * FROM " + tableName + " WHERE 1=2";
-                        ResultSet rs = stmt.executeQuery(dtSql);
+                        Dialect dialect =
+                            ((RolapSchema) connection.getSchema()).getDialect();
+                        // FIXME: Include schema name, if specified.
+                        // FIXME: Deal with relations that are not tables.
+                        final StringBuilder buf = new StringBuilder();
+                        buf.append("SELECT * FROM ");
+                        dialect.quoteIdentifier(buf, tableName);
+                        buf.append(" WHERE 1=2");
+                        String sql = buf.toString();
+                        ResultSet rs = stmt.executeQuery(sql);
                         ResultSetMetaData rsMeta = rs.getMetaData();
                         for (int j = 1; j <= rsMeta.getColumnCount(); j++) {
+                            // FIXME: In some JDBC drivers,
+                            // ResultSetMetaData.getColumnName(int) does strange
+                            // things with aliased columns. See MONDRIAN-654
+                            // http://jira.pentaho.com/browse/MONDRIAN-654 for
+                            // details. Therefore, we don't want to use that
+                            // method. It seems harmless here, but I'd still
+                            // like to phase out use of getColumnName. After
+                            // PhysTable is introduced (coming in mondrian-4.0)
+                            // we should be able to just use its column list.
                             String colName = rsMeta.getColumnName(j);
                             boolean colNameExists = false;
                             for (List<String> prvField : fields) {
@@ -1313,7 +1331,7 @@ public class XmlaHandler implements XmlaConstants {
                                 }
                             }
                             if (!colNameExists) {
-                                fieldNameList.add(rsMeta.getColumnName(j));
+                                fieldNameList.add(colName);
                             }
                         }
                         fields.add(fieldNameList);
@@ -1532,29 +1550,6 @@ public class XmlaHandler implements XmlaConstants {
                     writer.endElement();
                 }
                 writer.endElement(); // row
-            }
-        }
-
-        public TabularRowSet(ResultSet rs) throws SQLException {
-            ResultSetMetaData md = rs.getMetaData();
-            int columnCount = md.getColumnCount();
-
-            // populate column definitions
-            for (int i = 0; i < columnCount; i++) {
-                columns.add(
-                    new Column(
-                        md.getColumnName(i + 1),
-                        md.getColumnType(i + 1)));
-            }
-
-            // populate data
-            rows = new ArrayList<Object[]>();
-            while (rs.next()) {
-                Object[] row = new Object[columnCount];
-                for (int i = 0; i < columnCount; i++) {
-                    row[i] = rs.getObject(i + 1);
-                }
-                rows.add(row);
             }
         }
 

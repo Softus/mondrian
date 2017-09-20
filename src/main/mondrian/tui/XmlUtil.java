@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/tui/XmlUtil.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/tui/XmlUtil.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -32,7 +32,7 @@ import java.util.*;
  * to valiate XMLA responses.
  *
  * @author Richard M. Emberson
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/tui/XmlUtil.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/tui/XmlUtil.java#3 $
  */
 public class XmlUtil {
 
@@ -983,7 +983,7 @@ public class XmlUtil {
         String docStr,
         String schemaLocationPropertyValue,
         EntityResolver resolver)
-        throws IOException ,
+        throws IOException,
         SAXException
     {
         if (resolver == null) {

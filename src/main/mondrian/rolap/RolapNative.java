@@ -27,7 +27,7 @@ import mondrian.olap.NativeEvaluator;
  * to be evaluated in SQL then a NativeEvaluator will be returned that performs
  * the computations in SQL. Otherwise null will be returned.
  *
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapNative.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapNative.java#3 $
  */
 public abstract class RolapNative {
 
@@ -60,7 +60,7 @@ public abstract class RolapNative {
     interface Listener {
         void foundEvaluator(NativeEvent e);
         void foundInCache(TupleEvent e);
-        void excutingSql(TupleEvent e);
+        void executingSql(TupleEvent e);
     }
 
     protected Listener listener;

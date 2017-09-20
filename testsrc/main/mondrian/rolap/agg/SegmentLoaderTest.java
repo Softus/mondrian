@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/rolap/agg/SegmentLoaderTest.java#2 $
+// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/rolap/agg/SegmentLoaderTest.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -18,7 +18,7 @@ import java.sql.SQLException;
  * <p>Test for <code>SegmentLoader</code></p>
  *
  * @author Thiyagu
- * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/rolap/agg/SegmentLoaderTest.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/rolap/agg/SegmentLoaderTest.java#3 $
  * @since 06-Jun-2007
  */
 public class SegmentLoaderTest extends BatchTestCase {
@@ -446,7 +446,9 @@ public class SegmentLoaderTest extends BatchTestCase {
         key.set(1);
         assertEquals(key, bitKeysList.get(1));
 
-        assertTrue(new GroupingSetsList(new ArrayList<GroupingSet>())
+        assertTrue(
+            new GroupingSetsList(
+                new ArrayList<GroupingSet>())
             .getRollupColumnsBitKeyList().isEmpty());
     }
 

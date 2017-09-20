@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/CubeType.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/CubeType.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -19,7 +19,7 @@ import mondrian.olap.Level;
  *
  * @author jhyde
  * @since Feb 17, 2005
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/CubeType.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/CubeType.java#3 $
  */
 public class CubeType implements Type {
     private final Cube cube;
@@ -31,6 +31,11 @@ public class CubeType implements Type {
         this.cube = cube;
     }
 
+    /**
+     * Returns the cube.
+     *
+     * @return Cube
+     */
     public Cube getCube() {
         return cube;
     }
@@ -68,6 +73,10 @@ public class CubeType implements Type {
         return this.equals(type)
             ? this
             : null;
+    }
+
+    public boolean isInstance(Object value) {
+        return value instanceof Cube;
     }
 }
 

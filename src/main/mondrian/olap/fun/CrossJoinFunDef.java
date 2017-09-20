@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/CrossJoinFunDef.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/CrossJoinFunDef.java#4 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -25,7 +25,7 @@ import java.util.*;
  * Definition of the <code>CrossJoin</code> MDX function.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/CrossJoinFunDef.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/CrossJoinFunDef.java#4 $
  * @since Mar 23, 2006
  */
 public class CrossJoinFunDef extends FunDefBase {
@@ -227,6 +227,13 @@ public class CrossJoinFunDef extends FunDefBase {
             return compiler.compileAs(
                 exp,
                 null,
+                ResultStyle.ITERABLE_LIST_MUTABLELIST);
+        } else if (type instanceof TupleType) {
+            // this always returns an IterCalc
+            return new SetFunDef.ExprTupleIterCalc(
+                new DummyExp(new SetType(type)),
+                new Exp[] {exp},
+                compiler,
                 ResultStyle.ITERABLE_LIST_MUTABLELIST);
         } else {
             // this always returns an IterCalc
@@ -2213,17 +2220,7 @@ public class CrossJoinFunDef extends FunDefBase {
             ResolvedFunCall crossJoinCall)
         {
             this.queryMeasureSet = queryMeasureSet;
-            finder = new ResolvedFunCallFinder(crossJoinCall);
-        }
-
-        public Object visit(ResolvedFunCall funcall) {
-            Exp[] exps = funcall.getArgs();
-            if (exps != null) {
-                for (Exp exp : exps) {
-                    exp.accept(this);
-                }
-            }
-            return null;
+            this.finder = new ResolvedFunCallFinder(crossJoinCall);
         }
 
         public Object visit(ParameterExpr parameterExpr) {
@@ -2255,8 +2252,6 @@ public class CrossJoinFunDef extends FunDefBase {
                         exp.accept(finder);
                         if (! finder.found) {
                             exp.accept(this);
-                            // commented line out to fix bug #1696772
-                            // queryMeasureSet.add(member);
                         }
                         activeMeasures.remove(member);
                     }
@@ -2361,7 +2356,7 @@ public class CrossJoinFunDef extends FunDefBase {
 
         final String measureSetKey = "MEASURE_SET-" + ctag;
         Set<Member> measureSet =
-                (Set<Member>) query.getEvalCache(measureSetKey);
+            Util.cast((Set) query.getEvalCache(measureSetKey));
         // If not in query cache, then create and place into cache.
         // This information is used for each iteration so it makes
         // sense to create and cache it.
@@ -2390,7 +2385,7 @@ public class CrossJoinFunDef extends FunDefBase {
 
         final String allMemberListKey = "ALL_MEMBER_LIST-" + ctag;
         List<Member> allMemberList =
-                (List<Member>) query.getEvalCache(allMemberListKey);
+            Util.cast((List) query.getEvalCache(allMemberListKey));
 
         final String nonAllMembersKey = "NON_ALL_MEMBERS-" + ctag;
         Member[][] nonAllMembers =

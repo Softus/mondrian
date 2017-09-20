@@ -1,4 +1,12 @@
-
+/*
+// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/rolap/aggmatcher/Checkin_7641.java#3 $
+// This software is subject to the terms of the Eclipse Public License v1.0
+// Agreement, available at the following URL:
+// http://www.eclipse.org/legal/epl-v10.html.
+// Copyright (C) 2006-2009 Julian Hyde and others
+// All Rights Reserved.
+// You must accept the terms of that agreement to use this software.
+*/
 package mondrian.rolap.aggmatcher;
 
 import mondrian.test.loader.CsvDBTestCase;
@@ -17,7 +25,7 @@ import mondrian.olap.MondrianProperties;
  * answers when the mdx is evaluated.
  *
  * @author Richard M. Emberson
- * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/rolap/aggmatcher/Checkin_7641.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/rolap/aggmatcher/Checkin_7641.java#3 $
  */
 public class Checkin_7641 extends CsvDBTestCase {
     private static final String DIRECTORY =

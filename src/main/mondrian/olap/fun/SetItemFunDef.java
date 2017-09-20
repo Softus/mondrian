@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/SetItemFunDef.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/SetItemFunDef.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -29,7 +29,7 @@ import java.util.ArrayList;
  * </code></blockquote>
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/SetItemFunDef.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/SetItemFunDef.java#3 $
  * @since Mar 23, 2006
  */
 class SetItemFunDef extends FunDefBase {
@@ -71,7 +71,7 @@ class SetItemFunDef extends FunDefBase {
             // All args must be strings.
             for (int i = 1; i < args.length; i++) {
                 if (!validator.canConvert(
-                    args[i], Category.String, conversions))
+                    i, args[i], Category.String, conversions))
                 {
                     return null;
                 }

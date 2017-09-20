@@ -1,5 +1,5 @@
 #!/bin/bash
-# $Id: //open/mondrian-release/3.1/workbench/workbench.sh#1 $
+# $Id: //open/mondrian-release/3.1/workbench/workbench.sh#3 $
 # Launch Mondrian Schema Workbench on Linux, UNIX or Cygwin
 
 # Platform specific path-separator.
@@ -7,14 +7,14 @@
 # first look in directory of the script for lib, then 
 # look up one folder if lib does not exist
 
-MONDRIAN_HOME=$(cd $(dirname $0); pwd)
-if test ! -d $MONDRIAN_HOME/lib; then
-  MONDRIAN_HOME=$(cd $(dirname $0)/..; pwd)
+MONDRIAN_HOME=`cd \`dirname $0\`; pwd`
+if test ! -d "$MONDRIAN_HOME/lib"; then
+  MONDRIAN_HOME="`cd \`dirname $0\`/..; pwd`"
 fi
-case $(uname) in
+case `uname` in
 Windows_NT|CYGWIN*)
     export PS=";"
-    export MONDRIAN_HOME=$(cygpath -m $MONDRIAN_HOME)
+    export MONDRIAN_HOME=`cygpath -m $MONDRIAN_HOME`
     ;;
 *)
     export PS=":"
@@ -64,12 +64,12 @@ CP="${CP}${PS}${HOME}/.schemaWorkbench"
 # in the java command below to adjust workbench logging
 
 # add all needed JDBC drivers to the classpath
-for i in `ls drivers/*.jar 2> /dev/null`; do
+for i in `ls ${MONDRIAN_HOME}/drivers/*.jar 2> /dev/null`; do
     CP="${CP}${PS}${i}"
 done
 
 # add all needed plugins to the classpath
-for i in `ls plugins/*.jar 2> /dev/null`; do
+for i in `ls ${MONDRIAN_HOME}/plugins/*.jar 2> /dev/null`; do
     CP="${CP}${PS}${i}"
 done
 
@@ -78,6 +78,9 @@ done
 JAVA_FLAGS="-Xms100m -Xmx500m"
 #JAVA_FLAGS="-verbose $JAVA_FLAGS"
 
-exec java $JAVA_FLAGS -cp "$CP" mondrian.gui.Workbench
+. "$MONDRIAN_HOME/set-pentaho-java.sh"
+setPentahoJava
+
+exec "$_PENTAHO_JAVA" $JAVA_FLAGS -cp "$CP" mondrian.gui.Workbench
 
 # End workbench.sh

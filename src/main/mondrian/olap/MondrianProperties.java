@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/MondrianProperties.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/MondrianProperties.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -49,7 +49,7 @@ import java.util.Properties;
  * <p>Similarly if you update or delete a property.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/MondrianProperties.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/MondrianProperties.java#3 $
  * @since 22 December, 2002
  */
 public class MondrianProperties extends TriggerableProperties {
@@ -885,6 +885,17 @@ public class MondrianProperties extends TriggerableProperties {
     public transient final StringProperty JdbcFactoryClass =
         new StringProperty(
             this, "mondrian.rolap.aggregates.jdbcFactoryClass", null);
+
+    /**
+     * Property that defines
+     * the name of the plugin class that resolves data source names to
+     * {@link javax.sql.DataSource} objects. The class must implement the
+     * {@link mondrian.spi.DataSourceResolver} interface. If not specified,
+     * the default implementation uses JNDI to perform resolution.
+     */
+    public transient final StringProperty DataSourceResolverClass =
+        new StringProperty(
+            this, "mondrian.spi.dataSourceResolverClass", null);
 
     /**
      * Property that defines

@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/UdfResolver.java#3 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/UdfResolver.java#4 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -24,7 +24,7 @@ import java.util.List;
  *
  * @author jhyde
  * @since 2.0
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/UdfResolver.java#3 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/UdfResolver.java#4 $
  */
 public class UdfResolver implements Resolver {
     private final UserDefinedFunction udf;
@@ -87,7 +87,7 @@ public class UdfResolver implements Resolver {
             final int parameterCategory =
                 TypeUtil.typeToCategory(parameterType);
             if (!validator.canConvert(
-                arg, parameterCategory, conversions))
+                i, arg, parameterCategory, conversions))
             {
                 return null;
             }

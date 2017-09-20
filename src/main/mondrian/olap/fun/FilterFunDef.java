@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/FilterFunDef.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/FilterFunDef.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -30,7 +30,7 @@ import java.util.List;
  * Condition&gt;)</code></blockquote>
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/FilterFunDef.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/FilterFunDef.java#3 $
  * @since Mar 23, 2006
  */
 class FilterFunDef extends FunDefBase {
@@ -46,7 +46,12 @@ class FilterFunDef extends FunDefBase {
     public Calc compileCall(final ResolvedFunCall call, ExpCompiler compiler) {
         // Ignore the caller's priority. We prefer to return iterable, because
         // it makes NamedSet.CurrentOrdinal work.
-        final List<ResultStyle> styles = compiler.getAcceptableResultStyles();
+        List<ResultStyle> styles = compiler.getAcceptableResultStyles();
+        if (call.getArg(0) instanceof ResolvedFunCall
+            && ((ResolvedFunCall) call.getArg(0)).getFunName().equals("AS"))
+        {
+            styles = ResultStyle.ITERABLE_ONLY;
+        }
         if (styles.contains(ResultStyle.ITERABLE)
             || styles.contains(ResultStyle.ANY))
         {

@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/olap/fun/TestMember.java#2 $
+// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/olap/fun/TestMember.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -12,12 +12,13 @@ package mondrian.olap.fun;
 import mondrian.olap.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  *
  *
  * @author <a>Richard M. Emberson</a>
- * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/olap/fun/TestMember.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/olap/fun/TestMember.java#3 $
  */
 public class TestMember implements Member {
     private final String identifer;
@@ -169,6 +170,10 @@ public class TestMember implements Member {
         return new MockDimension();
     }
 
+    public Map<String, Annotation> getAnnotationMap() {
+        throw new UnsupportedOperationException();
+    }
+
     private static class MockDimension implements Dimension {
         public Hierarchy[] getHierarchies() {
             throw new UnsupportedOperationException();
@@ -226,6 +231,10 @@ public class TestMember implements Member {
         }
 
         public Dimension getDimension() {
+            throw new UnsupportedOperationException();
+        }
+
+        public Map<String, Annotation> getAnnotationMap() {
             throw new UnsupportedOperationException();
         }
     }

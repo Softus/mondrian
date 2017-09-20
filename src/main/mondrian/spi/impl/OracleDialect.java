@@ -16,7 +16,7 @@ import java.sql.SQLException;
  * Implementation of {@link mondrian.spi.Dialect} for the Oracle database.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/spi/impl/OracleDialect.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/spi/impl/OracleDialect.java#4 $
  * @since Nov 23, 2008
  */
 public class OracleDialect extends JdbcDialectImpl {
@@ -51,6 +51,11 @@ public class OracleDialect extends JdbcDialectImpl {
 
     public boolean supportsGroupingSets() {
         return true;
+    }
+
+    @Override
+    public String generateOrderByNullsLast(String expr, boolean ascending) {
+        return generateOrderByNullsLastAnsi(expr, ascending);
     }
 }
 

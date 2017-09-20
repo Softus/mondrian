@@ -2,7 +2,7 @@
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
-// Copyright (C) 2009-2009 Julian Hyde
+// Copyright (C) 2009-2010 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -24,7 +24,7 @@ import java.lang.reflect.*;
  * objects.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/spi/DialectManager.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/spi/DialectManager.java#3 $
  * @since Jan 13, 2009
  */
 public abstract class DialectManager {
@@ -175,7 +175,7 @@ public abstract class DialectManager {
                             throw Util.newError(
                                 e,
                                 "Error while creating a generic dialect for"
-                                    + " JDBC connection" + connection);
+                                + " JDBC connection" + connection);
                         }
                     }
                 };

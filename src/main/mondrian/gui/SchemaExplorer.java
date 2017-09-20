@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/gui/SchemaExplorer.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/gui/SchemaExplorer.java#5 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -34,7 +34,7 @@ import java.util.List;
 
 /**
  * @author sean
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/gui/SchemaExplorer.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/gui/SchemaExplorer.java#5 $
  */
 public class SchemaExplorer
     extends javax.swing.JPanel
@@ -317,6 +317,7 @@ public class SchemaExplorer
         addCalculatedMemberButton = new JButton();
         addLevelButton = new JButton();
         addPropertyButton = new JButton();
+        addCalculatedMemberPropertyButton = new JButton();
 
         addVirtualCubeButton = new JButton();
         addVirtualCubeDimensionButton = new JButton();
@@ -692,6 +693,16 @@ public class SchemaExplorer
             }
         };
 
+        addCalculatedMemberProperty = new AbstractAction(
+                getResourceConverter().getString(
+                    "schemaExplorer.addCalculatedMemberProperty.title",
+                    "Add Calculated Member Property"))
+        {
+            public void actionPerformed(ActionEvent e) {
+                addCalculatedMemberProperty(e);
+            }
+        };
+
         addVirtualCube = new AbstractAction(
             getResourceConverter().getString(
                 "schemaExplorer.addVirtualCube.title", "Add Virtual Cube"))
@@ -908,6 +919,18 @@ public class SchemaExplorer
                 "schemaExplorer.addProperty.title", "Add Property"));
         addPropertyButton.addActionListener(addProperty);
 
+        addCalculatedMemberPropertyButton.setIcon(
+            new ImageIcon(
+                myClassLoader.getResource(
+                    getResourceConverter().getGUIReference(
+                        "addCalculatedMemberProperty"))));
+        addCalculatedMemberPropertyButton.setToolTipText(
+            getResourceConverter().getString(
+                "schemaExplorer.addCalculatedMemberProperty.title",
+                "Add Calculated Member Property"));
+        addCalculatedMemberPropertyButton.addActionListener(
+            addCalculatedMemberProperty);
+
         addVirtualCubeButton.setIcon(
             new ImageIcon(
                 myClassLoader.getResource(
@@ -1010,6 +1033,7 @@ public class SchemaExplorer
         jToolBar1.add(addMeasureButton);
         jToolBar1.add(addLevelButton);
         jToolBar1.add(addPropertyButton);
+        jToolBar1.add(addCalculatedMemberPropertyButton);
         jToolBar1.addSeparator();
         jToolBar1.add(addVirtualCubeButton);
         jToolBar1.add(addVirtualCubeDimensionButton);
@@ -3434,6 +3458,123 @@ public class SchemaExplorer
     /**
      * @param evt
      */
+    protected void addCalculatedMemberProperty(ActionEvent evt) {
+        TreePath tpath = tree.getSelectionPath();
+        int parentIndex = -1;
+        Object path = null;
+        if (tpath != null) {
+            for (parentIndex = tpath.getPathCount() - 1; parentIndex >= 0;
+                parentIndex--)
+            {
+                final Object p = tpath.getPathComponent(parentIndex);
+                if (p instanceof MondrianGuiDef.CalculatedMember
+                    || p instanceof MondrianGuiDef.Measure)
+                {
+                    path = p;
+                    break;
+                }
+            }
+        }
+        if (path instanceof MondrianGuiDef.CalculatedMember) {
+            addCalcMemberPropToCalcMember(
+                (MondrianGuiDef.CalculatedMember)path, parentIndex, tpath);
+        } else if (path instanceof MondrianGuiDef.Measure) {
+            addCalcMemberPropToMeasure(
+                (MondrianGuiDef.Measure)path, parentIndex, tpath);
+        } else {
+            JOptionPane.showMessageDialog(
+                this, getResourceConverter().getString(
+                    "schemaExplorer.calculatedMemberNotSelected.alert",
+                    "Calculated Member or Measure not selected."),
+                    alert, JOptionPane.WARNING_MESSAGE);
+        }
+    }
+
+    protected void addCalcMemberPropToCalcMember(
+        MondrianGuiDef.CalculatedMember calcMember,
+        int parentIndex,
+        TreePath tpath)
+    {
+        MondrianGuiDef.CalculatedMemberProperty property =
+            new MondrianGuiDef.CalculatedMemberProperty();
+        property.name = "";
+
+        if (calcMember.memberProperties == null) {
+            calcMember.memberProperties =
+                new MondrianGuiDef.CalculatedMemberProperty[0];
+        }
+        property.name =
+            getNewName(
+                getResourceConverter().getString(
+                    "schemaExplorer.newProperty.title",
+                    "New Property"),
+                calcMember.memberProperties);
+        NodeDef[] temp = calcMember.memberProperties;
+        calcMember.memberProperties =
+            new MondrianGuiDef.CalculatedMemberProperty[temp.length + 1];
+        for (int i = 0; i < temp.length; i++) {
+            calcMember.memberProperties[i] =
+                (MondrianGuiDef.CalculatedMemberProperty) temp[i];
+        }
+
+        calcMember.memberProperties[calcMember.memberProperties.length - 1] =
+            property;
+
+        Object[] parentPathObjs = new Object[parentIndex + 1];
+        for (int i = 0; i <= parentIndex; i++) {
+            parentPathObjs[i] = tpath.getPathComponent(i);
+        }
+        TreePath parentPath = new TreePath(parentPathObjs);
+        tree.setSelectionPath(parentPath.pathByAddingChild(property));
+
+        refreshTree(tree.getSelectionPath());
+        setTableCellFocus(0);
+    }
+
+    protected void addCalcMemberPropToMeasure(
+        MondrianGuiDef.Measure measure,
+        int parentIndex,
+        TreePath tpath)
+    {
+        MondrianGuiDef.CalculatedMemberProperty property =
+            new MondrianGuiDef.CalculatedMemberProperty();
+        property.name = "";
+
+        if (measure.memberProperties == null) {
+            measure.memberProperties =
+                new MondrianGuiDef.CalculatedMemberProperty[0];
+        }
+        property.name =
+            getNewName(
+                getResourceConverter().getString(
+                    "schemaExplorer.newProperty.title",
+                    "New Property"),
+                measure.memberProperties);
+        NodeDef[] temp = measure.memberProperties;
+        measure.memberProperties =
+            new MondrianGuiDef.CalculatedMemberProperty[temp.length + 1];
+        for (int i = 0; i < temp.length; i++) {
+            measure.memberProperties[i] =
+                (MondrianGuiDef.CalculatedMemberProperty) temp[i];
+        }
+
+        measure.memberProperties[measure.memberProperties.length - 1] =
+            property;
+
+        Object[] parentPathObjs = new Object[parentIndex + 1];
+        for (int i = 0; i <= parentIndex; i++) {
+            parentPathObjs[i] = tpath.getPathComponent(i);
+        }
+        TreePath parentPath = new TreePath(parentPathObjs);
+        tree.setSelectionPath(parentPath.pathByAddingChild(property));
+
+        refreshTree(tree.getSelectionPath());
+        setTableCellFocus(0);
+    }
+
+    /**
+     * @param evt
+     */
     protected void addClosure(ActionEvent evt) {
         TreePath tpath = tree.getSelectionPath();
         int parentIndex = -1;
@@ -4192,10 +4333,11 @@ public class SchemaExplorer
                         }
                     } else if (pathSelected instanceof MondrianGuiDef.Measure) {
                         jPopupMenu.add(addMeasureExp);
+                        jPopupMenu.add(addCalculatedMemberProperty);
                         if (((MondrianGuiDef.Measure) pathSelected).measureExp
                             == null)
                         {
-                            addMeasureExp.setEnabled(false);
+                            addMeasureExp.setEnabled(true);
                         } else {
                             addMeasureExp.setEnabled(false);
                         }
@@ -4218,7 +4360,8 @@ public class SchemaExplorer
                                instanceof MondrianGuiDef.CalculatedMember)
                     {
                         jPopupMenu.add(addFormula);
-                        if (((MondrianGuiDef.NamedSet) pathSelected)
+                        jPopupMenu.add(addCalculatedMemberProperty);
+                        if (((MondrianGuiDef.CalculatedMember) pathSelected)
                             .formulaElement == null)
                         {
                             addFormula.setEnabled(false);
@@ -4493,6 +4636,7 @@ public class SchemaExplorer
     private AbstractAction addView;
     private AbstractAction addInlineTable;
     private AbstractAction addProperty;
+    private AbstractAction addCalculatedMemberProperty;
     private AbstractAction addClosure;
 
     private AbstractAction addAggName;
@@ -4520,6 +4664,7 @@ public class SchemaExplorer
     private JScrollPane jScrollPane2;
     private JScrollPane jScrollPane1;
     private JButton addPropertyButton;
+    private JButton addCalculatedMemberPropertyButton;
     private JButton pasteButton;
     private JLabel targetLabel;
     private JLabel validStatusLabel;

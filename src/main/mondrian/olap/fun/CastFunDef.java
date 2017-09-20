@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/CastFunDef.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/CastFunDef.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -11,6 +11,7 @@ package mondrian.olap.fun;
 
 import mondrian.olap.*;
 import mondrian.olap.type.Type;
+import mondrian.olap.type.TypeUtil;
 import mondrian.resource.MondrianResource;
 import mondrian.calc.Calc;
 import mondrian.calc.ExpCompiler;
@@ -36,7 +37,7 @@ import java.util.List;
  * </ul>
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/CastFunDef.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/CastFunDef.java#3 $
  * @since Sep 3, 2006
  */
 public class CastFunDef extends FunDefBase {
@@ -151,11 +152,13 @@ public class CastFunDef extends FunDefBase {
     private static class CalcImpl extends GenericCalc {
         private final Calc calc;
         private final Type targetType;
+        private final int targetCategory;
 
         public CalcImpl(Exp arg, Calc calc, Type targetType) {
             super(arg);
             this.calc = calc;
             this.targetType = targetType;
+            this.targetCategory = TypeUtil.typeToCategory(targetType);
         }
 
         public Calc[] getCalcs() {
@@ -163,11 +166,24 @@ public class CastFunDef extends FunDefBase {
         }
 
         public Object evaluate(Evaluator evaluator) {
-            return calc.evaluate(evaluator);
+            switch (targetCategory) {
+            case Category.String:
+                return evaluateString(evaluator);
+            case Category.Integer:
+                return FunUtil.box(evaluateInteger(evaluator));
+            case Category.Numeric:
+                return FunUtil.box(evaluateDouble(evaluator));
+            case Category.DateTime:
+                return evaluateDateTime(evaluator);
+            case Category.Logical:
+                return evaluateBoolean(evaluator);
+            default:
+                throw Util.newInternal("category " + targetCategory);
+            }
         }
 
         public String evaluateString(Evaluator evaluator) {
-            final Object o = evaluate(evaluator);
+            final Object o = calc.evaluate(evaluator);
             if (o == null) {
                 return null;
             }
@@ -175,17 +191,17 @@ public class CastFunDef extends FunDefBase {
         }
 
         public int evaluateInteger(Evaluator evaluator) {
-            final Object o = evaluate(evaluator);
+            final Object o = calc.evaluate(evaluator);
             return toInt(o, targetType);
         }
 
         public double evaluateDouble(Evaluator evaluator) {
-            final Object o = evaluate(evaluator);
+            final Object o = calc.evaluate(evaluator);
             return toDouble(o, targetType);
         }
 
         public boolean evaluateBoolean(Evaluator evaluator) {
-            final Object o = evaluate(evaluator);
+            final Object o = calc.evaluate(evaluator);
             return toBoolean(o, targetType);
         }
     }

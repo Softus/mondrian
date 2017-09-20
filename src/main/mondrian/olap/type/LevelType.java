@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/LevelType.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/LevelType.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -9,17 +9,14 @@
 */
 package mondrian.olap.type;
 
-import mondrian.olap.Level;
-import mondrian.olap.Dimension;
-import mondrian.olap.Hierarchy;
-import mondrian.olap.Util;
+import mondrian.olap.*;
 
 /**
  * The type of an expression which represents a level.
  *
  * @author jhyde
  * @since Feb 17, 2005
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/LevelType.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/LevelType.java#3 $
  */
 public class LevelType implements Type {
     private final Dimension dimension;
@@ -142,6 +139,16 @@ public class LevelType implements Type {
                 null);
         }
         return LevelType.Unknown;
+    }
+
+    public boolean isInstance(Object value) {
+        return value instanceof Level
+            && (level == null
+                || value.equals(level))
+            && (hierarchy == null
+                || ((Level) value).getHierarchy().equals(hierarchy))
+            && (dimension == null
+                || ((Level) value).getDimension().equals(dimension));
     }
 }
 

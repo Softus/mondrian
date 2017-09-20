@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/ScalarType.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/ScalarType.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -22,7 +22,7 @@ import mondrian.olap.Level;
  *
  * @author jhyde
  * @since Feb 17, 2005
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/ScalarType.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/ScalarType.java#3 $
  */
 public class ScalarType implements Type {
     private final String digest;
@@ -102,6 +102,11 @@ public class ScalarType implements Type {
 
     public Dimension getDimension() {
         return null;
+    }
+
+    public boolean isInstance(Object value) {
+        // Somewhat pessimistic.
+        return false;
     }
 }
 

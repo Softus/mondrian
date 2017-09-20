@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/HierarchyType.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/HierarchyType.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -16,7 +16,7 @@ import mondrian.olap.*;
  *
  * @author jhyde
  * @since Feb 17, 2005
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/HierarchyType.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/HierarchyType.java#3 $
  */
 public class HierarchyType implements Type {
     private final Dimension dimension;
@@ -106,6 +106,14 @@ public class HierarchyType implements Type {
                 null);
         }
         return HierarchyType.Unknown;
+    }
+
+    public boolean isInstance(Object value) {
+        return value instanceof Hierarchy
+            && (hierarchy == null
+                || value.equals(hierarchy))
+            && (dimension == null
+                || ((Hierarchy) value).getDimension().equals(dimension));
     }
 }
 

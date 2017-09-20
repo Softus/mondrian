@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/DimensionBase.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/DimensionBase.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -20,7 +20,7 @@ import mondrian.resource.MondrianResource;
  *
  * @author jhyde
  * @since 6 August, 2001
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/DimensionBase.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/DimensionBase.java#3 $
  */
 public abstract class DimensionBase
     extends OlapElementBase
@@ -35,13 +35,16 @@ public abstract class DimensionBase
     protected DimensionType dimensionType;
 
     protected DimensionBase(
-            String name,
-            DimensionType dimensionType,
-            final boolean highCardinality)
+        String name,
+        String caption,
+        String description,
+        DimensionType dimensionType,
+        boolean highCardinality)
     {
         this.name = name;
+        this.caption = caption;
         this.uniqueName = Util.makeFqName(name);
-        this.description = null;
+        this.description = description;
         this.dimensionType = dimensionType;
         this.highCardinality = highCardinality;
     }

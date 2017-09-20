@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Dimension.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Dimension.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -13,10 +13,12 @@
 
 package mondrian.olap;
 
+import java.util.Map;
+
 /**
  * A <code>Dimension</code> represents a dimension of a cube.
  */
-public interface Dimension extends OlapElement {
+public interface Dimension extends OlapElement, Annotated {
     final String MEASURES_UNIQUE_NAME = "[Measures]";
     final String MEASURES_NAME = "Measures";
 

@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/StringType.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/StringType.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -17,7 +17,7 @@ import mondrian.olap.Hierarchy;
  *
  * @author jhyde
  * @since Feb 17, 2005
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/StringType.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/type/StringType.java#3 $
  */
 public class StringType extends ScalarType {
 
@@ -30,6 +30,10 @@ public class StringType extends ScalarType {
 
     public boolean equals(Object obj) {
         return obj instanceof StringType;
+    }
+
+    public boolean isInstance(Object value) {
+        return value instanceof String;
     }
 }
 

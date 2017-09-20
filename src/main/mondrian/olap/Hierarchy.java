@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Hierarchy.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Hierarchy.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -13,10 +13,12 @@
 
 package mondrian.olap;
 
+import java.util.Map;
+
 /**
  * A <code>Hierarchy</code> is a set of members, organized into levels.
  */
-public interface Hierarchy extends OlapElement {
+public interface Hierarchy extends OlapElement, Annotated {
     /**
      * Returns the dimension this hierarchy belongs to.
      */

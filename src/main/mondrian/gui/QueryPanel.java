@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/gui/QueryPanel.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/gui/QueryPanel.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -27,7 +27,7 @@ import java.util.List;
 
 /**
  * @author sean
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/gui/QueryPanel.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/gui/QueryPanel.java#3 $
  */
 public class QueryPanel extends javax.swing.JPanel {
 
@@ -374,6 +374,10 @@ public class QueryPanel extends javax.swing.JPanel {
                 getResourceConverter().getString(
                     "common.errorDialog.title", "Error"),
                 JOptionPane.ERROR_MESSAGE);
+            resultTextPane.setText(getResourceConverter().getFormattedString(
+                "queryPanel.exceptionMessage",
+                "Exception: {0}\n\nSee workbench log for full stacktrace.",
+                ex.getMessage()));
         }
     }
 

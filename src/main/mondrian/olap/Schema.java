@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Schema.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Schema.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -16,9 +16,9 @@ import java.util.List;
  * A <code>Schema</code> is a collection of cubes, shared dimensions, and roles.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Schema.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Schema.java#3 $
  */
-public interface Schema {
+public interface Schema extends Annotated {
 
     /**
      * Returns the name of this schema.

@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/olap/fun/MemberHelperTest.java#2 $
+// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/olap/fun/MemberHelperTest.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -14,14 +14,13 @@ import mondrian.olap.*;
 
 import junit.framework.TestCase;
 
-import java.util.List;
-import java.util.ArrayList;
+import java.util.*;
 
 /**
  * <code>MemberHelperTest</code> tests {@link MemberHelper}.
  *
  * @author gjohnson
- * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/olap/fun/MemberHelperTest.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/olap/fun/MemberHelperTest.java#3 $
  */
 public class MemberHelperTest extends TestCase {
     public MemberHelperTest(String name) {
@@ -247,6 +246,10 @@ public class MemberHelperTest extends TestCase {
 
         public int getSolveOrder() {
             return -1;
+        }
+
+        public Map<String, Annotation> getAnnotationMap() {
+            return Collections.emptyMap();
         }
     }
 }

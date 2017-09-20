@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/test/StandAlone.java#2 $
+// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/test/StandAlone.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -396,7 +396,8 @@ public class StandAlone {
 
     private static void printDimension(Dimension dim) {
         DimensionType dimensionType = dim.getDimensionType();
-        System.out.println("\tDimension " + dim.getName()
+        System.out.println(
+            "\tDimension " + dim.getName()
             + " type: " + dimensionType.name());
 
         System.out.println("\t    Description: " + dim.getDescription());

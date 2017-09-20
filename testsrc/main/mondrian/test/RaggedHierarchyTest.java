@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/test/RaggedHierarchyTest.java#2 $
+// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/test/RaggedHierarchyTest.java#4 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
-// Copyright (C) 2004-2009 Julian Hyde
+// Copyright (C) 2004-2010 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -16,7 +16,7 @@ package mondrian.test;
  *
  * @author jhyde
  * @since Apr 19, 2004
- * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/test/RaggedHierarchyTest.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/test/RaggedHierarchyTest.java#4 $
  */
 public class RaggedHierarchyTest extends FoodMartTestCase {
     private void assertRaggedReturns(String expression, String expected) {
@@ -317,6 +317,82 @@ public class RaggedHierarchyTest extends FoodMartTestCase {
             + "Row #29: 23,591\n"
             + "Row #30: 35,257\n"
             + "Row #31: 35,257\n");
+    }
+
+    /**
+     * Test case for bug
+     * <a href="http://jira.pentaho.com/browse/MONDRIAN-628">MONDRIAN-628</a>,
+     * "ClassCastException in Mondrian for query using Sales Ragged cube".
+     *
+     * <p>Cause was that ancestor yielded a null member, which was a RolapMember
+     * but Order required it to be a RolapCubeMember.
+     */
+    public void testNullMember() {
+        assertQueryReturns(
+            "With \n"
+            + " Set [*NATIVE_CJ_SET] as '[*BASE_MEMBERS_Geography]' \n"
+            + " Set [*SORTED_ROW_AXIS] as 'Order([*CJ_ROW_AXIS],Ancestor([Geography].CurrentMember, [Geography].[Country]).OrderKey,BASC,Ancestor([Geography].CurrentMember, [Geography].[State]).OrderKey,BASC,[Geography].CurrentMember.OrderKey,BASC)' \n"
+            + " Set [*BASE_MEMBERS_Geography] as '[Geography].[City].Members' \n"
+            + " Set [*NATIVE_MEMBERS_Geography] as 'Generate([*NATIVE_CJ_SET], {[Geography].CurrentMember})' \n"
+            + " Set [*BASE_MEMBERS_Measures] as '{[Measures].[*ZERO]}' \n"
+            + " Set [*CJ_ROW_AXIS] as 'Generate([*NATIVE_CJ_SET], {([Geography].currentMember)})' \n"
+            + " Set [*CJ_COL_AXIS] as '[*NATIVE_CJ_SET]' \n"
+            + " Member [Measures].[*ZERO] as '0', SOLVE_ORDER=0 \n"
+            + " Select \n"
+            + " [*BASE_MEMBERS_Measures] on columns, \n"
+            + " [*SORTED_ROW_AXIS] on rows \n"
+            + " From [Sales Ragged]",
+            "Axis #0:\n"
+            + "{}\n"
+            + "Axis #1:\n"
+            + "{[Measures].[*ZERO]}\n"
+            + "Axis #2:\n"
+            + "{[Geography].[All Geographys].[Canada].[BC].[Vancouver]}\n"
+            + "{[Geography].[All Geographys].[Canada].[BC].[Victoria]}\n"
+            + "{[Geography].[All Geographys].[Israel].[Israel].[Haifa]}\n"
+            + "{[Geography].[All Geographys].[Israel].[Israel].[Tel Aviv]}\n"
+            + "{[Geography].[All Geographys].[Mexico].[DF].[Mexico City]}\n"
+            + "{[Geography].[All Geographys].[Mexico].[DF].[San Andres]}\n"
+            + "{[Geography].[All Geographys].[Mexico].[Guerrero].[Acapulco]}\n"
+            + "{[Geography].[All Geographys].[Mexico].[Jalisco].[Guadalajara]}\n"
+            + "{[Geography].[All Geographys].[Mexico].[Veracruz].[Orizaba]}\n"
+            + "{[Geography].[All Geographys].[Mexico].[Yucatan].[Merida]}\n"
+            + "{[Geography].[All Geographys].[Mexico].[Zacatecas].[Camacho]}\n"
+            + "{[Geography].[All Geographys].[Mexico].[Zacatecas].[Hidalgo]}\n"
+            + "{[Geography].[All Geographys].[USA].[USA].[Washington]}\n"
+            + "{[Geography].[All Geographys].[USA].[CA].[Alameda]}\n"
+            + "{[Geography].[All Geographys].[USA].[CA].[Beverly Hills]}\n"
+            + "{[Geography].[All Geographys].[USA].[CA].[Los Angeles]}\n"
+            + "{[Geography].[All Geographys].[USA].[CA].[San Francisco]}\n"
+            + "{[Geography].[All Geographys].[USA].[OR].[Portland]}\n"
+            + "{[Geography].[All Geographys].[USA].[OR].[Salem]}\n"
+            + "{[Geography].[All Geographys].[USA].[WA].[Bellingham]}\n"
+            + "{[Geography].[All Geographys].[USA].[WA].[Bremerton]}\n"
+            + "{[Geography].[All Geographys].[USA].[WA].[Seattle]}\n"
+            + "{[Geography].[All Geographys].[USA].[WA].[Spokane]}\n"
+            + "Row #0: 0\n"
+            + "Row #1: 0\n"
+            + "Row #2: 0\n"
+            + "Row #3: 0\n"
+            + "Row #4: 0\n"
+            + "Row #5: 0\n"
+            + "Row #6: 0\n"
+            + "Row #7: 0\n"
+            + "Row #8: 0\n"
+            + "Row #9: 0\n"
+            + "Row #10: 0\n"
+            + "Row #11: 0\n"
+            + "Row #12: 0\n"
+            + "Row #13: 0\n"
+            + "Row #14: 0\n"
+            + "Row #15: 0\n"
+            + "Row #16: 0\n"
+            + "Row #17: 0\n"
+            + "Row #18: 0\n"
+            + "Row #19: 0\n"
+            + "Row #20: 0\n"
+            + "Row #21: 0\n"
+            + "Row #22: 0\n");
     }
 }
 

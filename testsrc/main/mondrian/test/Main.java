@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/test/Main.java#2 $
+// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/test/Main.java#5 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -37,6 +37,8 @@ import mondrian.xmla.test.XmlaTest;
 import mondrian.test.clearview.*;
 import mondrian.calc.impl.ConstantCalcTest;
 import mondrian.rolap.agg.AggregationOnDistinctCountMeasuresTest;
+import mondrian.rolap.aggmatcher.MultipleColsInTupleAggTest;
+
 import org.apache.log4j.Logger;
 
 /**
@@ -46,7 +48,7 @@ import org.apache.log4j.Logger;
  * Mondrian tests.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/test/Main.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/test/Main.java#5 $
  */
 public class Main extends TestSuite {
     private static final Logger logger = Logger.getLogger(Main.class);
@@ -189,7 +191,10 @@ public class Main extends TestSuite {
             addTest(suite, DialectTest.class);
             addTest(suite, ResultComparatorTest.class, "suite");
             addTest(suite, DrillThroughTest.class);
-            addTest(suite, ScenarioTest.class);
+            if (false) {
+                // Scenarios are not implemented until mondrian-3.2.
+                addTest(suite, ScenarioTest.class);
+            }
             addTest(suite, BasicQueryTest.class);
             addTest(suite, CVBasicTest.class, "suite");
             addTest(suite, GrandTotalTest.class, "suite");
@@ -279,6 +284,7 @@ public class Main extends TestSuite {
             addTest(suite, BitKeyTest.class);
             addTest(suite, TypeTest.class);
             addTest(suite, SteelWheelsTestCase.class);
+            addTest(suite, MultipleColsInTupleAggTest.class);
 
             boolean testNonEmpty = isRunOnce();
             if (!MondrianProperties.instance().EnableNativeNonEmpty.get()) {
@@ -289,6 +295,7 @@ public class Main extends TestSuite {
             }
             if (testNonEmpty) {
                 addTest(suite, NonEmptyTest.class);
+                addTest(suite, FilterTest.class);
             } else {
                 logger.warn("skipping NonEmptyTests");
             }

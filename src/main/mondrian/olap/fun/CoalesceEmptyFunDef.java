@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/CoalesceEmptyFunDef.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/CoalesceEmptyFunDef.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -23,7 +23,7 @@ import java.util.List;
  * first such argument that does not return a null value.
  *
  * @author gjohnson
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/CoalesceEmptyFunDef.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/CoalesceEmptyFunDef.java#3 $
  */
 public class CoalesceEmptyFunDef extends FunDefBase {
     static final ResolverBase Resolver = new ResolverImpl();
@@ -79,7 +79,7 @@ public class CoalesceEmptyFunDef extends FunDefBase {
                 int matchingArgs = 0;
                 conversions.clear();
                 for (int i = 0; i < args.length; i++) {
-                    if (validator.canConvert(args[i], type, conversions)) {
+                    if (validator.canConvert(i, args[i], type, conversions)) {
                         matchingArgs++;
                     }
                     argTypes[i] = type;

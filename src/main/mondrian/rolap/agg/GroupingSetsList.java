@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/agg/GroupingSetsList.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/agg/GroupingSetsList.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -29,7 +29,7 @@ import java.util.*;
  * </ul>
  *
  * @author Thiyagu
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/agg/GroupingSetsList.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/agg/GroupingSetsList.java#3 $
  * @since 24 May 2007
  */
 class GroupingSetsList {
@@ -79,8 +79,8 @@ class GroupingSetsList {
         List<RolapStar.Column[]> groupingColumns =
             new ArrayList<RolapStar.Column[]>();
         for (GroupingSet aggBatchDetail : groupingSets) {
-            groupingColumns.add(aggBatchDetail.getSegments()[0]
-                .aggregation.getColumns());
+            groupingColumns.add(
+                aggBatchDetail.getSegments()[0].aggregation.getColumns());
         }
         return groupingColumns;
     }

@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/FunUtil.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/FunUtil.java#5 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -33,7 +33,7 @@ import java.util.*;
  * mondrian.olap.fun} package.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/FunUtil.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/fun/FunUtil.java#5 $
  * @since 1.0
  */
 public class FunUtil extends Util {
@@ -1072,6 +1072,26 @@ public class FunUtil extends Util {
     }
 
     /**
+     * Converts a double (primitive) value to a Double. {@link #DoubleNull}
+     * becomes null.
+     */
+    public static Double box(double d) {
+        return d == DoubleNull
+            ? null
+            : d;
+    }
+
+    /**
+     * Converts an int (primitive) value to an Integer. {@link #IntegerNull}
+     * becomes null.
+     */
+    public static Integer box(int n) {
+        return n == IntegerNull
+            ? null
+            : n;
+    }
+
+    /**
      * Sorts an array of values.
      */
     public static void sortValuesDesc(Object[] values) {
@@ -1303,8 +1323,8 @@ public class FunUtil extends Util {
         double avg2 = _avg(sw2);
         double covar = 0.0;
         for (int i = 0; i < sw1.v.size(); i++) {
-            //all of this casting seems inefficient - can we make SetWrapper
-            //contain an array of double instead?
+            // all of this casting seems inefficient - can we make SetWrapper
+            // contain an array of double instead?
             double diff1 = (((Double) sw1.v.get(i)).doubleValue() - avg1);
             double diff2 = (((Double) sw2.v.get(i)).doubleValue() - avg2);
             covar += (diff1 * diff2);
@@ -2865,7 +2885,7 @@ public class FunUtil extends Util {
      * object which indicates the the cell is not in the cache yet) next,
      * then numbers and strings are compared by value.
      */
-    private static class DescendingValueComparator implements Comparator {
+    public static class DescendingValueComparator implements Comparator {
         /**
          * The singleton.
          */
@@ -3012,6 +3032,10 @@ public class FunUtil extends Util {
         }
 
         public Dimension getDimension() {
+            throw new UnsupportedOperationException();
+        }
+
+        public Map<String, Annotation> getAnnotationMap() {
             throw new UnsupportedOperationException();
         }
 

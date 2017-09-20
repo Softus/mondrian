@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap4j/MondrianOlap4jCell.java#2 $
+// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap4j/MondrianOlap4jCell.java#4 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -10,14 +10,11 @@
 package mondrian.olap4j;
 
 import org.olap4j.AllocationPolicy;
-import org.olap4j.Cell;
-import org.olap4j.CellSet;
-import org.olap4j.OlapException;
+import org.olap4j.*;
 import org.olap4j.metadata.Property;
 
 import javax.sql.DataSource;
-import java.util.List;
-import java.util.ArrayList;
+import java.util.*;
 import java.sql.*;
 import java.lang.reflect.Proxy;
 
@@ -28,7 +25,7 @@ import mondrian.util.DelegatingInvocationHandler;
  * for the Mondrian OLAP engine.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap4j/MondrianOlap4jCell.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap4j/MondrianOlap4jCell.java#4 $
  * @since May 24, 2007
  */
 class MondrianOlap4jCell implements Cell {
@@ -36,6 +33,13 @@ class MondrianOlap4jCell implements Cell {
     private final MondrianOlap4jCellSet olap4jCellSet;
     private final mondrian.olap.Cell cell;
 
+    /**
+     * Creates a MondrianOlap4jCell.
+     *
+     * @param coordinates Coordinates
+     * @param olap4jCellSet Cell set
+     * @param cell Cell in native Mondrian representation
+     */
     MondrianOlap4jCell(
         int[] coordinates,
         MondrianOlap4jCellSet olap4jCellSet,
@@ -112,10 +116,6 @@ class MondrianOlap4jCell implements Cell {
         return cell.getFormattedValue();
     }
 
-    public void setValue(Object var1, AllocationPolicy var2, Object... var3) {
-        throw new UnsupportedOperationException();
-    }
-
     public ResultSet drillThrough() throws OlapException {
         if (!cell.canDrillThrough()) {
             return null;
@@ -144,12 +144,25 @@ class MondrianOlap4jCell implements Cell {
         }
     }
 
+    public void setValue(
+        Object newValue,
+        AllocationPolicy allocationPolicy,
+        Object... allocationArgs)
+    {
+        throw new UnsupportedOperationException("writeback not yet supported");
+    }
+
     // must be public for reflection to work
     public static class MyDelegatingInvocationHandler
         extends DelegatingInvocationHandler
     {
         private final ResultSet resultSet;
 
+        /**
+         * Creates a MyDelegatingInvocationHandler.
+         *
+         * @param resultSet Result set
+         */
         MyDelegatingInvocationHandler(ResultSet resultSet) {
             this.resultSet = resultSet;
         }
@@ -158,7 +171,11 @@ class MondrianOlap4jCell implements Cell {
             return resultSet;
         }
 
-        // implement ResultSet.close()
+        /**
+         * Helper method to implement {@link java.sql.ResultSet#close()}.
+         *
+         * @throws SQLException on error
+         */
         public void close() throws SQLException {
             resultSet.getStatement().getConnection().close();
         }

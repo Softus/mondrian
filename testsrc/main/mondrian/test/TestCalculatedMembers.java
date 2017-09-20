@@ -1,10 +1,10 @@
 /*
-// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/test/TestCalculatedMembers.java#2 $
+// $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/test/TestCalculatedMembers.java#7 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
 // Copyright (C) 2002-2002 Kana Software, Inc.
-// Copyright (C) 2002-2009 Julian Hyde and others
+// Copyright (C) 2002-2010 Julian Hyde and others
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
@@ -24,7 +24,7 @@ import mondrian.spi.Dialect;
  *
  * @author jhyde
  * @since 5 October, 2002
- * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/test/TestCalculatedMembers.java#2 $
+ * @version $Id: //open/mondrian-release/3.1/testsrc/main/mondrian/test/TestCalculatedMembers.java#7 $
  */
 public class TestCalculatedMembers extends BatchTestCase {
     public TestCalculatedMembers() {
@@ -220,7 +220,7 @@ public class TestCalculatedMembers extends BatchTestCase {
             + "{[Time].[1997].[Q2].[5]}\n"
             + "{[Time].[1997].[Q2].[6]}\n"
             + "Row #0: $25,766.55\n"
-            + "Row #0: $-4,289.24\n"
+            + "Row #0: -$4,289.24\n"
             + "Row #1: $26,673.73\n"
             + "Row #1: $907.18\n"
             + "Row #2: $27,261.76\n"
@@ -850,10 +850,10 @@ public class TestCalculatedMembers extends BatchTestCase {
         // calc measure defined in query
         assertQueryReturns(
             "with member [Measures].[Foo] as ' [Measures].[Unit Sales] * 2 ',\n"
-                + " CELL_FORMATTER='mondrian.test.FooBarCellFormatter' \n"
-                + "select {[Measures].[Unit Sales], [Measures].[Foo]} on 0,\n"
-                + " {[Store].Children} on rows\n"
-                + "from [Sales]",
+            + " CELL_FORMATTER='mondrian.test.FooBarCellFormatter' \n"
+            + "select {[Measures].[Unit Sales], [Measures].[Foo]} on 0,\n"
+            + " {[Store].Children} on rows\n"
+            + "from [Sales]",
             "Axis #0:\n"
             + "{}\n"
             + "Axis #1:\n"
@@ -905,9 +905,9 @@ public class TestCalculatedMembers extends BatchTestCase {
         // the MDX spec. -- jhyde, 2007/9/5.
         assertQueryReturns(
             "with member [Store].[CA or OR] as ' Aggregate({[Store].[USA].[CA], [Store].[USA].[OR]}) ',\n"
-                + " CELL_FORMATTER='mondrian.test.FooBarCellFormatter'\n"
-                + "select {[Store].[USA], [Store].[CA or OR]} on columns\n"
-                + "from [Sales]",
+            + " CELL_FORMATTER='mondrian.test.FooBarCellFormatter'\n"
+            + "select {[Store].[USA], [Store].[CA or OR]} on columns\n"
+            + "from [Sales]",
             "Axis #0:\n"
             + "{}\n"
             + "Axis #1:\n"
@@ -969,8 +969,8 @@ public class TestCalculatedMembers extends BatchTestCase {
                 + "</CalculatedMember>\n");
         testContext.assertQueryThrows(
             "select {[Measures].[Unit Sales], [Measures].[Profit Formatted]} on 0,\n"
-                + " {[Store].Children} on rows\n"
-                + "from [Sales]",
+            + " {[Store].Children} on rows\n"
+            + "from [Sales]",
             "Failed to load formatter class 'mondrian.test.NonExistentCellFormatter' for member '[Measures].[Profit Formatted]'.");
     }
 
@@ -1002,8 +1002,8 @@ public class TestCalculatedMembers extends BatchTestCase {
         // same result if calc member is defined in query
         TestContext.instance().assertQueryReturns(
             "with member [Measures].[My Tuple] as\n"
-                + " 'StrToTuple(\"([Gender].[M], [Marital Status].[S])\", [Gender], [Marital Status])'\n"
-                + "select {[Measures].[My Tuple]} on 0 from [Sales]",
+            + " 'StrToTuple(\"([Gender].[M], [Marital Status].[S])\", [Gender], [Marital Status])'\n"
+            + "select {[Measures].[My Tuple]} on 0 from [Sales]",
             desiredResult);
     }
 
@@ -1143,8 +1143,10 @@ public class TestCalculatedMembers extends BatchTestCase {
 
 
     /**
-     * test case for bug #1801069, Issues with calculated members
-     * verify that the calculated member [Product].[Food].[Test]
+     * Test case for
+     * <a href="http://jira.pentaho.com/browse/MONDRIAN-335">MONDRIAN-335</a>,
+     * "Issues with calculated members".
+     * Verify that the calculated member [Product].[Food].[Test]
      * definition does not throw errors and returns expected
      * results.
      */
@@ -1177,8 +1179,10 @@ public class TestCalculatedMembers extends BatchTestCase {
     }
 
     /**
-     * test case for bug #1801069, Issues with calculated members
-     * verify that the calculated member [Product].[Test]
+     * Test case for
+     * <a href="http://jira.pentaho.com/browse/MONDRIAN-335">MONDRIAN-335</a>,
+     * "Issues with calculated members".
+     * Verify that the calculated member [Product].[Test]
      * returns an empty children list vs. invalid behavior
      * of returning [All Products].Children
      */
@@ -1399,6 +1403,179 @@ public class TestCalculatedMembers extends BatchTestCase {
             + "Row #2: 2.22\n"
             + "Row #3: 332\n"
             + "Row #3: 2.20\n");
+    }
+
+    /**
+     * Testcase for bug <a href="http://jira.pentaho.com/browse/MONDRIAN-608">
+     * MONDRIAN-608, "Performance issue with large number of measures"</a>.
+     */
+    public void testExponentialPerformanceBugMondrian608() {
+        // Run variants of the same query with increasing expression complexity.
+        // With MONDRIAN-608, running time triples each iteration (for
+        // example, i=10 takes 2.7s, i=11 takes 9.6s), so 20 would be very
+        // noticeable!
+        final boolean print = false;
+        for (int i = 0; i < 20; ++i) {
+            checkForExponentialPerformance(i, print);
+        }
+    }
+
+    /**
+     * Runs a query with an calculated member whose expression is a given
+     * complexity.
+     *
+     * @param n Expression complexity
+     * @param print Whether to print timings
+     */
+    private void checkForExponentialPerformance(
+        int n,
+        boolean print)
+    {
+        StringBuilder buf = new StringBuilder();
+        for (int i = 0; i < n; ++i) {
+            buf.append(
+                "+ [Measures].[Sales Count] - [Measures].[Sales Count]\n");
+        }
+        final long t0 = System.currentTimeMillis();
+        final String mdx =
+            "with member [Measures].[M0] as\n"
+            + "    [Measures].[Unit Sales]\n"
+            + "   + [Measures].[Store Cost]\n"
+            + "   + [Measures].[Store Sales]\n"
+            + "   + [Measures].[Customer Count]\n"
+            + buf
+            + "  set [#DataSet#] as NonEmptyCrossjoin(\n"
+            + "    {[Product].[Food]},\n"
+            + "    {Descendants([Store].[USA], 1)})\n"
+            + "select {[Measures].[M0]} on columns,\n"
+            + " NON EMPTY Hierarchize({[#DataSet#]}) on rows\n"
+            + "FROM [Sales]";
+        assertQueryReturns(
+            mdx,
+            "Axis #0:\n"
+            + "{}\n"
+            + "Axis #1:\n"
+            + "{[Measures].[M0]}\n"
+            + "Axis #2:\n"
+            + "{[Product].[All Products].[Food], [Store].[All Stores].[USA].[CA]}\n"
+            + "{[Product].[All Products].[Food], [Store].[All Stores].[USA].[OR]}\n"
+            + "{[Product].[All Products].[Food], [Store].[All Stores].[USA].[WA]}\n"
+            + "Row #0: 217,506\n"
+            + "Row #1: 193,104\n"
+            + "Row #2: 359,162\n");
+
+        // Check for a similar issue in the visitor that analyzes a calculated
+        // member's expression to see whether a cell based on that member can
+        // be drilled through.
+        final Result result = executeQuery(mdx);
+        assertTrue(result.getCell(new int[] {0, 0}).canDrillThrough());
+
+        final long t1 = System.currentTimeMillis();
+        if (print) {
+            System.out.println(
+                "For n=" + n + ", took " + (t1 - t0) + " millis");
+        }
+    }
+
+    /**
+     * Test case for
+     * <a href="http://jira.pentaho.com/browse/MONDRIAN-638">MONDRIAN-638</a>,
+     * "Stack trace when grand total turned on". The cause of the problem were
+     * negative SOLVE_ORDER values. We were incorrectly populating
+     * RolapEvaluator.expandingMember from the parent evaluator, which made it
+     * look like two evaluation contexts were expanding the same member.
+     */
+    public void testCycleFalsePositive() {
+        if (MondrianProperties.instance().SsasCompatibleNaming.get()) {
+            // This test uses old-style [dimension.hierarchy] names.
+            return;
+        }
+        final TestContext testContext = TestContext.create(
+            null,
+            "<Cube name=\"Store5\"> \n"
+            + "  <Table name=\"store\"/> \n"
+            + "  <!-- We could have used the shared dimension \"Store Type\", but we \n"
+            + "     want to test private dimensions without primary key. --> \n"
+            + "  <Dimension name=\"Store Type\"> \n"
+            + "    <Hierarchy name=\"Store Types Hierarchy\" allMemberName=\"All Store Types Member Name\" hasAll=\"true\"> \n"
+            + "      <Level name=\"Store Type\" column=\"store_type\" uniqueMembers=\"true\"/> \n"
+            + "    </Hierarchy> \n"
+            + "  </Dimension> \n"
+            + "\n"
+            + "  <Dimension name=\"Country\">\n"
+            + "    <Hierarchy hasAll=\"true\" primaryKey=\"customer_id\">\n"
+            + "      <Level name=\"Country\" column=\"store_country\" uniqueMembers=\"true\"/>\n"
+            + "    </Hierarchy>\n"
+            + "  </Dimension>\n"
+            + "\n"
+            + "  <Measure name=\"Store Sqft\" column=\"store_sqft\" aggregator=\"sum\" \n"
+            + "      formatString=\"#,###\"/> \n"
+            + "  <Measure name=\"Grocery Sqft\" column=\"grocery_sqft\" aggregator=\"sum\" \n"
+            + "      formatString=\"#,###\" description=\"Grocery Sqft Description...\"> \n"
+            + "    <Annotations> \n"
+            + "        <Annotation name=\"AnalyzerBusinessGroup\">Numbers</Annotation> \n"
+            + "    </Annotations> \n"
+            + "  </Measure> \n"
+            + "  <CalculatedMember \n"
+            + "      name=\"Constant 1\" description=\"Constant 1 Description...\" \n"
+            + "      dimension=\"Measures\"> \n"
+            + "    <Annotations> \n"
+            + "        <Annotation name=\"AnalyzerBusinessGroup\">Numbers</Annotation> \n"
+            + "    </Annotations> \n"
+            + "    <Formula>1</Formula> \n"
+            + "  </CalculatedMember> \n"
+            + "</Cube> ",
+            null,
+            null,
+            null,
+            null);
+        testContext.assertQueryReturns(
+            "With \n"
+            + "Set [*NATIVE_CJ_SET] as 'NonEmptyCrossJoin([*BASE_MEMBERS_Country],[*BASE_MEMBERS_Store Type.Store Types Hierarchy])' \n"
+            + "Set [*SORTED_ROW_AXIS] as 'Order([*CJ_ROW_AXIS],[Country].CurrentMember.OrderKey,BASC,[Store Type.Store Types Hierarchy].CurrentMember.OrderKey,BASC)' \n"
+            + "Set [*BASE_MEMBERS_Country] as '[Country].[Country].Members' \n"
+            + "Set [*NATIVE_MEMBERS_Country] as 'Generate([*NATIVE_CJ_SET], {[Country].CurrentMember})' \n"
+            + "Set [*BASE_MEMBERS_Measures] as '{[Measures].[*FORMATTED_MEASURE_0]}' \n"
+            + "Set [*CJ_ROW_AXIS] as 'Generate([*NATIVE_CJ_SET], {([Country].currentMember,[Store Type.Store Types Hierarchy].currentMember)})' \n"
+            + "Set [*BASE_MEMBERS_Store Type.Store Types Hierarchy] as '[Store Type.Store Types Hierarchy].[Store Type].Members' \n"
+            + "Set [*NATIVE_MEMBERS_Store Type.Store Types Hierarchy] as 'Generate([*NATIVE_CJ_SET], {[Store Type.Store Types Hierarchy].CurrentMember})' \n"
+            + "Set [*CJ_COL_AXIS] as '[*NATIVE_CJ_SET]' \n"
+            + "Member [Store Type.Store Types Hierarchy].[*TOTAL_MEMBER_SEL~SUM] as 'Sum({[Store Type.Store Types Hierarchy].[All Store Types Member Name]})', SOLVE_ORDER=-101 \n"
+            + "Member [Country].[*TOTAL_MEMBER_SEL~SUM] as 'Sum({[Country].[All Countrys]})', SOLVE_ORDER=-100 \n"
+            + "Member [Measures].[*FORMATTED_MEASURE_0] as '[Measures].[Store Sqft]', FORMAT_STRING = '#,###', SOLVE_ORDER=400 \n"
+            + "Select \n"
+            + "[*BASE_MEMBERS_Measures] on columns, \n"
+            + "Non Empty Union(NonEmptyCrossJoin({[Country].[*TOTAL_MEMBER_SEL~SUM]},{[Store Type.Store Types Hierarchy].[*TOTAL_MEMBER_SEL~SUM]}),[*SORTED_ROW_AXIS]) on rows \n"
+            + "From [Store5] ",
+            "Axis #0:\n"
+            + "{}\n"
+            + "Axis #1:\n"
+            + "{[Measures].[*FORMATTED_MEASURE_0]}\n"
+            + "Axis #2:\n"
+            + "{[Country].[*TOTAL_MEMBER_SEL~SUM], [Store Type.Store Types Hierarchy].[*TOTAL_MEMBER_SEL~SUM]}\n"
+            + "{[Country].[All Countrys].[Canada], [Store Type.Store Types Hierarchy].[All Store Types Member Name].[Deluxe Supermarket]}\n"
+            + "{[Country].[All Countrys].[Canada], [Store Type.Store Types Hierarchy].[All Store Types Member Name].[Mid-Size Grocery]}\n"
+            + "{[Country].[All Countrys].[Mexico], [Store Type.Store Types Hierarchy].[All Store Types Member Name].[Deluxe Supermarket]}\n"
+            + "{[Country].[All Countrys].[Mexico], [Store Type.Store Types Hierarchy].[All Store Types Member Name].[Gourmet Supermarket]}\n"
+            + "{[Country].[All Countrys].[Mexico], [Store Type.Store Types Hierarchy].[All Store Types Member Name].[Mid-Size Grocery]}\n"
+            + "{[Country].[All Countrys].[Mexico], [Store Type.Store Types Hierarchy].[All Store Types Member Name].[Small Grocery]}\n"
+            + "{[Country].[All Countrys].[Mexico], [Store Type.Store Types Hierarchy].[All Store Types Member Name].[Supermarket]}\n"
+            + "{[Country].[All Countrys].[USA], [Store Type.Store Types Hierarchy].[All Store Types Member Name].[Deluxe Supermarket]}\n"
+            + "{[Country].[All Countrys].[USA], [Store Type.Store Types Hierarchy].[All Store Types Member Name].[Gourmet Supermarket]}\n"
+            + "{[Country].[All Countrys].[USA], [Store Type.Store Types Hierarchy].[All Store Types Member Name].[Small Grocery]}\n"
+            + "{[Country].[All Countrys].[USA], [Store Type.Store Types Hierarchy].[All Store Types Member Name].[Supermarket]}\n"
+            + "Row #0: 571,596\n"
+            + "Row #1: 23,112\n"
+            + "Row #2: 34,452\n"
+            + "Row #3: 61,381\n"
+            + "Row #4: 23,759\n"
+            + "Row #5: 74,891\n"
+            + "Row #6: 24,597\n"
+            + "Row #7: 58,384\n"
+            + "Row #8: 61,552\n"
+            + "Row #9: 23,688\n"
+            + "Row #10: 50,684\n"
+            + "Row #11: 135,096\n");
     }
 }
 
