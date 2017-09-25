@@ -504,8 +504,7 @@ compile.java"/>
         srcdir="${java.dir}"
         destdir="${classes.dir}"
         debug="${project.build.debug}"
-        classpathref="project.build.classpath"
-        source="1.5">
+        classpathref="project.build.classpath">
       <include name="mondrian/olap/MondrianException.java" />
       <include name="mondrian/olap/ResultLimitExceededException.java" />
       <include name="mondrian/olap/InvalidHierarchyException.java" />
@@ -540,11 +539,8 @@ compile.java"/>
         srcdir="${java.dir}"
         destdir="${classes.dir}"
         debug="${project.build.debug}"
-        classpathref="project.build.classpath"
-        source="1.5">
+        classpathref="project.build.classpath">
       <include name="mondrian/**/*.java"/>
-      <exclude name="mondrian/olap4j/FactoryJdbc3Impl.java" if="jdk16.present"/>
-      <exclude name="mondrian/olap4j/FactoryJdbc4Impl.java" if="jdk16.not.present"/>
     </javac>
     <copy file="src/main/mondrian/rolap/aggmatcher/DefaultRules.xml"
         todir="${classes.dir}"/>
@@ -563,8 +559,7 @@ META-INF/**"/>
         srcdir="${javatest.dir}"
         destdir="${testclasses.dir}"
         debug="${project.build.debug}"
-        classpathref="project.test.classpath"
-        source="1.5">
+        classpathref="project.test.classpath">
         <include name="mondrian/**/*.java"/>
     </javac>
   </target>
@@ -573,7 +568,7 @@ META-INF/**"/>
     <javacup
         srcdir="${java.dir}"
         input="${java.dir}/mondrian/olap/Parser.cup"
-        expect="61"
+        expect="64"
         interface="true"/>
   </target>
 
@@ -1309,7 +1304,6 @@ clean against JDK 1.6.">
         overview="${java.dir}/overview.html"
         footer="&lt;a href=&quot;http://sourceforge.net/projects/mondrian&quot;&gt;&lt;img src=&quot;http://sflogo.sourceforge.net/sflogo.php?group_id=35302&#38;type=15&quot; width=&quot;150&quot; height=&quot;40&quot; border=&quot;0&quot; alt=&apos;Get Mondrian at SourceForge.net. Fast, secure and free Open Source software downloads&apos;&gt;&lt;/a&gt;"
         author="true"
-        source="1.5"
         access="${access}"
         Windowtitle="Mondrian OLAP Engine, version ${version}"
         additionalparam="${additionalparam}"
@@ -1356,7 +1350,6 @@ diagrams and hyperlinks to source code">
         overview="${java.dir}/overview.html"
         footer="&lt;a href=&quot;http://sourceforge.net/projects/mondrian&quot;&gt;&lt;img src=&quot;http://sflogo.sourceforge.net/sflogo.php?group_id=35302&#38;type=15&quot; width=&quot;150&quot; height=&quot;40&quot; border=&quot;0&quot; alt=&apos;Get Mondrian at SourceForge.net. Fast, secure and free Open Source software downloads&apos;&gt;&lt;/a&gt;"
         author="true"
-        source="1.5"
         access="package"
         Windowtitle="Mondrian OLAP Engine, version ${version}"
         additionalparam="-linksource"

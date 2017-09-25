@@ -61,14 +61,18 @@ class MondrianOlap4jProperty implements Property, Named {
         return property.name;
     }
 
-    public String getCaption(Locale locale) {
+    public String getCaption() {
         // todo: i18n
         return property.getCaption();
     }
 
-    public String getDescription(Locale locale) {
+    public String getDescription() {
         // todo: i18n
         return property.getDescription();
+    }
+
+    public boolean isVisible() {
+        return !property.isInternal();
     }
 
     public ContentType getContentType() {

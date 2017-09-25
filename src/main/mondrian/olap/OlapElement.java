@@ -67,6 +67,16 @@ public interface OlapElement {
      * can't represent that, so we return null);</p>
      */
     Dimension getDimension();
+
+    /**
+     * Returns whether this element is visible to end-users.
+     *
+     * <p>Visibility is a hint for client applications. An element's visibility
+     * does not affect how it is treated when MDX queries are evaluated.
+     *
+     * @return Whether this element is visible
+     */
+    boolean isVisible();
 }
 
 // End OlapElement.java

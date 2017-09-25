@@ -940,7 +940,7 @@ abstract class MondrianOlap4jDatabaseMetaData implements OlapDatabaseMetaData {
             "ACTION_NAME", wildcard(actionNamePattern));
     }
 
-    public ResultSet getDatasources() throws OlapException {
+    public ResultSet getDatabases() throws OlapException {
         return getMetadata("DISCOVER_DATASOURCES");
     }
 
@@ -1012,7 +1012,7 @@ abstract class MondrianOlap4jDatabaseMetaData implements OlapDatabaseMetaData {
             "MDSCHEMA_DIMENSIONS",
             "SCHEMA_NAME", wildcard(schemaPattern),
             "CUBE_NAME", wildcard(cubeNamePattern),
-            "DIMSENSION_NAME", wildcard(dimensionNamePattern));
+            "DIMENSION_NAME", wildcard(dimensionNamePattern));
     }
 
     public ResultSet getOlapFunctions(
@@ -1121,6 +1121,19 @@ abstract class MondrianOlap4jDatabaseMetaData implements OlapDatabaseMetaData {
     }
     
     public Set<Granularity> getSupportedCellSetListenerGranularities() throws OlapException {
+        throw new UnsupportedOperationException();
+    }
+
+    public ResultSet getPseudoColumns(
+        String catalog,
+        String schemaPattern,
+        String tableNamePattern,
+        String columnNamePattern) throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public boolean generatedKeyAlwaysReturned() throws SQLException {
         throw new UnsupportedOperationException();
     }
 }

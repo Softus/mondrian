@@ -16,6 +16,7 @@ import org.olap4j.OlapDatabaseMetaData;
 
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.Executor;
 import java.io.Reader;
 import java.io.InputStream;
 

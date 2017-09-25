@@ -9,6 +9,8 @@
 */
 package mondrian.olap4j;
 
+
+import org.olap4j.mdx.IdentifierSegment;
 import org.olap4j.metadata.*;
 import org.olap4j.OlapException;
 import org.olap4j.impl.*;
@@ -109,111 +111,32 @@ class MondrianOlap4jCube implements Cube, Named {
         return cube.getUniqueName();
     }
 
-    public String getCaption(Locale locale) {
+    public String getCaption() {
         // todo: i81n
         return cube.getCaption();
     }
 
-    public String getDescription(Locale locale) {
+    public String getDescription() {
         // todo: i81n
         return cube.getDescription();
     }
 
-    public MondrianOlap4jMember lookupMember(String... nameParts) {
-        final MondrianOlap4jConnection olap4jConnection =
-            olap4jSchema.olap4jCatalog.olap4jDatabaseMetaData.olap4jConnection;
-        final mondrian.olap.SchemaReader schemaReader =
-            cube.getSchemaReader(olap4jConnection.connection.getRole());
+    public boolean isVisible() {
+        return cube.isVisible();
+    }
 
-        final List<mondrian.olap.Id.Segment> segmentList =
-            new ArrayList<mondrian.olap.Id.Segment>();
-        for (String namePart : nameParts) {
-            segmentList.add(
-                new mondrian.olap.Id.Segment(
-                    namePart, mondrian.olap.Id.Quoting.QUOTED));
-        }
-        final mondrian.olap.Member member =
-            schemaReader.getMemberByUniqueName(segmentList, false);
-        if (member == null) {
-            return null;
-        }
-        return olap4jConnection.toOlap4j(member);
+    public MondrianOlap4jMember lookupMember(
+        List<IdentifierSegment> nameParts)
+        throws OlapException
+    {
+        throw new UnsupportedOperationException();
     }
 
     public List<Member> lookupMembers(
         Set<Member.TreeOp> treeOps,
-        String... nameParts) throws OlapException
+        List<IdentifierSegment> nameParts) throws OlapException
     {
-        final MondrianOlap4jMember member = lookupMember(nameParts);
-        if (member == null) {
-            return Collections.emptyList();
-        }
-
-        // Add ancestors and/or the parent. Ancestors are prepended, to ensure
-        // hierarchical order.
-        final List<MondrianOlap4jMember> list =
-            new ArrayList<MondrianOlap4jMember>();
-        if (treeOps.contains(Member.TreeOp.ANCESTORS)) {
-            for (MondrianOlap4jMember m = member.getParentMember();
-                m != null;
-                m = m.getParentMember())
-                {
-                list.add(0, m);
-            }
-        } else if (treeOps.contains(Member.TreeOp.PARENT)) {
-            final MondrianOlap4jMember parentMember = member.getParentMember();
-            if (parentMember != null) {
-                list.add(parentMember);
-            }
-        }
-
-        // Add siblings. Siblings which occur after the member are deferred,
-        // because they occur after children and descendants in the
-        // hierarchical ordering.
-        List<MondrianOlap4jMember> remainingSiblingsList = null;
-        if (treeOps.contains(Member.TreeOp.SIBLINGS)) {
-            final MondrianOlap4jMember parentMember = member.getParentMember();
-            NamedList<MondrianOlap4jMember> siblingMembers;
-            if (parentMember != null) {
-                siblingMembers = parentMember.getChildMembers();
-            } else {
-                siblingMembers =
-                    Olap4jUtil.cast(member.getHierarchy().getRootMembers());
-            }
-            List<MondrianOlap4jMember> targetList = list;
-            for (MondrianOlap4jMember siblingMember : siblingMembers) {
-                if (siblingMember.equals(member)) {
-                    targetList =
-                        remainingSiblingsList =
-                            new ArrayList<MondrianOlap4jMember>();
-                } else {
-                    targetList.add(siblingMember);
-                }
-            }
-        }
-
-        // Add the member itself.
-        if (treeOps.contains(Member.TreeOp.SELF)) {
-            list.add(member);
-        }
-
-        // Add descendants and/or children.
-        if (treeOps.contains(Member.TreeOp.DESCENDANTS)) {
-            for (MondrianOlap4jMember childMember : member.getChildMembers()) {
-                list.add(childMember);
-                addDescendants(list, childMember);
-            }
-        } else if (treeOps.contains(Member.TreeOp.CHILDREN)) {
-            for (MondrianOlap4jMember childMember : member.getChildMembers()) {
-                list.add(childMember);
-            }
-        }
-        // Lastly, add siblings which occur after the member itself. They
-        // occur after all of the descendants in the hierarchical ordering.
-        if (remainingSiblingsList != null) {
-            list.addAll(remainingSiblingsList);
-        }
-        return Olap4jUtil.cast(list);
+        throw new UnsupportedOperationException();
     }
 
     private static void addDescendants(
@@ -224,6 +147,10 @@ class MondrianOlap4jCube implements Cube, Named {
             list.add(childMember);
             addDescendants(list, childMember);
         }
+    }
+
+    public boolean isDrillThroughEnabled() {
+        return true;
     }
 }
 

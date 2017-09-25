@@ -1027,6 +1027,7 @@ public class RolapResult extends ResultBase {
                 }
                 for (final Position position : subPositions) {
                     point.setAxis(axisOrdinal, pi);
+                    revaluator.setEvalAxes( true );
                     revaluator.setContext(position);
                     getQuery().checkCancelOrTimeout();
                     executeStripe(axisOrdinal - 1, revaluator, pos);

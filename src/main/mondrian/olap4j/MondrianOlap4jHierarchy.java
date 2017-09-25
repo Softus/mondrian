@@ -84,8 +84,8 @@ class MondrianOlap4jHierarchy implements Hierarchy, Named {
                 hierarchy.getLevels()[0], true);
 
         return new AbstractNamedList<Member>() {
-            protected String getName(Member member) {
-                return member.getName();
+            public String getName(Object member) {
+                return ((Member)member).getName();
             }
 
             public Member get(int index) {
@@ -106,14 +106,18 @@ class MondrianOlap4jHierarchy implements Hierarchy, Named {
         return hierarchy.getUniqueName();
     }
 
-    public String getCaption(Locale locale) {
+    public String getCaption() {
         // todo: localize caption
         return hierarchy.getCaption();
     }
 
-    public String getDescription(Locale locale) {
+    public String getDescription() {
         // todo: localize description
         return hierarchy.getDescription();
+    }
+
+    public boolean isVisible() {
+        return hierarchy.isVisible();
     }
 }
 

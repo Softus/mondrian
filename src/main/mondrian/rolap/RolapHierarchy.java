@@ -1074,6 +1074,27 @@ public class RolapHierarchy extends HierarchyBase {
         return uniqueKeyLevelName;
     }
 
+    /**
+     * Returns the ordinal of this hierarchy in its cube.
+     *
+     * <p>Temporarily defined against RolapHierarchy; will be moved to
+     * RolapCubeHierarchy as soon as the measures hierarchy is a
+     * RolapCubeHierarchy.
+     *
+     * @return Ordinal of this hierarchy in its cube
+     */
+    public int getOrdinalInCube() {
+        // This is temporary to verify that all calls to this method are for
+        // the measures hierarchy. For all other hierarchies, the context will
+        // be a RolapCubeHierarchy.
+        //
+        // In particular, if this method is called from
+        // RolapEvaluator.setContext, the caller of that method should have
+        // passed in a RolapCubeMember, not a RolapMember.
+        assert dimension.isMeasures();
+        return 0;
+    }
+
 
     /**
      * A <code>RolapNullMember</code> is the null member of its hierarchy.
@@ -1299,6 +1320,10 @@ public class RolapHierarchy extends HierarchyBase {
         }
 
         public Hierarchy getHierarchy() {
+            throw new UnsupportedOperationException();
+        }
+
+        public boolean isVisible() {
             throw new UnsupportedOperationException();
         }
 

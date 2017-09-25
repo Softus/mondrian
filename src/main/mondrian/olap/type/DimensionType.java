@@ -57,8 +57,17 @@ public class DimensionType implements Type {
         return dimension == null
             ? null
             : dimension.getHierarchies().length > 1
-            ? null
+            ? getHierarchyWithDefaultName()
             : dimension.getHierarchies()[0];
+    }
+
+    private Hierarchy getHierarchyWithDefaultName() {
+        for ( Hierarchy hierarchy : dimension.getHierarchies() ) {
+            if ( Util.equalName( hierarchy.getName(), dimension.getName() ) ) {
+                return hierarchy;
+            }
+        }
+        return null;
     }
 
     public Level getLevel() {
