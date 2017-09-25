@@ -1,29 +1,28 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Scanner.java#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
-// Copyright (C) 1998-2002 Kana Software, Inc.
-// Copyright (C) 2001-2009 Julian Hyde and others
-// All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
-// jhyde, 20 January, 1999
+// Copyright (C) 1998-2005 Julian Hyde
+// Copyright (C) 2005-2011 Pentaho and others
+// All Rights Reserved.
 */
 
 package mondrian.olap;
 
-import java_cup.runtime.Symbol;
 import org.apache.log4j.Logger;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.Hashtable;
+
+import java_cup.runtime.Symbol;
+
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.*;
 
 /**
  * Lexical analyzer for MDX.
+ *
+ * @author jhyde, 20 January, 1999
  */
 public class Scanner {
     private static final Logger LOGGER = Logger.getLogger(Scanner.class);
@@ -252,10 +251,13 @@ public class Scanner {
         initResword(ParserSym.COLUMNS,              "COLUMNS");
 //      initResword(ParserSym.DESC,                 "DESC");
         initResword(ParserSym.DIMENSION,            "DIMENSION");
+        initResword(ParserSym.DRILLTHROUGH,         "DRILLTHROUGH");
         initResword(ParserSym.ELSE,                 "ELSE");
         initResword(ParserSym.EMPTY,                "EMPTY");
         initResword(ParserSym.END,                  "END");
+        initResword(ParserSym.EXPLAIN,              "EXPLAIN");
 //      initResword(ParserSym.FIRSTCHILD,           "FIRSTCHILD");
+        initResword(ParserSym.FIRSTROWSET,          "FIRSTROWSET");
 //      initResword(ParserSym.FIRSTSIBLING,         "FIRSTSIBLING");
 //      initResword(ParserSym.FONT_FLAGS,           "FONT_FLAGS");
 //      initResword(ParserSym.FONT_NAME,            "FONT_NAME");
@@ -263,6 +265,7 @@ public class Scanner {
 //      initResword(ParserSym.FORE_COLOR,           "FORE_COLOR");
 //      initResword(ParserSym.FORMATTED_VALUE,      "FORMATTED_VALUE");
 //      initResword(ParserSym.FORMAT_STRING,        "FORMAT_STRING");
+        initResword(ParserSym.FOR,                  "FOR");
         initResword(ParserSym.FROM,                 "FROM");
         initResword(ParserSym.IS,                   "IS");
         initResword(ParserSym.IN,                   "IN");
@@ -271,6 +274,7 @@ public class Scanner {
 //      initResword(ParserSym.LASTSIBLING,          "LASTSIBLING");
 //      initResword(ParserSym.LEAD,                 "LEAD");
         initResword(ParserSym.MATCHES,              "MATCHES");
+        initResword(ParserSym.MAXROWS,              "MAXROWS");
         initResword(ParserSym.MEMBER,               "MEMBER");
 //      initResword(ParserSym.MEMBERS,              "MEMBERS");
 //      initResword(ParserSym.NEXTMEMBER,           "NEXTMEMBER");
@@ -281,9 +285,11 @@ public class Scanner {
         initResword(ParserSym.OR,                   "OR");
         initResword(ParserSym.PAGES,                "PAGES");
 //      initResword(ParserSym.PARENT,               "PARENT");
+        initResword(ParserSym.PLAN,                 "PLAN");
 //      initResword(ParserSym.PREVMEMBER,           "PREVMEMBER");
         initResword(ParserSym.PROPERTIES,           "PROPERTIES");
 //      initResword(ParserSym.RECURSIVE,            "RECURSIVE");
+        initResword(ParserSym.RETURN,               "RETURN");
         initResword(ParserSym.ROWS,                 "ROWS");
         initResword(ParserSym.SECTIONS,             "SECTIONS");
         initResword(ParserSym.SELECT,               "SELECT");
@@ -326,7 +332,7 @@ public class Scanner {
      * @return number literal token
      */
     private Symbol makeNumber(BigDecimal mantissa, int exponent) {
-        double d = mantissa.movePointRight(exponent).doubleValue();
+        BigDecimal d = mantissa.movePointRight(exponent);
         return makeSymbol(ParserSym.NUMBER, d);
     }
 
@@ -608,6 +614,7 @@ public class Scanner {
             case 'M': case 'N': case 'O': case 'P': case 'Q': case 'R':
             case 'S': case 'T': case 'U': case 'V': case 'W': case 'X':
             case 'Y': case 'Z':
+            case '_': case '$':
                 /* parse an identifier */
                 id = new StringBuilder();
                 for (;;) {
@@ -626,7 +633,7 @@ public class Scanner {
                     case 'Y': case 'Z':
                     case '0': case '1': case '2': case '3': case '4':
                     case '5': case '6': case '7': case '8': case '9':
-                    case '_':
+                    case '_': case '$':
                         break;
                     default:
                         String strId = id.toString();

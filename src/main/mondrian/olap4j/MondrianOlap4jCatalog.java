@@ -9,9 +9,7 @@
 */
 package mondrian.olap4j;
 
-import org.olap4j.metadata.Catalog;
-import org.olap4j.metadata.NamedList;
-import org.olap4j.metadata.Schema;
+import org.olap4j.metadata.*;
 import org.olap4j.OlapException;
 import org.olap4j.OlapDatabaseMetaData;
 import org.olap4j.impl.*;
@@ -47,6 +45,11 @@ class MondrianOlap4jCatalog implements Catalog, Named {
 
     public String getName() {
         return MondrianOlap4jConnection.LOCALDB_CATALOG_NAME;
+    }
+
+    public Database getDatabase() {
+        //PBreturn olap4jDatabase;
+        throw new UnsupportedOperationException();
     }
 
     public OlapDatabaseMetaData getMetaData() {

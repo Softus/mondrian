@@ -86,6 +86,9 @@ public class RolapCube extends CubeBase {
 
     RolapBaseCubeMeasure factCountMeasure;
 
+    final List<RolapHierarchy> hierarchyList =
+        new ArrayList<RolapHierarchy>();
+
     /**
      * Private constructor used by both normal cubes and virtual cubes.
      *
@@ -153,7 +156,9 @@ public class RolapCube extends CubeBase {
 
         this.dimensions[0] = measuresDimension;
 
-        this.measuresHierarchy = measuresDimension.newHierarchy(null, false);
+        this.measuresHierarchy =
+            measuresDimension.newHierarchy(null, false);
+        hierarchyList.add(measuresHierarchy);
 
         if (!Util.isEmpty(xmlSchema.measuresCaption)) {
             measuresDimension.setCaption(xmlSchema.measuresCaption);
@@ -166,7 +171,7 @@ public class RolapCube extends CubeBase {
             // consulting the XML schema (which may be null).
             RolapCubeDimension dimension =
                 getOrCreateDimension(
-                    xmlCubeDimension, schema, xmlSchema, i + 1);
+                    xmlCubeDimension, schema, xmlSchema, i + 1, hierarchyList);
             if (getLogger().isDebugEnabled()) {
                 getLogger().debug(
                     "RolapCube<init>: dimension=" + dimension.getName());
@@ -242,13 +247,11 @@ public class RolapCube extends CubeBase {
         }
 
         boolean writebackEnabled = false;
-        /*
-        for (Dimension dimension : dimensions) {
-            if (ScenarioImpl.isScenario(dimension)) {
+        for (RolapHierarchy hierarchy : hierarchyList) {
+            if (ScenarioImpl.isScenario(hierarchy)) {
                 writebackEnabled = true;
             }
         }
-        */
 
         // If writeback is enabled, ensure that cube has an atomic cell count
         // measure even if the schema does not contain one.
@@ -686,13 +689,15 @@ public class RolapCube extends CubeBase {
      * @param schema Schema
      * @param xmlSchema XML Schema
      * @param dimensionOrdinal Ordinal of dimension
+     * @param cubeHierarchyList List of hierarchies in cube
      * @return A dimension
      */
     private RolapCubeDimension getOrCreateDimension(
         MondrianDef.CubeDimension xmlCubeDimension,
         RolapSchema schema,
         MondrianDef.Schema xmlSchema,
-        int dimensionOrdinal)
+        int dimensionOrdinal,
+        List<RolapHierarchy> cubeHierarchyList)
     {
         RolapDimension dimension = null;
         if (xmlCubeDimension instanceof MondrianDef.DimensionUsage) {
@@ -711,15 +716,15 @@ public class RolapCube extends CubeBase {
                 xmlCubeDimension.getDimension(xmlSchema);
             dimension =
                 new RolapDimension(
-                        schema, this, xmlDimension, xmlCubeDimension);
+                    schema, this, xmlDimension, xmlCubeDimension);
         }
 
         // wrap the shared or regular dimension with a
         // rolap cube dimension object
         return new RolapCubeDimension(
-                this, dimension, xmlCubeDimension,
-                xmlCubeDimension.name, dimensionOrdinal,
-                xmlCubeDimension.highCardinality);
+            this, dimension, xmlCubeDimension,
+            xmlCubeDimension.name, dimensionOrdinal,
+            cubeHierarchyList, xmlCubeDimension.highCardinality);
     }
 
     /**
@@ -1870,6 +1875,18 @@ public class RolapCube extends CubeBase {
     }
 
     /**
+     * Returns a list of all hierarchies in this cube, in order of dimension.
+     *
+     * <p>TODO: Make this method return RolapCubeHierarchy, when the measures
+     * hierarchy is a RolapCubeHierarchy.
+     *
+     * @return List of hierarchies
+     */
+    public List<RolapHierarchy> getHierarchies() {
+        return hierarchyList;
+    }
+
+    /**
      * Association between a MondrianDef.Table with its associated
      * level's depth. This is used to rank tables in a snowflake so that
      * the table with the lowest rank, level depth, is furthest from
@@ -2267,6 +2284,22 @@ public class RolapCube extends CubeBase {
     }
 
     /**
+     * Returns the time hierarchy for this cube. If there is no time hierarchy,
+     * throws.
+     */
+    public RolapHierarchy getTimeHierarchy(String funName) {
+        for (RolapHierarchy hierarchy : hierarchyList) {
+            if (hierarchy.getDimension().getDimensionType()
+                == DimensionType.TimeDimension)
+            {
+                return hierarchy;
+            }
+        }
+
+        throw MondrianResource.instance().NoTimeDimensionInCube.ex(funName);
+    }
+
+    /**
      * Finds out non joining dimensions for this cube.
      * Useful for finding out non joining dimensions for a stored measure from
      * a base cube.
@@ -2431,13 +2464,13 @@ public class RolapCube extends CubeBase {
     }
 
     RolapCubeDimension createDimension(
-            MondrianDef.CubeDimension xmlCubeDimension,
-            MondrianDef.Schema xmlSchema)
+        MondrianDef.CubeDimension xmlCubeDimension,
+        MondrianDef.Schema xmlSchema)
     {
         RolapCubeDimension dimension =
             getOrCreateDimension(
-                    xmlCubeDimension, schema, xmlSchema,
-                    dimensions.length);
+                xmlCubeDimension, schema, xmlSchema,
+                dimensions.length, hierarchyList);
 
         if (! isVirtual()) {
             createUsages(dimension, xmlCubeDimension);
@@ -2586,7 +2619,7 @@ public class RolapCube extends CubeBase {
      * @param name Name of member
      * @param calc Compiled expression
      */
-    void createCalculatedMember(
+    RolapMember createCalculatedMember(
         RolapDimension dimension,
         String name,
         Calc calc)
@@ -2610,6 +2643,7 @@ public class RolapCube extends CubeBase {
                 false);
         query.createValidator().validate(formula);
         calculatedMemberList.add(formula);
+	return (RolapMember) formula.getMdxMember();
     }
 
     /**

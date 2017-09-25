@@ -1,24 +1,24 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap4j/EmptyResultSet.java#2 $
-// This software is subject to the terms of the Eclipse Public License v1.0
-// Agreement, available at the following URL:
-// http://www.eclipse.org/legal/epl-v10.html.
-// Copyright (C) 2007-2009 Julian Hyde
-// All Rights Reserved.
-// You must accept the terms of that agreement to use this software.
+* This software is subject to the terms of the Eclipse Public License v1.0
+* Agreement, available at the following URL:
+* http://www.eclipse.org/legal/epl-v10.html.
+* You must accept the terms of that agreement to use this software.
+*
+* Copyright (c) 2002-2013 Pentaho Corporation..  All rights reserved.
 */
+
 package mondrian.olap4j;
 
 import org.olap4j.OlapWrapper;
 
-import javax.sql.rowset.RowSetMetaDataImpl;
-import java.sql.*;
-import java.sql.Date;
-import java.math.BigDecimal;
 import java.io.InputStream;
 import java.io.Reader;
-import java.util.*;
+import java.math.BigDecimal;
 import java.net.URL;
+import java.sql.*;
+import java.sql.Date;
+import java.util.*;
+import javax.sql.rowset.RowSetMetaDataImpl;
 
 /**
  * Implementation of {@link ResultSet} which returns 0 rows.
@@ -31,7 +31,6 @@ import java.net.URL;
  * it is instantiated using {@link Factory#newEmptyResultSet}.</p>
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap4j/EmptyResultSet.java#2 $
  * @since May 24, 2007
  */
 abstract class EmptyResultSet implements ResultSet, OlapWrapper {
@@ -53,9 +52,54 @@ abstract class EmptyResultSet implements ResultSet, OlapWrapper {
             metaData.setColumnCount(headerList.size());
             for (int i = 0; i < headerList.size(); i++) {
                 metaData.setColumnName(i + 1, headerList.get(i));
+                deduceType(rowList, i);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    protected void deduceType(List<List<Object>> rowList, int column)
+        throws SQLException
+    {
+        int nullability = ResultSetMetaData.columnNoNulls;
+        int type = Types.OTHER;
+        int maxLen = 0;
+        for (List<Object> objects : rowList) {
+            final Object o = objects.get(column);
+            if (o == null) {
+                nullability = ResultSetMetaData.columnNullable;
+            } else {
+                if (type == Types.OTHER) {
+                    type = deduceColumnType(o);
+                }
+                if (o instanceof String) {
+                    maxLen = Math.max(maxLen, ((String) o).length());
+                }
+            }
+        }
+        metaData.setNullable(column + 1, nullability);
+        metaData.setColumnType(column + 1, type);
+        if (maxLen > 0) {
+            metaData.setPrecision(column + 1, maxLen);
+        }
+    }
+
+    private int deduceColumnType(Object o) {
+        if (o instanceof String) {
+            return Types.VARCHAR;
+        } else if (o instanceof Integer) {
+            return Types.INTEGER;
+        } else if (o instanceof Long) {
+            return Types.BIGINT;
+        } else if (o instanceof Double) {
+            return Types.DOUBLE;
+        } else if (o instanceof Float) {
+            return Types.FLOAT;
+        } else if (o instanceof Boolean) {
+            return Types.BOOLEAN;
+        } else {
+            return Types.VARCHAR;
         }
     }
 
@@ -97,7 +141,8 @@ abstract class EmptyResultSet implements ResultSet, OlapWrapper {
     }
 
     public String getString(int columnIndex) throws SQLException {
-        return String.valueOf(getColumn(columnIndex - 1));
+        final Object result = getColumn(columnIndex - 1);
+        return result == null ? null : String.valueOf(result);
     }
 
     public boolean getBoolean(int columnIndex) throws SQLException {
@@ -180,8 +225,8 @@ abstract class EmptyResultSet implements ResultSet, OlapWrapper {
     }
 
     public String getString(String columnLabel) throws SQLException {
-        Object o = getColumn(columnLabel);
-        return String.valueOf(o);
+        final Object result = getColumn(columnLabel);
+        return result == null ? null : String.valueOf(result);
     }
 
     public boolean getBoolean(String columnLabel) throws SQLException {
@@ -289,6 +334,14 @@ abstract class EmptyResultSet implements ResultSet, OlapWrapper {
     }
 
     public int findColumn(String columnLabel) throws SQLException {
+        throw new UnsupportedOperationException();
+    }
+
+    public <T> T getObject(int columnIndex, Class<T> type) throws SQLException {
+        throw new UnsupportedOperationException();
+    }
+
+    public <T> T getObject(String columnLabel, Class<T> type) throws SQLException {
         throw new UnsupportedOperationException();
     }
 

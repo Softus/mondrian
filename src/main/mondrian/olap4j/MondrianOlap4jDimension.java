@@ -83,14 +83,18 @@ class MondrianOlap4jDimension implements Dimension, Named {
         return dimension.getUniqueName();
     }
 
-    public String getCaption(Locale locale) {
+    public String getCaption() {
         // TODO: locale caption
         return dimension.getCaption();
     }
 
-    public String getDescription(Locale locale) {
+    public String getDescription() {
         // TODO: locale description
         return dimension.getDescription();
+    }
+
+    public boolean isVisible() {
+        return dimension.isVisible();
     }
 }
 

@@ -100,8 +100,8 @@ class MondrianOlap4jLevel implements Level, Named {
 
     public NamedList<Property> getProperties() {
         final NamedList<Property> list = new ArrayNamedListImpl<Property>() {
-            protected String getName(Property property) {
-                return property.getName();
+            public String getName(Object property) {
+                return ((Property)property).getName();
             }
         };
         // standard properties first
@@ -140,14 +140,18 @@ class MondrianOlap4jLevel implements Level, Named {
         return level.getUniqueName();
     }
 
-    public String getCaption(Locale locale) {
+    public String getCaption() {
         // todo: localized captions
         return level.getCaption();
     }
 
-    public String getDescription(Locale locale) {
+    public String getDescription() {
         // todo: localize
         return level.getDescription();
+    }
+
+    public boolean isVisible() {
+        return level.isVisible();
     }
 
     public int getCardinality() {

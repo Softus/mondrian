@@ -716,8 +716,8 @@ abstract class MondrianOlap4jCellSet implements CellSet {
         throw new UnsupportedOperationException();
     }
 
-    public Statement getStatement() throws SQLException {
-        throw new UnsupportedOperationException();
+    public OlapStatement getStatement() {
+        return olap4jStatement;
     }
 
     public Object getObject(
@@ -745,6 +745,14 @@ abstract class MondrianOlap4jCellSet implements CellSet {
     public Object getObject(
         String columnLabel, Map<String, Class<?>> map) throws SQLException
     {
+        throw new UnsupportedOperationException();
+    }
+
+    public <T> T getObject(int columnIndex, Class<T> type) throws SQLException {
+        throw new UnsupportedOperationException();
+    }
+
+    public <T> T getObject(String columnLabel, Class<T> type) throws SQLException {
         throw new UnsupportedOperationException();
     }
 

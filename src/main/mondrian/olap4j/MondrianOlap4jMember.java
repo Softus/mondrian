@@ -15,8 +15,8 @@ import org.olap4j.impl.Named;
 import org.olap4j.impl.AbstractNamedList;
 import org.olap4j.mdx.ParseTreeNode;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import mondrian.rolap.RolapMeasure;
 
@@ -59,8 +59,8 @@ class MondrianOlap4jMember implements Member, Named {
             olap4jSchema.schemaReader.getMemberChildren(
                 member);
         return new AbstractNamedList<MondrianOlap4jMember>() {
-            protected String getName(MondrianOlap4jMember member) {
-                return member.getName();
+            public String getName(Object member) {
+                return ((MondrianOlap4jMember)member).getName();
             }
 
             public MondrianOlap4jMember get(int index) {
@@ -125,7 +125,13 @@ class MondrianOlap4jMember implements Member, Named {
     }
 
     public List<Member> getAncestorMembers() {
-        throw new UnsupportedOperationException();
+        final List<Member> list = new ArrayList<Member>();
+        MondrianOlap4jMember m = getParentMember();
+        while (m != null) {
+            list.add(m);
+            m = m.getParentMember();
+        }
+        return list;
     }
 
     public boolean isCalculatedInQuery() {
@@ -181,12 +187,17 @@ class MondrianOlap4jMember implements Member, Named {
         return member.getUniqueName();
     }
 
-    public String getCaption(Locale locale) {
+    public String getCaption() {
         return member.getCaption();
     }
 
-    public String getDescription(Locale locale) {
+    public String getDescription() {
         return member.getDescription();
+    }
+
+    public boolean isVisible() {
+        return (Boolean) member.getPropertyValue(
+            mondrian.olap.Property.VISIBLE.getName());
     }
 }
 

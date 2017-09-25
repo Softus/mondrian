@@ -54,14 +54,18 @@ public class MondrianOlap4jNamedSet implements NamedSet, Named {
         return namedSet.getUniqueName();
     }
 
-    public String getCaption(Locale locale) {
+    public String getCaption() {
         // todo: i18n
         return namedSet.getCaption();
     }
 
-    public String getDescription(Locale locale) {
+    public String getDescription() {
         // todo: i18n
         return namedSet.getDescription();
+    }
+
+    public boolean isVisible() {
+        return namedSet.isVisible();
     }
 }
 

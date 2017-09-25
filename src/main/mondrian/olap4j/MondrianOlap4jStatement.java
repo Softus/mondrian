@@ -30,6 +30,8 @@ class MondrianOlap4jStatement implements OlapStatement {
     final MondrianOlap4jConnection olap4jConnection;
     private boolean closed;
 
+    protected boolean closeOnCompletion;
+ 
     /**
      * Current cell set, or null if the statement is not executing anything.
      * Any method which modifies this member must synchronize
@@ -175,8 +177,8 @@ class MondrianOlap4jStatement implements OlapStatement {
         throw new UnsupportedOperationException();
     }
 
-    public Connection getConnection() throws SQLException {
-        throw new UnsupportedOperationException();
+    public OlapConnection getConnection() {
+        return olap4jConnection;
     }
 
     public boolean getMoreResults(int current) throws SQLException {
@@ -229,6 +231,14 @@ class MondrianOlap4jStatement implements OlapStatement {
 
     public boolean isClosed() throws SQLException {
         return closed;
+    }
+
+    public void closeOnCompletion() throws SQLException {
+        closeOnCompletion = true;
+    }
+
+    public boolean isCloseOnCompletion() throws SQLException {
+        return closeOnCompletion;
     }
 
     public void setPoolable(boolean poolable) throws SQLException {

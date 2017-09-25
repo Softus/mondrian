@@ -1,28 +1,29 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Parser.cup#3 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
-// Copyright (C) 1999-2002 Kana Software, Inc.
-// Copyright (C) 2002-2009 Julian Hyde and others
-// All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
-// jhyde, 20 January, 1999
+// Copyright (C) 1999-2005 Julian Hyde
+// Copyright (C) 2005-2011 Pentaho and others
+// All Rights Reserved.
 //
 // Grammar condensed from OLE DB reference
 // (http://www.microsoft.com/data/reference/oledb2.htm) by jhyde on 990120.
 */
 
 import java_cup.runtime.*;
+
 import java.util.*;
-import mondrian.resource.MondrianResource;
+import java.math.BigDecimal;
+
 import mondrian.mdx.*;
+import mondrian.resource.MondrianResource;
 
 // Preliminaries to set up and use the scanner.
 // action code {: ... :};
 parser code {:
-    // Generated from $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Parser.cup#3 $
+    // Generated from Parser.cup.
     private Scanner scanner;
     private String queryString;
     private Connection mdxConnection;
@@ -165,6 +166,25 @@ parser code {:
             strictValidation);
     }
 
+    public DrillThrough makeDrillThrough(
+        QueryPart query,
+        int maxRowCount,
+        int firstRowOrdinal,
+        List<Exp> returnList)
+    {
+        return new DrillThrough(
+            query, maxRowCount, firstRowOrdinal, returnList);
+    }
+
+    /**
+     * Creates an {@link Explain} object.
+     */
+    public Explain makeExplain(
+    QueryPart query)
+    {
+        return new Explain(query);
+    }
+
     // Override lr_parser methods for NLS.  With this error handling scheme,
     // all errors are fatal.
     public void report_fatal_error(
@@ -299,13 +319,18 @@ terminal
     CHAPTERS,
     COLUMNS,
     DIMENSION,
+    DRILLTHROUGH,
     ELSE,
     EMPTY,
     END,
+    EXPLAIN,
+    FIRSTROWSET,
+    FOR,
     FROM,
     IN,
     IS,
     MATCHES,
+    MAXROWS,
     MEMBER,
     NON,
     NOT,
@@ -313,7 +338,9 @@ terminal
     ON,
     OR,
     PAGES,
+    PLAN,
     PROPERTIES,
+    RETURN,
     ROWS,
     SECTIONS,
     SELECT,
@@ -348,7 +375,7 @@ terminal
     SOLIDUS;                    // /
 
 // c. Typed terminals
-terminal Double NUMBER;
+terminal BigDecimal NUMBER;
 terminal String ID;
 terminal String QUOTED_ID;
 terminal String AMP_QUOTED_ID;
@@ -373,15 +400,20 @@ non terminal Exp
     term3,
     term4,
     term5,
+    return_item,
     value_expression,
     value_expression_opt,
     value_expression_primary,
     where_clause_opt;
 non terminal QueryPart
     select_statement,
-    statement;
+    statement,
+    select_or_drillthrough_statement,
+    drillthrough_statement,
+    explain_statement;
 non terminal Id
     bang_compound_id,
+    cell_property,
     compound_id,
     cube_name,
     cube_specification,
@@ -405,10 +437,8 @@ non terminal MemberProperty
     member_property_definition;
 non terminal
     cell_opt,
-    cell_property,
     dimension_opt,
-    property,
-    unsigned_integer;
+    property;
 
 non terminal Boolean
     non_empty_opt;
@@ -427,14 +457,20 @@ non terminal List
     member_property_def_list,
     property_list,
     cell_property_list,
+    return_opt,
+    return_item_list,
     when_list,
     with_formula_specification_opt;
 
 non terminal Exp[]
     when_clause;
 
-non terminal Double
+non terminal BigDecimal
     axis_number;
+
+non terminal Number
+    maxrows_opt,
+    firstrowset_opt;
 
 // Start symbol
 start with statement;
@@ -842,7 +878,7 @@ value_expression_primary ::=
             RESULT = Literal.createString(s);
         :}
     |   NUMBER:d {:
-            RESULT = Literal.create(d);
+            RESULT = Literal.create(d.doubleValue());
         :}
     |   identifier:i {:
             RESULT = new Id(i);
@@ -1308,16 +1344,31 @@ aliasedExpression ::=
 // <MDX_statement> ::= <select_statement>
 //                   | <create_formula_statement>
 //                   | <drop_formula_statement>
+//                   | <drillthrough_statement>
+//                   | <explain_statement>
 //
-
 // <select_statement> ::= [WITH <formula_specification>]
 //                         SELECT [<axis_specification>
 //                                [, <axis_specification>...]]
 //                         FROM [<cube_specification>]
 //                         [WHERE <slicer_specification>]
 //                         [<cell_props>]
+//
+// <drillthrough_statment> ::=
+//     DRILLTHROUGH
+//     [ MAXROWS <count> ]
+//     [ FIRSTROWSET <count> ]
+//     <select_statement>
+//     [ RETURN <member_or_attribute> [, <member_or_attribute>...] ]
+//
+// <explain_statement> ::=
+//    EXPLAIN PLAN FOR
+//    ( <select_statement> | <drillthrough_statement> )
+
 statement ::=
         select_statement
+    |   drillthrough_statement
+    |   explain_statement
     |   _VALUE_EXPRESSION expression:e {:
             RESULT = (QueryPart) e;
         :}
@@ -1498,7 +1549,7 @@ axis_specification ::=
         :}
     |   non_empty_opt:b expression:s dim_props_opt:dp ON axis_number:n {:
             double d = n.doubleValue();
-            int index = (int)d;
+            int index = n.intValue();
 
             // AxisOrdinal values go from -2 to 4 for standard axis, but higher
             // ordinals are allowed. The negative values represent
@@ -1627,6 +1678,71 @@ cell_property_list ::=
 //                     | CELL_ORDINAL
 //                     | VALUE
 cell_property ::= compound_id;
+
+drillthrough_statement ::=
+        DRILLTHROUGH maxrows_opt:m firstrowset_opt:f select_statement:s
+        return_opt:r {:
+            RESULT = parser.makeDrillThrough(
+                s,
+                m == null ? 0 : m.intValue(),
+                f == null ? 0 : f.intValue(),
+                r);
+        :}
+    ;
+
+maxrows_opt ::=
+        MAXROWS NUMBER:n {:
+            RESULT = n;
+        :}
+    |   {:
+            RESULT = null;
+        :}
+    ;
+
+firstrowset_opt ::=
+        FIRSTROWSET NUMBER:n {:
+            RESULT = n;
+        :}
+    |   {:
+            RESULT = null;
+        :}
+    ;
+
+return_opt ::=
+        RETURN return_item_list:rl {:
+            RESULT = rl;
+        :}
+    |   {:
+            RESULT = null;
+        :}
+    ;
+
+return_item_list ::=
+        return_item:i {:
+            RESULT = new LinkedList();
+            RESULT.add(i);
+        :}
+    |   return_item:i COMMA return_item_list:list {:
+            list.add(0, i);
+            RESULT = list;
+        :}
+    ;
+
+return_item ::=
+        compound_id:i // TODO: allow NAME(id) etc.
+    ;
+
+select_or_drillthrough_statement ::=
+        select_statement
+    |   drillthrough_statement
+    ;
+
+explain_statement ::=
+        EXPLAIN PLAN FOR select_or_drillthrough_statement:s {:
+            RESULT = parser.makeExplain(
+                s);
+        :}
+   ;
 
 //
 // <create_formula_statement> ::= CREATE [<scope>]<formula_specification>

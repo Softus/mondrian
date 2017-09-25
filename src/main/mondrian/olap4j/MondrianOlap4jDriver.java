@@ -16,6 +16,7 @@ import java.util.Properties;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * Olap4j driver for Mondrian.
@@ -78,25 +79,7 @@ public class MondrianOlap4jDriver implements Driver {
      * Creates a MondrianOlap4jDriver.
      */
     MondrianOlap4jDriver() {
-        String factoryClassName;
-        try {
-            Class.forName("java.sql.Wrapper");
-            factoryClassName = "mondrian.olap4j.FactoryJdbc4Impl";
-        } catch (ClassNotFoundException e) {
-            // java.sql.Wrapper is not present. This means we are running JDBC
-            // 3.0 or earlier (probably JDK 1.5). Load the JDBC 3.0 factory
-            factoryClassName = "mondrian.olap4j.FactoryJdbc3Impl";
-        }
-        try {
-            final Class clazz = Class.forName(factoryClassName);
-            factory = (Factory) clazz.newInstance();
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
-        } catch (InstantiationException e) {
-            throw new RuntimeException(e);
-        }
+        factory = new mondrian.olap4j.FactoryJdbc4Impl();
     }
 
     /**
@@ -145,6 +128,11 @@ public class MondrianOlap4jDriver implements Driver {
                     null));
         }
         return list.toArray(new DriverPropertyInfo[list.size()]);
+    }
+
+    // JDBC 4.1 support (JDK 1.7 and higher)
+    public Logger getParentLogger() {
+        return Logger.getLogger("");
     }
 
     /**

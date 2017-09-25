@@ -28,8 +28,10 @@ import org.olap4j.type.DimensionType;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.sql.*;
+import java.math.BigDecimal;
+import java.math.BigInteger;import java.sql.*;
 import java.util.*;
+import java.util.concurrent.Executor;
 
 /**
  * Implementation of {@link org.olap4j.OlapConnection}
@@ -198,14 +200,50 @@ abstract class MondrianOlap4jConnection implements OlapConnection {
         return readOnly;
     }
 
-    public void setCatalog(String catalog) throws SQLException {
+    public void abort(Executor executor) throws SQLException {
+        throw new UnsupportedOperationException();
+    }
+
+    public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException {
+        throw new UnsupportedOperationException();
+    }
+
+    public int getNetworkTimeout() throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public void setCatalog(String catalog) throws OlapException {
         if (!catalog.equals(LOCALDB_CATALOG_NAME)) {
             throw new UnsupportedOperationException();
         }
     }
 
-    public String getCatalog() throws SQLException {
+    public String getCatalog() throws OlapException {
         return LOCALDB_CATALOG_NAME;
+    }
+
+    public Catalog getOlapCatalog() throws OlapException {
+        throw new UnsupportedOperationException();
+    }
+
+    public NamedList<Catalog> getOlapCatalogs() throws OlapException {
+        throw new UnsupportedOperationException();
+    }
+
+    public void setDatabase(String databaseName) throws OlapException {
+        // no op.
+    }
+
+    public String getDatabase() throws OlapException {
+        throw new UnsupportedOperationException();
+}
+    public Database getOlapDatabase() throws OlapException {
+        throw new UnsupportedOperationException();
+    }
+
+    public NamedList<Database> getOlapDatabases() throws OlapException {
+        throw new UnsupportedOperationException();
     }
 
     public void setTransactionIsolation(int level) throws SQLException {
@@ -358,8 +396,20 @@ abstract class MondrianOlap4jConnection implements OlapConnection {
         };
     }
 
-    public Schema getSchema() throws OlapException {
+    public String getSchema() throws OlapException {
+        return olap4jSchema.getName();
+    }
+
+    public void setSchema(String schemaName) throws OlapException {
+        // no op.
+    }
+
+    public Schema getOlapSchema() throws OlapException {
         return olap4jSchema;
+    }
+
+    public NamedList<Schema> getOlapSchemas() throws OlapException {
+        return getOlapCatalog().getSchemas();
     }
 
     MondrianOlap4jCube toOlap4j(mondrian.olap.Cube cube) {
@@ -739,10 +789,10 @@ abstract class MondrianOlap4jConnection implements OlapConnection {
                 if (literal.getCategory() == Category.Symbol) {
                     return LiteralNode.createSymbol(
                         null, (String) literal.getValue());
-                } else if (value instanceof Double) {
-                    return LiteralNode.create(null, (Double) value);
-                } else if (value instanceof Integer) {
-                    return LiteralNode.create(null, (Integer) value);
+                } else if (value instanceof Number) {
+                    Number number = (Number) value;
+                    BigDecimal bd = bigDecimalFor(number);
+                    return LiteralNode.createNumeric(null, bd, false);
                 } else if (value instanceof String) {
                     return LiteralNode.createString(null, (String) value);
                 } else if (value == null) {
@@ -752,6 +802,34 @@ abstract class MondrianOlap4jConnection implements OlapConnection {
                 }
             }
             throw Util.needToImplement(exp.getClass());
+        }
+
+        /**
+         * Converts a number to big decimal, non-lossy if possible.
+         *
+         * @param number Number
+         * @return BigDecimal
+         */
+        private static BigDecimal bigDecimalFor(Number number) {
+            if (number instanceof BigDecimal) {
+                return (BigDecimal) number;
+            } else if (number instanceof BigInteger) {
+                return new BigDecimal((BigInteger) number);
+            } else if (number instanceof Integer) {
+                return new BigDecimal((Integer) number);
+            } else if (number instanceof Double) {
+                return new BigDecimal((Double) number);
+            } else if (number instanceof Float) {
+                return new BigDecimal((Float) number);
+            } else if (number instanceof Long) {
+                return new BigDecimal((Long) number);
+            } else if (number instanceof Short) {
+                return new BigDecimal((Short) number);
+            } else if (number instanceof Byte) {
+                return new BigDecimal((Byte) number);
+            } else {
+                return new BigDecimal(number.doubleValue());
+            }
         }
 
         private ParseTreeNode toOlap4j(ResolvedFunCall call) {
@@ -814,23 +892,8 @@ abstract class MondrianOlap4jConnection implements OlapConnection {
             return list;
         }
 
-        private IdentifierNode toOlap4j(Id id) {
-            List<IdentifierNode.Segment> list =
-                new ArrayList<IdentifierNode.Segment>();
-            for (Id.Segment segment : id.getSegments()) {
-                list.add(
-                    new IdentifierNode.NameSegment(
-                        null,
-                        segment.name,
-                        toOlap4j(segment.quoting)));
-            }
-            return new IdentifierNode(
-                list.toArray(
-                    new IdentifierNode.Segment[list.size()]));
-        }
-
-        private IdentifierNode.Quoting toOlap4j(Id.Quoting quoting) {
-            return IdentifierNode.Quoting.valueOf(quoting.name());
+        private static IdentifierNode toOlap4j(Id id) {
+            throw new UnsupportedOperationException();
         }
     }
 }

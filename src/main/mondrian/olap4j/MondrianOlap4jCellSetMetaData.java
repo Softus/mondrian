@@ -30,8 +30,9 @@ class MondrianOlap4jCellSetMetaData implements CellSetMetaData {
     private final Query query;
     private final NamedList<CellSetAxisMetaData> axesMetaData =
         new ArrayNamedListImpl<CellSetAxisMetaData>() {
-            protected String getName(CellSetAxisMetaData axisMetaData) {
-                return axisMetaData.getAxisOrdinal().name();
+            public String getName(Object axisMetaData) {
+                return ((CellSetAxisMetaData)axisMetaData)
+                    .getAxisOrdinal().name();
             }
         };
     private final MondrianOlap4jCellSetAxisMetaData filterAxisMetaData;
@@ -58,8 +59,8 @@ class MondrianOlap4jCellSetMetaData implements CellSetMetaData {
     public NamedList<Property> getCellProperties() {
         final ArrayNamedListImpl<Property> list =
             new ArrayNamedListImpl<Property>() {
-                protected String getName(Property property) {
-                    return property.getName();
+                public String getName(Object property) {
+                    return ((Property)property).getName();
                 }
             };
         for (Property.StandardCellProperty property

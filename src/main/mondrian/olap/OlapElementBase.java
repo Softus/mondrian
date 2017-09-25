@@ -29,6 +29,8 @@ public abstract class OlapElementBase
 
     protected String caption = null;
 
+    protected boolean visible = true;
+
     // cache hash-code because it is often used and elements are immutable
     private int hash;
 
@@ -83,6 +85,10 @@ public abstract class OlapElementBase
         } else {
             return getName();
         }
+    }
+
+    public boolean isVisible() {
+        return visible;
     }
 
     /**

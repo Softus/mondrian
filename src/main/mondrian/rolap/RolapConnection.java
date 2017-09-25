@@ -727,6 +727,10 @@ public class RolapConnection extends ConnectionBase {
             logWriter = out;
         }
 
+        public java.util.logging.Logger getParentLogger() {
+            return java.util.logging.Logger.getLogger("");
+        }
+
         public void setLoginTimeout(int seconds) throws SQLException {
             loginTimeout = seconds;
         }
@@ -902,6 +906,10 @@ public class RolapConnection extends ConnectionBase {
 
         public void setLogWriter(PrintWriter out) throws SQLException {
             dataSource.setLogWriter(out);
+        }
+
+        public java.util.logging.Logger getParentLogger() {
+            return java.util.logging.Logger.getLogger("");
         }
 
         public void setLoginTimeout(int seconds) throws SQLException {
