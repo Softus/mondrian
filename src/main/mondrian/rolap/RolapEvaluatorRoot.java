@@ -44,12 +44,19 @@ class RolapEvaluatorRoot {
      * happens very often.
      */
     final RolapMember[] defaultMembers;
+    final int[] nonAllPositions;
+    int nonAllPositionCount;
 
     final MondrianProperties.SolveOrderModeEnum solveOrderMode =
         Util.lookup(
             MondrianProperties.SolveOrderModeEnum.class,
             MondrianProperties.instance().SolveOrderMode.get().toUpperCase(),
             MondrianProperties.SolveOrderModeEnum.ABSOLUTE);
+
+    /**
+     * The size of the command stack at which we will next check for recursion.
+     */
+    int recursionCheckCommandCount;
 
     /**
      * Creates a RolapEvaluatorRoot.
@@ -63,14 +70,42 @@ class RolapEvaluatorRoot {
         this.schemaReader = query.getSchemaReader(true);
         this.queryStartTime = new Date();
         List<RolapMember> list = new ArrayList<RolapMember>();
-        for (Dimension dimension : cube.getDimensions()) {
-            list.add(
-                (RolapMember) schemaReader.getHierarchyDefaultMember(
-                    dimension.getHierarchy()));
+        nonAllPositions = new int[cube.getHierarchies().size()];
+        nonAllPositionCount = 0;
+        for (RolapHierarchy hierarchy : cube.getHierarchies()) {
+            RolapMember defaultMember =
+                (RolapMember) schemaReader.getHierarchyDefaultMember(hierarchy);
+            assert defaultMember != null;
+
+            if (ScenarioImpl.isScenario(hierarchy)
+                && connection.getScenario() != null)
+            {
+                defaultMember =
+                    ((ScenarioImpl) connection.getScenario()).getMember();
+            }
+
+            // This fragment is a concurrency bottleneck, so use a cache of
+            // hierarchy usages.
+            final HierarchyUsage hierarchyUsage = cube.getFirstUsage(hierarchy);
+            if (hierarchyUsage != null) {
+                if (defaultMember instanceof RolapMember) {
+                ((RolapMember) defaultMember).makeUniqueName(
+                    hierarchyUsage);
+                }
+            }
+
+            list.add(defaultMember);
+            if (!defaultMember.isAll()) {
+                nonAllPositions[nonAllPositionCount] =
+                    hierarchy.getOrdinalInCube();
+                nonAllPositionCount++;
+            }
         }
         this.defaultMembers = list.toArray(new RolapMember[list.size()]);
         this.currentDialect =
             DialectManager.createDialect(schemaReader.getDataSource(), null);
+
+        this.recursionCheckCommandCount = (defaultMembers.length << 4);
     }
 
     /**

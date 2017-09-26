@@ -477,6 +477,10 @@ public class RolapResult extends ResultBase {
         return changed;
     }
 
+    public final Query getQuery() {
+        return query;
+    }
+
     private static class CalculatedMeasureVisitor
         extends MdxVisitorImpl
     {
@@ -1087,19 +1091,18 @@ public class RolapResult extends ResultBase {
 
     /**
      * Called only by RolapCell. Use this when creating an Evaluator
-     * (using method {@link #getCellEvaluator}) is not required.
+     * is not required.
      *
      * @param pos Coordinates of cell
      * @return Members which form the context of the given cell
      */
-    Member[] getCellMembers(int[] pos) {
-        Member[] members = evaluator.getMembers().clone();
-        final Cube cube = getCube();
+    RolapMember[] getCellMembers(int[] pos) {
+        RolapMember[] members = (RolapMember[]) evaluator.getMembers().clone();
         for (int i = 0; i < pos.length; i++) {
             Position position = axes[i].getPositions().get(pos[i]);
             for (Member member : position) {
                 RolapMember m = (RolapMember) member;
-                int ordinal = m.getDimension().getOrdinal(cube);
+                int ordinal = m.getHierarchy().getOrdinalInCube();
                 members[ordinal] = m;
             }
         }

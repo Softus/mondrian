@@ -1,17 +1,18 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Cell.java#4 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
-// Copyright (C) 2001-2002 Kana Software, Inc.
-// Copyright (C) 2001-2009 Julian Hyde and others
-// All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 //
-// jhyde, 6 August, 2001
+// Copyright (C) 2001-2005 Julian Hyde
+// Copyright (C) 2005-2009 Pentaho and others
+// All Rights Reserved.
 */
 
 package mondrian.olap;
+
+import org.olap4j.AllocationPolicy;
+import org.olap4j.Scenario;
 
 import java.util.List;
 
@@ -21,7 +22,6 @@ import java.util.List;
  *
  * @author jhyde
  * @since 6 August, 2001
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap/Cell.java#4 $
  */
 public interface Cell {
     /**
@@ -126,6 +126,20 @@ public interface Cell {
      * dimension (usually the 'all' member).</ul>
      */
     Member getContextMember(Dimension dimension);
+
+    /**
+     * Helper method to implement {@link org.olap4j.Cell#setValue}.
+     *
+     * @param scenario Scenario
+     * @param newValue New value
+     * @param allocationPolicy Allocation policy
+     * @param allocationArgs Arguments for allocation policy
+     */
+    void setValue(
+        Scenario scenario,
+        Object newValue,
+        AllocationPolicy allocationPolicy,
+        Object... allocationArgs);
 }
 
 // End Cell.java

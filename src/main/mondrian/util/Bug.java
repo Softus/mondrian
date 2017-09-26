@@ -1,16 +1,17 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/util/Bug.java#5 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
-// Copyright (C) 2006-2009 Julian Hyde
-// All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
+//
+// Copyright (c) 2002-2016 Pentaho Corporation..  All rights reserved.
 */
 package mondrian.util;
 
 import mondrian.olap.MondrianProperties;
 import mondrian.spi.Dialect;
+
+import org.apache.log4j.Logger;
 
 /**
  * Holder for constants which indicate whether particular issues have been
@@ -18,8 +19,24 @@ import mondrian.spi.Dialect;
  * code can be enabled when the bug is fixed. Generally a constant is removed
  * when its bug is fixed.
  *
+ * <h3>Cleanup items</h3>
+ *
+ * The following is a list of cleanup items. They are not bugs per se:
+ * functionality is not wrong, just the organization of the code. If they were
+ * bugs, they would be in jira. It makes sense to have the list here, so that
+ * referenced class, method and variable names show up as uses in code searches.
+ *
+ * <dl>
+ *
+ * <dt>Obsolete {@link mondrian.olap.Id.Segment}</dt>
+ * <dd>Replace it by {@link org.olap4j.mdx.IdentifierSegment}. Likewise
+ * {@link mondrian.olap.Id.Quoting} with {@link org.olap4j.mdx.Quoting}.
+ * Should wait until after the mondrian 4 'big bang', because there are ~300
+ * uses of Segment in the code.</dd>
+ *
+ * </dl>
+ *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/util/Bug.java#5 $
  * @since Oct 11, 2006
  */
 public class Bug {
@@ -40,6 +57,15 @@ public class Bug {
      * with SSAS 2005 but incompatible with Mondrian's previous behavior.
      */
     public static final boolean Ssas2005Compatible = false;
+
+    /**
+     * If you want to tag a piece of code in mondrian that needs to be changed
+     * when we upgrade to a future version of olap4j, reference this function.
+     * It will always return false.
+     */
+    public static boolean olap4jUpgrade(String reason) {
+        return false;
+    }
 
     /**
      * Whether
@@ -109,6 +135,14 @@ public class Bug {
 
     /**
      * Whether
+     * <a href="http://jira.pentaho.com/browse/MONDRIAN-441">bug MONDRIAN-441,
+     * "Parent-child hierarchies: &lt;Join&gt; used in dimension"</a>
+     * is fixed.
+     */
+    public static final boolean BugMondrian441Fixed = false;
+
+    /**
+     * Whether
      * <a href="http://jira.pentaho.com/browse/MONDRIAN-486">bug MONDRIAN-486,
      * "HighCardinalityTest test cases disabled"</a>
      * is fixed.
@@ -139,6 +173,23 @@ public class Bug {
      * twice, whereas SSAS 2005 does not.
      */
     public static final boolean BugMondrian555Fixed = false;
+
+    /**
+     * Whether
+     * <a href="http://jira.pentaho.com/browse/MONDRIAN-584">bug MONDRIAN-584,
+     * "Native evaluation returns enumerated members in the wrong order"</a>
+     * is fixed. A query that includes { Gender.M, Gender.F } should return
+     * results where the Gender.M values are returned before the Gender.F
+     * values.
+     */
+    public static final boolean BugMondrian584Fixed = false;
+
+    /**
+     * Whether
+     * <a href="http://jira.pentaho.com/browse/MONDRIAN-641">bug MONDRIAN-641,
+     * "Large NON EMPTY result performs poorly with ResultStyle.ITERABLE"</a>
+     */
+    public static final boolean BugMondrian641Fixed = false;
 
     /**
      * Whether
