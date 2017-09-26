@@ -1,19 +1,17 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/mdx/ParameterExpr.java#3 $
-// This software is subject to the terms of the Eclipse Public License v1.0
-// Agreement, available at the following URL:
-// http://www.eclipse.org/legal/epl-v10.html.
-// Copyright (C) 2006-2009 Julian Hyde
-// All Rights Reserved.
-// You must accept the terms of that agreement to use this software.
+* This software is subject to the terms of the Eclipse Public License v1.0
+* Agreement, available at the following URL:
+* http://www.eclipse.org/legal/epl-v10.html.
+* You must accept the terms of that agreement to use this software.
+*
+* Copyright (c) 2002-2013 Pentaho Corporation..  All rights reserved.
 */
+
 package mondrian.mdx;
 
+import mondrian.calc.*;
 import mondrian.olap.*;
 import mondrian.olap.type.*;
-import mondrian.calc.Calc;
-import mondrian.calc.ExpCompiler;
-import mondrian.calc.ParameterCompilable;
 
 import java.io.PrintWriter;
 import java.util.List;
@@ -22,7 +20,6 @@ import java.util.List;
  * MDX expression which is a usage of a {@link mondrian.olap.Parameter}.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/mdx/ParameterExpr.java#3 $
  */
 public class ParameterExpr extends ExpBase {
 

@@ -1,19 +1,19 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/mdx/UnresolvedFunCall.java#2 $
-// This software is subject to the terms of the Eclipse Public License v1.0
-// Agreement, available at the following URL:
-// http://www.eclipse.org/legal/epl-v10.html.
-// Copyright (C) 2006-2007 Julian Hyde
-// All Rights Reserved.
-// You must accept the terms of that agreement to use this software.
+* This software is subject to the terms of the Eclipse Public License v1.0
+* Agreement, available at the following URL:
+* http://www.eclipse.org/legal/epl-v10.html.
+* You must accept the terms of that agreement to use this software.
+*
+* Copyright (c) 2002-2013 Pentaho Corporation..  All rights reserved.
 */
+
 package mondrian.mdx;
 
-import mondrian.olap.*;
-import mondrian.olap.fun.*;
-import mondrian.olap.type.Type;
 import mondrian.calc.Calc;
 import mondrian.calc.ExpCompiler;
+import mondrian.olap.*;
+import mondrian.olap.fun.FunUtil;
+import mondrian.olap.type.Type;
 
 import java.io.PrintWriter;
 
@@ -23,7 +23,6 @@ import java.io.PrintWriter;
  * called infix, with function call syntax, and so forth.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/mdx/UnresolvedFunCall.java#2 $
  * @since Sep 28, 2005
  */
 public class UnresolvedFunCall extends ExpBase implements FunCall {
@@ -89,9 +88,11 @@ public class UnresolvedFunCall extends ExpBase implements FunCall {
 
     public Object accept(MdxVisitor visitor) {
         final Object o = visitor.visit(this);
-        // visit the call's arguments
-        for (Exp arg : args) {
-            arg.accept(visitor);
+        if (visitor.shouldVisitChildren()) {
+            // visit the call's arguments
+            for (Exp arg : args) {
+                arg.accept(visitor);
+            }
         }
         return o;
     }
