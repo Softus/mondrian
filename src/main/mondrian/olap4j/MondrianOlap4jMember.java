@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap4j/MondrianOlap4jMember.java#2 $
+// $Id$
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
-// Copyright (C) 2007-2009 Julian Hyde
+// Copyright (C) 2007-2010 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -15,8 +15,7 @@ import org.olap4j.impl.Named;
 import org.olap4j.impl.AbstractNamedList;
 import org.olap4j.mdx.ParseTreeNode;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import mondrian.rolap.RolapMeasure;
 
@@ -27,7 +26,7 @@ import mondrian.rolap.RolapMeasure;
  * {@link mondrian.olap.Member}.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap4j/MondrianOlap4jMember.java#2 $
+ * @version $Id$
  * @since May 25, 2007
  */
 class MondrianOlap4jMember implements Member, Named {

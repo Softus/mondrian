@@ -20,7 +20,7 @@ import org.olap4j.metadata.Measure;
  * {@link mondrian.rolap.RolapStoredMeasure}.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap4j/MondrianOlap4jMeasure.java#2 $
+ * @version $Id$
  * @since Dec 10, 2007
  */
 public class MondrianOlap4jMeasure
