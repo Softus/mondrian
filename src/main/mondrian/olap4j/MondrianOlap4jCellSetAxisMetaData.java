@@ -2,7 +2,7 @@
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
-// Copyright (C) 2007-2009 Julian Hyde
+// Copyright (C) 2007-2010 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -23,7 +23,7 @@ import java.util.*;
  * for the Mondrian OLAP engine.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap4j/MondrianOlap4jCellSetAxisMetaData.java#2 $
+ * @version $Id$
 * @since Nov 17, 2007
 */
 class MondrianOlap4jCellSetAxisMetaData implements CellSetAxisMetaData {
@@ -51,9 +51,22 @@ class MondrianOlap4jCellSetAxisMetaData implements CellSetAxisMetaData {
 
         // populate property list
         for (Id id : queryAxis.getDimensionProperties()) {
-            propertyList.add(
-                Property.StandardMemberProperty.valueOf(
-                    id.toStringArray()[0]));
+            final String[] names = id.toStringArray();
+            Property property = null;
+            if (names.length == 1) {
+                property =
+                    Util.lookup(
+                        Property.StandardMemberProperty.class, names[0]);
+            }
+            if (property == null) {
+                property =
+                    (Property)
+                    Util.lookup(
+                        cellSetMetaData.query,
+                        id.getSegments(),
+                        true);
+            }
+            propertyList.add(property);
         }
     }
 

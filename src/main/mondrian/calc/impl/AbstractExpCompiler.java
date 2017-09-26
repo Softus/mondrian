@@ -1,9 +1,9 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/calc/impl/AbstractExpCompiler.java#4 $
+// $Id$
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
-// Copyright (C) 2006-2009 Julian Hyde
+// Copyright (C) 2006-2010 Julian Hyde
 // All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
 */
@@ -16,7 +16,7 @@ import mondrian.olap.type.DimensionType;
 import mondrian.olap.type.LevelType;
 import mondrian.resource.MondrianResource;
 import mondrian.calc.*;
-import mondrian.mdx.UnresolvedFunCall;
+import mondrian.mdx.*;
 
 import java.util.*;
 
@@ -24,7 +24,7 @@ import java.util.*;
  * Abstract implementation of the {@link mondrian.calc.ExpCompiler} interface.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/calc/impl/AbstractExpCompiler.java#4 $
+ * @version $Id$
  * @since Sep 29, 2005
  */
 public class AbstractExpCompiler implements ExpCompiler {
@@ -160,7 +160,7 @@ public class AbstractExpCompiler implements ExpCompiler {
         } else if (type instanceof NullType) {
             throw MondrianResource.instance().NullNotSupported.ex();
         }
-        assert type instanceof MemberType;
+        assert type instanceof MemberType : type;
         return (MemberCalc) compile(exp);
     }
 
@@ -201,6 +201,12 @@ public class AbstractExpCompiler implements ExpCompiler {
                 if (hierarchy != null) {
                     return (HierarchyCalc) ConstantCalc.constantHierarchy(
                         hierarchy);
+                } else {
+                    // SSAS gives error at run time (often as an error in a
+                    // cell) but we prefer to give an error at validate time.
+                    throw MondrianResource.instance()
+                        .CannotImplicitlyConvertDimensionToHierarchy.ex(
+                            dimension.getName());
                 }
             }
             final DimensionCalc dimensionCalc = compileDimension(exp);
@@ -495,6 +501,7 @@ public class AbstractExpCompiler implements ExpCompiler {
         private final int index;
         private Calc defaultValueCalc;
         private Object value;
+        private boolean assigned;
         private Object cachedDefaultValue;
 
         /**
@@ -535,12 +542,22 @@ public class AbstractExpCompiler implements ExpCompiler {
             this.defaultValueCalc = calc;
         }
 
-        public void setParameterValue(Object value) {
+        public void setParameterValue(Object value, boolean assigned) {
             this.value = value;
+            this.assigned = assigned;
         }
 
         public Object getParameterValue() {
             return value;
+        }
+
+        public boolean isParameterSet() {
+            return assigned;
+        }
+
+        public void unsetParameterValue() {
+            this.value = null;
+            this.assigned = false;
         }
 
         public void setCachedDefaultValue(Object value) {
