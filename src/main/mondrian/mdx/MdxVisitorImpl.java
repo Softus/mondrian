@@ -1,12 +1,12 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/mdx/MdxVisitorImpl.java#2 $
-// This software is subject to the terms of the Eclipse Public License v1.0
-// Agreement, available at the following URL:
-// http://www.eclipse.org/legal/epl-v10.html.
-// Copyright (C) 2006-2009 Julian Hyde
-// All Rights Reserved.
-// You must accept the terms of that agreement to use this software.
+* This software is subject to the terms of the Eclipse Public License v1.0
+* Agreement, available at the following URL:
+* http://www.eclipse.org/legal/epl-v10.html.
+* You must accept the terms of that agreement to use this software.
+*
+* Copyright (c) 2002-2013 Pentaho Corporation..  All rights reserved.
 */
+
 package mondrian.mdx;
 
 import mondrian.olap.*;
@@ -18,10 +18,25 @@ import mondrian.olap.*;
  * {@link Exp#accept(MdxVisitor)} this visitor.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/mdx/MdxVisitorImpl.java#2 $
  * @since Jul 21, 2006
  */
 public class MdxVisitorImpl implements MdxVisitor {
+    private boolean shouldVisitChildren = true;
+
+    public boolean shouldVisitChildren() {
+        boolean returnValue = shouldVisitChildren;
+        turnOnVisitChildren();
+        return returnValue;
+    }
+
+    public void turnOnVisitChildren() {
+        shouldVisitChildren = true;
+    }
+
+    public void turnOffVisitChildren() {
+        shouldVisitChildren = false;
+    }
+
     public Object visit(Query query) {
         return null;
     }

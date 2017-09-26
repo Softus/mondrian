@@ -1,29 +1,30 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/mdx/MemberExpr.java#2 $
-// This software is subject to the terms of the Eclipse Public License v1.0
-// Agreement, available at the following URL:
-// http://www.eclipse.org/legal/epl-v10.html.
-// Copyright (C) 2006-2006 Julian Hyde
-// All Rights Reserved.
-// You must accept the terms of that agreement to use this software.
+* This software is subject to the terms of the Eclipse Public License v1.0
+* Agreement, available at the following URL:
+* http://www.eclipse.org/legal/epl-v10.html.
+* You must accept the terms of that agreement to use this software.
+*
+* Copyright (c) 2002-2013 Pentaho Corporation..  All rights reserved.
 */
+
 package mondrian.mdx;
 
-import mondrian.olap.*;
-import mondrian.olap.type.Type;
-import mondrian.olap.type.MemberType;
-import mondrian.calc.*;
+import mondrian.calc.Calc;
+import mondrian.calc.ExpCompiler;
 import mondrian.calc.impl.ConstantCalc;
+import mondrian.olap.*;
+import mondrian.olap.type.MemberType;
+import mondrian.olap.type.Type;
 
 /**
  * Usage of a {@link mondrian.olap.Member} as an MDX expression.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/mdx/MemberExpr.java#2 $
  * @since Sep 26, 2005
  */
 public class MemberExpr extends ExpBase implements Exp {
     private final Member member;
+    private MemberType type;
 
     /**
      * Creates a member expression.
@@ -50,7 +51,10 @@ public class MemberExpr extends ExpBase implements Exp {
     }
 
     public Type getType() {
-        return MemberType.forMember(member);
+        if (type == null) {
+            type = MemberType.forMember(member);
+        }
+        return type;
     }
 
     public MemberExpr clone() {

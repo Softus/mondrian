@@ -1,20 +1,21 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/mdx/ResolvedFunCall.java#2 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
-// Copyright (C) 1998-2002 Kana Software, Inc.
-// Copyright (C) 2001-2007 Julian Hyde and others
-// All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
+//
+// Copyright (C) 1998-2005 Julian Hyde
+// Copyright (C) 2005-2007 Pentaho and others
+// All Rights Reserved.
 */
 
 package mondrian.mdx;
+
 import mondrian.calc.Calc;
 import mondrian.calc.ExpCompiler;
-import mondrian.olap.fun.*;
-import mondrian.olap.type.Type;
 import mondrian.olap.*;
+import mondrian.olap.fun.FunUtil;
+import mondrian.olap.type.Type;
 
 import java.io.PrintWriter;
 
@@ -24,7 +25,6 @@ import java.io.PrintWriter;
  * {@link FunDef function definition}.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/mdx/ResolvedFunCall.java#2 $
  * @since Jan 6, 2006
  */
 public final class ResolvedFunCall extends ExpBase implements FunCall {
@@ -154,9 +154,11 @@ public final class ResolvedFunCall extends ExpBase implements FunCall {
 
     public Object accept(MdxVisitor visitor) {
         final Object o = visitor.visit(this);
-        // visit the call's arguments
-        for (Exp arg : args) {
-            arg.accept(visitor);
+        if (visitor.shouldVisitChildren()) {
+            // visit the call's arguments
+            for (Exp arg : args) {
+                arg.accept(visitor);
+            }
         }
         return o;
     }

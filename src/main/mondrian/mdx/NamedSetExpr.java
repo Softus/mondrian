@@ -1,12 +1,12 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/mdx/NamedSetExpr.java#3 $
-// This software is subject to the terms of the Eclipse Public License v1.0
-// Agreement, available at the following URL:
-// http://www.eclipse.org/legal/epl-v10.html.
-// Copyright (C) 2006-2009 Julian Hyde
-// All Rights Reserved.
-// You must accept the terms of that agreement to use this software.
+* This software is subject to the terms of the Eclipse Public License v1.0
+* Agreement, available at the following URL:
+* http://www.eclipse.org/legal/epl-v10.html.
+* You must accept the terms of that agreement to use this software.
+*
+* Copyright (c) 2002-2013 Pentaho Corporation..  All rights reserved.
 */
+
 package mondrian.mdx;
 
 import mondrian.olap.*;
@@ -22,7 +22,6 @@ import java.util.List;
  * Usage of a {@link mondrian.olap.NamedSet} in an MDX expression.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/mdx/NamedSetExpr.java#3 $
  * @since Sep 26, 2005
  */
 public class NamedSetExpr extends ExpBase implements Exp {
@@ -138,7 +137,9 @@ public class NamedSetExpr extends ExpBase implements Exp {
 
     public Object accept(MdxVisitor visitor) {
         Object o = visitor.visit(this);
-        namedSet.getExp().accept(visitor);
+        if (visitor.shouldVisitChildren()) {
+            namedSet.getExp().accept(visitor);
+        }
         return o;
     }
 
