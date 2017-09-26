@@ -81,11 +81,17 @@ class MondrianOlap4jCube implements Cube, Named {
     }
 
     public List<Measure> getMeasures() {
-        final MondrianOlap4jLevel measuresLevel =
-            (MondrianOlap4jLevel)
-                getDimensions().get("Measures").getDefaultHierarchy()
-                    .getLevels().get(0);
-        return Olap4jUtil.cast(measuresLevel.getMembers());
+        try {
+            final MondrianOlap4jLevel measuresLevel =
+                (MondrianOlap4jLevel)
+                    getDimensions().get("Measures").getDefaultHierarchy()
+                        .getLevels().get(0);
+            return Olap4jUtil.cast(measuresLevel.getMembers());
+        } catch (OlapException e) {
+            // OlapException not possible, since measures are stored in memory.
+            // Demote from checked to unchecked exception.
+            throw new RuntimeException(e);
+        }
     }
 
     public NamedList<NamedSet> getSets() {

@@ -13,6 +13,7 @@ import org.olap4j.OlapConnection;
 import org.olap4j.OlapStatement;
 import org.olap4j.CellSetMetaData;
 import org.olap4j.OlapDatabaseMetaData;
+import org.olap4j.OlapException;
 
 import java.sql.*;
 import java.util.*;
@@ -66,7 +67,7 @@ class FactoryJdbc4Impl implements Factory {
 
     public MondrianOlap4jPreparedStatement newPreparedStatement(
         String mdx,
-        MondrianOlap4jConnection olap4jConnection)
+        MondrianOlap4jConnection olap4jConnection) throws OlapException
     {
         return new MondrianOlap4jPreparedStatementJdbc4(olap4jConnection, mdx);
     }
@@ -723,7 +724,7 @@ class FactoryJdbc4Impl implements Factory {
     {
         public MondrianOlap4jPreparedStatementJdbc4(
             MondrianOlap4jConnection olap4jConnection,
-            String mdx)
+            String mdx) throws OlapException
         {
             super(olap4jConnection, mdx);
         }

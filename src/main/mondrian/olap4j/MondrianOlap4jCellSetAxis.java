@@ -86,9 +86,15 @@ class MondrianOlap4jCellSetAxis implements CellSetAxis {
             for (Hierarchy hierarchy : hierarchyList) {
                 ++k;
                 if (members[k] == null) {
-                    members[k] =
-                        ((MondrianOlap4jHierarchy) hierarchy)
-                            .getDefaultMember();
+                    try {
+                        members[k] =
+                            ((MondrianOlap4jHierarchy) hierarchy)
+                                .getDefaultMember();
+                    } catch (OlapException e) {
+                        // OlapException not possible, since measures are stored in memory.
+                        // Demote from checked to unchecked exception.
+                        throw new RuntimeException(e);
+                    }
                 }
             }
             final Position position = new Position() {

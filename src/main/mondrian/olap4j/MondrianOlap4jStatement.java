@@ -268,7 +268,7 @@ class MondrianOlap4jStatement implements OlapStatement {
     public CellSet executeOlapQuery(String mdx) throws OlapException {
         Query query;
         try {
-            query = olap4jConnection.connection.parseQuery(mdx);
+            query = olap4jConnection.getMondrianConnection().parseQuery(mdx);
         } catch (MondrianException e) {
             throw olap4jConnection.helper.createException(
                 "mondrian gave exception while parsing query", e);

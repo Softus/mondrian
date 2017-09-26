@@ -11,9 +11,11 @@ package mondrian.olap4j;
 
 import mondrian.olap.Query;
 
-import java.util.Properties;
-import java.util.List;
+import org.olap4j.OlapException;
+
 import java.sql.*;
+import java.util.List;
+import java.util.Properties;
 
 /**
  * Instantiates classes to implement the olap4j API against the
@@ -79,9 +81,12 @@ interface Factory {
      * @param mdx MDX query text
      * @param olap4jConnection Connection
      * @return Prepared statement
+     * @throws org.olap4j.OlapException on database error
      */
     MondrianOlap4jPreparedStatement newPreparedStatement(
-        String mdx, MondrianOlap4jConnection olap4jConnection);
+        String mdx,
+        MondrianOlap4jConnection olap4jConnection)
+        throws OlapException;
 
     /**
      * Creates a metadata object.

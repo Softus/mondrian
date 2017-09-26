@@ -1,14 +1,16 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap4j/MondrianOlap4jDatabaseMetaData.java#2 $
-// This software is subject to the terms of the Eclipse Public License v1.0
-// Agreement, available at the following URL:
-// http://www.eclipse.org/legal/epl-v10.html.
-// Copyright (C) 2007-2009 Julian Hyde
-// All Rights Reserved.
-// You must accept the terms of that agreement to use this software.
+* This software is subject to the terms of the Eclipse Public License v1.0
+* Agreement, available at the following URL:
+* http://www.eclipse.org/legal/epl-v10.html.
+* You must accept the terms of that agreement to use this software.
+*
+* Copyright (c) 2002-2013 Pentaho Corporation..  All rights reserved.
 */
+
 package mondrian.olap4j;
 
+import mondrian.olap.Util;
+import mondrian.rolap.RolapConnection;
 import mondrian.olap.MondrianServer;
 import mondrian.xmla.XmlaUtil;
 
@@ -36,7 +38,6 @@ import java.util.*;
  */
 abstract class MondrianOlap4jDatabaseMetaData implements OlapDatabaseMetaData {
     final MondrianOlap4jConnection olap4jConnection;
-    final MondrianServer mondrianServer;
 
     // A mondrian instance contains only one catalog (and one schema).
     private final MondrianOlap4jCatalog olap4jCatalog =
@@ -46,13 +47,12 @@ abstract class MondrianOlap4jDatabaseMetaData implements OlapDatabaseMetaData {
      * Creates a MondrianOlap4jDatabaseMetaData.
      *
      * @param olap4jConnection Connection
+     * @param mondrianConnection Mondrian connection
      */
     MondrianOlap4jDatabaseMetaData(
         MondrianOlap4jConnection olap4jConnection)
     {
         this.olap4jConnection = olap4jConnection;
-        mondrianServer =
-            MondrianServer.forConnection(olap4jConnection.connection);
     }
 
     // helpers
@@ -61,6 +61,10 @@ abstract class MondrianOlap4jDatabaseMetaData implements OlapDatabaseMetaData {
      * Executes a metadata query and returns the result as a JDBC
      * {@link ResultSet}.
      *
+     * <p>The XMLA specification usually specifies that the returned list is
+     * ordered by particular attributes. XMLA notwithstanding, the result from
+     * this method is always ordered.
+     *
      * @param methodName Name of the metadata request. Corresponds to the XMLA
      * method name, e.g. "MDSCHEMA_CUBES"
      *
@@ -68,10 +72,13 @@ abstract class MondrianOlap4jDatabaseMetaData implements OlapDatabaseMetaData {
      * pairs. If the parameter value is null, it is ignored.
      *
      * @return Result set of metadata
+     *
+     * @throws org.olap4j.OlapException on error
      */
     private ResultSet getMetadata(
         String methodName,
         Object... patternValues)
+        throws OlapException
     {
         Map<String, Object> restrictionMap =
             new HashMap<String, Object>();
@@ -88,7 +95,7 @@ abstract class MondrianOlap4jDatabaseMetaData implements OlapDatabaseMetaData {
         }
         XmlaUtil.MetadataRowset rowset =
             XmlaUtil.getMetadataRowset(
-                olap4jConnection.connection,
+                olap4jConnection.getMondrianConnection(),
                 MondrianOlap4jConnection.LOCALDB_CATALOG_NAME,
                 methodName,
                 restrictionMap);
@@ -135,7 +142,7 @@ abstract class MondrianOlap4jDatabaseMetaData implements OlapDatabaseMetaData {
     }
 
     public String getURL() throws SQLException {
-        return olap4jConnection.connection.getConnectString();
+        return olap4jConnection.getMondrianConnection().getConnectString();
     }
 
     public String getUserName() throws SQLException {
@@ -165,11 +172,11 @@ abstract class MondrianOlap4jDatabaseMetaData implements OlapDatabaseMetaData {
     }
 
     public String getDatabaseProductName() throws SQLException {
-        return mondrianServer.getVersion().getProductName();
+        return olap4jConnection.mondrianServer.getVersion().getProductName();
     }
 
     public String getDatabaseProductVersion() throws SQLException {
-        return mondrianServer.getVersion().getVersionString();
+        return olap4jConnection.mondrianServer.getVersion().getVersionString();
     }
 
     public String getDriverName() throws SQLException {
@@ -877,11 +884,11 @@ abstract class MondrianOlap4jDatabaseMetaData implements OlapDatabaseMetaData {
     }
 
     public int getDatabaseMajorVersion() throws SQLException {
-        return mondrianServer.getVersion().getMajorVersion();
+        return olap4jConnection.mondrianServer.getVersion().getMajorVersion();
     }
 
     public int getDatabaseMinorVersion() throws SQLException {
-        return mondrianServer.getVersion().getMajorVersion();
+        return olap4jConnection.mondrianServer.getVersion().getMinorVersion();
     }
 
     public int getJDBCMajorVersion() throws SQLException {
@@ -978,7 +985,7 @@ abstract class MondrianOlap4jDatabaseMetaData implements OlapDatabaseMetaData {
 
     public String getMdxKeywords() throws OlapException {
         StringBuilder buf = new StringBuilder();
-        for (String keyword : mondrianServer.getKeywords()) {
+        for (String keyword : olap4jConnection.mondrianServer.getKeywords()) {
             if (buf.length() > 0) {
                 buf.append(',');
             }

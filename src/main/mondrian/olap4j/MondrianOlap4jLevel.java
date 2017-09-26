@@ -9,6 +9,7 @@
 */
 package mondrian.olap4j;
 
+import org.olap4j.OlapException;
 import org.olap4j.metadata.*;
 import org.olap4j.impl.ArrayNamedListImpl;
 import org.olap4j.impl.Named;
@@ -114,11 +115,11 @@ class MondrianOlap4jLevel implements Level, Named {
         return list;
     }
 
-    public List<Member> getMembers() {
+    public List<Member> getMembers() throws OlapException {
         final MondrianOlap4jConnection olap4jConnection =
             olap4jSchema.olap4jCatalog.olap4jDatabaseMetaData.olap4jConnection;
         final mondrian.olap.SchemaReader schemaReader =
-            olap4jConnection.connection.getSchemaReader();
+            olap4jConnection.getMondrianConnection().getSchemaReader();
         final List<mondrian.olap.Member> levelMembers =
             schemaReader.getLevelMembers(level, true);
         return new AbstractList<Member>() {

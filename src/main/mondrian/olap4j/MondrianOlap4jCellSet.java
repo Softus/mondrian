@@ -76,10 +76,12 @@ abstract class MondrianOlap4jCellSet implements CellSet {
      *
      * <p>This method may take some time. While it is executing, a client may
      * execute {@link MondrianOlap4jStatement#cancel()}.
+     *
+     * @throws org.olap4j.OlapException on error
      */
-    void execute() {
+    void execute() throws OlapException {
         query.setQueryTimeoutMillis(olap4jStatement.timeoutSeconds * 1000);
-        result = olap4jStatement.olap4jConnection.connection.execute(query);
+        result = olap4jStatement.olap4jConnection.getMondrianConnection().execute(query);
 
         // initialize axes
         mondrian.olap.Axis[] axes = result.getAxes();

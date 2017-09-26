@@ -37,7 +37,7 @@ class MondrianOlap4jCatalog implements Catalog, Named {
         NamedList<MondrianOlap4jSchema> list =
             new NamedListImpl<MondrianOlap4jSchema>();
         final mondrian.olap.Schema schema =
-            olap4jDatabaseMetaData.olap4jConnection.connection.getSchema();
+            olap4jDatabaseMetaData.olap4jConnection.getMondrianConnection().getSchema();
         list.add(
             olap4jDatabaseMetaData.olap4jConnection.toOlap4j(schema));
         return Olap4jUtil.cast(list);

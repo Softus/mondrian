@@ -11,15 +11,11 @@ package mondrian.olap4j;
 
 import java.util.*;
 
-import org.olap4j.impl.AbstractNamedList;
-import org.olap4j.impl.Named;
-import org.olap4j.impl.NamedListImpl;
-import org.olap4j.impl.Olap4jUtil;
-import org.olap4j.metadata.Dimension;
-import org.olap4j.metadata.Hierarchy;
-import org.olap4j.metadata.Level;
-import org.olap4j.metadata.Member;
-import org.olap4j.metadata.NamedList;
+import org.olap4j.OlapException;
+import org.olap4j.impl.*;
+import org.olap4j.metadata.*;
+
+import java.util.List;
 
 /**
  * Implementation of {@link org.olap4j.metadata.Hierarchy}
@@ -70,17 +66,17 @@ class MondrianOlap4jHierarchy implements Hierarchy, Named {
         return hierarchy.hasAll();
     }
 
-    public Member getDefaultMember() {
+    public Member getDefaultMember() throws OlapException {
         final MondrianOlap4jConnection olap4jConnection =
             olap4jSchema.olap4jCatalog.olap4jDatabaseMetaData.olap4jConnection;
         return olap4jConnection.toOlap4j(hierarchy.getDefaultMember());
     }
 
-    public NamedList<Member> getRootMembers() {
+    public NamedList<Member> getRootMembers() throws OlapException {
         final MondrianOlap4jConnection olap4jConnection =
             olap4jSchema.olap4jCatalog.olap4jDatabaseMetaData.olap4jConnection;
         final List<mondrian.olap.Member> levelMembers =
-            olap4jConnection.connection.getSchemaReader().getLevelMembers(
+            olap4jConnection.getMondrianConnection().getSchemaReader().getLevelMembers(
                 hierarchy.getLevels()[0], true);
 
         return new AbstractNamedList<Member>() {

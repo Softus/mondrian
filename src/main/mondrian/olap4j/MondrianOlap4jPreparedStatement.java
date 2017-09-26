@@ -45,17 +45,18 @@ abstract class MondrianOlap4jPreparedStatement
     public MondrianOlap4jPreparedStatement(
         MondrianOlap4jConnection olap4jConnection,
         String mdx)
+        throws OlapException
     {
         super(olap4jConnection);
         this.mdx = mdx;
-        this.query = olap4jConnection.connection.parseQuery(mdx);
+        this.query = olap4jConnection.getMondrianConnection().parseQuery(mdx);
         this.cellSetMetaData = new MondrianOlap4jCellSetMetaData(this, query);
     }
 
     // override OlapStatement
 
     public CellSet executeOlapQuery(String mdx) throws OlapException {
-        this.query = olap4jConnection.connection.parseQuery(mdx);
+        this.query = olap4jConnection.getMondrianConnection().parseQuery(mdx);
         this.cellSetMetaData = new MondrianOlap4jCellSetMetaData(this, query);
         return executeOlapQueryInternal(query);
     }

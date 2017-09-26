@@ -35,6 +35,8 @@ import org.eigenbase.util.property.StringProperty;
 
 import org.apache.log4j.Logger;
 
+import org.olap4j.Scenario;
+
 /**
  * A <code>RolapConnection</code> is a connection to a Mondrian OLAP Server.
  *
@@ -66,7 +68,9 @@ public class RolapConnection extends ConnectionBase {
     private final RolapSchema schema;
     private SchemaReader schemaReader;
     protected Role role;
-    private Locale locale = Locale.US;
+    private Locale locale = Locale.getDefault();
+    private Scenario scenario;
+
     private static DataSourceResolver dataSourceResolver;
 
     /**
@@ -514,7 +518,7 @@ public class RolapConnection extends ConnectionBase {
     public void close() {
     }
 
-    public Schema getSchema() {
+    public RolapSchema getSchema() {
         return schema;
     }
 
@@ -657,6 +661,14 @@ public class RolapConnection extends ConnectionBase {
         return role;
     }
 
+    public void setScenario(Scenario scenario) {
+        this.scenario = scenario;
+    }
+
+    public Scenario getScenario() {
+        return scenario;
+    }
+
     /**
      * Implementation of {@link DataSource} which calls the good ol'
      * {@link java.sql.DriverManager}.
@@ -727,16 +739,16 @@ public class RolapConnection extends ConnectionBase {
             logWriter = out;
         }
 
-        public java.util.logging.Logger getParentLogger() {
-            return java.util.logging.Logger.getLogger("");
-        }
-
         public void setLoginTimeout(int seconds) throws SQLException {
             loginTimeout = seconds;
         }
 
         public int getLoginTimeout() throws SQLException {
             return loginTimeout;
+        }
+
+        public java.util.logging.Logger getParentLogger() {
+            return java.util.logging.Logger.getLogger("");
         }
 
         public <T> T unwrap(Class<T> iface) throws SQLException {
@@ -750,6 +762,18 @@ public class RolapConnection extends ConnectionBase {
 
     public DataSource getDataSource() {
         return dataSource;
+    }
+
+    /**
+     * Helper method to allow olap4j wrappers to implement
+     * {@link org.olap4j.OlapConnection#createScenario()}.
+     *
+     * @return new Scenario
+     */
+    public ScenarioImpl createScenario() {
+        final ScenarioImpl scenario = new ScenarioImpl();
+        scenario.register(schema);
+        return scenario;
     }
 
     /**

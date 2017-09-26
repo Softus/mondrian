@@ -123,7 +123,7 @@ class MondrianOlap4jCell implements Cell {
         final MondrianOlap4jConnection olap4jConnection =
             this.olap4jCellSet.olap4jStatement.olap4jConnection;
         final DataSource dataSource =
-            olap4jConnection.connection.getDataSource();
+            olap4jConnection.getMondrianConnection().getDataSource();
         try {
             final Connection connection = dataSource.getConnection();
             final Statement statement = connection.createStatement();
