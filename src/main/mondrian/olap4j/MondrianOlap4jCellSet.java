@@ -14,6 +14,7 @@ import org.olap4j.Cell;
 import org.olap4j.Position;
 import mondrian.olap.*;
 import mondrian.olap.Axis;
+import mondrian.rolap.RolapCell;
 
 import java.util.*;
 import java.sql.*;
@@ -158,9 +159,9 @@ abstract class MondrianOlap4jCellSet implements CellSet {
     }
 
     private Cell getCellInternal(int[] pos) {
-        mondrian.olap.Cell cell;
+        RolapCell cell;
         try {
-            cell = result.getCell(pos);
+            cell = (RolapCell) result.getCell(pos);
         } catch (MondrianException e) {
             if (e.getMessage().indexOf("coordinates out of range") >= 0) {
                 int[] dimensions = new int[getAxes().size()];
@@ -172,7 +173,7 @@ abstract class MondrianOlap4jCellSet implements CellSet {
                         + ") fall outside CellSet bounds ("
                         + getCoordsAsString(dimensions) + ")");
             } else if (e.getMessage().indexOf(
-                "coordinates should have dimension") >= 0)
+                    "coordinates should have dimension") >= 0)
             {
                 throw new IllegalArgumentException(
                     "Cell coordinates should have dimension "

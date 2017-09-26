@@ -10,7 +10,10 @@
 package mondrian.rolap;
 
 import mondrian.olap.Util;
+import mondrian.util.*;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Proxy;
 import javax.sql.DataSource;
 
 import java.sql.Connection;
@@ -231,6 +234,65 @@ public class SqlStatement {
             // ignore
         }
         return runtimeException;
+    }
+
+    /**
+     * Returns the result set in a proxy which automatically closes this
+     * SqlStatement (and hence also the statement and result set) when the
+     * result set is closed.
+     *
+     * <p>This helps to prevent connection leaks. The caller still has to
+     * remember to call ResultSet.close(), of course.
+     *
+     * @return Wrapped result set
+     */
+    public ResultSet getWrappedResultSet() {
+        return (ResultSet) Proxy.newProxyInstance(
+            null,
+            new Class<?>[] {ResultSet.class},
+            new MyDelegatingInvocationHandler(this));
+    }
+
+
+    /**
+     * Reflectively implements the {@link ResultSet} interface by routing method
+     * calls to the result set inside a {@link mondrian.rolap.SqlStatement}.
+     * When the result set is closed, so is the SqlStatement, and hence the
+     * JDBC connection and statement also.
+     */
+    // must be public for reflection to work
+    public static class MyDelegatingInvocationHandler
+        extends DelegatingInvocationHandler
+    {
+        private final SqlStatement sqlStatement;
+
+        /**
+         * Creates a MyDelegatingInvocationHandler.
+         *
+         * @param sqlStatement SQL statement
+         */
+        MyDelegatingInvocationHandler(SqlStatement sqlStatement) {
+            this.sqlStatement = sqlStatement;
+        }
+
+        protected Object getTarget() throws InvocationTargetException {
+            final ResultSet resultSet = sqlStatement.getResultSet();
+            if (resultSet == null) {
+                throw new InvocationTargetException(
+                    new SQLException(
+                        "Invalid operation. Statement is closed."));
+            }
+            return resultSet;
+        }
+
+        /**
+         * Helper method to implement {@link java.sql.ResultSet#close()}.
+         *
+         * @throws SQLException on error
+         */
+        public void close() throws SQLException {
+            sqlStatement.close();
+        }
     }
 }
 
