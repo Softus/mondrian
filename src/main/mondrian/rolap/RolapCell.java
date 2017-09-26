@@ -1,11 +1,12 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapCell.java#5 $
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
-// Copyright (C) 2005-2009 Julian Hyde
-// All Rights Reserved.
 // You must accept the terms of that agreement to use this software.
+//
+// Copyright (C) 2005-2005 Julian Hyde
+// Copyright (C) 2005-2016 Pentaho
+// All Rights Reserved.
 */
 package mondrian.rolap;
 
@@ -13,6 +14,8 @@ import mondrian.mdx.*;
 import mondrian.olap.*;
 import mondrian.rolap.agg.AggregationManager;
 import mondrian.rolap.agg.CellRequest;
+
+import org.apache.log4j.Logger;
 
 import org.olap4j.AllocationPolicy;
 import org.olap4j.Scenario;
@@ -23,10 +26,14 @@ import java.util.*;
 /**
  * <code>RolapCell</code> implements {@link mondrian.olap.Cell} within a
  * {@link RolapResult}.
- *
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/rolap/RolapCell.java#5 $
  */
-class RolapCell implements Cell {
+public class RolapCell implements Cell {
+    /**
+     * @see mondrian.util.Bug#olap4jUpgrade Use
+     * {@link mondrian.xmla.XmlaConstants}.ActionType.DRILLTHROUGH when present
+     */
+    private static final int MDACTION_TYPE_DRILLTHROUGH = 0x100;
+
     private final RolapResult result;
     protected final int[] pos;
     protected RolapResult.CellInfo ci;
@@ -198,6 +205,61 @@ class RolapCell implements Cell {
             }
         }
         return currentMembers;
+    }
+
+    /**
+     * Generates an executes a SQL statement to drill through this cell.
+     *
+     * <p>Throws if this cell is not drillable.
+     *
+     * <p>Enforces limits on the starting and last row.
+     *
+     * <p>If tabFields is not null, returns the specified columns. (This option
+     * is deprecated.)
+     *
+     * @param maxRowCount Maximum number of rows to retrieve, <= 0 if unlimited
+     * @param firstRowOrdinal Ordinal of row to skip to (1-based), or 0 to
+     *   start from beginning
+     * @param fields            List of field expressions to return as the
+     *                          result set columns.
+     * @param extendedContext   If true, add non-constraining columns to the
+     *                          query for levels below each current member.
+     *                          This additional context makes the drill-through
+     *                          queries easier for humans to understand.
+     * @param logger Logger. If not null and debug is enabled, log SQL here
+     * @return executed SQL statement
+     */
+    public SqlStatement drillThroughInternal(
+        int maxRowCount,
+        int firstRowOrdinal,
+        List<OlapElement> fields,
+        boolean extendedContext,
+        Logger logger)
+    {
+        if (!canDrillThrough()) {
+            throw Util.newError("Cannot do DrillThrough operation on the cell");
+        }
+
+        // Generate SQL.
+        String sql = getDrillThroughSQL(/*fields,*/ extendedContext);
+        if (logger != null && logger.isDebugEnabled()) {
+            logger.debug("drill through sql: " + sql);
+        }
+
+        // Choose the appropriate scrollability. If we need to start from an
+        // offset row, it is useful that the cursor is scrollable, but not
+        // essential.
+        int resultSetType = ResultSet.TYPE_FORWARD_ONLY;
+        int resultSetConcurrency = ResultSet.CONCUR_READ_ONLY;
+        return
+            RolapUtil.executeQuery(
+                result.getQuery().getConnection().getDataSource(),
+                sql,
+                maxRowCount,
+                "RolapCell.drillThrough",
+                "Error in drill through",
+                resultSetType,
+                resultSetConcurrency);
     }
 
     public Object getPropertyValue(String propertyName) {

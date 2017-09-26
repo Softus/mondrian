@@ -1,11 +1,12 @@
 /*
-// This software is subject to the terms of the Eclipse Public License v1.0
-// Agreement, available at the following URL:
-// http://www.eclipse.org/legal/epl-v10.html.
-// Copyright (C) 2007-2007 Julian Hyde
-// All Rights Reserved.
-// You must accept the terms of that agreement to use this software.
+* This software is subject to the terms of the Eclipse Public License v1.0
+* Agreement, available at the following URL:
+* http://www.eclipse.org/legal/epl-v10.html.
+* You must accept the terms of that agreement to use this software.
+*
+* Copyright (c) 2002-2013 Pentaho Corporation..  All rights reserved.
 */
+
 package mondrian.util;
 
 import java.lang.reflect.*;
@@ -40,7 +41,6 @@ import java.lang.reflect.*;
  * </p>
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/util/DelegatingInvocationHandler.java#2 $
  */
 public abstract class DelegatingInvocationHandler
     implements InvocationHandler
@@ -92,8 +92,11 @@ public abstract class DelegatingInvocationHandler
      * does not have the required method.
      *
      * @return object to forward method calls to
+     *
+     * @throws InvocationTargetException if there is an error acquiring the
+     * target
      */
-    protected Object getTarget() {
+    protected Object getTarget() throws InvocationTargetException {
         return null;
     }
 }
