@@ -20,7 +20,7 @@ import java.util.Locale;
  * for the Mondrian OLAP engine.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap4j/MondrianOlap4jNamedSet.java#2 $
+ * @version $Id$
  * @since Nov 12, 2007
  */
 public class MondrianOlap4jNamedSet implements NamedSet, Named {

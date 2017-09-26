@@ -1,5 +1,5 @@
 /*
-// $Id: //open/mondrian-release/3.1/src/main/mondrian/olap4j/MondrianOlap4jDriver.java#2 $
+// $Id$
 // This software is subject to the terms of the Eclipse Public License v1.0
 // Agreement, available at the following URL:
 // http://www.eclipse.org/legal/epl-v10.html.
@@ -61,7 +61,7 @@ import java.util.logging.Logger;
  * it to anything else.
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap4j/MondrianOlap4jDriver.java#2 $
+ * @version $Id$
  * @since May 22, 2007
  */
 public class MondrianOlap4jDriver implements Driver {
