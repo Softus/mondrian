@@ -20,8 +20,9 @@ import java.io.Reader;
 import java.util.Calendar;
 import java.net.URL;
 
-import mondrian.olap.Query;
 import mondrian.olap.Parameter;
+import mondrian.olap.Query;
+import mondrian.olap.Util;
 
 /**
  * Implementation of {@link PreparedOlapStatement}
@@ -31,7 +32,7 @@ import mondrian.olap.Parameter;
  * it is instantiated using {@link Factory#newPreparedStatement}.</p>
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap4j/MondrianOlap4jPreparedStatement.java#2 $
+ * @version $Id$
  * @since Jun 12, 2007
  */
 abstract class MondrianOlap4jPreparedStatement
@@ -72,15 +73,7 @@ abstract class MondrianOlap4jPreparedStatement
     }
 
     public Cube getCube() {
-        throw new UnsupportedOperationException();
-    }
-
-    public boolean isSet(int var1) throws SQLException {
-        throw new UnsupportedOperationException();
-    }
-
-    public void unset(int var1) throws SQLException {
-        throw new UnsupportedOperationException();
+        return cellSetMetaData.getCube();
     }
 
     // implement PreparedStatement
@@ -268,6 +261,7 @@ abstract class MondrianOlap4jPreparedStatement
     private Parameter getParameter(int param) throws OlapException {
         final Parameter[] parameters = query.getParameters();
         if (param < 1 || param > parameters.length) {
+            //noinspection ThrowableResultOfMethodCallIgnored
             throw this.olap4jConnection.helper.toOlapException(
                 this.olap4jConnection.helper.createException(
                     "parameter ordinal " + param + " out of range"));
@@ -392,7 +386,16 @@ abstract class MondrianOlap4jPreparedStatement
 
     public int getParameterMode(int param) throws SQLException {
         Parameter paramDef = getParameter(param); // forces param range check
+        Util.discard(paramDef);
         return ParameterMetaData.parameterModeIn;
+    }
+
+    public boolean isSet(int parameterIndex) throws SQLException {
+        return getParameter(parameterIndex).isSet();
+    }
+
+    public void unset(int parameterIndex) throws SQLException {
+        getParameter(parameterIndex).unsetValue();
     }
 
     // Helper classes
