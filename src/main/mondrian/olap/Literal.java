@@ -18,6 +18,7 @@ import mondrian.calc.impl.ConstantCalc;
 import mondrian.mdx.MdxVisitor;
 
 import java.io.PrintWriter;
+import java.math.BigDecimal;
 
 /**
  * Represents a constant value, such as a string or number, in a parse tree.
@@ -97,6 +98,18 @@ public class Literal extends ExpBase {
         } else {
             return new Literal(d);
         }
+    }
+
+    /**
+     * Creates a numeric literal.
+     *
+     * <p>Using a {@link BigDecimal} allows us to store the precise value that
+     * the user typed. We will have to fit the value into a native
+     * {@code double} or {@code int} later on, but parse time is not the time to
+     * be throwing away information.
+     */
+    public static Literal create(BigDecimal d) {
+        return create(d.doubleValue());
     }
 
     /**

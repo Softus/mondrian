@@ -18,6 +18,9 @@ import org.apache.commons.vfs.provider.http.HttpFileObject;
 import org.apache.log4j.Logger;
 import org.eigenbase.xom.XOMUtil;
 
+import org.olap4j.impl.Olap4jUtil;
+import org.olap4j.mdx.*;
+
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -778,10 +781,10 @@ public class Util extends XOMUtil {
             schemaReaderSansAc.lookupCompound(
                 cube, nameParts, false, Category.Unknown);
         if (olapElement != null) {
-            Role role = schemaReader.getRole();
-            if (!role.canAccess(olapElement)) {
-                olapElement = null;
-            }
+//            Role role = schemaReader.getRole();
+//            if (!role.canAccess(olapElement)) {
+//                olapElement = null;
+//            }
             if (olapElement instanceof Member) {
                 olapElement =
                     schemaReader.substitute((Member) olapElement);
@@ -1449,6 +1452,42 @@ public class Util extends XOMUtil {
             }
         }
         return true;
+    }
+
+    /**
+     * Converts a list of olap4j-style segments to a list of mondrian-style
+     * segments.
+     *
+     * @param olap4jSegmentList List of olap4j segments
+     * @return List of mondrian segments
+     */
+    public static List<Id.Segment> convert(
+        List<IdentifierSegment> olap4jSegmentList)
+    {
+        final List<Id.Segment> list = new ArrayList<Id.Segment>();
+        for (IdentifierSegment olap4jSegment : olap4jSegmentList) {
+            list.add(convert(olap4jSegment));
+        }
+        return list;
+    }
+
+    public static Id.Segment convert(IdentifierSegment segment) {
+        return new Id.Segment(
+            segment.getName(),
+            convert(segment.getQuoting()));
+    }
+
+    private static Id.Quoting convert(Quoting quoting) {
+        switch (quoting) {
+        case QUOTED:
+            return Id.Quoting.QUOTED;
+        case UNQUOTED:
+            return Id.Quoting.UNQUOTED;
+        case KEY:
+            return Id.Quoting.KEY;
+        default:
+            throw Util.unexpected(quoting);
+        }
     }
 
     public static class ErrorCellValue {

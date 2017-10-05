@@ -1176,7 +1176,7 @@ public class Query extends QueryPart {
         for (final Formula formula : formulas) {
             if (formula.isMember()
                 && formula.getElement() != null
-                && getConnection().getRole().canAccess(formula.getElement()))
+                /*&& getConnection().getRole().canAccess(formula.getElement())*/)
             {
                 definedMembers.add((Member) formula.getElement());
             }

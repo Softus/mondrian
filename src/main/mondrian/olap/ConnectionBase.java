@@ -13,6 +13,7 @@
 
 package mondrian.olap;
 
+import mondrian.parser.*;
 import mondrian.resource.MondrianResource;
 
 import org.apache.log4j.Logger;
@@ -56,11 +57,11 @@ public abstract class ConnectionBase implements Connection {
     }
 
     public Query parseQuery(String query) {
-        return parseQuery(query, null, false, false);
+        return (Query)parseQuery(query, null, false, false);
     }
 
     public Query parseQuery(String query, boolean load) {
-        return parseQuery(query, null, load, false);
+        return (Query)parseQuery(query, null, load, false);
     }
 
     /**
@@ -79,7 +80,7 @@ public abstract class ConnectionBase implements Connection {
      * @return Query the corresponding Query object if parsing is successful
      * @throws MondrianException if parsing fails
      */
-    public Query parseQuery(
+    public QueryPart parseQuery(
         String query,
         FunTable funTable,
         boolean strictValidation)
@@ -96,7 +97,7 @@ public abstract class ConnectionBase implements Connection {
                 + expr);
         }
         try {
-            Parser parser = new Parser();
+            MdxParserValidator parser = createParser();;
             final FunTable funTable = getSchema().getFunTable();
             return parser.parseExpression(this, expr, debug, funTable);
         } catch (Throwable exception) {
@@ -106,13 +107,13 @@ public abstract class ConnectionBase implements Connection {
         }
     }
 
-    private Query parseQuery(
+    private QueryPart parseQuery(
         String query,
         FunTable cftab,
         boolean load,
         boolean strictValidation)
     {
-        Parser parser = new Parser();
+        MdxParserValidator parser = createParser();
         boolean debug = false;
         final FunTable funTable;
 
@@ -132,10 +133,14 @@ public abstract class ConnectionBase implements Connection {
         try {
             return
                 parser.parseInternal(
-                    this, query, debug, funTable, load, strictValidation);
+                    this, query, debug, funTable, strictValidation);
         } catch (Exception e) {
             throw MondrianResource.instance().FailedToParseQuery.ex(query, e);
         }
+    }
+
+    protected MdxParserValidator createParser() {
+        return new JavaccParserValidatorImpl();
     }
 }
 

@@ -9,6 +9,9 @@
 */
 package mondrian.olap4j;
 
+import mondrian.olap.SchemaReader;
+import mondrian.olap.Role;
+import mondrian.olap.Util;
 
 import org.olap4j.mdx.IdentifierSegment;
 import org.olap4j.metadata.*;
@@ -135,23 +138,128 @@ class MondrianOlap4jCube implements Cube, Named {
         List<IdentifierSegment> nameParts)
         throws OlapException
     {
-        throw new UnsupportedOperationException();
+        final MondrianOlap4jConnection olap4jConnection =
+            olap4jSchema.olap4jCatalog.olap4jDatabaseMetaData.olap4jConnection;
+        final Role role = olap4jConnection.getMondrianConnection().getRole();
+        final SchemaReader schemaReader = cube.getSchemaReader(role);
+        return lookupMember(schemaReader, nameParts);
+    }
+
+    private MondrianOlap4jMember lookupMember(
+        SchemaReader schemaReader,
+        List<IdentifierSegment> nameParts)
+    {
+        final List<mondrian.olap.Id.Segment> segmentList =
+            new ArrayList<mondrian.olap.Id.Segment>();
+        for (IdentifierSegment namePart : nameParts) {
+            segmentList.add(Util.convert(namePart));
+        }
+        final mondrian.olap.Member member =
+            schemaReader.getMemberByUniqueName(segmentList, false);
+        if (member == null) {
+            return null;
+        }
+
+        return olap4jSchema.olap4jCatalog.olap4jDatabaseMetaData
+            .olap4jConnection.toOlap4j(member);
     }
 
     public List<Member> lookupMembers(
         Set<Member.TreeOp> treeOps,
         List<IdentifierSegment> nameParts) throws OlapException
     {
-        throw new UnsupportedOperationException();
+        final MondrianOlap4jConnection olap4jConnection =
+            olap4jSchema.olap4jCatalog.olap4jDatabaseMetaData.olap4jConnection;
+        final Role role = olap4jConnection.getMondrianConnection().getRole();
+        final SchemaReader schemaReader = cube.getSchemaReader(role);
+        final MondrianOlap4jMember member =
+            lookupMember(schemaReader, nameParts);
+        if (member == null) {
+            return Collections.emptyList();
+        }
+
+        // Add ancestors and/or the parent. Ancestors are prepended, to ensure
+        // hierarchical order.
+        final List<MondrianOlap4jMember> list =
+            new ArrayList<MondrianOlap4jMember>();
+        if (treeOps.contains(Member.TreeOp.ANCESTORS)) {
+            for (MondrianOlap4jMember m = member.getParentMember();
+                m != null;
+                m = m.getParentMember())
+            {
+                list.add(0, m);
+            }
+        } else if (treeOps.contains(Member.TreeOp.PARENT)) {
+            final MondrianOlap4jMember parentMember = member.getParentMember();
+            if (parentMember != null) {
+                list.add(parentMember);
+            }
+        }
+
+        // Add siblings. Siblings which occur after the member are deferred,
+        // because they occur after children and descendants in the
+        // hierarchical ordering.
+        List<MondrianOlap4jMember> remainingSiblingsList = null;
+        if (treeOps.contains(Member.TreeOp.SIBLINGS)) {
+            final MondrianOlap4jMember parentMember = member.getParentMember();
+            NamedList<MondrianOlap4jMember> siblingMembers;
+            if (parentMember != null) {
+                siblingMembers =
+                    olap4jConnection.toOlap4j(
+                        schemaReader.getMemberChildren(parentMember.member));
+            } else {
+                siblingMembers =
+                    olap4jConnection.toOlap4j(
+                        schemaReader.getHierarchyRootMembers(
+                            member.member.getHierarchy()));
+            }
+            List<MondrianOlap4jMember> targetList = list;
+            for (MondrianOlap4jMember siblingMember : siblingMembers) {
+                if (siblingMember.equals(member)) {
+                    targetList =
+                        remainingSiblingsList =
+                            new ArrayList<MondrianOlap4jMember>();
+                } else {
+                    targetList.add(siblingMember);
+                }
+            }
+        }
+
+        // Add the member itself.
+        if (treeOps.contains(Member.TreeOp.SELF)) {
+            list.add(member);
+        }
+
+        // Add descendants and/or children.
+        if (treeOps.contains(Member.TreeOp.DESCENDANTS)) {
+            addDescendants(list, schemaReader, olap4jConnection, member, true);
+        } else if (treeOps.contains(Member.TreeOp.CHILDREN)) {
+            addDescendants(list, schemaReader, olap4jConnection, member, false);
+        }
+        // Lastly, add siblings which occur after the member itself. They
+        // occur after all of the descendants in the hierarchical ordering.
+        if (remainingSiblingsList != null) {
+            list.addAll(remainingSiblingsList);
+        }
+        return Olap4jUtil.cast(list);
     }
 
-    private static void addDescendants(
+    private void addDescendants(
         List<MondrianOlap4jMember> list,
-        MondrianOlap4jMember member)
+        SchemaReader schemaReader,
+        MondrianOlap4jConnection olap4jConnection,
+        MondrianOlap4jMember member,
+        boolean recurse)
     {
-        for (MondrianOlap4jMember childMember : member.getChildMembers()) {
+        for (mondrian.olap.Member m
+            : schemaReader.getMemberChildren(member.member))
+        {
+            MondrianOlap4jMember childMember = olap4jConnection.toOlap4j(m);
             list.add(childMember);
-            addDescendants(list, childMember);
+            if (recurse) {
+                addDescendants(
+                    list, schemaReader, olap4jConnection, childMember, recurse);
+            }
         }
     }
 
