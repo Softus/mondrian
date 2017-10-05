@@ -17,7 +17,7 @@ import java.util.*;
  * @author jhyde
  */
 public class DrillThrough extends QueryPart {
-    private final QueryPart query;
+    private final Query query;
     private final int maxRowCount;
     private final int firstRowOrdinal;
     private final List<OlapElement> returnList;
@@ -30,8 +30,8 @@ public class DrillThrough extends QueryPart {
      * @param firstRowOrdinal Ordinal of first row to return, or -1
      * @param returnList List of columns to return
      */
-    DrillThrough(
-        QueryPart query,
+    public DrillThrough(
+        Query query,
         int maxRowCount,
         int firstRowOrdinal,
         List<Exp> returnList)
@@ -70,7 +70,7 @@ public class DrillThrough extends QueryPart {
         return new Object[] {maxRowCount, firstRowOrdinal, query, returnList};
     }
 
-    public QueryPart getQuery() {
+    public Query getQuery() {
         return query;
     }
 

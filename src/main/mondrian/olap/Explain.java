@@ -24,7 +24,7 @@ public class Explain extends QueryPart {
      *
      * @param query Query (SELECT or DRILLTHROUGH)
      */
-    Explain(
+    public Explain(
         QueryPart query)
     {
         this.query = query;

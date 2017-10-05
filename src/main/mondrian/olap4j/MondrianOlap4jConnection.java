@@ -573,6 +573,24 @@ public abstract class MondrianOlap4jConnection implements OlapConnection {
         return types;
     }
 
+    NamedList<MondrianOlap4jMember> toOlap4j(
+        final List<Member> memberList)
+    {
+        return new AbstractNamedList<MondrianOlap4jMember>() {
+            public String getName(Object olap4jMember) {
+                return ((MondrianOlap4jMember)olap4jMember).getName();
+            }
+
+            public MondrianOlap4jMember get(int index) {
+                return toOlap4j(memberList.get(index));
+            }
+
+            public int size() {
+                return memberList.size();
+            }
+        };
+    }
+
     /**
      * Converts a Properties object to a Map with String keys and values.
      *
