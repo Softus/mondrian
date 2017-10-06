@@ -9,6 +9,7 @@
 */
 package mondrian.olap4j;
 
+import mondrian.calc.ResultStyle;
 import mondrian.olap.*;
 import org.olap4j.*;
 import org.olap4j.mdx.*;
@@ -17,6 +18,8 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.sql.*;
 import java.sql.Connection;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Implementation of {@link org.olap4j.OlapStatement}
@@ -50,14 +53,58 @@ class MondrianOlap4jStatement implements OlapStatement {
 
     // implement Statement
 
-    public ResultSet executeQuery(String sql) throws SQLException {
-        throw new UnsupportedOperationException();
+    public ResultSet executeQuery(String mdx) throws SQLException {
+        QueryPart parseTree;
+        try {
+            parseTree =
+                olap4jConnection.getMondrianConnection().parseQuery(mdx, null, false);
+        } catch (MondrianException e) {
+            throw olap4jConnection.helper.createException(
+                "mondrian gave exception while parsing query", e);
+        }
+        if (parseTree instanceof DrillThrough) {
+            DrillThrough drillThrough = (DrillThrough) parseTree;
+            final Query query = drillThrough.getQuery();
+            query.setResultStyle(ResultStyle.LIST);
+            CellSet cellSet = executeOlapQueryInternal(query);
+            final List<Integer> coords = Collections.nCopies(
+                cellSet.getAxes().size(), 0);
+            final MondrianOlap4jCell cell =
+                (MondrianOlap4jCell) cellSet.getCell(coords);
+
+            ResultSet resultSet =
+                cell.drillThroughInternal(
+                    drillThrough.getMaxRowCount(),
+                    drillThrough.getFirstRowOrdinal(),
+                    drillThrough.getReturnList(),
+                    true,
+                    null,
+                    null);
+            if (resultSet == null) {
+                throw new OlapException(
+                    "Cannot do DrillThrough operation on the cell");
+            }
+            return resultSet;
+        } else if (parseTree instanceof Explain) {
+            String plan = explainInternal(((Explain) parseTree).getQuery());
+            return olap4jConnection.factory.newFixedResultSet(
+                olap4jConnection,
+                Collections.singletonList("PLAN"),
+                Collections.singletonList(
+                    Collections.<Object>singletonList(plan)));
+        } else {
+            throw olap4jConnection.helper.createException(
+                "Query does not have relational result. Use a DRILLTHROUGH "
+                + "query, or execute using the executeOlapQuery method.");
+        }
     }
 
-    private void checkOpen() throws SQLException {
-        if (closed) {
-            throw olap4jConnection.helper.createException("closed");
-        }
+    private String explainInternal(QueryPart query) {
+        final StringWriter sw = new StringWriter();
+        final PrintWriter pw = new PrintWriter(sw);
+        query.explain(pw);
+        pw.flush();
+        return sw.toString();
     }
 
     public int executeUpdate(String sql) throws SQLException {
