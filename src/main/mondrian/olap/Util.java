@@ -781,10 +781,10 @@ public class Util extends XOMUtil {
             schemaReaderSansAc.lookupCompound(
                 cube, nameParts, false, Category.Unknown);
         if (olapElement != null) {
-//            Role role = schemaReader.getRole();
-//            if (!role.canAccess(olapElement)) {
-//                olapElement = null;
-//            }
+            Role role = schemaReader.getRole();
+            if (!role.canAccess(olapElement)) {
+                olapElement = null;
+            }
             if (olapElement instanceof Member) {
                 olapElement =
                     schemaReader.substitute((Member) olapElement);
@@ -2720,6 +2720,18 @@ public class Util extends XOMUtil {
                    + url.substring("jdbc:mondrian:".length());
         }
         return null;
+    }
+
+    /**
+     * Returns a role which has access to everything.
+     * @param schema A schema to bind this role to.
+     * @return A role with root access to the schema.
+     */
+    public static Role createRootRole(Schema schema) {
+        RoleImpl role = new RoleImpl();
+        role.grant(schema, Access.ALL);
+        role.makeImmutable();
+        return role;
     }
 }
 

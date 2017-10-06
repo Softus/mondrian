@@ -42,6 +42,16 @@ public abstract class QueryPart implements Walkable {
         // By default, a QueryPart is atomic (has no children).
         return null;
     }
+
+    /**
+     * Returns the plan that Mondrian intends to use to execute this query.
+     *
+     * @param pw Print writer
+     */
+    public void explain(PrintWriter pw) {
+        throw new UnsupportedOperationException(
+            "explain not implemented for " + this + " (" + getClass() + ")");
+    }
 }
 
 // End QueryPart.java

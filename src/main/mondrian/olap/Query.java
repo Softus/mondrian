@@ -13,7 +13,7 @@
 
 package mondrian.olap;
 
-import mondrian.calc.Calc;
+import mondrian.calc.*;
 import mondrian.calc.ExpCompiler;
 import mondrian.calc.ResultStyle;
 import mondrian.mdx.*;
@@ -646,6 +646,27 @@ public class Query extends QueryPart {
                     dimension.getUniqueName());
             }
         }
+    }
+
+    @Override
+    public void explain(PrintWriter pw) {
+        final CalcWriter calcWriter = new CalcWriter(pw);
+        for (Formula formula : formulas) {
+            formula.getMdxMember(); // TODO:
+        }
+        if (slicerCalc != null) {
+            pw.println("Axis (FILTER):");
+            slicerCalc.accept(calcWriter);
+            pw.println();
+        }
+        int i = -1;
+        for (QueryAxis axis : axes) {
+            ++i;
+            pw.println("Axis (" + axis.getAxisName() + "):");
+            axisCalcs[i].accept(calcWriter);
+            pw.println();
+        }
+        pw.flush();
     }
 
     public void unparse(PrintWriter pw) {
