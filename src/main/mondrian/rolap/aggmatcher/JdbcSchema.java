@@ -434,13 +434,13 @@ public class JdbcSchema {
                 public RolapAggregator getAggregator() {
                     return aggregator;
                 }
-                
+
                 public void setMinLevelColumn(final boolean minLevelColumn) {
-                	this.minLevelColumn = minLevelColumn;
+                    this.minLevelColumn = minLevelColumn;
                 }
-                
+
                 public boolean isMinLevelColumn() {
-                	return this.minLevelColumn;
+                    return this.minLevelColumn;
                 }
 
                 public String toString() {

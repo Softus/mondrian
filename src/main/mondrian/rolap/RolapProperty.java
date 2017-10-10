@@ -77,6 +77,7 @@ class RolapProperty extends Property {
         this.exp = exp;
         this.caption = property.caption;
         this.formatter = property.formatter;
+        this.dependsOnLevelValue = false;
     }
 
     private PropertyFormatter makePropertyFormatter(String formatterDef) {

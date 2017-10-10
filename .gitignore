@@ -1,0 +1,17 @@
+lib/
+classes/
+ivy/
+workbench/plugins/
+
+src/main/mondrian/gui/MondrianGuiDef.java
+src/main/mondrian/olap/MondrianDef.java
+src/main/mondrian/olap/Parser.java
+src/main/mondrian/olap/ParserSym.java
+src/main/mondrian/resource/MondrianResource*.java
+src/main/mondrian/xmla/DataSourcesConfig.java
+
+src/main/mondrian/gui/mondrian_SW.dtd
+src/main/mondrian/olap/mondrian.dtd
+src/main/mondrian/rolap/aggmatcher/aggregates.dtd
+src/main/mondrian/xmla/datasourcesconfig.dtd
+

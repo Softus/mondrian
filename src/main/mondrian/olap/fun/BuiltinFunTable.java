@@ -1235,6 +1235,7 @@ public class BuiltinFunTable extends FunTableImpl {
         builder.define(HeadTailFunDef.TailResolver);
         builder.define(ToggleDrillStateFunDef.Resolver);
         builder.define(UnionFunDef.Resolver);
+        builder.define(UnionFunDef.PlusResolver);
         builder.define(VisualTotalsFunDef.Resolver);
         builder.define(XtdFunDef.WtdResolver);
         builder.define(XtdFunDef.YtdResolver);
@@ -2220,6 +2221,20 @@ public class BuiltinFunTable extends FunTableImpl {
                 };
             }
         });
+
+        // Axiz([<Numeric Expression>])
+        builder.define(AxizFunDef.Resolver);
+
+        // OpeningSet(<Set>[, <Tuple>[, BYSET | BYHIER]])
+        builder.define(OpeningSetFunDef.Resolver);
+
+        // ABC test
+        builder.define(AbcFunDef.Resolver);
+        builder.define(AbcValueFunDef.Resolver);
+        builder.define(AbcPercentFunDef.Resolver);
+
+        // VarCoeff
+        builder.define(VarCoeffFunDef.Resolver);
 
         // Define VBA functions.
         for (FunDef funDef : JavaFunDef.scan(Vba.class)) {

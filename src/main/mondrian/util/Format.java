@@ -500,7 +500,7 @@ public class Format {
             buf.append(s);
         }
 
-        void format(String s, StringBuilder buf) {
+        void format(String str, StringBuilder buf) {
             buf.append(s);
         }
 
@@ -1049,6 +1049,26 @@ public class Format {
             default:
                 throw new Error();
             }
+        }
+    }
+
+    /**
+     * UpperLowerFormat is an implementation of {@link Format.BasicFormat} which
+     * prints string.
+     */
+    static class UpperLowerFormat extends BasicFormat
+    {
+        private final Locale locale;
+        private final boolean upper;
+
+        UpperLowerFormat(Locale locale, boolean upper)
+        {
+            this.locale = locale;
+            this.upper = upper;
+        }
+
+        void format(String s, StringBuilder buf) {
+            buf.append(upper ? s.toUpperCase(locale) : s.toLowerCase(locale));
         }
     }
 
@@ -2325,18 +2345,21 @@ public class Format {
                         case FORMAT_UPPER:
                         {
                             stringCase = CASE_UPPER;
+                            format = new UpperLowerFormat(locale.locale, true);
                             break;
                         }
 
                         case FORMAT_LOWER:
                         {
                             stringCase = CASE_LOWER;
+                            format = new UpperLowerFormat(locale.locale, false);
                             break;
                         }
 
                         case FORMAT_FILL_FROM_LEFT:
                         {
                             fillFromRight = false;
+                            format = new JavaFormat(locale.locale);
                             break;
                         }
 

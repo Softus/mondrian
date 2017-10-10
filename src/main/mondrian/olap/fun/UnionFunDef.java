@@ -41,7 +41,7 @@ class UnionFunDef extends FunDefBase {
             new String[] {"fxxx", "fxxxy"},
             UnionFunDef.class,
             ReservedWords);
-    
+
     static final MultiResolver PlusResolver = new PlusUnionResolver();
 
     public UnionFunDef(FunDef dummyFunDef) {
@@ -88,7 +88,7 @@ class UnionFunDef extends FunDefBase {
             return result;
         }
     }
-    
+
     private static class PlusUnionResolver extends MultiResolver {
         public PlusUnionResolver() {
             super(
@@ -99,7 +99,7 @@ class UnionFunDef extends FunDefBase {
         }
 
         public FunDef resolve(
-                Exp[] args, Validator validator, int[] conversionCount) {
+                Exp[] args, Validator validator, List<Conversion> conversions) {
             // This function only applies in contexts which require a set.
             // Elsewhere, "+" is the addition operator.
             // This means that [Gender].[F] + [Gender].[M] is
@@ -107,7 +107,7 @@ class UnionFunDef extends FunDefBase {
             if (validator.requiresExpression()) {
                 return null;
             }
-            return super.resolve(args, validator, conversionCount);
+            return super.resolve(args, validator, conversions);
         }
 
         protected FunDef createFunDef(Exp[] args, FunDef dummyFunDef) {

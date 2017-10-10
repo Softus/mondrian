@@ -92,6 +92,14 @@ public class RolapCubeHierarchy extends RolapHierarchy {
         // the 'all' level.
         this.currentNullLevel = new RolapCubeLevel(nullLevel, this);
 
+        if (this.usage != null && this.usage.isShared() && !Util.isEmpty(cubeDim.caption)) {
+            if (!rolapHierarchy.getCaption().equals(rolapHierarchy.getDimension().getCaption())) {
+                this.caption = this.caption + " " + rolapHierarchy.getCaption();
+            }
+        } else {
+            this.caption = null;
+        }
+
         usingCubeFact =
             (dimension.getCube().getFact() == null
               || dimension.getCube().getFact().equals(
@@ -356,6 +364,27 @@ public class RolapCubeHierarchy extends RolapHierarchy {
      */
     public RolapCubeMember getAllMember() {
         return currentAllMember;
+    }
+
+    /**
+     * Returns the display name of this catalog element.
+     * If no caption is defined, the name is returned.
+     */
+    public String getCaption() {
+        if (caption != null) {
+            return caption;
+        }
+        return rolapHierarchy.getCaption();
+    }
+
+    /**
+     * Sets the display name of this catalog element.
+     */
+    public void setCaption(String caption) {
+        if (true) {
+            throw new UnsupportedOperationException();
+        }
+        rolapHierarchy.setCaption(caption);
     }
 
     void setMemberReader(MemberReader memberReader) {

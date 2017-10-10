@@ -45,6 +45,8 @@ public class RolapBaseCubeMeasure
     private final RolapCube cube;
     private final Map<String, Annotation> annotationMap;
 
+    private final RolapCubeDimension[] functionallyDependentDims;
+
     /**
      * Holds the {@link mondrian.rolap.RolapStar.Measure} from which this
      * member is computed. Untyped, because another implementation might store
@@ -80,6 +82,7 @@ public class RolapBaseCubeMeasure
         MondrianDef.Expression expression,
         String aggregatorName,
         String datatype,
+        RolapCubeDimension[] functionallyDependentDims,
         Map<String, Annotation> annotationMap)
     {
         super(parentMember, level, name, null, MemberType.MEASURE);
@@ -88,6 +91,7 @@ public class RolapBaseCubeMeasure
         this.annotationMap = annotationMap;
         this.caption = caption;
         this.expression = expression;
+        this.functionallyDependentDims = functionallyDependentDims;
         if (description != null) {
             setProperty(
                 Property.DESCRIPTION.name,
@@ -178,6 +182,11 @@ public class RolapBaseCubeMeasure
             return Dialect.Datatype.String;
         }
     }
+
+    public RolapCubeDimension[] getFunctionallyDependentDims() {
+        return functionallyDependentDims;
+    }
+
 }
 
 // End RolapBaseCubeMeasure.java

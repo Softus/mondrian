@@ -1,4 +1,22 @@
+//	Copyright (C) 2008, IDC
+//
+//	Project: 
+//	File:    
+//	Author:  Alexander Korsukov (akorsukov@gmail.com)
+//	Date:
+//
+//	Description:
+//		NONE
+//
+//	Update History:
+//		NONE
+//
+/////////////////////////////////////////////////////////////////////////////
+
 package mondrian.olap.fun;
+
+/////////////////////////////////////////////////////////////////////////////
+//Imports
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,30 +30,29 @@ import mondrian.calc.TupleCalc;
 
 import mondrian.calc.impl.AbstractListCalc;
 
-import mondrian.mdx.DimensionExpr;
 import mondrian.mdx.ResolvedFunCall;
 
+import mondrian.olap.Dimension;
 import mondrian.olap.Evaluator;
 import mondrian.olap.Exp;
 import mondrian.olap.FunDef;
 import mondrian.olap.Member;
-import mondrian.olap.Syntax;
-
-import mondrian.olap.Validator;
 
 import mondrian.olap.type.EmptyType;
 import mondrian.olap.type.MemberType;
 import mondrian.olap.type.SetType;
 import mondrian.olap.type.TupleType;
-import mondrian.olap.type.Type;
+
+/////////////////////////////////////////////////////////////////////////////
+//
 
 public class OpeningSetFunDef extends FunDefBase {
-	static final ReflectiveMultiResolver resolver =
+	static final ReflectiveMultiResolver Resolver =
 		new ReflectiveMultiResolver
 			( "OpeningSet"
-			, "OpeningSet(<Set>[, <Tuple>[, BYSET | BYHIER]])"
+			, "OpeningSet(<Set>[, <Tuple> | <Empty> [, BYSET | BYHIER]])"
 			, "Ordered opening set of axis set"
-			, new String[] {"fxx", "fxxt", "fxxm", "fxxty", "fxxmy"}
+			, new String[] {"fxx", "fxxt", "fxxm", "fxxty", "fxxmy", "fxxey", "fxxey"}
 			, OpeningSetFunDef.class
 			);
 	
@@ -47,8 +64,6 @@ public class OpeningSetFunDef extends FunDefBase {
 
 	public Calc compileCall(ResolvedFunCall call, ExpCompiler compiler) {
 		final Exp set = call.getArg(0);
-		final SetType setType = (SetType)set.getType();
-		final Type setElementType = setType.getElementType();
 		final ListCalc listCalc = compiler.compileList(set);
 
 		final Exp tuple =
@@ -58,184 +73,155 @@ public class OpeningSetFunDef extends FunDefBase {
 		final Flag flag =
 			call.getArgCount() > 2
 				? getLiteralArg(call, 2, Flag.BYSET, Flag.class) : Flag.BYSET;
-
-		if (setType.getArity() == 1) {
-			final MemberType setMemberType = 
-				(MemberType)
-					(setElementType instanceof TupleType
-						? ((TupleType)setElementType).elementTypes[0]
-						: setElementType
-					);
-			Exp memberExp = null;
 				
-			if (null != tuple) {
-				final Type tupleType = tuple.getType(); 
-				final String dimensionUniqueName = setMemberType.getDimension().getUniqueName();
-					
-				if (tupleType instanceof TupleType) {
-					final Type[] tupleElementTypes = ((TupleType)tupleType).elementTypes;
-					
-					for (int i = 0; i < tupleElementTypes.length; i++) {
-						if (((MemberType)tupleElementTypes[i]).getDimension().getUniqueName().equals(dimensionUniqueName)) {
-							memberExp = ((ResolvedFunCall)tuple).getArgs()[i];
-							break;
-						}
-					}
-				} else {
-					if (((MemberType)tupleType).getDimension().getUniqueName().equals(dimensionUniqueName)) {
-						memberExp = tuple;
-					}
-				}
-			}
-			
-			if (null == memberExp) { 
-				memberExp =
-					new ResolvedFunCall
-						( DimensionCurrentMemberFunDef.instance
-						, new Exp[] {new DimensionExpr(setMemberType.getDimension())}
-						, setMemberType
-						);
-			}
-			
-			final MemberCalc currentMemberCalc = compiler.compileMember(memberExp);
-			
-			return new AbstractListCalc(call, new Calc[] {listCalc, currentMemberCalc}) {
+		final MemberCalc memberCalc =
+			(null != tuple && tuple.getType() instanceof MemberType)
+				? compiler.compileMember(tuple) : null;
+		final TupleCalc tupleCalc =
+			(null != tuple && tuple.getType() instanceof TupleType)
+				? compiler.compileTuple(tuple) : null;
+				
+		final Calc[] calcs =
+			(null != memberCalc || null != tupleCalc)
+				? new Calc[] {listCalc, (null != memberCalc ? memberCalc : tupleCalc)}
+				: new Calc[] {listCalc};
+
+		if (((SetType)set.getType()).getArity() == 1) {
+			return new AbstractListCalc(call, calcs) {
 				@SuppressWarnings("unchecked")
                 public List<?> evaluateList(Evaluator evaluator) {
-					final List<Member> set = (List<Member>)listCalc.evaluateList(evaluator); 
-					final Member currentItem = currentMemberCalc.evaluateMember(evaluator);
-					Member item;
-					
-					for (int i = 0; i < set.size(); i++) {
-						item = set.get(i);
-						if (currentItem.getUniqueName().equals(item.getUniqueName())) {
-							final List<Member> result = new ArrayList<Member>(i + 1);
-							
-							result.add(item);
-							for (int j = i; j > 0; j--) {
-								item = set.get(j - 1);
+					final List<Member> set = (List<Member>)listCalc.evaluateList(evaluator);
+
+					if (set.size() > 0) {
+						final Member[] specifiedTuple =
+							(null != memberCalc)
+								? new Member[] {memberCalc.evaluateMember(evaluator)}
+								: (null != tupleCalc)
+									? tupleCalc.evaluateTuple(evaluator)
+									: null;
+						
+						Member currentItem = null;
+						final Dimension dimension = set.get(0).getDimension();
+						
+						if (null != specifiedTuple) {
+							final String dimUniqueName = dimension.getUniqueName(); 
 								
-								if (currentItem.getDepth() == item.getDepth()) {
-									if (Flag.BYHIER == flag) {
-										final Member currentParent = currentItem.getParentMember();
-										final Member parent = item.getParentMember();
-										
-										if (currentParent != parent && !currentParent.getUniqueName().equals(parent.getUniqueName())) {
-											break;
-										}
-									}
-									result.add(item);
-								} else if (currentItem.getDepth() > item.getDepth()) {
+							for (int j = 0; j < specifiedTuple.length; j++) {
+								if (specifiedTuple[j].getDimension().getUniqueName().equals(dimUniqueName)) {
+									currentItem = specifiedTuple[j];
 									break;
 								}
 							}
+						}
+
+						if (null == currentItem)
+							currentItem = evaluator.getContext(dimension);
+						
+						for (int i = 0; i < set.size(); i++) {
+							Member item = set.get(i);
 							
-							Collections.reverse(result);
-							return result;
+							if (currentItem.getUniqueName().equals(item.getUniqueName())) {
+								final List<Member> result = new ArrayList<Member>(i + 1);
+								
+								result.add(item);
+								for (int j = i; j > 0; j--) {
+									item = set.get(j - 1);
+									
+									if (currentItem.getDepth() == item.getDepth()) {
+										if (Flag.BYHIER == flag) {
+											final Member currentParent = currentItem.getParentMember();
+											final Member parent = item.getParentMember();
+											
+											if (currentParent != parent && !currentParent.getUniqueName().equals(parent.getUniqueName())) {
+												break;
+											}
+										}
+										result.add(item);
+									} else if (currentItem.getDepth() > item.getDepth()) {
+										break;
+									}
+								}
+								
+								Collections.reverse(result);
+								return result;
+							}
 						}
 					}
 					return Collections.EMPTY_LIST; 
 				}
 			};
 		} else {
-			final Type[] setMemberTypes = ((TupleType)setElementType).elementTypes;
-			final Exp[] args = new Exp[setMemberTypes.length];
-			
-			if (null != tuple) {
-				final Type tupleType = tuple.getType(); 
-					
-				if (tupleType instanceof TupleType) {
-					final Type[] tupleElementTypes = ((TupleType)tupleType).elementTypes;
-					
-					for (int i = 0; i < tupleElementTypes.length; i++) {
-						final String dimensionUniqueName = ((MemberType)tupleElementTypes[i]).getDimension().getUniqueName();
-						
-						for (int j = 0; j < setMemberTypes.length; j++) {
-							final MemberType memberType = (MemberType)setMemberTypes[j];
-							
-							if (dimensionUniqueName.equals(memberType.getDimension().getUniqueName())) {
-								args[j] = ((ResolvedFunCall)tuple).getArgs()[i];
-								break;
-							}
-						}
-					}
-				} else {
-					final String hierarchyUniqueName = ((MemberType)tupleType).getDimension().getUniqueName(); 
-					
-					for (int i = 0; i < setMemberTypes.length; i++) {
-						final MemberType memberType = (MemberType)setMemberTypes[i];
-						
-						if (hierarchyUniqueName.equals(memberType.getDimension().getUniqueName())) {
-							args[i] = tuple;
-							break;
-						}
-					}
-				}
-			}			
-			
-			for (int i = 0; i < setMemberTypes.length; i++) {
-				if (null == args[i]) {
-					final MemberType memberType = (MemberType)setMemberTypes[i];
-					
-					args[i] =
-						new ResolvedFunCall
-							( DimensionCurrentMemberFunDef.instance
-							, new Exp[] {new DimensionExpr(memberType.getDimension())}
-							, memberType
-							);
-				}
-			}
-			
-			final Validator validator = compiler.getValidator();
-			final ResolvedFunCall currentTuple =
-				new ResolvedFunCall
-					( validator.getFunTable().getDef(args, validator, "()", Syntax.Parentheses)
-					, args
-					, setElementType
-					);
-			final TupleCalc currentTupleCalc = compiler.compileTuple(currentTuple);
-			
-			return new AbstractListCalc(call, new Calc[] {listCalc, currentTupleCalc}) {
+			return new AbstractListCalc(call, calcs) {
 				@SuppressWarnings("unchecked")
                 public List<?> evaluateList(Evaluator evaluator) {
 					final List<Member[]> set = (List<Member[]>)listCalc.evaluateList(evaluator);
-					final Member[] currentTuple = currentTupleCalc.evaluateTuple(evaluator);
-					final int length = currentTuple.length;
-					Member[] tuple;
 
-					for (int i = 0; i < set.size(); i++) {
-						tuple = set.get(i);
-						if (equalsTuple(currentTuple, tuple, length)) {
-							final List<Member[]> result = new ArrayList<Member[]>(i + 1);
-							final Member currentItem = currentTuple[length - 1];
+					if (set.size() > 0) {
+						final Member[] setTuple = set.get(0);
+						final Member[] currentTuple = new Member[setTuple.length];
+						final Member[] specifiedTuple =
+							(null != memberCalc)
+								? new Member[] {memberCalc.evaluateMember(evaluator)}
+								: (null != tupleCalc)
+									? tupleCalc.evaluateTuple(evaluator)
+									: null;
+
+						for (int i = 0; i < currentTuple.length; i++) {
+							final Dimension dimension = setTuple[i].getDimension();
 							
-							result.add(tuple);
-							for (int j = i; j > 0; j--) {
-								tuple = set.get(j - 1);
-								
-								if (!equalsTuple(currentTuple, tuple, length - 1)) {
-									break;
-								}
-								
-								final Member item = tuple[length - 1];
-								
-								if (currentItem.getDepth() == item.getDepth()) {
-									if (Flag.BYHIER == flag) {
-										final Member currentParent = currentItem.getParentMember();
-										final Member parent = item.getParentMember();
-										
-										if (currentParent != parent && !currentParent.getUniqueName().equals(parent.getUniqueName())) {
-											break;
-										}
+							if (null != specifiedTuple) {
+								final String dimUniqueName = dimension.getUniqueName(); 
+									
+								for (int j = 0; j < specifiedTuple.length; j++) {
+									if (specifiedTuple[j].getDimension().getUniqueName().equals(dimUniqueName)) {
+										currentTuple[i] = specifiedTuple[j];
+										break;
 									}
-									result.add(tuple);
-								} else if (currentItem.getDepth() > item.getDepth()) {
-									break;
 								}
 							}
+
+							if (null == currentTuple[i])
+								currentTuple[i] = evaluator.getContext(dimension);
+						}
+						
+						final int length = currentTuple.length;
+	
+						for (int i = 0; i < set.size(); i++) {
+							Member[] tuple = set.get(i);
 							
-							Collections.reverse(result);
-							return result;
+							if (equalsTuple(currentTuple, tuple, length)) {
+								final List<Member[]> result = new ArrayList<Member[]>(i + 1);
+								final Member currentItem = currentTuple[length - 1];
+								
+								result.add(tuple);
+								for (int j = i; j > 0; j--) {
+									tuple = set.get(j - 1);
+									
+									if (!equalsTuple(currentTuple, tuple, length - 1)) {
+										break;
+									}
+									
+									final Member item = tuple[length - 1];
+									
+									if (currentItem.getDepth() == item.getDepth()) {
+										if (Flag.BYHIER == flag) {
+											final Member currentParent = currentItem.getParentMember();
+											final Member parent = item.getParentMember();
+											
+											if (currentParent != parent
+												&& !currentParent.getUniqueName().equals(parent.getUniqueName())) {
+												break;
+											}
+										}
+										result.add(tuple);
+									} else if (currentItem.getDepth() > item.getDepth()) {
+										break;
+									}
+								}
+								
+								Collections.reverse(result);
+								return result;
+							}
 						}
 					}
 					return Collections.EMPTY_LIST; 
@@ -256,4 +242,4 @@ public class OpeningSetFunDef extends FunDefBase {
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// End of AxisOrderedHeadFunDef.java
+// End of OpeningSetFunDef.java

@@ -322,6 +322,9 @@ class MondrianOlap4jStatement implements OlapStatement {
         }
         return executeOlapQueryInternal(query);
     }
+    
+    public void addListener(CellSetListener.Granularity var1, CellSetListener var2) throws OlapException {
+    }
 
     /**
      * Executes a parsed query, closing any previously open cellset.

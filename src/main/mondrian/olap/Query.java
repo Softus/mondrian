@@ -98,6 +98,8 @@ public class Query extends QueryPart {
     private final Connection connection;
     public Calc[] axisCalcs;
     public Calc slicerCalc;
+    public Axis[] axisPositions;
+    public Axis slicerPositions;
 
     /**
      * Set of FunDefs for which alerts about non-native evaluation
@@ -540,6 +542,7 @@ public class Query extends QueryPart {
 
         if (axes != null) {
             axisCalcs = new Calc[axes.length];
+            axisPositions = new Axis[axes.length];
             for (int i = 0; i < axes.length; i++) {
                 axisCalcs[i] = axes[i].compile(compiler, resultStyle);
             }
@@ -608,6 +611,14 @@ public class Query extends QueryPart {
                 ++seekOrdinal;
             }
         }
+
+        // Validate formulas.
+        if (formulas != null) {
+            for (Formula formula : formulas) {
+                validator.validate(formula);
+            }
+        }
+
         if (slicerAxis != null) {
             slicerAxis.validate(validator);
         }

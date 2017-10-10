@@ -47,10 +47,10 @@ class MondrianOlap4jProperty implements Property, Named {
     }
 
     public Set<TypeFlag> getType() {
-        return TypeFlag.forMask(
+        return
             property.isCellProperty()
-                ? TypeFlag.CELL.xmlaOrdinal
-                : TypeFlag.MEMBER.xmlaOrdinal);
+                ? TypeFlag.CELL_TYPE_FLAG
+                : TypeFlag.MEMBER_TYPE_FLAG;
     }
 
     public String getName() {

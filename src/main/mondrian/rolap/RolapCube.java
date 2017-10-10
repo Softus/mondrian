@@ -324,12 +324,31 @@ public class RolapCube extends CubeBase {
         if (aggregator.equals("distinct count")) {
             aggregator = RolapAggregator.DistinctCount.getName();
         }
+
+        RolapCubeDimension[] depDims = null;
+
+        if (null != xmlMeasure.functionallyDependentDims && xmlMeasure.functionallyDependentDims.length > 0) {
+            List<RolapCubeDimension> dims = new ArrayList<RolapCubeDimension>(xmlMeasure.functionallyDependentDims.length);
+
+            for (MondrianDef.FunctionallyDependentDimension funDepDim : xmlMeasure.functionallyDependentDims) {
+                Dimension dim = (Dimension)lookupDimension(new Id.Segment(funDepDim.name, Id.Quoting.UNQUOTED));
+
+                if (dim instanceof RolapCubeDimension) {
+                    dims.add((RolapCubeDimension)dim);
+                }
+            }
+
+            if (dims.size() > 0) {
+                depDims = dims.toArray(new RolapCubeDimension[dims.size()]);
+            }
+        }
+
         final RolapBaseCubeMeasure measure =
             new RolapBaseCubeMeasure(
                 this, null, measuresLevel, xmlMeasure.name,
                 xmlMeasure.caption, xmlMeasure.description,
                 xmlMeasure.formatString, measureExp,
-                aggregator, xmlMeasure.datatype,
+                aggregator, xmlMeasure.datatype, depDims,
                 RolapHierarchy.createAnnotationMap(xmlMeasure.annotations));
 
         try {
@@ -2431,8 +2450,13 @@ public class RolapCube extends CubeBase {
         if (levelDimName.endsWith("$Closure")) {
             isClosure = true;
             closDimName = levelDimName.substring(0, levelDimName.length() - 8);
-            closHierName =
-                levelHierName.substring(0, levelHierName.length() - 8);
+            if (levelHierName.endsWith("$Closure")) {
+                closHierName = levelHierName.substring(0, levelHierName.length() - 8);
+            } else {
+                int pos = levelHierName.indexOf("$Closure.");
+                closHierName = levelHierName.substring(0, pos) +
+                    levelHierName.substring(pos + 8);
+            }
         }
 
         for (int i = 0; i < getDimensions().length; i++) {

@@ -233,7 +233,7 @@ class ExplicitRecognizer extends Recognizer {
      * level usage for the column.  Return true if the aggregate table's column
      * was found.
      */
-    protected boolean matchLevel(
+    protected JdbcSchema.Table.Column.Usage matchLevel(
         final Hierarchy hierarchy,
         final HierarchyUsage hierarchyUsage,
         final RolapLevel rlevel)
@@ -254,19 +254,18 @@ class ExplicitRecognizer extends Recognizer {
                         : aggTable.getColumns())
                     {
                         if (aggColumn.getName().equals(columnName)) {
-                            makeLevel(
+                            return makeLevel(
                                 aggColumn,
                                 hierarchy,
                                 hierarchyUsage,
                                 getColumnName(rlevel.getKeyExp()),
                                 columnName,
                                 rlevel.getName());
-                            return true;
                         }
                     }
                 }
             }
-            return false;
+            return null;
         } finally {
             msgRecorder.popContextName();
         }

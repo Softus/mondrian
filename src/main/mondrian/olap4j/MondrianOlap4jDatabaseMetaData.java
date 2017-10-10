@@ -1,12 +1,12 @@
 /*
-* This software is subject to the terms of the Eclipse Public License v1.0
-* Agreement, available at the following URL:
-* http://www.eclipse.org/legal/epl-v10.html.
-* You must accept the terms of that agreement to use this software.
-*
-* Copyright (c) 2002-2013 Pentaho Corporation..  All rights reserved.
+// $Id$
+// This software is subject to the terms of the Eclipse Public License v1.0
+// Agreement, available at the following URL:
+// http://www.eclipse.org/legal/epl-v10.html.
+// Copyright (C) 2007-2010 Julian Hyde
+// All Rights Reserved.
+// You must accept the terms of that agreement to use this software.
 */
-
 package mondrian.olap4j;
 
 import mondrian.olap.Util;
@@ -14,9 +14,7 @@ import mondrian.rolap.RolapConnection;
 import mondrian.olap.MondrianServer;
 import mondrian.xmla.XmlaUtil;
 
-import org.olap4j.OlapDatabaseMetaData;
-import org.olap4j.OlapException;
-import org.olap4j.OlapConnection;
+import org.olap4j.*;
 import org.olap4j.impl.NamedListImpl;
 import org.olap4j.impl.Olap4jUtil;
 import org.olap4j.metadata.*;
@@ -33,7 +31,7 @@ import java.util.*;
  * it is instantiated using {@link Factory#newDatabaseMetaData}.</p>
  *
  * @author jhyde
- * @version $Id: //open/mondrian-release/3.1/src/main/mondrian/olap4j/MondrianOlap4jDatabaseMetaData.java#2 $
+ * @version $Id$
  * @since May 23, 2007
  */
 abstract class MondrianOlap4jDatabaseMetaData implements OlapDatabaseMetaData {
@@ -933,6 +931,14 @@ abstract class MondrianOlap4jDatabaseMetaData implements OlapDatabaseMetaData {
 
     // implement OlapDatabaseMetaData
 
+    public Set<CellSetListener.Granularity>
+    getSupportedCellSetListenerGranularities()
+        throws OlapException
+    {
+        // Cell set listener API not supported in this version of mondrian.
+        return Collections.emptySet();
+    }
+
     public ResultSet getActions(
         String catalog,
         String schemaPattern,
@@ -946,7 +952,7 @@ abstract class MondrianOlap4jDatabaseMetaData implements OlapDatabaseMetaData {
             "ACTION_NAME", wildcard(actionNamePattern));
     }
 
-    public ResultSet getDatasources() throws OlapException {
+    public ResultSet getDatabases() throws OlapException {
         return getMetadata("DISCOVER_DATASOURCES");
     }
 
@@ -1018,7 +1024,7 @@ abstract class MondrianOlap4jDatabaseMetaData implements OlapDatabaseMetaData {
             "MDSCHEMA_DIMENSIONS",
             "SCHEMA_NAME", wildcard(schemaPattern),
             "CUBE_NAME", wildcard(cubeNamePattern),
-            "DIMSENSION_NAME", wildcard(dimensionNamePattern));
+            "DIMENSION_NAME", wildcard(dimensionNamePattern));
     }
 
     public ResultSet getOlapFunctions(
@@ -1124,6 +1130,19 @@ abstract class MondrianOlap4jDatabaseMetaData implements OlapDatabaseMetaData {
             "SCHEMA_NAME", wildcard(schemaPattern),
             "CUBE_NAME", wildcard(cubeNamePattern),
             "SET_NAME", wildcard(setNamePattern));
+    }
+
+    public ResultSet getPseudoColumns(
+        String catalog,
+        String schemaPattern,
+        String tableNamePattern,
+        String columnNamePattern) throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public boolean generatedKeyAlwaysReturned() throws SQLException {
+        throw new UnsupportedOperationException();
     }
 }
 

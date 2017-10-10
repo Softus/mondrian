@@ -572,6 +572,8 @@ public class RolapSchema implements Schema {
                             Category.Hierarchy);
                     final Access hierarchyAccess =
                         getAccess(hierarchyGrant.access, hierarchyAllowed);
+                    final Access hierarchyMemberAccess = (hierarchyGrant.memberAccess != null)
+                        ? getAccess(hierarchyGrant.memberAccess, memberAllowed) : Access.NONE;
                     Level topLevel = null;
                     if (hierarchyGrant.topLevel != null) {
                         if (hierarchyAccess != Access.CUSTOM) {
@@ -614,7 +616,7 @@ public class RolapSchema implements Schema {
                         rollupPolicy = Role.RollupPolicy.FULL;
                     }
                     role.grant(
-                        hierarchy, hierarchyAccess, topLevel, bottomLevel,
+                        hierarchy, hierarchyAccess, hierarchyMemberAccess, topLevel, bottomLevel,
                         rollupPolicy);
                     for (MondrianDef.MemberGrant memberGrant
                         : hierarchyGrant.memberGrants)

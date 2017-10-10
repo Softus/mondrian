@@ -589,6 +589,7 @@ public class RolapConnection extends ConnectionBase {
 
         Listener listener = new Listener(query);
         MemoryMonitor mm = MemoryMonitorFactory.getMemoryMonitor();
+        DataSourceChangeListener dsChangeListener = schema.getDataSourceChangeListener();
         long currId = -1;
         try {
             mm.addListener(listener);
@@ -602,6 +603,10 @@ public class RolapConnection extends ConnectionBase {
             if (RolapUtil.MDX_LOGGER.isDebugEnabled()) {
                 currId = executeCount++;
                 RolapUtil.MDX_LOGGER.debug(currId + ": " + Util.unparse(query));
+            }
+
+            if (dsChangeListener != null) {
+                dsChangeListener.beforeQuery(query);
             }
 
             query.setQueryStartTime();
@@ -638,6 +643,10 @@ public class RolapConnection extends ConnectionBase {
                 e,
                 "Error while executing query [" + queryString + "]");
         } finally {
+            if (dsChangeListener != null) {
+                dsChangeListener.afterQuery(query);
+            }
+
             mm.removeListener(listener);
             if (RolapUtil.MDX_LOGGER.isDebugEnabled()) {
                 RolapUtil.MDX_LOGGER.debug(

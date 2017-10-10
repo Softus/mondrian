@@ -294,10 +294,10 @@ public class MockServletContext implements ServletContext {
         }
     }
 
-	public String getContextPath()
+    public String getContextPath()
     {
-	    // TODO Auto-generated method stub
-	    return null;
+        // TODO Auto-generated method stub
+        return null;
     }
 }
 
