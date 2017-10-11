@@ -2,6 +2,11 @@ lib/
 classes/
 ivy/
 workbench/plugins/
+target/
+.idea/
+mondrian.iml
+
+src/generated/
 
 src/main/mondrian/gui/MondrianGuiDef.java
 src/main/mondrian/olap/MondrianDef.java
