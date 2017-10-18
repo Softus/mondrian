@@ -45,7 +45,7 @@
     <dom4j.version>1.6.1</dom4j.version>
     <log4j.version>1.2.9</log4j.version>
     <javacc.version>5.0</javacc.version>
-    <jlfgr.version>1.0</jlfgr.version>
+    <jlfgr.version>1_0</jlfgr.version>
     <jsp-api.version>2.0</jsp-api.version>
     <junit.version>3.8.1</junit.version>
     <olap4j.version>1.2.0</olap4j.version>
@@ -159,7 +159,7 @@
       <version>${eigenbase-resgen.version}</version>
     </dependency>
     <dependency>
-      <groupId>sun</groupId>
+      <groupId>net.java.linoleum</groupId>
       <artifactId>jlfgr</artifactId>
       <version>${jlfgr.version}</version>
     </dependency>
